@@ -1,4 +1,4 @@
-# Autonoous Mobile Robot: Cleaning Robot
+# Autonomous Mobile Robot: Cleaning Robot
 #### Copyright © 2024 Alessio Borgi
 
 
@@ -162,5 +162,11 @@ Another very important thing is that you can remove data due to noisy sensor dat
   <img src="images/Noisy_Map.jpg" alt="Screenshot" width="400"/>
 </div>
 
+
+---
+### Other Similar Repositories
+If you like this world, please, have a look at these other projects I have developed: 
+- **MoonBot Navigation**: Autonomous robot for lunar navigation and object interaction, developed during TESP '25 at the Space Robotics Lab (Tohoku University). Features custom robot design, Dijkstra-based path planning, object detection with vision, and gripper control.
+     - Site: https://github.com/alessioborgi/MoonBot-Navigation
 
 
