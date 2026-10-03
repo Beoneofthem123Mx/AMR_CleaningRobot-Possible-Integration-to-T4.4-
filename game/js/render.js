@@ -130,7 +130,7 @@ function init3D() {
   G3.trail = document.createElement("canvas"); G3.trail.width = G3.fxCv.width; G3.trail.height = G3.fxCv.height; G3.tctx = G3.trail.getContext("2d");
   G3.fxTex = new THREE.CanvasTexture(G3.fxCv); G3.fxTex.encoding = THREE.sRGBEncoding;
   const fxPlane = new THREE.Mesh(new THREE.PlaneGeometry(WW, SH), new THREE.MeshBasicMaterial({ map: G3.fxTex, transparent: true, depthWrite: false, toneMapped: false }));
-  fxPlane.rotation.x = -Math.PI / 2; fxPlane.position.set(WW / 2, .03, SH / 2); fxPlane.renderOrder = 1; sc.add(fxPlane);
+  fxPlane.rotation.x = -Math.PI / 2; fxPlane.position.set(WW / 2, .03, SH / 2); fxPlane.renderOrder = 1; sc.add(fxPlane); G3.fxPlane = fxPlane;
   // player fences: yellow and black stripes in world coordinates
   const fc = document.createElement("canvas"); fc.width = fc.height = 64; const fg = fc.getContext("2d");
   fg.fillStyle = "#f2c230"; fg.fillRect(0, 0, 64, 64); fg.fillStyle = "#1c1c1c";
@@ -213,6 +213,7 @@ function buildStatic3D() {
   G3.ground.material.map = tex; G3.ground.material.needsUpdate = true;
   const m = new THREE.MeshStandardMaterial({ map: tex, roughness: .85 });
   G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
+  G3.fxPlane.material.color.setScalar(scene.night ? .5 : 1);  // keep floor markings under the bloom threshold at night
   if (!G3.winTex) G3.winTex = windowTex();
   const side = new THREE.MeshStandardMaterial({ map: G3.winTex, roughness: .7, emissiveMap: G3.winTex, emissive: new THREE.Color(scene.night ? 0xffffff : 0x000000), emissiveIntensity: scene.night ? .8 : 0 });
   for (const o of obs) {

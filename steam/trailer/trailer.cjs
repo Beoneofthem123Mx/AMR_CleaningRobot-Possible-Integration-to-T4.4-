@@ -8,33 +8,35 @@ const ROOT = path.resolve(__dirname, "../.."), WORK = path.join(__dirname, "work
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map(Number) : null;
 
 // script: title cards and gameplay shots
+const B = 60 / 124;  // one beat of the game's EDM track: cuts land on the beat
 const SEG = [
-  { card: "FROM THE MAKERS OF<br>NOTHING IN PARTICULAR", dur: 2.2, bg: "ciudad" },
-  { clip: "plaza", warm: 2.5, secs: 4.5, cam: 2 },
-  { card: "YOU PLAN<br>THE EVENT", dur: 1.6, bg: "plaza" },
-  { clip: "plaza", warm: 24, secs: 3.5, cam: 0, heat: true, ev: [[-1.2, "car"]] },
-  { card: "THE CROWD DOES<br>WHATEVER IT WANTS", dur: 1.6, bg: "plaza" },
-  { clip: "circo", warm: 28, secs: 4, cam: 1, ev: [[-1.5, "elephants"], [-.4, "cannon"], [1.6, "balls"]] },
-  { card: "THERE ARE ELEPHANTS", dur: 1.1, bg: "circo" },
-  { clip: "ovni", warm: 26, secs: 4.5, cam: 0, ev: [[-2, "abduccion"], [1.8, "vacas"]] },
-  { card: "THERE ARE UFOS", dur: 1.0, bg: "ciudad" },
-  { clip: "boda", warm: 26, secs: 3.5, cam: 1, ev: [[-1, "ramo"], [.3, "suegra"]] },
-  { card: "THERE ARE<br>MOTHERS-IN-LAW", dur: 1.0, bg: "circo" },
-  { clip: "mitin", warm: 26, secs: 3.5, cam: 1, ev: [[-1.5, "botargas"], [-.2, "promesas"], [1.2, "huevazo"]] },
-  { card: "THERE'S A CANDIDATE<br>WHO IS A DUCK", dur: 1.4, bg: "mitin" },
-  { clip: "crucero", warm: 26, secs: 1.4, cam: 0, ev: [[-.6, "oleaje"]], hot: true },
-  { clip: "hipodromo", warm: 26, secs: 1.4, cam: 0, ev: [[-1.5, "carrera"]], hot: true },
-  { clip: "taco", warm: 26, secs: 1.4, cam: 1, ev: [[-.4, "salsa"]], hot: true },
-  { clip: "aeropuerto", warm: 26, secs: 1.4, cam: 1, ev: [[-1.2, "idolo"]], hot: true },
-  { clip: "trono", warm: 26, secs: 1.4, cam: 0, ev: [[-.3, "inundacion"]], hot: true },
-  { clip: "ciudad", warm: 26, secs: 1.4, cam: 0, ev: [[-.8, "fuegos"]], hot: true },
-  { clip: "viernes", warm: 26, secs: 1.4, cam: 1, ev: [[-.8, "oferta"]], hot: true },
-  { clip: "estadio", warm: 26, secs: 1.4, cam: 0, ev: [[-.5, "ola"], [-.4, "flares"]], hot: true },
-  { clip: "arena", warm: 26, secs: 1.6, cam: 1, ev: [[-1.3, "tope"], [-.4, "sillazo"]], hot: true },
-  { card: "14 VENUES<br>ZERO PERMITS", dur: 1.8, bg: "circo" },
-  { clip: "plaza", warm: 0, secs: 6, cam: 0, crush: true, hot: true },
-  { card: "HOW MANY TRAMPLED<br>CAN YOUR CONSCIENCE TAKE?", dur: 2.2, bg: "plaza" },
-  { card: "HUMAN<br>TSUNAMI", sub: "Coming soon to Steam · ridiculously cheap", dur: 3.4, bg: "circo", end: true },
+  // cold open: the counter already climbing
+  { clip: "plaza", warm: 0, secs: B * 7, cam: 0, crush: true, hot: true },
+  { card: "THIS IS YOUR FAULT.", dur: B * 2, style: "yellow" },
+  { card: "HUMAN<br>TSUNAMI", logo: true, dur: B * 4, bg: "arena" },
+  { card: "STEP 1:<br>PLAN THE EVENT", dur: B * 3, bg: "plaza" },
+  { clip: "plaza", plan: true, warm: 0, secs: B * 7, cam: 0, fences: [[.2, 10, 40, 18, 46], [.9, 30, 40, 22, 46], [1.6, 14, 58, 14, 50], [2.3, 26, 58, 26, 50]] },
+  { card: "STEP 2:<br>OPEN THE GATES", dur: B * 3, bg: "plaza" },
+  { clip: "plaza", warm: 2.5, secs: B * 7, cam: 2 },
+  { card: "STEP 3:<br>EVERYTHING GOES WRONG", dur: B * 3, style: "yellow" },
+  { clip: "circo", warm: 28, secs: B * 4, cam: 1, ev: [[-1.5, "elephants"], [-.4, "cannon"]], hot: true },
+  { clip: "ovni", warm: 26, secs: B * 4, cam: 0, ev: [[-2, "abduccion"]], hot: true },
+  { clip: "arena", warm: 26, secs: B * 4, cam: 1, ev: [[-1.3, "tope"], [-.4, "sillazo"]], hot: true },
+  { clip: "ciudad", warm: 26, secs: B * 4, cam: 0, ev: [[-.8, "fuegos"]], hot: true },
+  { clip: "plaza", warm: 26, secs: B * 4, cam: 1, mod: "rain", ev: [[-.6, "dogs"]], hot: true },
+  { clip: "zoo", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "ZOO_EV"]], hot: true },
+  { clip: "rocket", warm: 26, secs: B * 4, cam: 0, ev: [[-1.2, "ROCKET_EV"]], hot: true },
+  { clip: "cheese", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "CHEESE_EV"]], hot: true },
+  { clip: "zombie", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "ZOMBIE_EV"]], hot: true },
+  { clip: "mitin", warm: 26, secs: B * 4, cam: 1, ev: [[-1.5, "botargas"], [-.2, "promesas"]], hot: true },
+  { clip: "boda", warm: 26, secs: B * 4, cam: 1, ev: [[-1, "ramo"], [.3, "suegra"]], hot: true },
+  { card: "18 VENUES", dur: B * 2, bg: "circo" },
+  { card: "13 RANDOM TWISTS", dur: B * 2, bg: "ciudad" },
+  { card: "1 MEGAPHONE", dur: B * 2, style: "yellow" },
+  { clip: "estadio", warm: 28, secs: B * 6, cam: 1, ev: [[.3, "mega", 20, 34], [1.2, "mega", 14, 42]] },
+  { card: "TOMORROW'S<br>HEADLINES", dur: B * 3, bg: "mitin" },
+  { clip: "arena", warm: 0, secs: B * 7, cam: 0, report: true },
+  { card: "HUMAN<br>TSUNAMI", sub: "Coming soon to Steam · cheaper than a coffee", dur: B * 9, bg: "arena", end: true },
 ];
 
 const sh = (cmd, args) => execFileSync(cmd, args, { stdio: ["ignore", "ignore", "inherit"] });
@@ -56,8 +58,14 @@ async function captureClips() {
     const dir = path.join(WORK, "seg" + i); fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
     const t0 = await w.evaluate(g => {
       __game.reset(); __game.scene(g.clip); document.querySelector("#overlay").hidden = true;
-      if (!g.crush) __game.bestGates();
-      camMode = g.cam; heat = !!g.heat; __game.start(MODS_BY_ID.normal); document.querySelector("#mod").hidden = true;
+      if (!g.crush && !g.plan && !g.report) __game.bestGates();
+      camMode = g.cam; heat = !!g.heat;
+      if (g.plan) {  // planning shot: fences appear one by one while the venue waits
+        window.__pending = (g.fences || []).map(([at, ax, ay, bx, by]) => [at, "fence", { ax, ay, bx, by }]);
+        for (let k = 0; k < 20; k++) __game.tick(1 / 60);
+        return vnow / 1000;
+      }
+      __game.start(MODS_BY_ID[g.mod || "normal"]); if (g.mod) showModChip(MOD); else document.querySelector("#mod").hidden = true;
       const evs = (g.ev || []).slice().sort((a, b) => a[0] - b[0]);
       const pre = evs.length ? Math.min(0, evs[0][0]) : 0;
       let steps = Math.round((g.warm + pre) * 60);
@@ -66,6 +74,10 @@ async function captureClips() {
         // replay the slow-motion close-up on the latest fall, as the game does for the first one
         const f = fallen[fallen.length - 1];
         if (f) { slowT = 1.8; focus = { x: f.x, y: f.y }; }
+      } else if (g.report) { // run the whole show; the newspaper appears at the end
+        for (let k = 0; k < 60 * 300 && !(fullAt && t > fullAt + 13); k++) __game.step();
+        camMode = 1; for (let k = 0; k < 30; k++) __game.tick(1 / 60);  // render once so the paper gets its photo
+        for (let k = 0; k < 60 * 300 && ["show", "evac"].includes(__game.s.phase); k++) __game.step();
       } else for (let k = 0; k < steps; k++) __game.step();
       movers = movers.filter(m => m.kind === "router" || m.kind === "influencer");
       for (const [at, e] of evs) if (at < 0) { __game.event(e); }
@@ -76,7 +88,15 @@ async function captureClips() {
     }, g);
     const n = Math.round(g.secs * FPS);
     for (let f = 0; f < n; f++) {
-      await w.evaluate(([f, fps]) => { const tt = f / fps; for (const e of window.__pending.filter(e => e[0] <= tt)) __game.event(e[1]); window.__pending = window.__pending.filter(e => e[0] > tt); __game.tick(1 / fps); }, [f, FPS]);
+      await w.evaluate(([f, fps]) => {
+        const tt = f / fps;
+        for (const e of window.__pending.filter(e => e[0] <= tt)) {
+          if (e[1] === "fence") __game.addFence(e[2]);
+          else if (e[1] === "mega") { mega.active.push({ x: e[2], y: e[3], t: 3.5 }); rings.push({ x: e[2], y: e[3], t: 0, mega: true }); sfx("whistle"); }
+          else __game.event(e[1]);
+        }
+        window.__pending = window.__pending.filter(e => e[0] > tt); __game.tick(1 / fps);
+      }, [f, FPS]);
       await frame.screenshot({ path: path.join(dir, String(f).padStart(5, "0") + ".png") });
     }
     const log = await w.evaluate(() => { const L = window.__sfxLog; window.__sfxLog = []; return L; });
@@ -120,10 +140,10 @@ async function renderCards() {
   const p = await b.newPage({ viewport: { width: 1920, height: 1080 } });
   for (let i = 0; i < SEG.length; i++) {
     const g = SEG[i]; if (!g.card) continue;
-    const q = new URLSearchParams({ w: 1920, h: 1080, mode: g.end ? "full" : "card", bg: g.bg, text: g.card, sub: g.sub || "" });
+    const q = new URLSearchParams({ w: 1920, h: 1080, mode: g.end || g.logo ? "full" : "card", bg: g.bg, text: g.card, sub: g.sub || "", style: g.style || "" });
     await p.goto("file://" + path.join(ROOT, "steam/art/capsule.html") + "?" + q);
     await p.waitForSelector("body[data-ready]"); await p.waitForTimeout(200);
-    if (g.end) await p.evaluate(sub => { const t = document.querySelector(".tag"); if (t) t.textContent = sub; }, g.sub);
+    if (g.end || g.logo) await p.evaluate(sub => { const t = document.querySelector(".tag"); if (t) { if (sub) t.textContent = sub; else t.remove(); } }, g.sub || "");
     await p.locator("#c").screenshot({ path: path.join(WORK, `card${i}.png`) });
   }
   await b.close();
