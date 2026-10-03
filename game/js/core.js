@@ -15,9 +15,9 @@ let fences = [];           // vallas del jugador {ax,ay,bx,by,len}
 // ===== Obstáculos =====
 let obs = [], buckets, BKS = 2, BW = Math.ceil(WW / BKS), BH = Math.ceil(SH / BKS);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
-function seg(ax, ay, bx, by, th, kind) { obs.push({ t: "s", ax, ay, bx, by, th, kind }); }
-function rect(x0, y0, x1, y1, kind) { obs.push({ t: "r", x0, y0, x1, y1, kind }); }
-function circ(x, y, r, kind) { obs.push({ t: "c", x, y, r, kind }); }
+function seg(ax, ay, bx, by, th, kind) { const o = { t: "s", ax, ay, bx, by, th, kind }; obs.push(o); return o; }
+function rect(x0, y0, x1, y1, kind) { const o = { t: "r", x0, y0, x1, y1, kind }; obs.push(o); return o; }
+function circ(x, y, r, kind) { const o = { t: "c", x, y, r, kind }; obs.push(o); return o; }
 // ===== Escenarios =====
 const F = false, T = true;
 const hazardLine = (g, ax, ay, bx, by, w) => {

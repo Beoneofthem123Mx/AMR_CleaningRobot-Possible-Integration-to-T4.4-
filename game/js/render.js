@@ -105,6 +105,9 @@ function init3D() {
   G3.conf.instanceMatrix.setUsage(THREE.DynamicDrawUsage); G3.conf.frustumCulled = false; G3.conf.count = 0;
   G3.conf.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(1400 * 3), 3); sc.add(G3.conf);
   CONF_L = toLin(CONF);
+  const inst = (geo, material, n) => { const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.count = 0; m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); sc.add(m); return m; };
+  G3.spark = inst(new THREE.SphereGeometry(.11, 6, 4), new THREE.MeshBasicMaterial({ toneMapped: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), 1500);
+  G3.puff = inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: .3, depthWrite: false }), 800);
   SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
   initPeople();
   resize();
@@ -112,7 +115,24 @@ function init3D() {
 
 // ---------- recinto 3D ----------
 const HEIGHTS = { stage: 1.8, speaker: 3.2, catwalk: 1.3, platform: 1.35, barrier: 1.1, booth: 2.4, aid: 2.4,
-  canvas: 3.4, curtain: 5.5, wall: 1.3, curb: .7, pole: 4.5, popcorn: 2.5, candy: 2.5, cannon: 1.1, fence: 1.1, closed: 1.1, player: .95 };
+  canvas: 3.4, curtain: 5.5, wall: 1.3, curb: .7, pole: 4.5, popcorn: 2.5, candy: 2.5, cannon: 1.1, fence: 1.1, closed: 1.1, player: .95,
+  stands: 2.6, bench: 1, hull: 1.2, pool: .15, jacuzzi: .45, lounger: .45, bar: 1.2, outerrail: .9, rail: 1, startgate: 2.2,
+  grandstand: 2.2, tote: 4, winner: .3, fountain: .7 };
+// fachadas de edificios: ventanas que se repiten (de noche se encienden)
+function windowTex() {
+  const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), r = rng(12);
+  g.fillStyle = "#2e3340"; g.fillRect(0, 0, 64, 64);
+  for (let y = 4; y < 64; y += 16) for (let x = 4; x < 64; x += 16) { g.fillStyle = r() < .55 ? "#ffd98a" : "#1a1d26"; g.fillRect(x, y, 9, 10); }
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+function buildingUV(geo) {
+  const p = geo.attributes.position, n = geo.attributes.normal, uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    if (Math.abs(n.getY(i)) > .5) { uv[i * 2] = p.getX(i) / WW; uv[i * 2 + 1] = 1 - p.getZ(i) / SH; }
+    else { uv[i * 2] = (p.getX(i) + p.getZ(i)) / 3; uv[i * 2 + 1] = p.getY(i) / 3; }
+  }
+  geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); return geo;
+}
 function worldUV(geo) {
   const p = geo.attributes.position, uv = new Float32Array(p.count * 2);
   for (let i = 0; i < p.count; i++) { uv[i * 2] = p.getX(i) / WW; uv[i * 2 + 1] = 1 - p.getZ(i) / SH; }
@@ -127,7 +147,14 @@ function buildStatic3D() {
   const tex = G3.groundTex = new THREE.CanvasTexture(staticLayer); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
   G3.ground.material.map = tex; G3.ground.material.needsUpdate = true;
   const m = new THREE.MeshStandardMaterial({ map: tex, roughness: .85 });
+  G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
+  if (!G3.winTex) G3.winTex = windowTex();
+  const side = new THREE.MeshStandardMaterial({ map: G3.winTex, roughness: .7, emissiveMap: G3.winTex, emissive: new THREE.Color(scene.night ? 0xffffff : 0x000000), emissiveIntensity: scene.night ? .8 : 0 });
   for (const o of obs) {
+    if (o.kind === "building") {
+      const geo = new THREE.BoxGeometry(o.x1 - o.x0, o.hb, o.y1 - o.y0); geo.translate((o.x0 + o.x1) / 2, o.hb / 2, (o.y0 + o.y1) / 2); buildingUV(geo);
+      const mesh = new THREE.Mesh(geo, [side, side, m, m, side, side]); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh); continue;
+    }
     const h = HEIGHTS[o.kind]; if (!h && o.kind !== "tent") continue;
     let geo;
     if (o.kind === "tent") { geo = new THREE.ConeGeometry(Math.SQRT2 * 2.5, 3.4, 4, 1); geo.rotateY(Math.PI / 4); geo.translate((o.x0 + o.x1) / 2, 1.7, (o.y0 + o.y1) / 2); }
@@ -238,6 +265,11 @@ function renderPeople(tt, dtR, vb) {
         else if (a.st === 0) { armR = 2.35 + Math.sin(ph) * .55; armL = .3 * Math.sin(ph * .5); }
         else { armL = armR = 1.1 + Math.sin(ph * 2) * .45; }
       }
+      const olaD = ola ? Math.abs(a.x - ola.x) : 99;
+      if (olaD < 2.6 || (cheerT > 0 && a.dance)) {
+        const ph = tt * 8 + a.ph; armL = 2.95 + Math.sin(ph) * .12; armR = 2.95 - Math.sin(ph) * .12;
+        bob = olaD < 2.6 ? .4 * (1 - olaD / 2.6) : .18 * Math.abs(Math.sin(ph));
+      }
       if (a.ps > PCRIT * .55) { const ph = tt * 15 + a.ph; armL = 2.3 + Math.sin(ph) * .55; armR = 2.3 + Math.cos(ph) * .55; }
       setBase(a.x, bob, a.y, a.h, a.sc, false);
     }
@@ -296,15 +328,23 @@ function buildModel(m) {
       u.tail = pivot(g, -.9, 1, 0); part(u.tail, "cyl", "#c58c3c", .04, .9, .04, 0, -.45, 0); part(u.tail, "sph", "#5a2e12", .12, .12, .12, 0, -.9, 0);
       break;
     }
-    case "horse": {
-      const c = m.col || "#f2efe9";
+    case "horse": case "racehorse": case "policehorse": {
+      const c = m.col || (m.kind === "policehorse" ? "#3b2a20" : "#f2efe9");
       part(g, "sph", c, 1.1, .45, .4, 0, 1.4, 0);
       const nk = part(g, "cyl", c, .18, .9, .18, .95, 1.85, 0); nk.rotation.z = -.6;
       part(g, "box", c, .55, .25, .22, 1.35, 2.15, 0);
-      part(g, "cone", "#d8322b", .1, .4, .1, 1.15, 2.45, 0);
-      part(g, "box", "#2f6fc4", .62, .1, .86, 0, 1.85, 0);
+      if (m.kind === "horse") { part(g, "cone", "#d8322b", .1, .4, .1, 1.15, 2.45, 0); part(g, "box", "#2f6fc4", .62, .1, .86, 0, 1.85, 0); }
       for (const [x, z] of [[.75, .2], [.75, -.2], [-.75, .2], [-.75, -.2]]) u.legs.push(leg(g, x, 1.25, z, .08, 1.25, c));
-      u.tail = pivot(g, -1.05, 1.5, 0); part(u.tail, "cyl", c === "#f2efe9" ? "#bdb5a8" : "#3a2414", .06, .8, .06, 0, -.4, 0);
+      u.tail = pivot(g, -1.05, 1.5, 0); part(u.tail, "cyl", c === "#f2efe9" ? "#bdb5a8" : "#1d140c", .06, .8, .06, 0, -.4, 0);
+      // jinete: sedas de colores en la carrera, uniforme azul en la policía
+      const silk = m.kind === "policehorse" ? "#1f2a44" : m.silk || "#d8322b";
+      if (m.kind !== "horse") {
+        part(g, "box", m.kind === "policehorse" ? "#2b2f35" : "#ffffff", .6, .08, .8, 0, 1.86, 0);
+        part(g, "sph", silk, .2, .3, .24, m.kind === "racehorse" ? .2 : 0, 2.2, 0);
+        part(g, "sph", "#e0ac84", .13, .13, .13, m.kind === "racehorse" ? .32 : .02, 2.6, 0);
+        part(g, "sph", silk, .14, .08, .14, m.kind === "racehorse" ? .32 : .02, 2.7, 0);
+        if (m.kind === "policehorse") part(g, "box", "#ffd23a", .05, .12, .25, 0, 2.25, .2);
+      }
       break;
     }
     case "dog": {
@@ -314,20 +354,77 @@ function buildModel(m) {
       u.tail = pivot(g, -.42, .55, 0); part(u.tail, "cyl", c, .035, .35, .035, 0, -.17, 0); u.tail.rotation.z = 2.3;
       break;
     }
-    case "juggler": case "unicycle": case "flyer": {
-      const body = m.kind === "flyer" ? "#d8322b" : m.col || "#2f6fc4";
+    case "juggler": case "unicycle": case "flyer": case "dj": case "guard": {
+      const clown = m.kind === "juggler" || m.kind === "unicycle";
+      const body = m.kind === "flyer" ? "#d8322b" : m.kind === "dj" ? "#1c1c1c" : m.kind === "guard" ? "#d7f53a" : m.col || "#2f6fc4";
       const base = m.kind === "unicycle" ? .65 : 0;
       if (m.kind === "unicycle") { const w = part(g, "cyl", "#1c1c1c", .32, .08, .32, 0, .32, 0); w.rotation.x = Math.PI / 2; part(g, "cyl", "#9aa0a6", .03, .45, .03, 0, .65, 0); u.wheel = w; }
       const bodyG = pivot(g, 0, base, 0); u.body = bodyG;
       part(bodyG, "sph", body, .2, .38, .26, 0, 1.15, 0);
-      part(bodyG, "sph", "#fbe9d7", .15, .15, .15, .02, 1.65, 0);
-      part(bodyG, "sph", "#ff3b2f", .055, .055, .055, .17, 1.65, 0);
+      part(bodyG, "sph", clown ? "#fbe9d7" : "#e0ac84", .15, .15, .15, .02, 1.65, 0);
+      if (clown) { part(bodyG, "sph", "#ff3b2f", .055, .055, .055, .17, 1.65, 0); for (const s of [-1, 1]) part(bodyG, "sph", "#ff5a3c", .1, .1, .1, -.02, 1.7, s * .14); }
       if (m.kind === "flyer") part(bodyG, "sph", "#c9ced6", .17, .12, .17, 0, 1.72, 0);
-      else for (const s of [-1, 1]) part(bodyG, "sph", "#ff5a3c", .1, .1, .1, -.02, 1.7, s * .14);
-      if (m.kind !== "flyer") for (const s of [-1, 1]) u.legs.push(leg(bodyG, 0, .8, s * .1, .06, .8, "#e8b631"));
+      if (m.kind === "dj") { for (const s of [-1, 1]) part(bodyG, "sph", "#e53229", .06, .08, .06, .02, 1.66, s * .15); part(g, "box", "#2b2d33", .6, .95, 1.6, .6, .48, 0); part(g, "box", basic("#22d3ee"), .62, .08, 1.62, .6, .9, 0); }
+      if (m.kind === "guard") { part(bodyG, "cyl", "#151617", .15, .09, .15, .01, 1.76, 0); part(bodyG, "box", "#151617", .16, .02, .22, .13, 1.73, 0); part(bodyG, "box", "#ff9a3c", .21, .04, .27, 0, 1.2, 0); }
+      if (m.kind !== "flyer") for (const s of [-1, 1]) u.legs.push(leg(bodyG, 0, .8, s * .1, .06, .8, clown ? "#e8b631" : "#22252b"));
       u.arms = [-1, 1].map(s => { const p = pivot(bodyG, 0, 1.4, s * .25); part(p, "cyl", body, .05, .6, .05, 0, -.3, 0); return p; });
       if (m.kind === "juggler") u.balls = ["#e8b631", "#d8322b", "#3d9a5b"].map(c => part(g, "sph", c, .1, .1, .1, 0, 2, 0));
       if (m.kind === "flyer") { bodyG.rotation.z = -Math.PI / 2; bodyG.position.y = .2; }
+      break;
+    }
+    case "mascot": {
+      part(g, "sph", m.col, .75, .9, .75, 0, 1.05, 0); part(g, "sph", "#ffffff", .5, .55, .55, .3, 1.0, 0);
+      const head = u.head = pivot(g, .05, 2.1, 0);
+      part(head, "sph", m.col, .58, .55, .58, 0, 0, 0);
+      for (const s of [-1, 1]) { part(head, "sph", "#ffffff", .16, .16, .16, .44, .12, s * .2); part(head, "sph", "#111214", .07, .07, .07, .58, .12, s * .2); part(head, "sph", m.col, .16, .22, .12, -.05, .5, s * .32); }
+      part(head, "sph", "#ffd23a", .14, .1, .2, .55, -.12, 0);
+      u.arms = [-1, 1].map(s => { const p = pivot(g, 0, 1.55, s * .75); part(p, "cyl", m.col, .14, .7, .14, 0, -.35, 0); part(p, "sph", "#ffffff", .17, .17, .17, 0, -.75, 0); return p; });
+      for (const s of [-1, 1]) u.legs.push(leg(g, 0, .55, s * .3, .16, .55, m.col));
+      break;
+    }
+    case "flare": {
+      part(g, "cyl", "#2b2d33", .05, .9, .05, 0, 1.2, 0);
+      part(g, "sph", basic(m.col), .18, .18, .18, 0, 1.7, 0);
+      break;
+    }
+    case "medic": {
+      for (const [x, z] of [[.6, .55], [-.6, .55], [.6, -.55], [-.6, -.55]]) { const w = part(g, "cyl", "#151617", .3, .2, .3, x, .3, z); w.rotation.x = Math.PI / 2; }
+      part(g, "box", "#f4f4f2", 2, .6, 1.2, 0, .65, 0);
+      for (const [x, z] of [[.8, .55], [-.8, .55], [.8, -.55], [-.8, -.55]]) part(g, "cyl", "#9aa0a8", .03, 1, .03, x, 1.45, z);
+      part(g, "box", "#f4f4f2", 1.9, .08, 1.25, 0, 1.95, 0);
+      part(g, "box", "#d8322b", .7, .02, .2, 0, 2.0, 0); part(g, "box", "#d8322b", .2, .02, .7, 0, 2.0, 0);
+      u.siren = [part(g, "box", basic("#ff3b2f"), .15, .12, .3, .4, 2.06, .2), part(g, "box", basic("#2f7fff"), .15, .12, .3, .4, 2.06, -.2)];
+      break;
+    }
+    case "gull": {
+      part(g, "sph", "#f4f4f2", .35, .13, .14, 0, 0, 0); part(g, "sph", "#f4f4f2", .1, .1, .1, .3, .06, 0);
+      const bk = part(g, "cone", "#ff9a3c", .04, .14, .04, .43, .05, 0); bk.rotation.z = -Math.PI / 2;
+      u.wings = [-1, 1].map(s => { const p = pivot(g, 0, .05, s * .08); part(p, "box", "#b9bec6", .26, .03, .62, 0, 0, s * .31); return p; });
+      break;
+    }
+    case "flamingo": {
+      part(g, "sph", "#ff7ab8", 1, .55, .75, 0, 1.0, 0);
+      const nk = part(g, "cyl", "#ff7ab8", .2, 1.5, .2, .75, 1.75, 0); nk.rotation.z = -.35;
+      part(g, "sph", "#ff7ab8", .3, .3, .3, 1.0, 2.5, 0);
+      const bk = part(g, "cone", "#151617", .1, .35, .1, 1.3, 2.4, 0); bk.rotation.z = -2.2;
+      u.bob = true;
+      break;
+    }
+    case "tractor": {
+      for (const [x, z, r] of [[-.4, .7, .6], [-.4, -.7, .6], [.8, .6, .35], [.8, -.6, .35]]) { const w = part(g, "cyl", "#151617", r, .3, r, x, r, z); w.rotation.x = Math.PI / 2; }
+      part(g, "box", "#3d8a3a", 1.8, .8, 1.1, .2, 1.0, 0);
+      part(g, "box", mat("#9fd3e8", { roughness: .2 }), .8, .8, 1, -.3, 1.8, 0);
+      part(g, "box", "#8a8f99", .3, .25, 2.4, -1.4, .25, 0);
+      break;
+    }
+    case "float": {
+      part(g, "box", "#7a2cff", 4.6, 1, 2.4, 0, .7, 0);
+      for (let i = 0; i < 8; i++) part(g, "box", ["#ffd23a", "#ff3fa4", "#22d3ee", "#7dff6a"][i % 4], .55, .9, 2.45, -2 + i * .57, .55, 0);
+      part(g, "box", "#e3b23c", 4.4, .15, 2.2, 0, 1.27, 0);
+      part(g, "sph", "#ffd23a", .95, .95, .95, 1.3, 2.4, 0);
+      for (const s of [-1, 1]) { part(g, "sph", "#ffffff", .24, .24, .24, 2.05, 2.6, s * .35); part(g, "sph", "#111214", .1, .1, .1, 2.25, 2.6, s * .35); }
+      for (const [x, z, c] of [[-1.8, .8, "#ff3fa4"], [-1.8, -.8, "#22d3ee"], [-.3, .9, "#7dff6a"]]) { part(g, "cyl", "#ffffff", .02, 1.4, .02, x, 2, z); part(g, "sph", c, .3, .36, .3, x, 2.85, z); }
+      u.dancers = [[-1.2, .4], [-1.2, -.4], [-.2, 0]].map(([x, z], i) => { const d = pivot(g, x, 1.35, z); part(d, "sph", SHIRTS[i * 4], .16, .3, .2, 0, .6, 0); part(d, "sph", "#e0ac84", .12, .12, .12, 0, 1.05, 0); return d; });
       break;
     }
     case "car": case "icecream": case "clowncar": {
@@ -340,6 +437,7 @@ function buildModel(m) {
         part(g, "box", mat("#1d2733", { roughness: .15, metalness: .5 }), 2.1, .55, Wd * .9, -.2, 1.22, 0);
         part(g, "box", mat(bodyC, { metalness: .3, roughness: .35 }), 1.7, .07, Wd * .88, -.25, 1.52, 0);
         for (const s of [-1, 1]) part(g, "box", basic("#fff6c8"), .06, .16, .35, L / 2, .75, s * .6);
+        if (m.taxi) { part(g, "box", "#ffd23a", .5, .25, .9, -.25, 1.68, 0); part(g, "box", "#151617", L * .9, .08, .04, 0, .7, Wd / 2 + .01); }
       } else if (m.kind === "icecream") {
         part(g, "box", bodyC, L, 2.1, Wd, 0, 1.35, 0);
         part(g, "box", "#ff8fc6", L + .02, .35, Wd + .02, 0, .95, 0);
@@ -366,8 +464,8 @@ function buildModel(m) {
   return g;
 }
 function animateModel(m, tt) {
-  const g = m.obj, u = g.userData, moving = m.kind !== "juggler";
-  const f = m.kind === "elephant" ? 3 : m.kind === "lion" ? 11 : m.kind === "dog" ? 14 : m.kind === "horse" ? 8 : 9;
+  const g = m.obj, u = g.userData, moving = m.kind !== "juggler" && m.kind !== "dj" && m.kind !== "guard";
+  const f = m.kind === "elephant" ? 3 : m.kind === "lion" || m.kind === "racehorse" ? 13 : m.kind === "dog" ? 14 : m.kind === "horse" || m.kind === "policehorse" ? 7 : 9;
   u.legs.forEach((p, i) => { p.rotation.z = moving ? Math.sin(tt * f + (i % 2 ? Math.PI : 0) + (i > 1 ? Math.PI / 2 : 0)) * .45 : 0; });
   if (u.trunk) u.trunk.rotation.z = -.35 + Math.sin(tt * 2.2) * .35;
   if (u.tail) u.tail.rotation.x = Math.sin(tt * (m.kind === "dog" ? 18 : 5)) * .5;
@@ -376,6 +474,14 @@ function animateModel(m, tt) {
   if (u.body && m.kind === "unicycle") { u.body.rotation.x = Math.sin(tt * 4 + m.x) * .12; u.wheel.rotation.y = tt * 6; }
   if (u.ball) u.ball.rotation.z = -m.spin;
   if (u.flower) u.flower.scale.setScalar(.14 + Math.abs(Math.sin(tt * 6)) * .08);
+  if (u.wings) u.wings.forEach((p, i) => { p.rotation.x = (i ? 1 : -1) * Math.sin(tt * 12 + m.x) * .6; });
+  if (u.head) u.head.rotation.x = Math.sin(tt * 5) * .15;
+  if (u.siren) { const on = Math.sin(tt * 12) > 0; u.siren[0].visible = on; u.siren[1].visible = !on; }
+  if (u.bob) g.position.y += Math.abs(Math.sin(tt * 3 + m.x)) * .3;
+  if (u.dancers) u.dancers.forEach((d, i) => { d.position.y = 1.35 + Math.abs(Math.sin(tt * 7 + i)) * .25; d.rotation.y = tt * 2 + i; });
+  if (m.kind === "dj" && u.arms) u.arms.forEach((p, i) => { p.rotation.z = phase === "show" ? 2.5 + Math.sin(tt * 7.5 + i * Math.PI) * .45 : .3; });
+  if (m.kind === "guard" && u.arms) { u.arms[1].rotation.z = phase === "show" || phase === "evac" ? 2.6 + Math.sin(tt * 6) * .35 : 0; u.arms[0].rotation.z = 0; }
+  if (m.kind === "mascot" && u.arms) u.arms.forEach((p, i) => { p.rotation.x = (i ? -1 : 1) * (.6 + Math.sin(tt * 8 + i) * .5); });
 }
 
 // ---------- cámara, capas y cuadro ----------
@@ -392,7 +498,8 @@ function updateCamera() {
   const dx = LAND ? -1 : 0, dz = LAND ? 0 : 1;   // dirección "hacia abajo" de la pantalla en el mundo
   const sx = (Math.random() - .5) * shake, sy = (Math.random() - .5) * shake;
   const lift = h * Math.sin(tilt) * .12, tx = cam.x + sx + dx * lift, tz = cam.y + sy + dz * lift;
-  G3.camera.up.set(LAND ? 1 : 0, 0, LAND ? 0 : -1);
+  const roll = windF.t > 0 ? windF.x * .1 * Math.min(1, windF.t) * Math.sin(Math.min(1, (3.6 - windF.t) * 2) * Math.PI / 2) : 0;
+  G3.camera.up.set(LAND ? 1 : roll, 0, LAND ? roll : -1);
   G3.camera.position.set(tx + dx * h * Math.sin(tilt), h * Math.cos(tilt), tz + dz * h * Math.sin(tilt));
   G3.camera.lookAt(tx, 0, tz);
   const sun = G3.sun, ext = WW / z * .9 + 8;
@@ -432,6 +539,11 @@ function updateFxLayer(live) {
       }
     }
   }
+  // zona que calma cada guardia
+  for (const gd of guards) {
+    g.fillStyle = "rgba(215,245,58,.14)"; g.strokeStyle = "rgba(215,245,58,.7)"; g.lineWidth = .12;
+    g.beginPath(); g.arc(gd.x, gd.y, GUARD_CALM, 0, 7); g.fill(); g.stroke();
+  }
   if (drag) drawFence(g, drag, true);
   g.lineWidth = .14;
   for (const r of rings) { g.strokeStyle = `rgba(229,50,41,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .3 + r.t * 1.8, 0, 7); g.stroke(); }
@@ -465,6 +577,26 @@ function renderConfetti() {
   }
   m.count = n; m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true;
 }
+const LINC = {};
+const linArr = hex => LINC[hex] || (LINC[hex] = (c => [c.r, c.g, c.b])(lin(hex)));
+function renderParticles() {
+  const sm = G3.spark; let n = 0;
+  for (const p of sparks) {
+    if (n >= 1500) break;
+    const a = sm.instanceMatrix.array, o = n * 16, s = Math.min(1, p.life);
+    a.fill(0, o, o + 16); a[o] = a[o + 5] = a[o + 10] = s; a[o + 12] = p.x; a[o + 13] = p.h; a[o + 14] = p.y; a[o + 15] = 1;
+    const c = linArr(p.col); sm.instanceColor.array.set([c[0] * 3, c[1] * 3, c[2] * 3], n * 3); n++;
+  }
+  sm.count = n; sm.instanceMatrix.needsUpdate = true; sm.instanceColor.needsUpdate = true;
+  const pm = G3.puff; n = 0;
+  for (const p of puffs) {
+    if (n >= 800) break;
+    const a = pm.instanceMatrix.array, o = n * 16, s = p.r * Math.min(1, p.life / (p.max * .4));
+    a.fill(0, o, o + 16); a[o] = a[o + 5] = a[o + 10] = s; a[o + 12] = p.x; a[o + 13] = p.h; a[o + 14] = p.y; a[o + 15] = 1;
+    pm.instanceColor.array.set(linArr(p.col), n * 3); n++;
+  }
+  pm.count = n; pm.instanceMatrix.needsUpdate = true; pm.instanceColor.needsUpdate = true;
+}
 function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
@@ -481,13 +613,15 @@ function render3D(now, dtR) {
   scene.beams.forEach((bm, i) => {
     const mesh = G3.beams[i], ang = bm.a + Math.sin(now / (surgeT > 0 ? 380 : 1000 + i * 130) + i * 1.7) * bm.sweep;
     mesh.visible = inten > 0; mesh.material.opacity = Math.min(.3, .085 * inten);
-    mesh.material.color.setHSL(((now / 22 + i * 60) % 360) / 360, 1, .6);
+    if (bm.white) mesh.material.color.setRGB(1, .97, .9); else mesh.material.color.setHSL(((now / 22 + i * 60) % 360) / 360, 1, .6);
     mesh.lookAt(bm.x + Math.cos(ang) * 20, 0, bm.y + Math.sin(ang) * 20);
   });
   // animales, coches y objetos
   const alive = new Set();
-  for (const m of movers.concat(performers)) {
-    if (!m.obj) { m.obj = buildModel(m); G3.moverGrp.add(m.obj); }
+  for (const m of movers.concat(performers, guards)) {
+    if (!m.obj) { m.obj = buildModel(m); if (!m.obj.parent) G3.moverGrp.add(m.obj); }
+    if (m.kind === "flare" && Math.random() < .7) puff(m.x + (Math.random() - .5) * .3, m.y, 1.6, m.col, .25, 3.5, 1.4);
+    if (m.dust && m.y > 0 && m.y < WH && Math.random() < .6) puff(m.x - Math.cos(m.ang) * .9, m.y - Math.sin(m.ang) * .9, .3, "#c9a77a", .3, 1.6, .5);
     alive.add(m.obj);
     m.obj.position.set(m.x, (m.h || 0) + (m.kind === "beach" ? 1.7 + Math.abs(Math.sin(tt * 3 + m.x)) * .6 : 0), m.y);
     m.obj.rotation.y = -m.ang;
@@ -496,6 +630,7 @@ function render3D(now, dtR) {
   for (const o of G3.moverGrp.children.slice()) if (!alive.has(o)) G3.moverGrp.remove(o);
   renderPeople(tt, dtR, vb);
   renderConfetti();
+  renderParticles();
   updateFxLayer(live);
   G3.renderer.render(G3.scene, G3.camera);
   drawOverlay();

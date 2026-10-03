@@ -24,19 +24,21 @@ Steam, sigue [STEAM.md](STEAM.md).
 
 ## Cómo jugar
 
-- **Valla**: arrastra sobre la plaza para trazar una valla (60 m en total).
-- **Puertas**: toca la reja de abajo para abrir o cerrar entradas (máximo 5).
-- **Borrar**: toca una valla para quitarla.
-- **Escenario**: cambia entre la plaza y el circo.
+- **Valla**: arrastra sobre el recinto para trazar una valla.
+- **Puertas**: toca la reja de abajo para abrir o cerrar entradas.
+- **Seguridad**: pon guardias. Calman a la gente a su alrededor y detienen animales y vehículos.
+- **Borrar**: toca una valla o un guardia para quitarlo.
+- **Escenario**: elige dónde jugar.
 - **Presión**: pinta a la multitud de azul a rojo según cuánto la aprietan.
 - **1× / 2× / 4×**: velocidad de la simulación.
 - **Cámara**: automática (se acerca e inclina en los momentos fuertes), cerca o lejos.
+- **Sonido** o tecla **M**: activa o silencia la música y los efectos.
 - **F11** o **Alt+Enter**: pantalla completa.
 
 Las estelas naranjas del modo de planeación muestran por dónde caminará la gente. Durante el show
-hay "drops" musicales: la multitud empuja hacia el escenario, la cámara se acerca y la gente se
-pinta con colores de presión.
-Terminar con cero pisoteados da tres estrellas.
+hay momentos fuertes: la multitud empuja hacia el escenario, la cámara se acerca y la gente se
+pinta con colores de presión. Terminar con cero pisoteados da tres estrellas, y las estrellas
+abren escenarios nuevos.
 
 ## Cómo funciona
 
@@ -44,6 +46,8 @@ Terminar con cero pisoteados da tres estrellas.
   rejilla de 50 cm) hacia el frente del escenario o hacia la salida.
 - Los empujones entre personas y contra las vallas suman presión. Por encima del umbral se
   acumula daño y la persona cae.
+- El sonido se genera en el momento con Web Audio: música distinta por escenario, murmullo de la
+  multitud que sube con la presión y un efecto para cada evento.
 - Se dibuja en 3D con [three.js](https://threejs.org/) (r149, licencia MIT en `game/vendor/three.LICENSE`):
   el suelo es una textura con los dibujos del escenario y encima van los escenarios, vallas, puertas,
   animales y coches como modelos 3D con sombras.
@@ -59,20 +63,24 @@ Terminar con cero pisoteados da tres estrellas.
 
 ## Estructura
 
-- `game/`: el juego (HTML, three.js, fuentes).
+- `game/`: el juego. `game/js/scenes/` tiene un archivo por escenario; `movers.js` los eventos;
+  `render.js` el 3D; `audio.js` el sonido.
 - `desktop/`: la app de Electron y el puente con Steam.
 - `steam/`: scripts de SteamPipe para subir las builds.
 - `STEAM.md`: guía para publicar en Steam.
 
 ## Escenarios
 
-- **La Plaza**: concierto gratis con 3200 personas. Cruzan coches, un camión de helados, perros
-  sueltos y pelotas gigantes de playa.
-- **El Circo**: función de gala bajo la carpa con 2800 personas. Se escapa el león, desfilan
-  elefantes, el coche de los payasos da vueltas, ruedan pelotas de circo, pasan payasos en
-  monociclo y la bala humana aterriza entre el público.
+| Escenario | Se abre con | Qué pasa |
+|-----------|-------------|----------|
+| **La Plaza** | — | Concierto gratis. Cruzan coches, un camión de helados, perros sueltos y pelotas de playa. |
+| **El Circo** | — | Bajo la carpa: se escapa el león, desfilan elefantes, el coche de los payasos, monociclos y la bala humana. |
+| **El Estadio** | 2 ★ | De noche, concierto en la cancha: bengalas, la mascota, el balón gigante, la ola y el carrito médico. |
+| **El Crucero** | 4 ★ | Fiesta en la cubierta con alberca: el oleaje inclina el barco, gaviotas, un flamenco inflable y la bocina del capitán. |
+| **El Hipódromo** | 6 ★ | Gran Premio: carreras junto a la valla, caballos desbocados, el tractor de la pista y perros. |
+| **La Ciudad** | 9 ★ | Festival nocturno entre edificios: fuegos artificiales, desfile con carroza, taxis y policía montada. |
 
-Las vallas también sirven contra el caos: los animales y coches que chocan con una valla se dan
-la vuelta.
+Las vallas y los guardias también sirven contra el caos: los animales y vehículos que chocan con
+ellos se dan la vuelta.
 
-Pendientes: estadio y toda la ciudad.
+

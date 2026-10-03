@@ -46,6 +46,13 @@ El juego ya los activa. Créalos en *Stats & Achievements* con estos nombres de 
 | `PERFECT_CIRCO` | Circo sin heridos        | Terminar el circo con cero pisoteados y nadie atrapado |
 | `LION_TAMER`    | Domador de leones        | Que el león choque con una valla y se dé la vuelta   |
 | `TRAGEDY`       | Esto no salió bien       | 500 o más pisoteados en un solo evento               |
+| `PERFECT_ESTADIO`   | Estadio sin heridos  | Terminar el estadio con cero pisoteados y nadie atrapado |
+| `PERFECT_CRUCERO`   | Crucero sin heridos  | Terminar el crucero con cero pisoteados y nadie atrapado |
+| `PERFECT_HIPODROMO` | Hipódromo sin heridos | Terminar el hipódromo con cero pisoteados y nadie atrapado |
+| `PERFECT_CIUDAD`    | Ciudad sin heridos   | Terminar la ciudad con cero pisoteados y nadie atrapado |
+| `GUARDIAN`      | Alto ahí                 | Que un guardia detenga a un animal o un vehículo     |
+| `ALL_SCENES`    | Gira completa            | Ganar al menos una estrella en todos los escenarios  |
+| `ALL_STARS`     | Seguridad perfecta       | Tres estrellas en todos los escenarios               |
 
 Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
 

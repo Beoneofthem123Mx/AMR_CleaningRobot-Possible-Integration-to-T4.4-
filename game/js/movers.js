@@ -2,7 +2,12 @@
 // ===== Cosas que pasan entre la gente: animales, coches y objetos =====
 let movers = [], performers = [], pops = [], eventT = 0, MPUSH = 2, MPRES = .4, MSCARE = 4;
 const rnd = (a, b) => a + Math.random() * (b - a);
-function pop(x, y, text) { pops.push({ x, y, text, t: 0 }); if (pops.length > 10) pops.shift(); }
+function pop(x, y, text, h) { pops.push({ x, y, text, t: 0, h }); if (pops.length > 10) pops.shift(); if (typeof sfxFor === "function") sfxFor(text); }
+// fuerzas globales: oleaje del barco, la ola del estadio y fuegos artificiales
+let windF = { x: 0, t: 0 }, ola = null, rockets = [], sparks = [], puffs = [], cheerT = 0;
+// guardias de seguridad que coloca el jugador
+let guards = [];
+const GUARD_CALM = 3.6;
 function openGateX() { const open = []; for (let i = 0; i < SLOTS; i++) if (gates[i]) open.push(slotX(i)); return open[(Math.random() * open.length) | 0] || WW / 2; }
 function addMover(m) { movers.push(Object.assign({ t: 0, ang: 0, i: 0, push: 30, scare: 0, spin: 0, h: 0, home: [m.x, m.y] }, m)); }
 function crowdPoint() { return [rnd(4, 36), rnd(22, 60)]; }
@@ -22,7 +27,7 @@ function spawnEvent(kind) {
     case "dogs": {
       for (let n = 0; n < 3; n++) {
         const [px, py] = crowdPoint(), [qx, qy] = crowdPoint();
-        addMover({ kind: "dog", x: side ? -1.5 - n : WW + 1.5 + n, y: rnd(30, 60), pts: [[px, py], [qx, qy], [side ? WW + 3 : -3, rnd(30, 60)]], speed: 4.8, r: .35, push: 30, scare: 1.8, col: ["#8a5a34", "#d9b98a", "#2b2f35"][n], say: "¡GUAU!", sayEvery: 2 });
+        addMover({ kind: "dog", x: side ? -1.5 - n : WW + 1.5 + n, y: rnd(30, 60), pts: [[px, py], [qx, qy], [side ? WW + 3 : -3, rnd(30, 60)]], speed: 4.8, r: .35, push: 15, scare: 1.8, col: ["#8a5a34", "#d9b98a", "#2b2f35"][n], say: "¡GUAU!", sayEvery: 2 });
       }
       caption("¡Perros sueltos!", true, 1800); break;
     }
@@ -63,6 +68,73 @@ function spawnEvent(kind) {
       }
       caption("Payasos en monociclo", false, 1800); break;
     }
+    case "mascot": {
+      const p1 = crowdPoint(), p2 = crowdPoint();
+      addMover({ kind: "mascot", x: side ? -1.5 : WW + 1.5, y: rnd(25, 55), pts: [p1, p2, [side ? WW + 3 : -3, rnd(25, 55)]], speed: 2.6, r: .8, push: 25, scare: 1.2, col: "#d8322b", say: "¡VAMOS!", sayEvery: 2.4 });
+      caption("¡La mascota se metió a la cancha!", false, 1800); break;
+    }
+    case "flares": {
+      for (let n = 0; n < 4; n++) { const [x, y] = crowdPoint(); addMover({ kind: "flare", beh: "static", x, y, life: 9, r: .2, push: 0, scare: 1.8, col: ["#ff3b2f", "#ff7ad9", "#ffd23a", "#ff3b2f"][n] }); }
+      caption("¡Bengalas en la afición!", true, 1800); break;
+    }
+    case "ola": ola = { x: -4, dir: 1, speed: 11 }; caption("¡La ola!", false, 1800); pop(4, 30, "¡OLEEE!"); break;
+    case "ball":
+      addMover({ kind: "cball", beh: "bounce", x: rnd(10, 30), y: rnd(20, 30), vx: rnd(-4, 4), vy: rnd(2, 5), r: 1.3, push: 16, life: 14 });
+      caption("¡Balón gigante!", false, 1600); break;
+    case "medic": {
+      const [x, y] = crowdPoint();
+      addMover({ kind: "medic", x: -3, y: 63, pts: [[x, 63], [x, y], [x, 63], [WW + 4, 63]], speed: 2.2, r: .9, push: 25, scare: 1.5, calm: 3, say: "¡PASO!", sayEvery: 2.2 });
+      caption("Pasa el carrito de primeros auxilios", false, 1800); break;
+    }
+    case "oleaje": {
+      windF = { x: side ? 1 : -1, t: 3.6 };
+      caption("¡Oleaje! El barco se inclina", true, 2200); pop(20, 20, "¡SPLASH!"); shake = Math.min(1.2, shake + .6); break;
+    }
+    case "gaviotas": {
+      for (let n = 0; n < 5; n++) {
+        const y = rnd(14, 60), swoop = n === 0;
+        const pts = swoop ? [crowdPoint(), [side ? WW + 4 : -4, y + rnd(-8, 8)]] : [[side ? WW + 4 : -4, y + rnd(-10, 10)]];
+        addMover({ kind: "gull", x: side ? -3 - n * 2 : WW + 3 + n * 2, y, pts, speed: 7, r: .35, push: 0, scare: swoop ? 2.2 : 0, air: true, h: 6 + n, swoop, say: n ? "" : "¡CUAC!", sayEvery: 1.5 });
+      }
+      caption("¡Gaviotas!", false, 1500); break;
+    }
+    case "flamenco":
+      addMover({ kind: "flamingo", beh: "bounce", x: rnd(8, 32), y: rnd(14, 24), vx: rnd(-3, 3), vy: rnd(2, 4), r: 1.2, push: 12, life: 15 });
+      caption("¡Se soltó el flamenco inflable!", false, 1800); break;
+    case "bocina":
+      caption("¡Bocinazo del capitán!", false, 1800); pop(20, 6, "¡TUUUUU!"); shake = Math.min(1, shake + .4); cheerT = 2.5; break;
+    case "carrera": {
+      for (let n = 0; n < 6; n++) {
+        const lane = 2.2 + n * 1.6;
+        addMover({ kind: "racehorse", x: -2 - Math.random() * 2, y: lane, pts: [[20, lane + rnd(-.5, .5)], [WW + 6, lane]], speed: 9 + Math.random() * 2, r: .7, push: 0, col: ["#5a3a22", "#2b1d14", "#8a5a34", "#d9c3a0", "#3b2a20", "#6b4a2b"][n], silk: SHIRTS[(n * 5) % SHIRTS.length], dust: true });
+      }
+      caption("¡Arrancan!", false, 1500); pop(3, 6, "¡ARRANCAN!"); break;
+    }
+    case "desbocado": {
+      const lane = rnd(4, 10), jx = rnd(10, 30), gx = openGateX();
+      addMover({ kind: "racehorse", x: -2, y: lane, pts: [[jx, lane], [jx + 2, 16], crowdPoint(), crowdPoint(), [gx, 64], [gx, SH + 5]], speed: 7.5, r: .75, push: 25, scale: 1, scare: 3.5, col: "#2b1d14", silk: "#ffd23a", dust: true, say: "¡IIIIH!", sayEvery: 2 });
+      caption("¡Caballo desbocado!", true, 2000); break;
+    }
+    case "tractor":
+      addMover({ kind: "tractor", x: -3, y: 7, pts: [[WW + 4, 7]], speed: 2.2, r: 1.1, push: 0, dust: true });
+      caption("El tractor empareja la pista", false, 1600); break;
+    case "fuegos": {
+      for (let n = 0; n < 6; n++) rockets.push({ x: rnd(4, 36), y: rnd(20, 58), h: 16, vh: 26 + Math.random() * 8, fuse: .7 + Math.random() * .7, delay: n * .35, col: ["#ff4fd8", "#4fd8ff", "#ffd23a", "#7dff6a", "#ff6a3c", "#ffffff"][n] });
+      caption("¡Fuegos artificiales!", false, 1800); cheerT = 4; break;
+    }
+    case "taxi": {
+      const y = [32.5, 47.5, 63][(Math.random() * 3) | 0];
+      addMover({ kind: "car", taxi: true, x: side ? -4 : WW + 4, y, pts: [[side ? WW + 5 : -5, y]], speed: 4.8, r: 1.15, push: 45, scare: 3.2, col: "#f2c230", say: "¡PIIIP!", sayEvery: 1.3 });
+      caption("¡Un taxi se metió al festival!", true, 1800); break;
+    }
+    case "carroza":
+      addMover({ kind: "float", x: 20, y: SH + 3, pts: [[20, 50], [20, 34], [side ? 30 : 10, 32.5], [side ? WW + 6 : -6, 32.5]], speed: 1.5, r: 1.9, push: 30, scare: 3.6, say: "♪ ♫ ♪", sayEvery: 1.6 });
+      caption("¡Llega el desfile!", false, 1800); break;
+    case "policia": {
+      const pts = [[9.5, 62], [9.5, 32.5], [30.5, 32.5], [30.5, 62], [WW + 4, 62]];
+      addMover({ kind: "policehorse", x: -3, y: 62, pts, speed: 2.4, r: .7, push: 20, scare: 0, calm: 4.5, say: "¡CALMA!", sayEvery: 3 });
+      caption("Llega la policía montada", false, 1800); break;
+    }
   }
 }
 function blast(x, y) {
@@ -96,6 +168,8 @@ function stepMovers() {
       }
       m.life -= DT; if (m.life <= 0) m.dead = true;
       m.ang = Math.atan2(m.vy, m.vx);
+    } else if (m.beh === "static") {
+      m.life -= DT; if (m.life <= 0) m.dead = true;
     } else if (m.beh === "fly") {
       const q = Math.min(1, m.t / m.dur);
       m.x = m.sx + (m.tx - m.sx) * q; m.y = m.sy + (m.ty - m.sy) * q; m.h = Math.sin(q * Math.PI) * 9; m.ang = Math.atan2(m.ty - m.sy, m.tx - m.sx);
@@ -104,8 +178,17 @@ function stepMovers() {
       const [tx, ty] = m.pts[m.i], dx = tx - m.x, dy = ty - m.y, d = Math.hypot(dx, dy);
       if (d < .5) { m.i++; if (m.i >= m.pts.length) m.dead = true; }
       else { m.ang = turnTo(m.ang, Math.atan2(dy, dx), DT * 7); const sp = m.speed * (.6 + .4 * Math.max(0, Math.cos(m.ang - Math.atan2(dy, dx)))) / (1 + (m.hits || 0) * .3); m.x += Math.cos(m.ang) * sp * DT; m.y += Math.sin(m.ang) * sp * DT; }
+      if (m.kind === "gull") m.h = m.swoop && m.i === 0 ? Math.max(1.6, Math.min(6, d * .35)) : Math.min(7, (m.h || 6) + DT * 3);
+      // un guardia de seguridad detiene a animales y vehículos
+      if (!m.bounced && !m.air && m.push) for (const gd of guards) {
+        const ex = m.x - gd.x, ey = m.y - gd.y, dd = Math.hypot(ex, ey);
+        if (dd < m.r + .9) {
+          pop(gd.x, gd.y - 1.4, "¡ALTO!"); achieve("GUARDIAN"); if (m.kind === "lion") achieve("LION_TAMER");
+          m.bounced = true; m.ang += Math.PI; m.pts = [m.home || [m.x + ex * 20, m.y + ey * 20]]; m.i = 0; m.speed *= 1.1; break;
+        }
+      }
       // las vallas del jugador frenan a los animales y coches: chocan y se dan la vuelta
-      if (!m.bounced) for (const o of obs) {
+      if (!m.bounced && !m.air && m.kind !== "racehorse" && m.kind !== "tractor") for (const o of obs) {
         if (o.kind !== "player") continue;
         const [nx, ny, dd] = contact(o, m.x, m.y);
         if (dd < m.r) {
@@ -124,17 +207,49 @@ function stepMovers() {
 function moverForces() {
   for (const m of movers) {
     if (m.air && !m.push) continue;
-    m.hits = 0;
+    m.lastHits = m.hits || 0; m.hits = 0;
     const rad = Math.max(m.r + R, m.scare);
     const gx0 = clamp(Math.floor((m.x - rad) / CS), 0, GW - 1), gx1 = clamp(Math.floor((m.x + rad) / CS), 0, GW - 1);
     const gy0 = clamp(Math.floor((m.y - rad) / CS), 0, GH - 1), gy1 = clamp(Math.floor((m.y + rad) / CS), 0, GH - 1);
     for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++)
       for (let j = hashHead[gy * GW + gx]; j !== -1; j = hashNext[j]) {
         const a = ag[j], ex = a.x - m.x, ey = a.y - m.y, d = Math.hypot(ex, ey) || .01, nx = ex / d, ny = ey / d;
-        if (d < m.r + R) { const ov = m.r + R - d; a.fx += nx * ov * m.push * MPUSH; a.fy += ny * ov * m.push * MPUSH; a.p += ov / R * MPRES; m.hits++; }
+        if (d < m.r + R) { const ov = m.r + R - d, k = m.push * MPUSH / (1 + (m.lastHits || 0) * .12); a.fx += nx * ov * k; a.fy += ny * ov * k; a.p += ov / R * MPRES; m.hits++; }
         if (m.scare && d < m.scare) { const s = (1 - d / m.scare) * MSCARE; a.fx += nx * s; a.fy += ny * s; }
       }
   }
+}
+// la policía montada, el carrito médico y los guardias calman a la gente cercana
+function calmForces() {
+  const sources = guards.map(g => [g.x, g.y, GUARD_CALM]);
+  for (const m of movers) if (m.calm) sources.push([m.x, m.y, m.calm]);
+  for (const [x, y, rad] of sources) {
+    const gx0 = clamp(Math.floor((x - rad) / CS), 0, GW - 1), gx1 = clamp(Math.floor((x + rad) / CS), 0, GW - 1);
+    const gy0 = clamp(Math.floor((y - rad) / CS), 0, GH - 1), gy1 = clamp(Math.floor((y + rad) / CS), 0, GH - 1);
+    for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++)
+      for (let j = hashHead[gy * GW + gx]; j !== -1; j = hashNext[j]) {
+        const a = ag[j]; if ((a.x - x) ** 2 + (a.y - y) ** 2 < rad * rad) a.p *= .55;
+      }
+  }
+}
+// fuerzas que afectan a todos: el barco se inclina, la ola, los fuegos
+function stepGlobal() {
+  if (windF.t > 0) windF.t -= DT;
+  if (cheerT > 0) cheerT -= DT;
+  if (ola) { ola.x += ola.dir * ola.speed * DT; if (ola.x > WW + 4) ola = null; }
+  for (const r of rockets) {
+    if (r.delay > 0) { r.delay -= DT; continue; }
+    if (!r.launched) { r.launched = true; r.h = 0; pop(r.x, r.y, "¡FIUUU!", 3); }
+    r.h += r.vh * DT; r.fuse -= DT;
+    if (r.fuse <= 0) {
+      r.dead = true; pop(r.x, r.y, "¡BUM!", r.h);
+      for (let k = 0; k < 70; k++) {
+        const th = Math.random() * 6.283, ph = Math.acos(2 * Math.random() - 1), v = 7 + Math.random() * 4;
+        sparks.push({ x: r.x, y: r.y, h: r.h, vx: Math.sin(ph) * Math.cos(th) * v, vy: Math.sin(ph) * Math.sin(th) * v, vh: Math.cos(ph) * v, col: r.col, life: 1.4 + Math.random() * .6 });
+      }
+    }
+  }
+  rockets = rockets.filter(r => !r.dead);
 }
 function stepPerformers(dt) {
   for (const p of performers) {

@@ -14,6 +14,7 @@ function buildWorld() {
   }
   seg(x, FENCE_Y, WW, FENCE_Y, .3, "fence");
   for (const f of fences) seg(f.ax, f.ay, f.bx, f.by, .35, "player");
+  for (const gd of guards) circ(gd.x, gd.y, .35, "guard");
   // cubetas espaciales
   buckets = Array.from({ length: BW * BH }, () => []);
   obs.forEach((o, i) => {
@@ -160,10 +161,11 @@ function step() {
       }
     }
   }
-  stepMovers(); moverForces();
+  stepGlobal(); stepMovers(); moverForces(); calmForces();
   const out = [];
   for (const a of ag) {
     const leaving = evac && evacT > a.leave;
+    if (windF.t > 0) a.fx += windF.x * 2.2 * Math.min(1, windF.t);
     const id = cellOf(a.x, a.y), f = leaving ? fExit : fStage, dir = leaving ? dirE : dirS;
     const surging = surgeT > 0 && !evac;
     let want = leaving ? a.v0 * 1.25 : surging ? (f[id] > a.tol * SURGE[0] ? a.v0 * SURGE[1] : 0) : (f[id] > a.tol ? a.v0 : 0);
@@ -213,6 +215,8 @@ function step() {
 const achieve = id => { try { window.steam && window.steam.achieve(id); } catch (e) { /* sin Steam */ } };
 let sceneKey = "plaza";
 function loadBest() { try { return JSON.parse(localStorage.getItem("mh.best") || "{}"); } catch (e) { return {}; } }
+const totalStars = () => Object.values(loadBest()).reduce((s, v) => s + v, 0);
+const isUnlocked = key => !!window.__unlockAll || totalStars() >= (SCENES[key].unlock || 0);
 function saveBest(key, stars) {
   const best = loadBest(); if ((best[key] ?? -1) >= stars) return;
   best[key] = stars; try { localStorage.setItem("mh.best", JSON.stringify(best)); } catch (e) { /* sin almacenamiento */ }
@@ -223,17 +227,20 @@ function start() {
   for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {
     toast("Una valla deja una puerta sin camino al escenario. Ábrele paso."); return;
   }
-  phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
+  phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
   caption("¡Abren las puertas!", false, 2200); ui();
 }
-function startEvac() { phase = "evac"; evacT = 0; surgeT = 0; caption("Se acabó el show. ¡Todos a la salida!", false, 2600); ui(); }
+function startEvac() { phase = "evac"; evacT = 0; surgeT = 0; sfx("siren"); caption("Se acabó el show. ¡Todos a la salida!", false, 2600); ui(); }
 function finish() {
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
   const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;
   saveBest(sceneKey, stars);
   achieve("FIRST_SHOW");
-  if (stars === 3) achieve(sceneKey === "plaza" ? "PERFECT_PLAZA" : "PERFECT_CIRCO");
+  if (stars === 3) achieve("PERFECT_" + sceneKey.toUpperCase());
+  const best = loadBest();
+  if (Object.keys(SCENES).every(k => (best[k] ?? 0) >= 1)) achieve("ALL_SCENES");
+  if (Object.keys(SCENES).every(k => best[k] === 3)) achieve("ALL_STARS");
   if (dead >= 500) achieve("TRAGEDY");
   showCard(`<h2>${stars === 3 ? "Nadie salió herido" : stars ? "Recinto evacuado" : "Fue una tragedia"}</h2>
     <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("")}</div>

@@ -9,11 +9,20 @@ cv.addEventListener("pointerdown", ev => {
   if (tool === "gate") {
     if (Math.abs(y - FENCE_Y) > 3) { toast("Toca una puerta de la reja de abajo."); return; }
     const i = clamp(Math.floor(x / (WW / SLOTS)), 0, SLOTS - 1), open = gates.filter(Boolean).length;
+    if ((scene.noSlots || []).includes(i)) { toast(`${scene.slotWhy}: no se puede abrir esa puerta.`); return; }
     if (gates[i] && open <= 1) { toast("Necesitas al menos una puerta abierta."); return; }
     if (!gates[i] && open >= MAX_GATES) { toast(`Solo hay personal para ${MAX_GATES} puertas.`); return; }
     gates[i] = !gates[i]; buildWorld(); ui(); return;
   }
+  if (tool === "guard") {
+    if (guards.length >= (scene.guards || 3)) { toast("No quedan guardias. Borra uno para moverlo."); return; }
+    const gx = snap(x), gy = snap(y), id = cellOf(gx, gy);
+    if (gy >= FENCE_Y - .5 || blockedC[id] || !isFinite(fStage[id])) { toast("Pon al guardia en una zona donde esté el público."); return; }
+    guards.push({ kind: "guard", x: gx, y: gy, ang: -Math.PI / 2, t: 0 }); buildWorld(); ui(); return;
+  }
   if (tool === "erase") {
+    const gi = guards.findIndex(gd => Math.hypot(gd.x - x, gd.y - y) < 1.2);
+    if (gi >= 0) { guards.splice(gi, 1); buildWorld(); ui(); return; }
     let best = -1, bd = 1.2;
     fences.forEach((f, i) => { const d = contact({ t: "s", ...f, th: 0 }, x, y)[2]; if (d < bd) { bd = d; best = i; } });
     if (best >= 0) { fences.splice(best, 1); buildWorld(); ui(); }
@@ -76,6 +85,7 @@ function hideCard() { $("#overlay").hidden = true; }
 function ui() {
   const plan = phase === "plan";
   $("#cFence").textContent = `${Math.round(FENCE_BUDGET - fenceUsed())} m`;
+  $("#cGuard").textContent = `${(scene.guards || 3) - guards.length}`;
   $("#cGate").textContent = `${gates.filter(Boolean).length}/${MAX_GATES}`;
   document.querySelectorAll("[data-tool]").forEach(b => { b.disabled = !plan; b.classList.toggle("on", b.dataset.tool === tool); });
   $("#bGo").textContent = plan ? "Abrir puertas" : phase === "done" ? "Abrir puertas" : "Detener";
@@ -86,6 +96,7 @@ function ui() {
 document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => {
   tool = b.dataset.tool; ui();
   if (tool === "gate") toast("Toca la reja de abajo para abrir o cerrar puertas.");
+  if (tool === "guard") toast("Toca la plaza para poner un guardia: calma a la gente y detiene animales y coches.");
 }));
 $("#bGo").addEventListener("click", () => phase === "plan" ? start() : backToPlan());
 let heat = false, speed = 1;

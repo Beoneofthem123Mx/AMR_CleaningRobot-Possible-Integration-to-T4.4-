@@ -3,7 +3,7 @@
 const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", "#7dff9e"];
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
 let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [];
-function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; shake = 0; flash = 0; rings = []; confetti = []; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
+function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; shake = 0; flash = 0; rings = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
 function confettiAt(x, y, h, n, spread) {
   for (let i = 0; i < n && confetti.length < 1400; i++) {
     const a = Math.random() * 6.283, v = Math.random() * spread;
@@ -14,10 +14,10 @@ function confettiAt(x, y, h, n, spread) {
 function burst(n) { for (let i = 0; i < n; i += 20) { const b = scene.beams[(Math.random() * scene.beams.length) | 0]; confettiAt(b.x + (Math.random() - .5) * 4, b.y + 1, b.h || 7, 20, 7); } }
 function burstAt(x, y, n) { confettiAt(x, y, 1, n, 6); }
 function onDrop(first) {
-  flash = 1; burst(260);
+  flash = 1; burst(260); sfx("cheer");
   caption(first ? "Física de multitudes real" : scene.acts[(Math.random() * scene.acts.length) | 0], false, 1900);
 }
-function onFall(x, y) { rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); }
+function onFall(x, y) { rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream"); }
 function updateFx(dt) {
   let tz = 1, ty = WH / 2;
   if (phase === "show" || phase === "evac") {
@@ -44,6 +44,16 @@ function updateFx(dt) {
     c.life -= dt * .25;
   }
   confetti = confetti.filter(c => c.life > 0);
+  // chispas de fuegos artificiales y humo (bengalas, polvo de la pista)
+  const sd = Math.pow(.5, dt);
+  for (const p of sparks) { p.vx *= sd; p.vy *= sd; p.vh = p.vh * sd - 6 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.h += p.vh * dt; p.life -= dt; }
+  sparks = sparks.filter(p => p.life > 0 && p.h > 0);
+  for (const p of puffs) { p.h += p.vh * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += dt * p.grow; p.life -= dt; }
+  puffs = puffs.filter(p => p.life > 0);
+}
+function puff(x, y, h, col, r, life, vh) {
+  if (puffs.length > 700) return;
+  puffs.push({ x, y, h, col, r, life, max: life, vh: vh ?? 1.2, vx: (Math.random() - .5) * .6, vy: (Math.random() - .5) * .6, grow: .7 });
 }
 // ===== Bucle =====
 const perf = { n: 0, sum: 0, level: 0 }, live3d = () => phase === "show" || phase === "evac";
@@ -58,6 +68,7 @@ function frame(now) {
       : `Evacuando · quedan ${ag.length}`;
   } else if (phase === "plan") stepPreview(real);
   updateFx(real * (phase === "show" || phase === "evac" ? speed : 1));
+  audioTick();
   render3D(now, real);
   // calidad automática: si el equipo no da abasto, quitamos sombras de la gente y bajamos resolución
   if (G3.renderer && live3d()) {
@@ -74,12 +85,12 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-window.__game = { mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene: k => loadScene(k), setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
+window.__game = { bestGates: () => { const ok = [...Array(SLOTS).keys()].filter(i => !(scene.noSlots || []).includes(i)); const pick = ok.length <= MAX_GATES ? ok : [0, 1, 2, 3, 4].map(k => ok[Math.round(k * (ok.length - 1) / 4)]); gates = gates.map((_, i) => pick.includes(i)); buildWorld(); }, unlockAll: () => { window.__unlockAll = true; }, event: k => spawnEvent(k), mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene: k => loadScene(k), setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
   get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; backToPlan(); } };
 
 function loadScene(key) {
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = scene.maxGates;
-  gates = scene.gates.slice(); fences = []; performers = scene.performers();
+  gates = scene.gates.slice(); fences = []; guards = []; performers = scene.performers();
   buildWorld(); backToPlan();
 }
 function chooser() {
@@ -89,14 +100,21 @@ function chooser() {
     <ul>
       <li><b>Valla:</b> arrastra para trazar una valla.</li>
       <li><b>Puertas:</b> toca la reja de abajo para abrir o cerrar entradas.</li>
+      <li><b>Seguridad:</b> pon guardias que calman a la gente y detienen animales y coches.</li>
       <li><b>Presión:</b> pinta a la multitud de azul a rojo.</li>
     </ul>
-    <p><b>Elige escenario:</b></p>
-    <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => { const b = loadBest()[key]; return `<button class="scene" data-scene="${key}"><b>${sc.name}${b !== undefined ? ` <em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : ""}</b><span>${sc.tag} · ${sc.crowd.toLocaleString("es")} personas</span><small>${sc.intro}</small></button>`; }).join("")}</div>
+    <p><b>Elige escenario.</b> Llevas <b>${totalStars()} de ${Object.keys(SCENES).length * 3}</b> estrellas; gana más para abrir nuevos escenarios.</p>
+    <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => {
+      const b = loadBest()[key], open = isUnlocked(key);
+      return `<button class="scene" data-scene="${key}" ${open ? "" : "disabled"}><b>${sc.name}${b !== undefined ? ` <em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : ""}</b><span>${sc.tag} · ${sc.crowd.toLocaleString("es")} personas</span>${open ? `<small>${sc.intro}</small>` : `<span class="lock">Bloqueado: necesitas ${sc.unlock} estrellas</span>`}</button>`; }).join("")}</div>
     ${window.steam ? '<div class="row"><button id="fs">Pantalla completa (F11)</button><button id="quit">Salir del juego</button></div>' : ""}`);
   const b = $("#card .scene"); if (b) b.focus();
 }
 $("#bScene").addEventListener("click", chooser);
+$("#bSound").textContent = "Sonido: " + (AU.on ? "sí" : "no");
+$("#bSound").addEventListener("click", () => { audioInit(); $("#bSound").textContent = "Sonido: " + (audioToggle() ? "sí" : "no"); });
+addEventListener("pointerdown", audioInit);
+addEventListener("keydown", e => { if (e.key === "m" || e.key === "M") $("#bSound").click(); });
 try { init3D(); } catch (err) {
   showCard(`<h2>Tu navegador no muestra 3D</h2><p>Este juego necesita WebGL. Prueba con Chrome, Edge, Firefox o Safari actualizados.</p>`);
 }

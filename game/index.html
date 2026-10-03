@@ -80,7 +80,10 @@ button.on { background: var(--text); color: var(--ink); border-color: var(--text
 button.go { background: var(--go); color: var(--ink); border-color: var(--go); font-weight: 900; }
 .card button { color: var(--ink); background: var(--paper); border: 3px solid var(--ink); }
 .card button.go { background: var(--caution); }
-.scenes { display: grid; gap: 8px; }
+.scenes { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.card button.scene:disabled { opacity: .55; }
+.card:has(.scenes) { max-width: 640px; }
+.card button.scene .lock { font-weight: 700; color: #8a5a00; font-size: .8rem; }
 .card button.scene { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; border-radius: 12px; padding: 10px 12px; }
 .card button.scene b { font-size: 1.1rem; font-weight: 900; text-transform: uppercase; }
 .card button.scene span { font-weight: 700; color: #45494c; font-size: .82rem; }
@@ -111,12 +114,14 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
   <div class="bar" id="bar">
     <button id="tFence" data-tool="fence" class="on">Valla <span class="cnt" id="cFence">60 m</span></button>
     <button id="tGate" data-tool="gate">Puertas <span class="cnt" id="cGate">3/5</span></button>
+    <button id="tGuard" data-tool="guard">Seguridad <span class="cnt" id="cGuard">3</span></button>
     <button id="tErase" data-tool="erase">Borrar</button>
     <button id="bScene">Escenario</button>
     <span class="sep"></span>
     <button id="bHeat">Presión</button>
     <button id="bSpeed">1×</button>
     <button id="bCam">Cámara: auto</button>
+    <button id="bSound">Sonido: sí</button>
     <button id="bGo" class="go">Abrir puertas</button>
   </div>
 </div>
@@ -125,6 +130,11 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 <script src="js/core.js"></script>
 <script src="js/scenes/plaza.js"></script>
 <script src="js/scenes/circo.js"></script>
+<script src="js/scenes/estadio.js"></script>
+<script src="js/scenes/crucero.js"></script>
+<script src="js/scenes/hipodromo.js"></script>
+<script src="js/scenes/ciudad.js"></script>
+<script src="js/audio.js"></script>
 <script src="js/movers.js"></script>
 <script src="js/sim.js"></script>
 <script src="js/ui.js"></script>
