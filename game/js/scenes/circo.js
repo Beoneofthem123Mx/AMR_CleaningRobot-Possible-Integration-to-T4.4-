@@ -1,6 +1,6 @@
-// Marea Humana · escenario: El Circo
+// Human Tide · scene: The Circus
 SCENES.circo = {
-  name: "El Circo", tag: "Función de gala", outside: "#79a25a", bulbH: .95,
+  name: "The Circus", tag: "Gala performance", outside: "#79a25a", bulbH: .95,
   light: { sky: 0xffd9a8, ground: 0x6a4a2a, hemi: .5, sun: 0xffd9a0, sunI: 1.1 }, crowd: 2800,
   extra3D(grp) {
     const gr = pivot(grp, 34.8, 1.5, 7.6); gr.rotation.y = 2.35;
@@ -8,8 +8,8 @@ SCENES.circo = {
     const rim = part(gr, "cyl", "#d8322b", .58, .4, .58, 2.55, 1.55, 0); rim.rotation.z = -1.05;
     for (const s of [-1, 1]) { const w = part(gr, "cyl", "#151617", .6, .2, .6, 0, .6, s * .7); w.rotation.x = Math.PI / 2; }
   }, fenceBudget: 70, maxGates: 5, gates: [F, T, F, F, F, T, F],
-  intro: "Función de gala bajo la carpa. Los animales no siempre se quedan en la pista: leones, elefantes, el coche de los payasos y la bala humana.",
-  acts: ["¡Ta-dá!", "¡Aplausos!", "¡El gran final!", "¡Más fuerte!"],
+  intro: "Gala show under the big top. The animals don't always stay in the ring: lions, elephants, the clown car and the human cannonball.",
+  acts: ["Ta-da!", "Applause!", "The grand finale!", "Louder!"],
   events: ["lion", "elephants", "clowncar", "balls", "cannon", "unicycles", "lion", "cannon"],
   goal: o => o.kind === "curb", goalMaxY: FENCE_Y,
   build() {
@@ -33,7 +33,7 @@ SCENES.circo = {
     g.globalAlpha = 1;
   },
   decor(g) {
-    // lona de la carpa a rayas rojas y blancas
+    // red-and-white striped big-top canvas
     const stripes = (x0, y0, x1, y1, vertical) => {
       g.save(); g.beginPath(); g.rect(x0, y0, x1 - x0, y1 - y0); g.clip();
       for (let s = 0, i = 0; s < (vertical ? y1 - y0 : x1 - x0); s += 1.2, i++) {
@@ -44,16 +44,16 @@ SCENES.circo = {
     };
     stripes(0, 0, 1.4, FENCE_Y, true); stripes(WW - 1.4, 0, WW, FENCE_Y, true); stripes(0, 0, WW, 1.4, false);
     g.fillStyle = "#e3b23c"; g.fillRect(1.4, 1.4, WW - 2.8, .15); g.fillRect(1.4, 1.4, .15, FENCE_Y - 1.4); g.fillRect(WW - 1.55, 1.4, .15, FENCE_Y - 1.4);
-    // telón y pasillo de artistas
+    // curtain and performers' walkway
     g.fillStyle = "#8f1b24"; g.fillRect(11, 1.4, 18, 3.6);
     g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = .12;
     for (let x = 11.6; x < 29; x += .9) { g.beginPath(); g.moveTo(x, 1.5); g.lineTo(x, 5); g.stroke(); }
     g.fillStyle = "#e3b23c"; g.fillRect(11, 1.4, 18, .35); g.fillRect(11, 4.7, 18, .3);
-    g.font = "900 2.1px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#f5d36b"; g.fillText("CIRCO", 20, 3.25);
+    g.font = "900 2.1px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#f5d36b"; g.fillText("CIRCUS", 20, 3.25);
     g.fillStyle = "#c4aa77"; g.fillRect(17, 5, 6, 13.5);
     g.fillStyle = "#b2232c"; g.fillRect(19, 5, 2, 13.5);
     for (const o of obs) if (o.kind === "wall") { g.lineCap = "square"; g.lineWidth = o.th; g.strokeStyle = "#5b2a1c"; g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke(); }
-    // pista
+    // ring
     g.fillStyle = "#e8d3a2"; g.beginPath(); g.arc(PISTA.x, PISTA.y, PISTA.r, 0, 7); g.fill();
     g.strokeStyle = "rgba(150,110,60,.18)"; g.lineWidth = .1;
     for (let r = 1.5; r < PISTA.r; r += 1.5) { g.beginPath(); g.arc(PISTA.x, PISTA.y, r, 0, 7); g.stroke(); }
@@ -64,19 +64,19 @@ SCENES.circo = {
       g.lineCap = "butt"; g.lineWidth = .62; g.strokeStyle = o.alt ? "#f4ecd8" : "#c8282a";
       g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke();
     }
-    // mástiles
+    // tent poles
     for (const o of obs) if (o.kind === "pole") {
       g.fillStyle = "#4a3426"; g.beginPath(); g.arc(o.x, o.y, o.r, 0, 7); g.fill();
       g.strokeStyle = "#c9a14a"; g.lineWidth = .15; g.beginPath(); g.arc(o.x, o.y, o.r * .7, 0, 7); g.stroke();
     }
-    // puestos de palomitas y algodón de azúcar
+    // popcorn and cotton candy stands
     const stand = (o, a, b, top) => {
       for (let x = o.x0, i = 0; x < o.x1; x += .5, i++) { g.fillStyle = i % 2 ? a : b; g.fillRect(x, o.y0, .5, o.y1 - o.y0); }
       g.fillStyle = top; g.beginPath(); g.arc((o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2, .9, 0, 7); g.fill();
     };
     for (const o of obs) if (o.kind === "popcorn") stand(o, "#d8322b", "#fbf4e4", "#f5d36b");
     for (const o of obs) if (o.kind === "candy") stand(o, "#ff8fc6", "#fbf4e4", "#ffd1ea");
-    // cañón de la bala humana
+    // human cannonball cannon
     for (const o of obs) if (o.kind === "cannon") {
       g.fillStyle = "#3b5d8f"; g.fillRect(o.x0, o.y0, o.x1 - o.x0, o.y1 - o.y0);
       g.fillStyle = "#e3b23c"; for (let x = o.x0 + .3; x < o.x1; x += .9) g.fillRect(x, o.y0 + .15, .4, .4);
@@ -85,7 +85,7 @@ SCENES.circo = {
       g.restore();
       g.fillStyle = "#151617"; g.beginPath(); g.arc(34.2, 6.6, .55, 0, 7); g.arc(35.6, 8.6, .55, 0, 7); g.fill();
     }
-    // banderines sobre la entrada
+    // bunting over the entrance
     for (let x = 1, i = 0; x < WW - 1; x += 1.1, i++) {
       g.fillStyle = ["#d8322b", "#e3b23c", "#2f7fd6", "#3d9a5b"][i % 4];
       g.beginPath(); g.moveTo(x, FENCE_Y - 1.8); g.lineTo(x + .9, FENCE_Y - 1.8); g.lineTo(x + .45, FENCE_Y - 1.1); g.fill();

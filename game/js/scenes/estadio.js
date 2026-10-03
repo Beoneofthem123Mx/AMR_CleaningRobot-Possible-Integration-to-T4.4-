@@ -1,10 +1,10 @@
-// Marea Humana · escenario: El Estadio (de noche, concierto en la cancha)
+// Human Tide · scene: The Stadium (night, concert on the pitch)
 SCENES.estadio = {
-  name: "El Estadio", tag: "Concierto en la cancha", outside: "#3b3f45", bulbH: 2.0, night: true, music: "edm",
+  name: "The Stadium", tag: "Concert on the pitch", outside: "#3b3f45", bulbH: 2.0, night: true, music: "edm",
   light: { sky: 0x8aa2e0, ground: 0x1e2228, hemi: .34, sun: 0xdfe8ff, sunI: .8 }, crowd: 3600, fenceBudget: 70, maxGates: 5, guards: 4,
-  gates: [F, T, F, T, F, T, F], noSlots: [0, 6], slotWhy: "Ahí están las gradas", unlock: 2,
-  intro: "La final terminó en concierto. La afición llena la cancha, hay bengalas, la mascota anda suelta y la ola no se detiene.",
-  acts: ["¡Golazo de canción!", "¡Todos a saltar!", "¡La ola!", "¡Campeones!"],
+  gates: [F, T, F, T, F, T, F], noSlots: [0, 6], slotWhy: "The stands are there", unlock: 2,
+  intro: "The final turned into a concert. Fans flood the pitch, flares are lit, the mascot is on the loose and the wave will not stop.",
+  acts: ["What a GOLAZO of a song!", "Everybody jump!", "The wave!", "Champions!"],
   events: ["mascot", "flares", "ola", "ball", "medic", "flares", "ola", "mascot"],
   goal: o => o.kind === "barrier", goalMaxY: 30,
   build() {
@@ -17,7 +17,7 @@ SCENES.estadio = {
   },
   ground(g, px) {
     g.fillStyle = "#3b3f45"; g.fillRect(0, 0, WW, WH);
-    // pasto con franjas de podadora
+    // grass with mower stripes
     for (let y = 5, i = 0; y < FENCE_Y; y += 3, i++) { g.fillStyle = i % 2 ? "#2f7d3a" : "#2a7334"; g.fillRect(3.5, y, WW - 7, 3); }
     g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = .14;
     g.strokeRect(5, 14, 30, 50.5);
@@ -26,13 +26,13 @@ SCENES.estadio = {
     g.strokeRect(11, 52, 18, 12.5); g.strokeRect(15.5, 59.5, 9, 5);
     g.beginPath(); g.arc(20, 52, 3, Math.PI, 0); g.stroke();
     g.fillStyle = "#ffffff"; g.beginPath(); g.arc(20, 39, .25, 0, 7); g.fill();
-    // afuera: explanada con rayas pintadas
+    // outside: concourse with painted stripes
     g.fillStyle = "#34383e"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
     g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = .12;
     for (let x = 1; x < WW; x += 2.5) { g.beginPath(); g.moveTo(x, 68.5); g.lineTo(x + 1.2, 68.5); g.stroke(); }
   },
   decor(g) {
-    // gradas llenas de afición
+    // stands packed with fans
     const rand = rng(31), fans = ["#d8322b", "#ffffff", "#d8322b", "#1f4fa8", "#ffd23a", "#f4f4f0", "#2b2f35"];
     const stand = (x0, y0, x1, y1) => {
       g.fillStyle = "#24272d"; g.fillRect(x0, y0, x1 - x0, y1 - y0);
@@ -41,11 +41,11 @@ SCENES.estadio = {
       }
     };
     stand(0, 0, 3.5, FENCE_Y); stand(WW - 3.5, 0, WW, FENCE_Y); stand(0, 0, WW, 5);
-    // mosaico en la grada de atrás
+    // card mosaic in the back stand
     g.font = "900 3.6px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "rgba(216,50,43,.92)"; g.fillRect(9, .4, 22, 4.2);
-    g.fillStyle = "#ffffff"; g.fillText("MAREA", 20, 2.6);
-    // escenario con pantalla LED
+    g.fillStyle = "#ffffff"; g.fillText("TIDE", 20, 2.6);
+    // stage with LED screen
     g.fillStyle = "#16171b"; g.fillRect(8, 5, 24, 6);
     const led = g.createLinearGradient(9, 0, 31, 0); led.addColorStop(0, "#7a2cff"); led.addColorStop(.5, "#ff3fa4"); led.addColorStop(1, "#22d3ee");
     g.fillStyle = led; g.fillRect(9, 5.4, 22, 1.4);
@@ -60,7 +60,7 @@ SCENES.estadio = {
           { x: 4, y: 62, a: -Math.PI / 4, sweep: .3, h: 18, white: true }, { x: 36, y: 62, a: -3 * Math.PI / 4, sweep: .3, h: 18, white: true },
           { x: 14, y: 11, a: Math.PI / 2, sweep: .6, h: 7 }, { x: 26, y: 11, a: Math.PI / 2, sweep: .6, h: 7 }],
   extra3D(grp) {
-    // torres de iluminación y portería
+    // floodlight towers and goal
     for (const [x, y] of [[1.5, 1.5], [38.5, 1.5], [1.5, 64.5], [38.5, 64.5]]) {
       part(grp, "cyl", mat("#9aa0a8", { metalness: .6, roughness: .4 }), .35, 18, .35, x, 9, y);
       part(grp, "box", basic("#fffbe8"), 3, 1.6, .4, x, 18.3, y);

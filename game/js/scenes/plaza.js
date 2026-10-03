@@ -1,9 +1,9 @@
-// Marea Humana · escenario: La Plaza
+// Human Tide · scene: The Plaza
 SCENES.plaza = {
-  name: "La Plaza", tag: "Concierto gratis", outside: "#b3b4af", bulbH: 1.95,
+  name: "The Plaza", tag: "Free concert", outside: "#b3b4af", bulbH: 1.95,
   light: { sky: 0xdfe8f2, ground: 0x6f6a60, hemi: .55, sun: 0xfff1dc, sunI: 1.25 }, crowd: 3200, fenceBudget: 60, maxGates: 5, gates: [F, F, T, F, T, F, F],
-  intro: "Hoy hay concierto gratis en la plaza. Por la plaza también pasan coches, perros y pelotas gigantes.",
-  acts: ["¡Suena su éxito!", "¡Todos al frente!", "¡Que suene el bajo!", "¡Empujones!"],
+  intro: "Free concert in the plaza today. Also passing through the plaza: cars, dogs and giant beach balls.",
+  acts: ["They're playing the hit!", "Everybody to the front!", "Drop the bass!", "Shoving time!"],
   events: ["car", "dogs", "beachballs", "icecream", "car", "dogs"],
   goal: o => o.kind === "barrier", goalMaxY: 30,
   build() {

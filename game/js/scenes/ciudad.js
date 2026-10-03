@@ -1,11 +1,11 @@
-// Marea Humana · escenario: La Ciudad (festival nocturno; toda la ciudad es el escenario)
+// Human Tide · scene: The City (night festival; the whole city is the stage)
 const BLOCKS_X = [[0, 7], [12, 17.5], [22.5, 28], [33, WW]], BLOCKS_Y = [[20, 30], [35, 45], [50, 60]];
 SCENES.ciudad = {
-  name: "La Ciudad", tag: "Festival nocturno", outside: "#2a2d33", bulbH: 2.2, night: true, music: "edm",
+  name: "The City", tag: "Night festival", outside: "#2a2d33", bulbH: 2.2, night: true, music: "edm",
   light: { sky: 0x5c70b0, ground: 0x15181f, hemi: .32, sun: 0xb0c0ff, sunI: .6 }, crowd: 3800, fenceBudget: 80, maxGates: 5, guards: 5,
   gates: [F, T, F, T, F, T, F], unlock: 9,
-  intro: "Toda la ciudad es el escenario. Calles llenas entre edificios altos, fuegos artificiales, un desfile y taxis que no saben que la calle está cerrada.",
-  acts: ["¡La ciudad está de fiesta!", "¡Más fuerte!", "¡Todas las calles cantan!", "¡Último tema!"],
+  intro: "The whole city is the stage. Packed streets between tall buildings, fireworks, a parade and taxis that didn't get the memo that the street is closed.",
+  acts: ["The whole city is partying!", "Louder!", "Every street is singing!", "Last song!"],
   events: ["fuegos", "taxi", "carroza", "policia", "fuegos", "dogs", "taxi"],
   goal: o => o.kind === "barrier", goalMaxY: 20,
   build() {
@@ -18,15 +18,15 @@ SCENES.ciudad = {
   },
   ground(g) {
     g.fillStyle = "#2a2d33"; g.fillRect(0, 0, WW, WH);
-    // plaza de adoquín
+    // cobblestone plaza
     g.fillStyle = "#4a4b52"; g.fillRect(0, 6.4, WW, 13.6);
     g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = .05;
     for (let x = 0; x < WW; x += .6) { g.beginPath(); g.moveTo(x, 6.4); g.lineTo(x, 20); g.stroke(); }
     for (let y = 6.4; y < 20; y += .6) { g.beginPath(); g.moveTo(0, y); g.lineTo(WW, y); g.stroke(); }
-    // banquetas alrededor de las manzanas
+    // sidewalks around the blocks
     g.fillStyle = "#5b5d63";
     for (const [x0, x1] of BLOCKS_X) for (const [y0, y1] of BLOCKS_Y) g.fillRect(x0 - .9, y0 - .9, x1 - x0 + 1.8, y1 - y0 + 1.8);
-    // líneas de carril y pasos de cebra
+    // lane lines and crosswalks
     g.strokeStyle = "rgba(255,210,58,.55)"; g.lineWidth = .12; g.setLineDash([1, 1]);
     for (const x of [9.5, 20, 30.5]) { g.beginPath(); g.moveTo(x, 20); g.lineTo(x, FENCE_Y); g.stroke(); }
     for (const y of [32.5, 47.5, 63]) { g.beginPath(); g.moveTo(0, y); g.lineTo(WW, y); g.stroke(); }
@@ -36,7 +36,7 @@ SCENES.ciudad = {
     g.fillStyle = "#24272c"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
   },
   decor(g) {
-    // azoteas: tinacos, aires acondicionados y luces
+    // rooftops: water tanks, AC units and lights
     const rand = rng(3), tones = ["#3a3e48", "#46404a", "#3b4640", "#4a4438"];
     for (const o of obs) if (o.kind === "building") {
       g.fillStyle = tones[o.tone]; g.fillRect(o.x0, o.y0, o.x1 - o.x0, o.y1 - o.y0);
@@ -45,7 +45,7 @@ SCENES.ciudad = {
       g.fillStyle = "#1c1d22"; g.beginPath(); g.arc(o.x0 + (o.x1 - o.x0) * .7, o.y0 + 1.6, .6, 0, 7); g.fill();
       g.fillStyle = "#ff4fd8"; g.fillRect(o.x0 + .3, o.y1 - .5, o.x1 - o.x0 - .6, .12);
     }
-    // escenario con pantalla y fuente
+    // stage with screen, and fountain
     g.fillStyle = "#121318"; g.fillRect(12, 0, 16, 5);
     const led = g.createLinearGradient(12, 0, 28, 0); led.addColorStop(0, "#22d3ee"); led.addColorStop(.5, "#ff3fa4"); led.addColorStop(1, "#ffd23a");
     g.fillStyle = led; g.fillRect(12.5, .3, 15, 1.2);
@@ -58,7 +58,7 @@ SCENES.ciudad = {
   beams: [{ x: 14, y: 5, a: Math.PI / 2, sweep: .7, h: 7 }, { x: 20, y: 5, a: Math.PI / 2, sweep: .7, h: 7 }, { x: 26, y: 5, a: Math.PI / 2, sweep: .7, h: 7 },
           { x: 3, y: 19, a: 0.4, sweep: .5, h: 20, white: true }, { x: 37, y: 19, a: Math.PI - .4, sweep: .5, h: 20, white: true }],
   extra3D(grp) {
-    // faroles en las calles
+    // street lamps
     const lampMat = mat("#2a2c31", { metalness: .5, roughness: .4 }), glow = basic("#ffd98a");
     for (const x of [7.6, 32.4]) for (const y of [22, 30, 37, 45, 52, 60]) {
       part(grp, "cyl", lampMat, .08, 3.6, .08, x, 1.8, y); part(grp, "sph", glow, .22, .22, .22, x, 3.65, y);

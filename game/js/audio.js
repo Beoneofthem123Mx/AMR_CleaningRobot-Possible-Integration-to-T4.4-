@@ -151,13 +151,14 @@ function sfx(name) {
   AU.lastSfx[name] = now; SFX[name](now + .01);
 }
 // every onomatopoeia in the game makes a sound
-const SFX_BY_TEXT = { "¡ROAR!": "roar", "¡GRRR!": "roar", "¡MEC MEC!": "honk", "¡PIIIP!": "honk", "¡HONK!": "honk", "¡GUAU!": "bark", "¡AUU!": "bark",
-  "¡PAWOO!": "trumpet", "¡BUM!": "boom", "¡CRASH!": "crash", "¡ALTO!": "whistle", "¡FIUUU!": "fiu", "¡SPLASH!": "splash", "¡TUUUUU!": "horn",
-  "¡CUAC!": "quack", "¡IIIIH!": "neigh", "¡ARRANCAN!": "horn", "♪ ♫ ♪": "jingle", "¡OLEEE!": "cheer", "¡VAMOS!": "cheer", "¡CALMA!": "whistle", "¡PASO!": "honk",
-  "¡OFERTA!": "jingle", "♪ ¡AY, AY, AY! ♪": "trumpet", "¡ESA NO ES MI NUERA!": "scream", "¡SE TAPÓ!": "splash", "¡FOTO CON EL ALCALDE!": "cheer",
-  "¡CUAC!": "quack", "¡CUAC CUAC!": "quack", "¡TORTAS GRATIS!": "honk", "¡LLEGAMOS!": "horn", "¡SPLAT!": "crash", "¡SE REGÓ LA SALSA!": "splash",
-  "¡TACOS GRATIS!": "jingle", "¡FUUUM!": "ufo", "¡MUUU!": "moo", "¡FLASH!": "flash", "¡HOLA, FANS!": "cheer", "¡PI-PI-PI!": "beep", "¡SNIF, SNIF!": "bark",
-  "¡NOOO!": "scream", "¡WIFI GRATIS!": "jingle", "¡HOLA MIS AMORES!": "cheer", "¡ZAS!": "crash", "¡CURRUCÚ!": "quack", "¡AHÍ VA EL RAMO!": "cheer", "¡ES MÍO!": "cheer",
-  "¡VAMOS!": "cheer", "¡PERMISO, JOVEN!": "honk", "¡PISO MOJADO!": "beep", "¡ESA ES MI CANCIÓN!": "cheer", "¡OTRA, OTRA!": "cheer", "¡UNA FOTO, SOBRINO!": "flash",
-  "¡TOPE SUICIDA!": "fiu", "¡SILLAZO!": "crash", "¡LA MÁSCARA!": "fiu", "¡ES MÍA!": "cheer", "¡FUERA, FUERA!": "roar", "¡ABRAN PASO, MIJOS!": "cheer", "¡SEPÁRENSE!": "whistle", "¡NO ME DOLIÓ!": "scream" };
+const SFX_BY_TEXT = { "ROAR!": "roar", "GRRR!": "roar", "MEEP MEEP!": "honk", "BEEEP!": "honk", "HONK!": "honk", "WOOF!": "bark", "YELP!": "bark",
+  "PAWOOO!": "trumpet", "BOOM!": "boom", "CRASH!": "crash", "HALT!": "whistle", "WHOOOSH!": "fiu", "SPLASH!": "splash", "TOOOOOT!": "horn",
+  "SQUAWK!": "quack", "NEIGHHH!": "neigh", "THEY'RE OFF!": "horn", "♪ ♫ ♪": "jingle", "OLEEE!": "cheer", "LET'S GOOO!": "cheer", "SETTLE DOWN!": "whistle", "COMING THROUGH!": "honk",
+  "SALE!": "jingle", "♪ AY, AY, AY! ♪": "trumpet", "THAT'S NOT MY DAUGHTER-IN-LAW!": "scream", "IT'S CLOGGED!": "splash", "PHOTO WITH THE MAYOR!": "cheer",
+  "QUACK!": "quack", "QUACK QUACK!": "quack", "FREE SANDWICHES!": "honk", "WE'RE HERE!": "horn", "SPLAT!": "crash", "SALSA SPILL!": "splash",
+  "FREE TACOS!": "jingle", "VWOOOM!": "ufo", "MOOO!": "moo", "FLASH!": "flash", "HELLO, FANS!": "cheer", "BEEP-BEEP-BEEP!": "beep", "SNIFF, SNIFF!": "bark",
+  "NOOO!": "scream", "FREE WIFI!": "jingle", "HEY BESTIES!": "cheer", "WHACK!": "crash", "COO COO!": "quack", "HERE COMES THE BOUQUET!": "cheer", "IT'S MINE!": "cheer",
+  "EXCUSE ME, YOUNG MAN!": "honk", "WET FLOOR!": "beep", "THAT'S MY SONG!": "cheer", "ONE MORE! ONE MORE!": "cheer", "TAKE MY PICTURE, KIDDO!": "flash",
+  "SUICIDE DIVE!": "fiu", "CHAIR SHOT!": "crash", "THE MASK!": "fiu", "OUTTA MY WAY!": "roar", "MAKE WAY, MIJOS!": "cheer", "BREAK IT UP!": "whistle", "DIDN'T EVEN HURT!": "scream",
+  "VANILLA!": "jingle", "SANDWICHES!": "cheer", "SPICY!": "scream", "I'LL FIX IT!": "honk", "LOOK OVER HERE!": "flash" };
 function sfxFor(text) { const n = SFX_BY_TEXT[text]; if (n) sfx(n); }
