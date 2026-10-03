@@ -66,6 +66,8 @@ The game already unlocks them. Create them under *Stats & Achievements* with the
 | `PERFECT_ZOO`        | Nobody Got Eaten         | Free Zoo Day with zero trampled and nobody stuck         |
 | `PERFECT_CHEESE`     | Grate Success            | The Cheese Chase with zero trampled and nobody stuck     |
 | `PERFECT_ZOMBIE`     | No Brains Lost           | Zombie Walk with zero trampled and nobody stuck          |
+| `PERFECT_BEACH`      | Sprinkles, Not Casualties| Free Ice Cream Beach with zero trampled and nobody stuck |
+| `PERFECT_PARK`       | Happiest Place (Legally Distinct) | Grand Opening with zero trampled and nobody stuck |
 | `SPACE_TOURISM`      | Space Tourism            | 100 abducted in a single show                            |
 | `LOUD_AND_SAFE`      | Loud but Safe            | Three stars using all three megaphones                   |
 | `MOD_COLLECTOR`      | Seen It All              | Finish shows under six different "today's twists"        |

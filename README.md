@@ -29,7 +29,7 @@ Everything works offline: three.js and the fonts ship inside `game/`. To publish
 - **Gates**: tap the barrier at the bottom to open or close entrances.
 - **Security**: place guards. They calm the people around them and stop animals and vehicles.
 - **Erase**: tap a fence or a guard to remove it.
-- **Venue**: choose where to play (there are 18).
+- **Venue**: choose where to play (there are 20).
 - **Pressure**: paints the crowd from blue to red depending on how hard they're being squeezed.
 - **1× / 2× / 4×**: simulation speed.
 - **Camera**: automatic (zooms in and tilts during the big moments), near or far.
@@ -93,6 +93,8 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 | **Free Zoo Day** | 22 ★ | The baby panda's debut: penguin parades, a giraffe strolling through the crowd, a gorilla that steals a phone, Kevin the runaway alpaca, a banana truck and a hippo that yawns at the wrong moment. |
 | **The Cheese Chase** | 24 ★ | Downhill cheese rolling: wheels bouncing through the crowd, tumbling contestants, a runaway goat, a tractor with a car-sized cheese and a blue cheese so smelly everyone flees. |
 | **Zombie Walk** | 26 ★ | Night-time zombie parade by a haunted mansion: shambling hordes, a hearse, a giant inflatable pumpkin, fog machines, bats, a werewolf and a vampire who turns out to be the mayor. |
+| **Free Ice Cream Beach** | 28 ★ | A brand gives away ice cream on the beach: a shark fin (it's just Gary), a sunscreen spill, seagulls stealing cones, an inflatable whale, a slow-motion lifeguard and a jet ski that drives onto the sand. |
+| **Grand Opening** | 30 ★ | Opening day at a bootleg theme park: a knock-off mascot giving hugs, a dinosaur parade, a coaster car that leaves the track, a runaway teacup, free churros and fireworks that go sideways. |
 
 Fences and guards also work against the chaos: animals and vehicles that bump into them turn
 around.
