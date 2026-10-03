@@ -10,7 +10,8 @@ alguien soporta demasiada presión durante un rato, cae y el contador **PISOTEAD
 
 ## Cómo jugar
 
-Abre `index.html` en cualquier navegador moderno. No necesita servidor ni instalación.
+Abre `index.html` en cualquier navegador moderno con WebGL. No necesita servidor ni instalación:
+carga three.js desde jsDelivr y, sin internet, usa la copia de `vendor/three.min.js`.
 
 - **Valla**: arrastra sobre la plaza para trazar una valla (60 m en total).
 - **Puertas**: toca la reja de abajo para abrir o cerrar entradas (máximo 5).
@@ -18,6 +19,7 @@ Abre `index.html` en cualquier navegador moderno. No necesita servidor ni instal
 - **Escenario**: cambia entre la plaza y el circo.
 - **Presión**: pinta a la multitud de azul a rojo según cuánto la aprietan.
 - **1× / 2× / 4×**: velocidad de la simulación.
+- **Cámara**: automática (se acerca e inclina en los momentos fuertes), cerca o lejos.
 
 Las estelas naranjas del modo de planeación muestran por dónde caminará la gente. Durante el show
 hay "drops" musicales: la multitud empuja hacia el escenario, la cámara se acerca y la gente se
@@ -30,7 +32,14 @@ Terminar con cero pisoteados da tres estrellas.
   rejilla de 50 cm) hacia el frente del escenario o hacia la salida.
 - Los empujones entre personas y contra las vallas suman presión. Por encima del umbral se
   acumula daño y la persona cae.
-- Todo es un solo archivo HTML con canvas 2D, sin dependencias.
+- Se dibuja en 3D con [three.js](https://threejs.org/) (r149, licencia MIT en `vendor/three.LICENSE`):
+  el suelo es una textura con los dibujos del escenario y encima van los escenarios, vallas, puertas,
+  animales y coches como modelos 3D con sombras.
+- El público usa cinco modelos de personaje (clásico, con gorra, con melena, con mochila y fiestero
+  con barra luminosa) dibujados con mallas instanciadas. Cada persona camina moviendo brazos y
+  piernas, salta y levanta los brazos en el show, agita los brazos cuando la aprietan y queda tendida
+  en el suelo si la pisotean.
+- Si el equipo va lento, el juego quita sombras de la gente y baja la resolución automáticamente.
 
 ## Escenarios
 
