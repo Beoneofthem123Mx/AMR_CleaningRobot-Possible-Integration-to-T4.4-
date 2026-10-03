@@ -63,6 +63,26 @@ function stripeTex(cols, bands, horiz) {
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
 }
 
+function inst0(geo, material, n, sc) {
+  const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false;
+  m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); sc.add(m); return m;
+}
+function updateAmbient(tt, dtR) {
+  const night = !!scene.night;
+  G3.clouds.visible = !night;
+  if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
+  G3.motes.visible = night;
+  if (night) {
+    const cols = [[1, .85, .4], [.5, 1, .6], [.6, .8, 1], [1, .5, .9]];
+    G3.moteData.forEach((d, i) => {
+      const x = d.x + Math.sin(tt * d.s + d.p) * 1.2, y = d.y + Math.cos(tt * d.s * .8 + d.p) * 1.2, h = d.h + Math.sin(tt * d.s * 1.6 + d.p) * .4;
+      M4.makeTranslation(x, h, y); G3.motes.setMatrixAt(i, M4);
+      const tw = .5 + .5 * Math.sin(tt * 3 * d.s + d.p * 3), c = cols[i % 4];
+      G3.motes.instanceColor.setXYZ(i, c[0] * 2.5 * tw, c[1] * 2.5 * tw, c[2] * 2.5 * tw);
+    });
+    G3.motes.instanceMatrix.needsUpdate = true; G3.motes.instanceColor.needsUpdate = true;
+  }
+}
 function init3D() {
   const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -97,6 +117,21 @@ function init3D() {
   const grd = gg.createLinearGradient(0, 0, 0, 128); grd.addColorStop(0, "#ffffff"); grd.addColorStop(1, "#000000"); gg.fillStyle = grd; gg.fillRect(0, 0, 4, 128);
   G3.beamAlpha = new THREE.CanvasTexture(gc);
   G3.beamGeo = new THREE.ConeGeometry(3.4, 34, 24, 1, true); G3.beamGeo.translate(0, -17, 0); G3.beamGeo.rotateX(-Math.PI / 2);
+  // drifting cloud shadows (day) and floating light motes (night)
+  const cc = document.createElement("canvas"); cc.width = cc.height = 256; const cg = cc.getContext("2d"), cr = rng(9);
+  for (let k = 0; k < 9; k++) {
+    const x = cr() * 256, y = cr() * 256, r = 30 + cr() * 60;
+    for (const [dx, dy] of [[0, 0], [256, 0], [-256, 0], [0, 256], [0, -256]]) {
+      const gr = cg.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r); gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+      cg.fillStyle = gr; cg.beginPath(); cg.ellipse(x + dx, y + dy, r * 1.6, r, .4, 0, 7); cg.fill();
+    }
+  }
+  const ct = new THREE.CanvasTexture(cc); ct.wrapS = ct.wrapT = THREE.RepeatWrapping; ct.repeat.set(.55, .55 * SH / WW);
+  G3.clouds = new THREE.Mesh(new THREE.PlaneGeometry(WW + 40, SH + 40), new THREE.MeshBasicMaterial({ color: 0x000000, alphaMap: ct, transparent: true, opacity: .16, depthWrite: false }));
+  G3.clouds.rotation.x = -Math.PI / 2; G3.clouds.position.set(WW / 2, .02, SH / 2); G3.clouds.renderOrder = 0; sc.add(G3.clouds);
+  G3.motes = inst0(new THREE.SphereGeometry(.05, 6, 4), new THREE.MeshBasicMaterial({ toneMapped: false }), 160, sc);
+  G3.motes.count = 160;
+  G3.moteData = Array.from({ length: 160 }, () => ({ x: Math.random() * WW, y: Math.random() * WH, h: .6 + Math.random() * 3.5, p: Math.random() * 7, s: .3 + Math.random() * .6 }));
   G3.dyn = new THREE.Group(); sc.add(G3.dyn);       // spotlights and beams (change with the venue)
   G3.moverGrp = new THREE.Group(); sc.add(G3.moverGrp);
   G3.perfGrp = new THREE.Group(); sc.add(G3.perfGrp);
@@ -206,9 +241,13 @@ const loc = (sx, sy, sz, x, y, z) => new Float32Array([sx, 0, 0, 0, sy, 0, 0, 0,
 const LOCAL = {
   torso: loc(.82, 1, 1.32, 0, 1.17, 0), head: loc(1, 1, 1, .02, 1.62, 0), hair: loc(1, 1, 1, -.012, 1.635, 0),
   cap: loc(1, 1, 1, -.005, 1.71, 0), brim: loc(1, 1, 1, .13, 1.68, 0), long: loc(1, 1, 1, -.1, 1.5, 0), pack: loc(1, 1, 1, -.2, 1.2, 0),
+  // accessories: party hat, wide sun hat, balloon string, umbrella pole and canopy, kid on the shoulders
+  phat: loc(1, 1, 1, 0, 1.86, 0), whatB: loc(1, 1, 1, 0, 1.72, 0), whatT: loc(1, 1, 1, 0, 1.8, 0), string: loc(1, 1, 1, -.05, 2.08, .26),
+  pole: loc(1, 1, 1, .05, 1.85, .2), umb: loc(1, 1, 1, .05, 2.3, .1), kidT: loc(.5, .55, .78, -.05, 1.98, 0), kidH: loc(.82, .82, .82, -.03, 2.32, 0),
 };
+const LBAL = new Float32Array([1, 0, 0, 0, 1.15, 0, 0, 0, 1, 0, 0, 0]);
 function initPeople() {
-  const N = 4200, std = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {}));
+  const N = 6000, std = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {}));
   const mk = (geo, material, n) => {
     const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); m.instanceColor.setUsage(THREE.DynamicDrawUsage);
@@ -225,6 +264,12 @@ function initPeople() {
   P.pack = mk(new THREE.BoxGeometry(.17, .34, .28), std({ roughness: .6 }), N);
   P.glow = mk(new THREE.CylinderGeometry(.028, .028, .42, 6), new THREE.MeshBasicMaterial({ toneMapped: false }), N);
   P.glow.castShadow = false;
+  P.phat = mk(new THREE.ConeGeometry(.1, .3, 10), std({ roughness: .5 }), N);
+  P.what = mk(new THREE.CylinderGeometry(.34, .34, .03, 14), std({ roughness: .8 }), N);
+  P.whatTop = mk(new THREE.CylinderGeometry(.13, .15, .14, 10), std({ roughness: .8 }), N);
+  P.balloon = mk(new THREE.SphereGeometry(.2, 10, 8), std({ roughness: .25, metalness: .1 }), N);
+  P.string = mk(new THREE.BoxGeometry(.012, .9, .012), std(), N * 2);
+  P.umb = mk(new THREE.ConeGeometry(.5, .2, 12), std({ roughness: .55, side: THREE.DoubleSide }), N);
 }
 // body base: rotation, scale and position (optionally lying down)
 function setBase(x, y, z, h, sc, lying) {
@@ -252,7 +297,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0 };
+  const C = { torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0;
@@ -279,6 +324,7 @@ function renderPeople(tt, dtR, vb) {
       if (a.ps > PCRIT * .55) { const ph = tt * 15 + a.ph; armL = 2.3 + Math.sin(ph) * .55; armR = 2.3 + Math.cos(ph) * .55; }
       if (MOD && MOD.bounce && a.dance) bob *= MOD.bounce;
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
+      if ((a.acc === 1 || a.acc === 3) && !surging && a.ps < PCRIT * .55) armR = 2.7;  // holding the balloon / umbrella up
       setBase(a.x, bob, a.y, a.h, a.sc, false);
     }
     // clothes: blend into the pressure color; red when in danger
@@ -296,6 +342,25 @@ function renderPeople(tt, dtR, vb) {
       emit(P.cap, C.cap, LOCAL.cap); colW(P.cap, C.cap++, cc[0] * k, cc[1] * k, cc[2] * k);
       emit(P.brim, C.brim, LOCAL.brim); colW(P.brim, C.brim++, cc[0] * k, cc[1] * k, cc[2] * k);
     } else { emit(P.hair, C.hair, LOCAL.hair); colW(P.hair, C.hair++, hc[0] * k, hc[1] * k, hc[2] * k); }
+    if (a.acc && !down) {
+      const ac = SHIRT_L[a.ac];
+      if (a.acc === 1) {        // balloon on a string, swaying
+        LBAL[9] = -.12 + Math.sin(tt * 1.7 + a.ph) * .1; LBAL[10] = 2.72 + Math.sin(tt * 2.3 + a.ph) * .07; LBAL[11] = .3;
+        emit(P.balloon, C.balloon, LBAL); colW(P.balloon, C.balloon++, ac[0] * 1.15, ac[1] * 1.15, ac[2] * 1.15);
+        emit(P.string, C.string, LOCAL.string); colW(P.string, C.string++, .8, .8, .8);
+      } else if (a.acc === 2) { emit(P.phat, C.phat, LOCAL.phat); colW(P.phat, C.phat++, ac[0], ac[1], ac[2]); }
+      else if (a.acc === 3) {   // umbrella
+        emit(P.umb, C.umb, LOCAL.umb); colW(P.umb, C.umb++, ac[0], ac[1], ac[2]);
+        emit(P.string, C.string, LOCAL.pole); colW(P.string, C.string++, .15, .15, .15);
+      } else if (a.acc === 4) { // kid on the shoulders
+        const kc = SHIRT_L[(a.ac + 3) % SHIRT_L.length];
+        emit(P.torso, C.torso, LOCAL.kidT); colW(P.torso, C.torso++, kc[0] * k, kc[1] * k, kc[2] * k);
+        emit(P.head, C.head, LOCAL.kidH); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
+      } else if (a.acc === 5) { // wide sun hat
+        emit(P.what, C.what, LOCAL.whatB); colW(P.what, C.what++, .78, .62, .32);
+        emit(P.whatTop, C.whatTop, LOCAL.whatT); colW(P.whatTop, C.whatTop++, .74, .58, .3);
+      }
+    }
     if (!detail && !down) return;
     emit(P.arm, C.arm, limb(0, 1.4, -.25, armL, .6)); colW(P.arm, C.arm++, r, g, b);
     emit(P.arm, C.arm, limb(0, 1.4, .25, armR, .6)); colW(P.arm, C.arm++, r, g, b);
@@ -687,6 +752,7 @@ function render3D(now, dtR) {
   }
   for (const o of G3.moverGrp.children.slice()) if (!alive.has(o)) G3.moverGrp.remove(o);
   if (G3.trompo) G3.trompo.rotation.y = tt * 1.5;
+  updateAmbient(tt, dtR);
   renderPeople(tt, dtR, vb);
   renderConfetti();
   renderParticles();

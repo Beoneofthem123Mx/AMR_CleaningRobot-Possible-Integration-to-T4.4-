@@ -5,8 +5,10 @@ let movers = [], performers = [], pops = [], eventT = 0, MPUSH = 2, MPRES = .4, 
 const rnd = (a, b) => a + Math.random() * (b - a);
 function pop(x, y, text, h) {
   // don't stack the same sound effect on top of itself
-  if (pops.some(q => q.text === text && q.t < 1.1 && Math.abs(q.x - x) < 4 && Math.abs(q.y - y) < 4)) return;
-  pops.push({ x, y, text, t: 0, h }); if (pops.length > 10) pops.shift(); if (typeof sfxFor === "function") sfxFor(text);
+  if (pops.some(q => q.text === text && q.t < 1.3 && Math.abs(q.x - x) < 10 && Math.abs(q.y - y) < 10)) return;
+  // and keep different shouts from landing on top of each other
+  if (pops.some(q => q.t < .7 && Math.abs(q.x - x) < 5 && Math.abs(q.y - y) < 2.2)) return;
+  pops.push({ x, y, text, t: 0, h }); if (pops.length > 8) pops.shift(); if (typeof sfxFor === "function") sfxFor(text);
 }
 // total chaos mode: any event from any venue can happen anywhere
 let chaosMode = false;

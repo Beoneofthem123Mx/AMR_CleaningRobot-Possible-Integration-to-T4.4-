@@ -143,6 +143,10 @@ function looks() {
     sk: (Math.random() * 5) | 0, pc: (Math.random() * 6) | 0, hc: (Math.random() * 6) | 0, ac: (Math.random() * SHIRTS.length) | 0, st: (Math.random() * 3) | 0, wp: Math.random() * 6,
     c: (Math.random() * SHIRTS.length) | 0 };
   // today's twists: Children's Day (everyone tiny) and mandatory uniform (everyone identical)
+  // accessories: 1 balloon, 2 party hat, 3 umbrella, 4 kid on the shoulders, 5 wide sun hat
+  const r2 = Math.random();
+  L.acc = r2 < .06 ? 1 : r2 < .11 ? 2 : r2 < .14 ? 3 : r2 < .17 ? 4 : r2 < .22 ? 5 : 0;
+  if (MOD && MOD.rain && Math.random() < .45) L.acc = 3;
   if (MOD && MOD.sizeMul) L.sc *= MOD.sizeMul;
   if (MOD && MOD.uniform) { L.c = L.ac = MOD.uc || 0; L.pc = 0; }
   return L;
