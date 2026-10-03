@@ -1,7 +1,7 @@
-// Marea Humana · dibujo 3D
-// ===== Dibujo 3D (three.js) =====
-const TEXS = 16, FXS = 10;                 // píxeles por metro: textura del suelo y capa de efectos
-let S = 10, dpr = 1, staticLayer = null, staticDirty = true, camMode = 0, LAND = false;  // LAND: monitor horizontal
+// Human Tide · 3D rendering
+// ===== 3D rendering (three.js) =====
+const TEXS = 16, FXS = 10;                 // pixels per meter: ground texture and effects layer
+let S = 10, dpr = 1, staticLayer = null, staticDirty = true, camMode = 0, LAND = false;  // LAND: landscape monitor
 const G3 = {};
 const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
 const SKIN = ["#f1c9a5", "#e0ac84", "#c68a5e", "#8d5a3b", "#5e3a24"];
@@ -13,7 +13,7 @@ let SHIRT_L, HEAT_L, SKIN_L, PANTS_L, HAIR_L, GLOW_L;
 
 function resize() {
   const r = $("#wrap").getBoundingClientRect();
-  // en pantallas horizontales (PC) el recinto se gira: el escenario queda a la izquierda
+  // on landscape screens (PC) the venue is rotated: the stage ends up on the left
   LAND = r.width > r.height;
   const ar = LAND ? WH / WW : WW / WH;
   const w = Math.min(r.width, r.height * ar), h = w / ar;
@@ -27,7 +27,7 @@ function resize() {
 new ResizeObserver(resize).observe($("#wrap"));
 
 function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
-// textura del suelo: todos los dibujos planos del escenario
+// ground texture: all the flat drawings of the venue
 function buildStatic() {
   const c = document.createElement("canvas"); c.width = WW * TEXS; c.height = SH * TEXS;
   const g = c.getContext("2d"); g.scale(TEXS, TEXS);
@@ -46,7 +46,7 @@ function drawFence(g, f, ghost) {
   g.lineCap = "butt"; g.strokeStyle = "#1c1c1c"; g.setLineDash([.5, .5]); g.lineWidth = .35; g.stroke(); g.setLineDash([]);
 }
 
-// ---------- materiales y piezas compartidas ----------
+// ---------- shared materials and parts ----------
 const MATS = {};
 function mat(hex, o) { const key = hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshStandardMaterial(Object.assign({ color: lin(hex), roughness: .7 }, o || {}))); }
 function basic(hex, o) { const key = "b" + hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshBasicMaterial(Object.assign({ color: lin(hex), toneMapped: false }, o || {}))); }
@@ -77,7 +77,7 @@ function init3D() {
   GEO = {
     sph: new THREE.SphereGeometry(1, 16, 12), cyl: new THREE.CylinderGeometry(1, 1, 1, 12), box: new THREE.BoxGeometry(1, 1, 1), cone: new THREE.ConeGeometry(1, 1, 14),
   };
-  // suelo y capa de efectos
+  // ground and effects layer
   G3.ground = new THREE.Mesh(new THREE.PlaneGeometry(WW, SH), new THREE.MeshStandardMaterial({ roughness: .95 }));
   G3.ground.rotation.x = -Math.PI / 2; G3.ground.position.set(WW / 2, 0, SH / 2); G3.ground.receiveShadow = true; sc.add(G3.ground);
   G3.fxCv = document.createElement("canvas"); G3.fxCv.width = WW * FXS; G3.fxCv.height = SH * FXS; G3.fx = G3.fxCv.getContext("2d");
@@ -85,22 +85,22 @@ function init3D() {
   G3.fxTex = new THREE.CanvasTexture(G3.fxCv); G3.fxTex.encoding = THREE.sRGBEncoding;
   const fxPlane = new THREE.Mesh(new THREE.PlaneGeometry(WW, SH), new THREE.MeshBasicMaterial({ map: G3.fxTex, transparent: true, depthWrite: false, toneMapped: false }));
   fxPlane.rotation.x = -Math.PI / 2; fxPlane.position.set(WW / 2, .03, SH / 2); fxPlane.renderOrder = 1; sc.add(fxPlane);
-  // vallas del jugador: rayas amarillas y negras en coordenadas del mundo
+  // player fences: yellow and black stripes in world coordinates
   const fc = document.createElement("canvas"); fc.width = fc.height = 64; const fg = fc.getContext("2d");
   fg.fillStyle = "#f2c230"; fg.fillRect(0, 0, 64, 64); fg.fillStyle = "#1c1c1c";
   for (let i = -64; i < 128; i += 32) { fg.beginPath(); fg.moveTo(i, 0); fg.lineTo(i + 16, 0); fg.lineTo(i + 80, 64); fg.lineTo(i + 64, 64); fg.fill(); }
   const ft = new THREE.CanvasTexture(fc); ft.encoding = THREE.sRGBEncoding; ft.wrapS = ft.wrapT = THREE.RepeatWrapping; ft.repeat.set(WW / 1.2, SH / 1.2);
   G3.fenceMat = new THREE.MeshStandardMaterial({ map: ft, roughness: .6 });
   G3.ballTex = { cball: stripeTex(["#d8322b", "#f3e7cf", "#2f7fd6", "#e8b631"], 8, false), beach: stripeTex(["#ffffff", "#d8322b", "#ffffff", "#2f6fc4", "#ffffff", "#e8b631"], 6, false) };
-  // haz de luz: cono con degradado
+  // light beam: cone with a gradient
   const gc = document.createElement("canvas"); gc.width = 4; gc.height = 128; const gg = gc.getContext("2d");
   const grd = gg.createLinearGradient(0, 0, 0, 128); grd.addColorStop(0, "#ffffff"); grd.addColorStop(1, "#000000"); gg.fillStyle = grd; gg.fillRect(0, 0, 4, 128);
   G3.beamAlpha = new THREE.CanvasTexture(gc);
   G3.beamGeo = new THREE.ConeGeometry(3.4, 34, 24, 1, true); G3.beamGeo.translate(0, -17, 0); G3.beamGeo.rotateX(-Math.PI / 2);
-  G3.dyn = new THREE.Group(); sc.add(G3.dyn);       // focos y haces (cambian con el escenario)
+  G3.dyn = new THREE.Group(); sc.add(G3.dyn);       // spotlights and beams (change with the venue)
   G3.moverGrp = new THREE.Group(); sc.add(G3.moverGrp);
   G3.perfGrp = new THREE.Group(); sc.add(G3.perfGrp);
-  // confeti
+  // confetti
   G3.conf = new THREE.InstancedMesh(new THREE.PlaneGeometry(.24, .15), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, toneMapped: false }), 1400);
   G3.conf.instanceMatrix.setUsage(THREE.DynamicDrawUsage); G3.conf.frustumCulled = false; G3.conf.count = 0;
   G3.conf.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(1400 * 3), 3); sc.add(G3.conf);
@@ -110,10 +110,11 @@ function init3D() {
   G3.puff = inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: .3, depthWrite: false }), 800);
   SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
   initPeople();
+  initPost();
   resize();
 }
 
-// ---------- recinto 3D ----------
+// ---------- 3D venue ----------
 const HEIGHTS = { stage: 1.8, speaker: 3.2, catwalk: 1.3, platform: 1.35, barrier: 1.1, booth: 2.4, aid: 2.4,
   canvas: 3.4, curtain: 5.5, wall: 1.3, curb: .7, pole: 4.5, popcorn: 2.5, candy: 2.5, cannon: 1.1, fence: 1.1, closed: 1.1, player: .95,
   stands: 2.6, bench: 1, hull: 1.2, pool: .15, jacuzzi: .45, lounger: .45, bar: 1.2, outerrail: .9, rail: 1, startgate: 2.2,
@@ -121,7 +122,7 @@ const HEIGHTS = { stage: 1.8, speaker: 3.2, catwalk: 1.3, platform: 1.35, barrie
   shop: 3.2, megastore: 3.4, escalator: 1.2, kiosk: 1.6, gazebo: .4, bench: .5, caketable: .9, pavilion: .5, portapotty: 2.4, post: 1,
   riser: 1.2, foodtruck: 2.6, tacotable: 1, taqueria: 2.6, salsabar: 1, barn: 4, farmhouse: 3, haybale: 1, arrivals: 4, carousel: .6, info: 1.1, counter: 1.1,
   ring: 1.0, ramp: .4, merch: 2.2 };
-// fachadas de edificios: ventanas que se repiten (de noche se encienden)
+// building facades: repeating windows (they light up at night)
 function windowTex() {
   const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), r = rng(12);
   g.fillStyle = "#2e3340"; g.fillRect(0, 0, 64, 64);
@@ -168,7 +169,7 @@ function buildStatic3D() {
     const mesh = new THREE.Mesh(geo, o.kind === "player" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
     mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
   }
-  // puertas abiertas: arcos rojos
+  // open gates: red arches
   for (let i = 0; i < SLOTS; i++) if (gates[i]) {
     const cx = slotX(i), red = mat("#d8322b", { roughness: .45 });
     for (const s of [-1, 1]) { const p = part(grp, "box", red, .28, 2.5, .28, cx + s * SLOT_W / 2, 1.25, FENCE_Y); p.userData.shared = true; }
@@ -178,7 +179,7 @@ function buildStatic3D() {
   G3.trompo = null;
   if (scene.extra3D) scene.extra3D(grp);
   grp.traverse(o => { if (o.isMesh && GEO && Object.values(GEO).includes(o.geometry)) o.userData.shared = true; });
-  // focos y haces de luz del escenario
+  // stage spotlights and light beams
   G3.dyn.clear();
   const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(.24, 10, 8), new THREE.MeshBasicMaterial({ toneMapped: false }), scene.bulbs.length);
   bulbs.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(scene.bulbs.length * 3), 3);
@@ -188,16 +189,16 @@ function buildStatic3D() {
     const mesh = new THREE.Mesh(G3.beamGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, alphaMap: G3.beamAlpha, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
     mesh.position.set(b.x, b.h || 7, b.y); G3.dyn.add(mesh); return mesh;
   });
-  // luz según el escenario
+  // lighting depends on the venue
   G3.hemi.color.set(scene.light.sky); G3.hemi.groundColor.set(scene.light.ground); G3.hemi.intensity = scene.light.hemi;
   G3.sun.color.set(scene.light.sun); G3.sun.intensity = scene.light.sunI;
-  // artistas fijos
+  // fixed performers
   G3.perfGrp.clear();
   for (const p of performers) { p.obj = buildModel(p); G3.perfGrp.add(p.obj); }
 }
 
-// ---------- personas: 5 modelos con piezas instanciadas ----------
-// 0 clásico, 1 gorra, 2 melena, 3 mochila, 4 fiestero con barra luminosa
+// ---------- people: 5 models built from instanced parts ----------
+// 0 classic, 1 cap, 2 long hair, 3 backpack, 4 partygoer with glow stick
 let P = {};
 const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), Vp = new THREE.Vector3(), Vs = new THREE.Vector3();
 const Bm = new Float32Array(9), Bt = new Float32Array(3), LB = new Float32Array(12);
@@ -225,7 +226,7 @@ function initPeople() {
   P.glow = mk(new THREE.CylinderGeometry(.028, .028, .42, 6), new THREE.MeshBasicMaterial({ toneMapped: false }), N);
   P.glow.castShadow = false;
 }
-// base del cuerpo: giro, escala y posición (y opcionalmente tumbado)
+// body base: rotation, scale and position (optionally lying down)
 function setBase(x, y, z, h, sc, lying) {
   const c = Math.cos(h) * sc, s = Math.sin(h) * sc;
   if (lying) { Bm[0] = 0; Bm[1] = c; Bm[2] = -s; Bm[3] = -sc; Bm[4] = 0; Bm[5] = 0; Bm[6] = 0; Bm[7] = s; Bm[8] = c; }
@@ -280,7 +281,7 @@ function renderPeople(tt, dtR, vb) {
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
       setBase(a.x, bob, a.y, a.h, a.sc, false);
     }
-    // ropa: se funde con el color de presión; en peligro, roja
+    // clothes: blend into the pressure color; red when in danger
     const k = down ? .5 : 1, hq = HEAT_L[clamp(Math.floor(a.ps / PCRIT * HEAT_L.length), 0, HEAT_L.length - 1)];
     const sh = SHIRT_L[a.c], pa = PANTS_L[a.pc];
     let r, g, b;
@@ -311,7 +312,7 @@ function renderPeople(tt, dtR, vb) {
   for (const key in C) { const m = P[key]; m.count = C[key]; m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true; }
 }
 
-// ---------- animales, coches y objetos en 3D (mirando a +x) ----------
+// ---------- 3D animals, cars and objects (facing +x) ----------
 function buildModel(m) {
   const g = new THREE.Group(), u = g.userData; u.legs = []; u.kind = m.kind;
   switch (m.kind) {
@@ -344,7 +345,7 @@ function buildModel(m) {
       if (m.kind === "horse") { part(g, "cone", "#d8322b", .1, .4, .1, 1.15, 2.45, 0); part(g, "box", "#2f6fc4", .62, .1, .86, 0, 1.85, 0); }
       for (const [x, z] of [[.75, .2], [.75, -.2], [-.75, .2], [-.75, -.2]]) u.legs.push(leg(g, x, 1.25, z, .08, 1.25, c));
       u.tail = pivot(g, -1.05, 1.5, 0); part(u.tail, "cyl", c === "#f2efe9" ? "#bdb5a8" : "#1d140c", .06, .8, .06, 0, -.4, 0);
-      // jinete: sedas de colores en la carrera, uniforme azul en la policía
+      // rider: colored silks in the race, blue uniform for the police
       const silk = m.kind === "policehorse" ? "#1f2a44" : m.silk || "#d8322b";
       if (m.kind !== "horse") {
         part(g, "box", m.kind === "policehorse" ? "#2b2f35" : "#ffffff", .6, .08, .8, 0, 1.86, 0);
@@ -516,7 +517,7 @@ function animateModel(m, tt) {
   if (m.kind === "mascot" && u.arms) u.arms.forEach((p, i) => { p.rotation.x = (i ? -1 : 1) * (.6 + Math.sin(tt * 8 + i) * .5); });
 }
 
-// ---------- cámara, capas y cuadro ----------
+// ---------- camera, layers and frame ----------
 const RAY = new THREE.Raycaster(), PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), HIT = new THREE.Vector3(), NDC = new THREE.Vector2();
 function toWorld(ev) {
   const r = cv.getBoundingClientRect();
@@ -527,7 +528,7 @@ function toWorld(ev) {
 function updateCamera() {
   const base = ((LAND ? WW : WH) / 2) / Math.tan(15 * Math.PI / 180), z = cam.z, h = base / z;
   const tilt = clamp((z - 1) * .5, 0, .42);
-  const dx = LAND ? -1 : 0, dz = LAND ? 0 : 1;   // dirección "hacia abajo" de la pantalla en el mundo
+  const dx = LAND ? -1 : 0, dz = LAND ? 0 : 1;   // the screen's "down" direction in the world
   const sx = (Math.random() - .5) * shake, sy = (Math.random() - .5) * shake;
   const lift = h * Math.sin(tilt) * .12, tx = cam.x + sx + dx * lift, tz = cam.y + sy + dz * lift;
   const roll = windF.t > 0 ? windF.x * .1 * Math.min(1, windF.t) * Math.sin(Math.min(1, (3.6 - windF.t) * 2) * Math.PI / 2) : 0;
@@ -556,7 +557,7 @@ function updateFxLayer(live) {
     g.globalAlpha = .9; g.drawImage(G3.trail, 0, 0); g.globalAlpha = 1;
   } else if (phase === "plan") G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height);
   g.scale(k, k);
-  // sombra roja bajo quienes cayeron
+  // red shadow under those who fell
   g.fillStyle = "rgba(200,30,30,.28)";
   for (const a of fallen) { g.beginPath(); g.arc(a.x, a.y, .7, 0, 7); g.fill(); }
   if (phase === "plan") {
@@ -571,7 +572,7 @@ function updateFxLayer(live) {
       }
     }
   }
-  // zona que calma cada guardia
+  // area each guard calms
   for (const gd of guards) {
     g.fillStyle = "rgba(215,245,58,.14)"; g.strokeStyle = "rgba(215,245,58,.7)"; g.lineWidth = .12;
     g.beginPath(); g.arc(gd.x, gd.y, GUARD_CALM, 0, 7); g.fill(); g.stroke();
@@ -582,7 +583,7 @@ function updateFxLayer(live) {
     if (r.mega) { g.lineWidth = .3; g.strokeStyle = `rgba(255,210,58,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .5 + r.t * 4.5, 0, 7); g.stroke(); g.lineWidth = .14; continue; }
     g.strokeStyle = `rgba(229,50,41,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .3 + r.t * 1.8, 0, 7); g.stroke();
   }
-  // zona del megáfono y meta que se movió
+  // megaphone area and goal that moved
   for (const mg of mega.active) { g.fillStyle = "rgba(255,210,58,.12)"; g.beginPath(); g.arc(mg.x, mg.y, 5.5, 0, 7); g.fill(); }
   if (attr && phase !== "plan") { g.strokeStyle = "rgba(255,80,160,.8)"; g.lineWidth = .25; g.setLineDash([.6, .4]); g.beginPath(); g.arc(attr.x, attr.y, attr.r + .4 + Math.sin(performance.now() / 150) * .2, 0, 7); g.stroke(); g.setLineDash([]); }
   G3.fxTex.needsUpdate = true;
@@ -617,7 +618,7 @@ function renderConfetti() {
 }
 const LINC = {};
 const linArr = hex => LINC[hex] || (LINC[hex] = (c => [c.r, c.g, c.b])(lin(hex)));
-// lluvia: gotas que caen alrededor de la cámara
+// rain: drops falling around the camera
 function renderRain(tt) {
   if (!G3.rain) {
     G3.rain = new THREE.InstancedMesh(new THREE.BoxGeometry(.03, .9, .03), new THREE.MeshBasicMaterial({ color: 0xbcd4ff, transparent: true, opacity: .45, depthWrite: false }), 900);
@@ -655,11 +656,11 @@ function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
   const tt = now / 1000, live = phase === "show" || phase === "evac";
-  // apagón: la luz baja poco a poco y regresa de golpe
+  // blackout: the light fades slowly and comes back all at once
   const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
   G3.hemi.intensity = scene.light.hemi * (1 - .8 * black); G3.sun.intensity = scene.light.sunI * (1 - .9 * black);
   const vb = updateCamera();
-  // focos y haces
+  // spotlights and beams
   const cols = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"].map(lin);
   scene.bulbs.forEach((_, i) => {
     const on = live ? .35 + .9 * Math.max(0, Math.sin(now / (surgeT > 0 ? 90 : 220) + i * .9)) : .9, c = cols[i % 5];
@@ -673,7 +674,7 @@ function render3D(now, dtR) {
     if (bm.white) mesh.material.color.setRGB(1, .97, .9); else mesh.material.color.setHSL(((now / 22 + i * 60) % 360) / 360, 1, .6);
     mesh.lookAt(bm.x + Math.cos(ang) * 20, 0, bm.y + Math.sin(ang) * 20);
   });
-  // animales, coches y objetos
+  // animals, cars and objects
   const alive = new Set();
   for (const m of movers.concat(performers, guards)) {
     if (!m.obj) { m.obj = buildModel(m); if (!m.obj.parent) G3.moverGrp.add(m.obj); }
@@ -691,9 +692,9 @@ function render3D(now, dtR) {
   renderParticles();
   updateFxLayer(live);
   renderRain(tt);
-  G3.renderer.render(G3.scene, G3.camera);
-  // foto para el periódico: a mitad del show o en el primer pisoteado
-  if (live && (G3.wantPhoto || (fullAt && !G3.photo && t > fullAt + 12))) { try { G3.photo = cv.toDataURL("image/jpeg", .62); } catch (e) { /* sin foto */ } G3.wantPhoto = false; }
+  renderFrame();
+  // photo for the newspaper: halfway through the show or at the first trampling
+  if (live && (G3.wantPhoto || (fullAt && !G3.photo && t > fullAt + 12))) { try { G3.photo = cv.toDataURL("image/jpeg", .62); } catch (e) { /* no photo */ } G3.wantPhoto = false; }
   drawOverlay();
 }
 

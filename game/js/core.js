@@ -1,8 +1,8 @@
-// Marea Humana · mundo, obstáculos y utilidades
+// Human Tide · world, obstacles and utilities
 const $ = s => document.querySelector(s);
 const cv = $("#cv"), ov = $("#ov"), octx = ov.getContext("2d");
-// ===== Mundo (metros) =====
-const WW = 40, WH = 72, SH = 78, CS = .5, GW = WW / CS, GH = SH / CS;  // SH: la calle sigue fuera de cuadro
+// ===== World (meters) =====
+const WW = 40, WH = 72, SH = 78, CS = .5, GW = WW / CS, GH = SH / CS;  // SH: the street continues off-frame
 const R = .24, DT = 1 / 60;
 let PCRIT = 8.5;
 let CROWD = 3200, FENCE_BUDGET = 60, MAX_GATES = 5;
@@ -10,15 +10,15 @@ const SHOW_TIME = 40;
 const FENCE_Y = 66, SLOTS = 7, SLOT_W = 2.6;
 const slotX = i => WW * (i + .5) / SLOTS;
 let gates = [false, false, true, false, true, false, false], scene;
-let fences = [];           // vallas del jugador {ax,ay,bx,by,len}
+let fences = [];           // player fences {ax,ay,bx,by,len}
 
-// ===== Obstáculos =====
+// ===== Obstacles =====
 let obs = [], buckets, BKS = 2, BW = Math.ceil(WW / BKS), BH = Math.ceil(SH / BKS);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 function seg(ax, ay, bx, by, th, kind) { const o = { t: "s", ax, ay, bx, by, th, kind }; obs.push(o); return o; }
 function rect(x0, y0, x1, y1, kind) { const o = { t: "r", x0, y0, x1, y1, kind }; obs.push(o); return o; }
 function circ(x, y, r, kind) { const o = { t: "c", x, y, r, kind }; obs.push(o); return o; }
-// ===== Escenarios =====
+// ===== Venues =====
 const F = false, T = true;
 const hazardLine = (g, ax, ay, bx, by, w) => {
   g.lineCap = "butt"; g.lineWidth = w; g.strokeStyle = "#e9b923"; g.setLineDash([]);
@@ -34,7 +34,7 @@ function ringSegs(cx, cy, r, n, kind, skip) {
     obs[obs.length - 1].alt = k % 2;
   }
 }
-const RING = { x: 20, y: 21.5, r: 4.8 };     // plaza: plataforma redonda
-const PISTA = { x: 20, y: 25, r: 7.6 };      // circo: la pista
+const RING = { x: 20, y: 21.5, r: 4.8 };     // plaza: round platform
+const PISTA = { x: 20, y: 25, r: 7.6 };      // circus: the ring
 
 const SCENES = {};

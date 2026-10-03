@@ -1,4 +1,4 @@
-// Puente mínimo entre el juego y la app: logros de Steam, salir y pantalla completa
+// Minimal bridge between the game and the app: Steam achievements, quit and fullscreen
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("steam", {

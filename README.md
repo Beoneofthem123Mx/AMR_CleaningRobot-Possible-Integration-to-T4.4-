@@ -1,113 +1,114 @@
-# Marea Humana
+# Human Tide
 
-Juego de escritorio de gestión de multitudes para Steam (Windows y Linux), inspirado en el tráiler
-conceptual de @bonkbureau ("making trailers for games i wish existed").
+A crowd-management desktop game for Steam (Windows and Linux), inspired by the concept trailer by
+@bonkbureau ("making trailers for games i wish existed").
 
-Eres responsable de la seguridad de un evento masivo. Antes de abrir las puertas trazas vallas y
-decides qué entradas abrir. Luego miles de personas entran, se aprietan frente al escenario y, al
-terminar, salen todas a la vez. Mientras tanto pasan animales, coches y objetos entre la gente. Si
-alguien soporta demasiada presión durante un rato, cae y el contador **PISOTEADOS** sube.
+You are in charge of safety at a massive event. Before the gates open you draw fences and decide
+which entrances to open. Then thousands of people pour in, cram together in front of the stage and,
+when it's over, all leave at once. Meanwhile animals, cars and assorted objects wander through the
+crowd. If someone takes too much pressure for too long, they go down and the **TRAMPLED** counter
+goes up.
 
-## Cómo ejecutarlo
+## How to run it
 
-Necesitas [Node.js](https://nodejs.org/) 20 o más reciente.
+You need [Node.js](https://nodejs.org/) 20 or newer.
 
 ```sh
 npm install
-npm start            # abre el juego en una ventana
-npm run dist:win     # empaqueta dist/win-unpacked/Marea Humana.exe
-npm run dist:linux   # empaqueta dist/linux-unpacked/marea-humana
+npm start            # opens the game in a window
+npm run dist:win     # packages dist/win-unpacked/Human Tide.exe
+npm run dist:linux   # packages dist/linux-unpacked/human-tide
 ```
 
-Todo funciona sin internet: three.js y las fuentes van dentro de `game/`. Para publicarlo en
-Steam, sigue [STEAM.md](STEAM.md).
+Everything works offline: three.js and the fonts ship inside `game/`. To publish on Steam, follow
+[STEAM.md](STEAM.md).
 
-## Cómo jugar
+## How to play
 
-- **Valla**: arrastra sobre el recinto para trazar una valla.
-- **Puertas**: toca la reja de abajo para abrir o cerrar entradas.
-- **Seguridad**: pon guardias. Calman a la gente a su alrededor y detienen animales y vehículos.
-- **Borrar**: toca una valla o un guardia para quitarlo.
-- **Escenario**: elige dónde jugar (hay 13).
-- **Presión**: pinta a la multitud de azul a rojo según cuánto la aprietan.
-- **1× / 2× / 4×**: velocidad de la simulación.
-- **Cámara**: automática (se acerca e inclina en los momentos fuertes), cerca o lejos.
-- **Sonido** o tecla **M**: activa o silencia la música y los efectos.
-- **F11** o **Alt+Enter**: pantalla completa.
+- **Fence**: drag across the venue to draw a fence.
+- **Gates**: tap the barrier at the bottom to open or close entrances.
+- **Security**: place guards. They calm the people around them and stop animals and vehicles.
+- **Erase**: tap a fence or a guard to remove it.
+- **Venue**: choose where to play (there are 14).
+- **Pressure**: paints the crowd from blue to red depending on how hard they're being squeezed.
+- **1× / 2× / 4×**: simulation speed.
+- **Camera**: automatic (zooms in and tilts during the big moments), near or far.
+- **Sound** or the **M** key: turns music and effects on or off.
+- **F11** or **Alt+Enter**: fullscreen.
 
-Las estelas naranjas del modo de planeación muestran por dónde caminará la gente. Durante el show
-hay momentos fuertes: la multitud empuja hacia el escenario, la cámara se acerca y la gente se
-pinta con colores de presión. Terminar con cero pisoteados da tres estrellas, y las estrellas
-abren escenarios nuevos.
+The orange trails in planning mode show where people will walk. During the show there are big
+moments: the crowd surges toward the stage, the camera moves in and people light up in pressure
+colors. Finishing with zero trampled earns three stars, and stars unlock new venues.
 
-## Cómo funciona
+## How it works
 
-- Cada persona es un agente con radio de 24 cm que sigue un campo de flujo (Dijkstra sobre una
-  rejilla de 50 cm) hacia el frente del escenario o hacia la salida.
-- Los empujones entre personas y contra las vallas suman presión. Por encima del umbral se
-  acumula daño y la persona cae.
-- El sonido se genera en el momento con Web Audio: música distinta por escenario, murmullo de la
-  multitud que sube con la presión y un efecto para cada evento.
-- Se dibuja en 3D con [three.js](https://threejs.org/) (r149, licencia MIT en `game/vendor/three.LICENSE`):
-  el suelo es una textura con los dibujos del escenario y encima van los escenarios, vallas, puertas,
-  animales y coches como modelos 3D con sombras.
-- El público usa cinco modelos de personaje (clásico, con gorra, con melena, con mochila y fiestero
-  con barra luminosa) dibujados con mallas instanciadas. Cada persona camina moviendo brazos y
-  piernas, salta y levanta los brazos en el show, agita los brazos cuando la aprietan y queda tendida
-  en el suelo si la pisotean.
-- Si el equipo va lento, el juego quita sombras de la gente y baja la resolución automáticamente.
-- En monitores horizontales la vista se gira: el escenario queda a la izquierda.
-- La app de escritorio es [Electron](https://www.electronjs.org/) (`desktop/`). La integración con
-  Steam (logros y superposición) usa [steamworks.js](https://github.com/ceifa/steamworks.js); sin
-  Steam abierto, el juego corre igual pero sin logros.
+- Each person is an agent with a 24 cm radius following a flow field (Dijkstra over a 50 cm grid)
+  toward the front of the stage or toward the exit.
+- Shoving between people and against fences adds up to pressure. Above the threshold, damage
+  builds up and the person falls.
+- Sound is generated on the fly with Web Audio: different music per venue, a crowd murmur that
+  rises with the pressure and an effect for every event.
+- It's drawn in 3D with [three.js](https://threejs.org/) (r149, MIT license in `game/vendor/three.LICENSE`):
+  the ground is a texture with the venue's markings, and on top sit the stages, fences, gates,
+  animals and cars as 3D models with shadows.
+- The audience uses five character models (classic, cap, long hair, backpack and partygoer with a
+  glow stick) drawn with instanced meshes. Every person swings their arms and legs as they walk,
+  jumps and raises their arms during the show, flails when squeezed and lies flat on the ground if
+  trampled.
+- If the hardware is struggling, the game automatically drops crowd shadows and lowers the
+  resolution.
+- On landscape monitors the view is rotated so the stage sits on the left.
+- The desktop app is [Electron](https://www.electronjs.org/) (`desktop/`). The Steam integration
+  (achievements and overlay) uses [steamworks.js](https://github.com/ceifa/steamworks.js); without
+  Steam running, the game works the same, just without achievements.
 
-## Estructura
+## Structure
 
-- `game/`: el juego. `game/js/scenes/` tiene un archivo por escenario; `movers.js` los eventos;
-  `render.js` el 3D; `audio.js` el sonido.
-- `desktop/`: la app de Electron y el puente con Steam.
-- `steam/`: scripts de SteamPipe, capturas (`steam/screenshots/`) y arte de tienda (`steam/art/`).
-- `build/icon.png`: ícono que usa electron-builder para el ejecutable.
-- `STEAM.md`: guía para publicar en Steam.
+- `game/`: the game. `game/js/scenes/` has one file per venue; `movers.js` the events;
+  `render.js` the 3D; `audio.js` the sound.
+- `desktop/`: the Electron app and the Steam bridge.
+- `steam/`: SteamPipe scripts, screenshots (`steam/screenshots/`) and store art (`steam/art/`).
+- `build/icon.png`: icon electron-builder uses for the executable.
+- `STEAM.md`: guide to publishing on Steam.
 
-## Escenarios
+## Venues
 
-| Escenario | Se abre con | Qué pasa |
-|-----------|-------------|----------|
-| **La Plaza** | — | Concierto gratis. Cruzan coches, un camión de helados, perros sueltos y pelotas de playa. |
-| **El Circo** | — | Bajo la carpa: se escapa el león, desfilan elefantes, el coche de los payasos, monociclos y la bala humana. |
-| **El Estadio** | 2 ★ | De noche, concierto en la cancha: bengalas, la mascota, el balón gigante, la ola y el carrito médico. |
-| **El Viernes Negro** | 3 ★ | Rebajas en el centro comercial: ofertas relámpago que mueven a la multitud, carritos sin dueño, una abuela con codos y piso mojado. |
-| **El Crucero** | 4 ★ | Fiesta en la cubierta: el oleaje inclina el barco, gaviotas, un flamenco inflable y la bocina del capitán. |
-| **La Boda del Año** | 5 ★ | Boda de influencers: el ramo provoca estampidas, el pastel rueda, el dron se estrella, mariachis y la suegra. |
-| **El Hipódromo** | 6 ★ | Gran Premio: carreras junto a la valla, caballos desbocados, el tractor de la pista y perros. |
-| **El Trono de Oro** | 7 ★ | Inauguran el baño más lujoso del mundo: se tapa, ruedan rollos de oro, el alcalde se toma selfies y huele a vainilla. |
-| **La Ciudad** | 9 ★ | Festival nocturno entre edificios: fuegos artificiales, desfile con carroza, taxis y policía montada. |
-| **El Mitin del Pato** | 10 ★ | Cierre de campaña de un pato: promesas absurdas, tortas gratis, camiones de simpatizantes, botargas y huevazos. |
-| **El Taco Gigante** | 12 ★ | Récord mundial de taco: salsa que vuelve el piso resbaloso, un taquero que regala tacos y chiles que explotan. |
-| **Encuentro Cercano** | 14 ★ | Un ovni en el maizal: rayo que abduce gente, vacas (una flotando), agentes de negro y un alien que quiere selfies. |
-| **Llega la Estrella** | 16 ★ | Sala de llegadas: sale el ídolo pop y sus fans lo persiguen; maletas sueltas, carritos y el perro de seguridad. |
-| **La Arena** | 18 ★ | Gran final de lucha libre: topes suicidas al público, sillazos, máscaras que vuelan, el rudo que baja a pelear y doña Chona, de 84 años, que quiere subirse al ring. |
+| Venue | Unlocks at | What happens |
+|-------|------------|--------------|
+| **The Plaza** | — | Free concert. Cars drive through, plus an ice-cream truck, loose dogs and beach balls. |
+| **The Circus** | — | Under the big top: the lion escapes, elephants parade, the clown car, unicycles and the human cannonball. |
+| **The Stadium** | 2 ★ | Night concert on the pitch: flares, the mascot, the giant ball, the wave and the medical cart. |
+| **Black Friday** | 3 ★ | Mall sale: flash deals that send the crowd stampeding, runaway shopping carts, a grandma with elbows and a wet floor. |
+| **The Cruise** | 4 ★ | Deck party: the swell tilts the ship, seagulls, an inflatable flamingo and the captain's horn. |
+| **Wedding of the Year** | 5 ★ | Influencer wedding: the bouquet toss sparks stampedes, the cake rolls away, the drone crashes, mariachis and the mother-in-law. |
+| **The Racetrack** | 6 ★ | Grand Prix: races right along the fence, runaway horses, the track tractor and dogs. |
+| **The Golden Throne** | 7 ★ | The world's most luxurious restroom opens: it clogs, golden rolls go rolling, the mayor takes selfies and it smells like vanilla. |
+| **The City** | 9 ★ | Night festival between buildings: fireworks, a parade float, taxis and mounted police. |
+| **The Duck Rally** | 10 ★ | A duck's closing campaign rally: absurd promises, free sandwiches, trucks full of supporters, costumed mascots and egg-throwing. |
+| **The Giant Taco** | 12 ★ | World-record taco: salsa makes the floor slippery, a taquero hands out free tacos and chiles explode. |
+| **Close Encounter** | 14 ★ | A UFO in the cornfield: a beam that abducts people, cows (one of them floating), men in black and an alien who wants selfies. |
+| **The Star Arrives** | 16 ★ | Arrivals hall: the pop idol walks out and the fans give chase; loose suitcases, luggage carts and the security dog. |
+| **The Arena** | 18 ★ | Lucha libre grand finale: suicide dives into the crowd, chair shots, flying masks, the villain coming down to brawl and doña Chona, 84, who wants to climb into the ring. |
 
-Las vallas y los guardias también sirven contra el caos: los animales y vehículos que chocan con
-ellos se dan la vuelta.
+Fences and guards also work against the chaos: animals and vehicles that bump into them turn
+around.
 
-## Sorpresas en cada partida
+## Surprises every match
 
-- **Condición del día**: al abrir las puertas, una ruleta elige una sorpresa: wifi gratis en una
-  esquina, influencer en vivo, aguacero, noche de reguetón, gravedad lunar, hora pico, público en
-  cámara lenta, lluvia de chanclas, palomas hambrientas, apagones, Día del Niño, uniforme
-  obligatorio (todos con la misma playera) o el tío de la fiesta.
-- **Megáfono**: durante el show, cada clic calma a la gente en esa zona (tres usos por show).
-- **Modo caos total** (en el menú): cualquier evento de cualquier escenario puede pasar en
-  cualquier lugar, y se combinan dos condiciones del día.
-- **El periódico**: al terminar, la portada de *El Chismógrafo* cuenta lo que pasó con titulares
-  satíricos y una foto tomada durante el show.
-- La primera persona que cae activa una repetición en cámara lenta.
-- **Cámara de director**: en modo automático, la cámara se asoma unos segundos a cada evento
-  (el elefante, el ovni, el taxi que no sabía que la calle estaba cerrada).
+- **Today's twist**: when the gates open, a roulette picks a surprise: free wifi in one corner, an
+  influencer going live, a downpour, reggaeton night, moon gravity, rush hour, a slow-motion
+  audience, a rain of flip-flops, hungry pigeons, blackouts, Children's Day, mandatory uniform
+  (everyone in the same T-shirt) or that one uncle at the party.
+- **Megaphone**: during the show, each click calms the people in that area (three uses per show).
+- **Total Chaos mode** (in the menu): any event from any venue can happen anywhere, and two of
+  today's twists are combined.
+- **The newspaper**: at the end, the front page of *The Daily Gossip* recounts what happened with
+  satirical headlines and a photo taken during the show.
+- The first person to go down triggers a slow-motion replay.
+- **Director's camera**: in automatic mode, the camera peeks at each event for a few seconds (the
+  elephant, the UFO, the taxi that didn't know the street was closed).
 
-## Atajos de teclado
+## Keyboard shortcuts
 
-**1–4** herramientas · **Espacio** abre puertas · **H** presión · **C** cámara · **V** velocidad ·
-**M** sonido · **Esc** o **P** pausa · **F11** pantalla completa
+**1–4** tools · **Space** opens the gates · **H** pressure · **C** camera · **V** speed ·
+**M** sound · **Esc** or **P** pause · **F11** fullscreen

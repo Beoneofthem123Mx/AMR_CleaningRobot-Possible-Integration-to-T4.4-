@@ -1,8 +1,8 @@
-// Marea Humana · modelos 3D de personajes y objetos de los escenarios cómicos
-// Todos miran hacia +x y se arman con piezas simples (esferas, cilindros y cajas).
+// Human Tide · 3D models of characters and objects for the comedy venues
+// They all face +x and are built from simple parts (spheres, cylinders and boxes).
 
-// ---------- personas con estilo ----------
-// body: ropa, legs: pantalón, skin, hat: tipo de sombrero, extra(g, u, bodyG): accesorios
+// ---------- people with style ----------
+// body: clothes, legs: pants, skin, hat: hat type, extra(g, u, bodyG): accessories
 const PERSONS = {
   abuela: { body: "#8a4fbf", legs: "#5d3a7a", hat: "bun", hatCol: "#d9d9d9", scale: .9,
     extra(g, u, b) { for (const s of [-1, 1]) part(b, "box", s > 0 ? "#ff6fb1" : "#ffd23a", .25, .3, .1, .05, .95, s * .38); part(b, "sph", "#c9ced6", .05, .05, .05, .16, 1.68, .07); } },
@@ -30,18 +30,18 @@ const PERSONS = {
   taquero: { body: "#f4f4f2", legs: "#2b3a55", hat: "chef", hatCol: "#ffffff", extra(g, u, b) { part(b, "box", "#d8322b", .05, .5, .32, .19, 1.0, 0); } },
   tio: { body: "#ff7a3c", legs: "#c9b28a", hat: "none", scale: 1.05,
     extra(g, u, b) {
-      part(b, "sph", "#ff7a3c", .26, .28, .28, .06, 1.0, 0);  // la panza
+      part(b, "sph", "#ff7a3c", .26, .28, .28, .06, 1.0, 0);  // the belly
       for (const [y, z] of [[1.28, .12], [1.08, -.12], [1.2, -.2], [.98, .16], [1.35, -.05]]) part(b, "sph", "#ffe48a", .06, .06, .04, .24, y, z);
-      part(b, "box", "#0a0a0a", .06, .05, .26, .14, 1.67, 0);  // lentes oscuros
+      part(b, "box", "#0a0a0a", .06, .05, .26, .14, 1.67, 0);  // sunglasses
       part(b, "cyl", "#2f8f3a", .05, .24, .05, .3, 1.05, .32); part(b, "cyl", "#e8e2d0", .03, .05, .03, .3, 1.2, .32);
     } },
   luchador: { body: "#d39a6a", legs: "#2b2f35", hat: "none", scale: 1.12,
     extra(g, u, b, m) {
       const c = m.col || "#d8322b";
-      part(b, "sph", c, .165, .17, .165, .02, 1.66, 0);  // la máscara
+      part(b, "sph", c, .165, .17, .165, .02, 1.66, 0);  // the mask
       for (const s of [-1, 1]) { part(b, "sph", "#ffffff", .05, .035, .045, .15, 1.69, s * .065); part(b, "sph", "#111214", .02, .02, .02, .19, 1.69, s * .065); }
-      part(b, "box", c, .36, .2, .4, 0, .84, 0);  // calzón de lucha
-      if (m.rudo) part(b, "box", "#6b1a8a", .06, .85, .52, -.24, 1.0, 0);  // capa de rudo
+      part(b, "box", c, .36, .2, .4, 0, .84, 0);  // wrestling trunks
+      if (m.rudo) part(b, "box", "#6b1a8a", .06, .85, .52, -.24, 1.0, 0);  // villain's cape
     } },
   referi: { body: "#f4f4f2", legs: "#151617", hat: "none",
     extra(g, u, b) { for (let y = .92; y < 1.42; y += .13) part(b, "box", "#151617", .4, .05, .52, 0, y, 0); part(b, "box", "#151617", .05, .06, .16, .21, 1.45, 0); } },
@@ -66,7 +66,7 @@ function personModel(g, u, P, m) {
   if (P.extra) P.extra(g, u, b, m);
 }
 
-// ---------- animales y objetos ----------
+// ---------- animals and objects ----------
 const EXTRA_MODELS = {
   chair(g, u, m) {
     const metal = mat("#9aa0a8", { metalness: .7, roughness: .35 });
