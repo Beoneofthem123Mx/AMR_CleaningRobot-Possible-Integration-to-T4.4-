@@ -6,13 +6,13 @@ const JOBS = [
   ["header_capsule.png", 920, 430, "full", "circo"],
   ["small_capsule.png", 462, 174, "full", "circo"],
   ["main_capsule.png", 1232, 706, "full", "circo"],
-  ["vertical_capsule.png", 748, 896, "full", "circo"],
-  ["library_capsule.png", 600, 900, "full", "plaza"],
-  ["library_hero.png", 3840, 1240, "bg", "circo"],
+  ["vertical_capsule.png", 748, 896, "full", "arena"],
+  ["library_capsule.png", 600, 900, "full", "arena"],
+  ["library_hero.png", 3840, 1240, "bg", "arena"],
   ["library_logo.png", 1280, 720, "logo", "circo"],
   ["page_background.png", 1438, 810, "bg", "mitin"],
-  ["icon_512.png", 512, 512, "icon", "circo"],
-  ["icon_256.png", 256, 256, "icon", "circo"],
+  ["icon_512.png", 512, 512, "icon", "arena"],
+  ["icon_256.png", 256, 256, "icon", "arena"],
 ];
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });

@@ -2,8 +2,8 @@
 const LRING = { x0: 15, y0: 6, x1: 25, y1: 16 }, MASKS = ["#d8322b", "#2f6fc4", "#e3b23c", "#3d9a5b", "#ff6fb1", "#a98bff"];
 SCENES.arena = {
   name: "The Arena", tag: "Lucha libre grand final", outside: "#1d1a22", bulbH: 2.3, night: true, music: "brass",
-  light: { sky: 0x9a8fd0, ground: 0x221d2a, hemi: .38, sun: 0xfff0e0, sunI: .95 }, crowd: 3000, fenceBudget: 70, maxGates: 5, guards: 4,
-  gates: [F, T, F, T, F, T, F], unlock: 18,
+  light: { sky: 0x9a8fd0, ground: 0x221d2a, hemi: .38, sun: 0xfff0e0, sunI: .95 }, crowd: 3200, fenceBudget: 70, maxGates: 5, guards: 4,
+  gates: [F, F, T, F, T, F, F], unlock: 18,
   intro: "Lucha libre grand final: mask vs. hair. The wrestlers dive into the crowd, chairs are flying and an 84-year-old grandma wants to get in the ring.",
   acts: ["Lucha! Lucha! Lucha!", "Get down from there!", "Rudos! Rudos!", "Técnicos! Técnicos!"],
   events: ["tope", "sillazo", "mascara", "rudo", "chona", "tope", "referi"],
