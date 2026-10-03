@@ -38,3 +38,6 @@ const RING = { x: 20, y: 21.5, r: 4.8 };     // plaza: round platform
 const PISTA = { x: 20, y: 25, r: 7.6 };      // circus: the ring
 
 const SCENES = {};
+// venue files can bring their own 3D models: SCENE_MODELS[kind] = (group, u, mover) => {...},
+// SCENE_PERSONS[kind] = { body, legs, hat, hatCol, scale, extra(g, u, body, mover) } (same format as PERSONS)
+const SCENE_MODELS = {}, SCENE_PERSONS = {};

@@ -110,7 +110,7 @@ const QUOTES = [
   "“I'd organize it again,” insisted the man in charge, now missing both shoes.",
 ];
 function showReport(stars, stuck) {
-  const p = PLACE[sceneKey] || scene.name.toUpperCase(), v = { P: p, N: CROWD.toLocaleString("en"), D: dead.toLocaleString("en") };
+  const p = PLACE[sceneKey] || scene.place || scene.name.toUpperCase(), v = { P: p, N: CROWD.toLocaleString("en"), D: dead.toLocaleString("en") };
   const head = fill(pick(stars === 3 ? HEADLINES.perfect : stars ? HEADLINES.some : HEADLINES.bad), v);
   const lines = [...eventLog].map(k => (scene.lines && scene.lines[k]) || EVENT_LINES[k]).filter(Boolean).sort(() => Math.random() - .5).slice(0, 2);
   if (MOD && MOD.id !== "normal") {

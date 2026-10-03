@@ -159,7 +159,7 @@ function buildStatic3D() {
       const geo = new THREE.BoxGeometry(o.x1 - o.x0, o.hb, o.y1 - o.y0); geo.translate((o.x0 + o.x1) / 2, o.hb / 2, (o.y0 + o.y1) / 2); buildingUV(geo);
       const mesh = new THREE.Mesh(geo, [side, side, m, m, side, side]); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh); continue;
     }
-    const h = HEIGHTS[o.kind]; if (!h && o.kind !== "tent") continue;
+    const h = HEIGHTS[o.kind] || (scene.heights && scene.heights[o.kind]); if (!h && o.kind !== "tent") continue;
     let geo;
     if (o.kind === "tent") { geo = new THREE.ConeGeometry(Math.SQRT2 * 2.5, 3.4, 4, 1); geo.rotateY(Math.PI / 4); geo.translate((o.x0 + o.x1) / 2, 1.7, (o.y0 + o.y1) / 2); }
     else if (o.t === "r") { geo = new THREE.BoxGeometry(o.x1 - o.x0, h, o.y1 - o.y0); geo.translate((o.x0 + o.x1) / 2, h / 2, (o.y0 + o.y1) / 2); }
@@ -482,8 +482,8 @@ function buildModel(m) {
       break;
     }
     default:
-      if (PERSONS[m.kind]) personModel(g, u, PERSONS[m.kind], m);
-      else if (EXTRA_MODELS[m.kind]) EXTRA_MODELS[m.kind](g, u, m);
+      if (PERSONS[m.kind] || SCENE_PERSONS[m.kind]) personModel(g, u, PERSONS[m.kind] || SCENE_PERSONS[m.kind], m);
+      else if (EXTRA_MODELS[m.kind] || SCENE_MODELS[m.kind]) (EXTRA_MODELS[m.kind] || SCENE_MODELS[m.kind])(g, u, m);
       break;
     case "beach": case "cball": {
       const ball = new THREE.Mesh(GEO.sph, new THREE.MeshStandardMaterial({ map: G3.ballTex[m.kind], roughness: .35 }));
