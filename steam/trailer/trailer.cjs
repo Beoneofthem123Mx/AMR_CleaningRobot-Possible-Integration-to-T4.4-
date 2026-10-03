@@ -62,7 +62,10 @@ async function captureClips() {
       const pre = evs.length ? Math.min(0, evs[0][0]) : 0;
       let steps = Math.round((g.warm + pre) * 60);
       if (g.crush) { // with the default gates the evacuation jams: record from the first trampled person
-        for (let k = 0; k < 60 * 140 && __game.s.dead === 0; k++) __game.step();
+        for (let k = 0; k < 60 * 140 && __game.s.dead < 4; k++) __game.step();
+        // replay the slow-motion close-up on the latest fall, as the game does for the first one
+        const f = fallen[fallen.length - 1];
+        if (f) { slowT = 1.8; focus = { x: f.x, y: f.y }; }
       } else for (let k = 0; k < steps; k++) __game.step();
       movers = movers.filter(m => m.kind === "router" || m.kind === "influencer");
       for (const [at, e] of evs) if (at < 0) { __game.event(e); }
@@ -143,7 +146,7 @@ function assemble() {
   fs.writeFileSync(path.join(WORK, "list.txt"), parts.map(p => `file '${p}'`).join("\n"));
   const final = path.join(__dirname, "human_tide_trailer.mp4");
   sh("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", path.join(WORK, "list.txt"), "-i", path.join(WORK, "audio.wav"),
-    "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
+    "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-maxrate", "7M", "-bufsize", "14M", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
     "-af", "afade=t=out:st=" + (SEG.reduce((s, g) => s + (g.card ? g.dur : g.secs), 0) - 1) + ":d=1", "-shortest", "-movflags", "+faststart", final]);
   console.log("done:", final);
 }
