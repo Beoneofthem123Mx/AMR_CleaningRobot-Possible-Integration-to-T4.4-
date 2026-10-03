@@ -42,7 +42,7 @@ function updateFx(dt) {
   const hw = WW / (2 * cam.z), hh = WH / (2 * cam.z);
   cam.x = clamp(cam.x, hw, WW - hw); cam.y = clamp(cam.y, hh, WH - hh);
   shake *= Math.pow(.03, dt); flash *= Math.pow(.04, dt);
-  heatMix += ((heat || surgeT > 0 ? 1 : 0) - heatMix) * (1 - Math.pow(.015, dt));
+  heatMix += ((heat ? 1 : surgeT > 0 ? .45 : 0) - heatMix) * (1 - Math.pow(.015, dt));
   for (const r of rings) r.t += dt; rings = rings.filter(r => r.t < 1.3);
   for (const q of pops) q.t += Math.max(dt, .016); pops = pops.filter(q => q.t < 1.6);
   stepPerformers(dt);

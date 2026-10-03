@@ -189,7 +189,26 @@ function smallHit(x, y) {
   pop(x, y, "WHACK!"); burstAt(x, y, 8);
 }
 const turnTo = (a, b, m) => { let d = ((b - a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; return a + clamp(d, -m, m); };
+// street life: vendors and characters that wander through every venue (mostly harmless)
+const AMBIENT = [
+  { kind: "balloonman", say: "BALLOONS! GET YOUR BALLOONS!", speed: .8 },
+  { kind: "hotdog", say: "HOT DOGS! TWO FOR TEN!", speed: .9 },
+  { kind: "photographer", say: "SAY CHEESE!", speed: 1.2 },
+  { kind: "mime", say: "...", speed: .7 },
+  { kind: "selfie", say: "DON'T MIND ME, I'M LIVE!", speed: 1 },
+];
+let ambientT = 6;
+function spawnAmbient() {
+  const a = AMBIENT[(Math.random() * AMBIENT.length) | 0], gx = openGateX();
+  const pts = [crowdPoint(), crowdPoint(), crowdPoint(), [openGateX(), SH + 3]];
+  addMover({ kind: a.kind, ambient: true, x: gx, y: SH, pts, speed: a.speed, r: .45, push: 8, scare: 0, say: a.say, sayEvery: 7 + Math.random() * 4,
+    tick: a.kind === "photographer" ? m => { m.ft = (m.ft || 0) - DT; if (m.ft <= 0 && m.y < FENCE_Y) { m.ft = 4 + Math.random() * 3; flash = Math.max(flash, .25); } } : undefined });
+}
 function stepMovers() {
+  if (phase === "show") {
+    ambientT -= DT;
+    if (ambientT <= 0) { ambientT = rnd(9, 15); if (movers.filter(m => m.ambient).length < 3 && movers.length < 14) spawnAmbient(); }
+  }
   if (phase === "show" || phase === "evac") {
     eventT -= DT;
     if (eventT <= 0 && movers.length < 16) {

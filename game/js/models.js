@@ -45,6 +45,35 @@ const PERSONS = {
     } },
   referi: { body: "#f4f4f2", legs: "#151617", hat: "none",
     extra(g, u, b) { for (let y = .92; y < 1.42; y += .13) part(b, "box", "#151617", .4, .05, .52, 0, y, 0); part(b, "box", "#151617", .05, .06, .16, .21, 1.45, 0); } },
+  balloonman: { body: "#3d9a5b", legs: "#2b3a55", hat: "cap", hatCol: "#d8322b",
+    extra(g, u, b) {
+      // a bunch of balloons on long strings, bobbing above the crowd
+      const cols = ["#ff4d6d", "#ffd23a", "#4fd8ff", "#7dff6a", "#c77dff", "#ff9a3c", "#ffffff"];
+      const bunch = pivot(g, .2, 0, .3); u.bunch = bunch;
+      cols.forEach((c, i) => {
+        const a = i / cols.length * 6.283, x = Math.cos(a) * .32, z = Math.sin(a) * .32, y = 2.75 + (i % 3) * .18;
+        part(bunch, "cyl", "#dddddd", .008, y - 1.3, .008, x * .5, (y + 1.3) / 2, z * .5);
+        part(bunch, "sph", mat(c, { roughness: .25, metalness: .1 }), .22, .26, .22, x, y, z);
+      });
+      u.anim = tt => { bunch.rotation.y = Math.sin(tt * .9) * .4; bunch.rotation.z = Math.sin(tt * 1.3) * .06; };
+    } },
+  hotdog: { body: "#f4f4f2", legs: "#2b2f35", hat: "chef", hatCol: "#ffffff",
+    extra(g, u, b) {
+      part(g, "box", "#d8322b", .9, .55, .7, .85, .75, 0); part(g, "box", "#f4f4f2", .92, .1, .72, .85, 1.07, 0);
+      for (const s of [-1, 1]) { const w = part(g, "cyl", "#151617", .16, .08, .16, .85, .16, s * .38); w.rotation.x = Math.PI / 2; }
+      part(g, "cyl", "#2b2f35", .02, 1.1, .02, .85, 1.6, 0); const um = part(g, "cone", "#ffd23a", .75, .3, .75, .85, 2.2, 0);
+      part(g, "sph", "#c7883a", .32, .07, .08, .7, 1.16, .15); part(g, "sph", "#d8322b", .28, .05, .05, .7, 1.2, .15);
+    } },
+  photographer: { body: "#4a4d55", legs: "#2b2f35", hat: "cap", hatCol: "#151617",
+    extra(g, u, b) { part(b, "box", "#151617", .16, .14, .2, .22, 1.62, 0); part(b, "cyl", "#2b2f35", .06, .14, .06, .32, 1.62, 0).rotation.z = Math.PI / 2; part(b, "box", "#e3b23c", .06, .2, .12, -.02, 1.1, .3); } },
+  mime: { body: "#f4f4f2", legs: "#151617", hat: "none", skin: "#ffffff",
+    extra(g, u, b) {
+      for (let y = .98; y < 1.4; y += .12) part(b, "box", "#151617", .4, .045, .52, 0, y, 0);
+      part(b, "cyl", "#151617", .17, .06, .17, -.01, 1.78, 0); part(b, "cyl", "#151617", .1, .12, .1, -.01, 1.86, 0);
+      part(b, "box", "#d8322b", .04, .12, .2, .19, 1.42, 0);
+    } },
+  selfie: { body: "#ff6fb1", legs: "#2f6fc4", hat: "hair", hatCol: "#ffd23a",
+    extra(g, u, b) { const st = part(b, "cyl", "#2b2f35", .015, 1.1, .015, .45, 2.0, .2); st.rotation.z = -.6; part(b, "box", basic("#cfe8ff"), .04, .16, .09, .78, 2.45, .2); } },
   shopper: { body: "#3d9a5b", legs: "#2b3a55", hat: "cap", hatCol: "#e8b631", extra(g, u, b) { for (const s of [-1, 1]) part(b, "box", "#ffffff", .3, .35, .12, .02, .9, s * .4); } },
 };
 function personModel(g, u, P, m) {

@@ -160,5 +160,6 @@ const SFX_BY_TEXT = { "ROAR!": "roar", "GRRR!": "roar", "MEEP MEEP!": "honk", "B
   "NOOO!": "scream", "FREE WIFI!": "jingle", "HEY BESTIES!": "cheer", "WHACK!": "crash", "COO COO!": "quack", "HERE COMES THE BOUQUET!": "cheer", "IT'S MINE!": "cheer",
   "EXCUSE ME, YOUNG MAN!": "honk", "WET FLOOR!": "beep", "THAT'S MY SONG!": "cheer", "ONE MORE! ONE MORE!": "cheer", "TAKE MY PICTURE, KIDDO!": "flash",
   "SUICIDE DIVE!": "fiu", "CHAIR SHOT!": "crash", "THE MASK!": "fiu", "OUTTA MY WAY!": "roar", "MAKE WAY, MIJOS!": "cheer", "BREAK IT UP!": "whistle", "DIDN'T EVEN HURT!": "scream",
-  "VANILLA!": "jingle", "SANDWICHES!": "cheer", "SPICY!": "scream", "I'LL FIX IT!": "honk", "LOOK OVER HERE!": "flash" };
+  "VANILLA!": "jingle", "SANDWICHES!": "cheer", "SPICY!": "scream", "I'LL FIX IT!": "honk", "LOOK OVER HERE!": "flash",
+  "SAY CHEESE!": "flash", "HOT DOGS! TWO FOR TEN!": "honk", "BALLOONS! GET YOUR BALLOONS!": "jingle", "DON'T MIND ME, I'M LIVE!": "cheer" };
 function sfxFor(text) { const n = SFX_BY_TEXT[text] || (scene && scene.sfx && scene.sfx[text]); if (n) sfx(n); }

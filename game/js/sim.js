@@ -280,7 +280,7 @@ function start(mod) {
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.round(scene.crowd * (MOD.crowdMul || 1));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] };
-  phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
+  phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();
   if (MOD.uniform) MOD.uc = (Math.random() * SHIRTS.length) | 0;
   if (MOD.start) MOD.start();
