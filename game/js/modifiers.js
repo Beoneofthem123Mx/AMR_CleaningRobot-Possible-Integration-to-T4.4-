@@ -29,6 +29,15 @@ const MODS = [
       caption("¡Ataque de palomas!", true, 1600); } } },
 ];
 const MODS_BY_ID = Object.fromEntries(MODS.map(m => [m.id, m]));
+// en modo caos se combinan dos condiciones del día
+function comboMod(a, b) {
+  if (a.id === "normal") return b; if (b.id === "normal" || a.id === b.id) return a;
+  const prod = k => (a[k] || 1) * (b[k] || 1);
+  return { id: a.id + "+" + b.id, name: `${a.name} + ${b.name}`, desc: `${a.desc} Además: ${b.desc.charAt(0).toLowerCase() + b.desc.slice(1)}`,
+    speed: prod("speed"), pcritMul: prod("pcritMul"), crowdMul: prod("crowdMul"), dropMul: prod("dropMul"), bounce: a.bounce || b.bounce, rain: a.rain || b.rain,
+    altShare: Math.max(a.altShare || 0, b.altShare || 0) || undefined, events: (a.events || []).concat(b.events || []), ev: { ...(a.ev || {}), ...(b.ev || {}) },
+    start() { if (a.start) a.start(); if (b.start) b.start(); } };
+}
 function rollMod() {
   const total = MODS.reduce((s, m) => s + m.w, 0); let r = Math.random() * total;
   for (const m of MODS) { r -= m.w; if (r <= 0) return m; }
@@ -38,7 +47,8 @@ function rollMod() {
 function startWithRoulette() {
   if (phase !== "plan" || !canStart()) return;
   audioInit();
-  const pick = window.__forceMod ? MODS_BY_ID[window.__forceMod] : rollMod();
+  let pick = window.__forceMod ? MODS_BY_ID[window.__forceMod] : rollMod();
+  if (chaosMode && !window.__forceMod) { let b = rollMod(), n = 0; while (b.id === pick.id && n++ < 5) b = rollMod(); pick = comboMod(pick.id === "normal" ? rollMod() : pick, b); }
   showCard(`<div class="roulette"><small>Condición del día</small><h2 id="rl">…</h2><p id="rld">&nbsp;</p></div>`);
   let k = 0, done = false;
   const names = MODS.map(m => m.name);

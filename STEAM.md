@@ -53,6 +53,16 @@ El juego ya los activa. Créalos en *Stats & Achievements* con estos nombres de 
 | `GUARDIAN`      | Alto ahí                 | Que un guardia detenga a un animal o un vehículo     |
 | `ALL_SCENES`    | Gira completa            | Ganar al menos una estrella en todos los escenarios  |
 | `ALL_STARS`     | Seguridad perfecta       | Tres estrellas en todos los escenarios               |
+| `PERFECT_VIERNES`    | Rebajas sin heridos       | Viernes Negro con cero pisoteados y nadie atrapado |
+| `PERFECT_BODA`       | Boda en paz               | La Boda del Año con cero pisoteados y nadie atrapado |
+| `PERFECT_TRONO`      | Baño impecable            | El Trono de Oro con cero pisoteados y nadie atrapado |
+| `PERFECT_MITIN`      | Campaña limpia            | El Mitin del Pato con cero pisoteados y nadie atrapado |
+| `PERFECT_TACO`       | Récord sin heridos        | El Taco Gigante con cero pisoteados y nadie atrapado |
+| `PERFECT_OVNI`       | Contacto pacífico         | Encuentro Cercano con cero pisoteados y nadie atrapado |
+| `PERFECT_AEROPUERTO` | Aterrizaje suave          | Llega la Estrella con cero pisoteados y nadie atrapado |
+| `SPACE_TOURISM`      | Turismo espacial          | 100 abducidos en un solo show |
+| `LOUD_AND_SAFE`      | A gritos pero a salvo     | Tres estrellas usando los tres megáfonos |
+| `MOD_COLLECTOR`      | Ya lo vi todo             | Terminar shows con seis condiciones del día distintas |
 
 Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
 

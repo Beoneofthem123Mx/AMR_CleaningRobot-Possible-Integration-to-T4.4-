@@ -289,6 +289,9 @@ function finish() {
   if (Object.keys(SCENES).every(k => (best[k] ?? 0) >= 1)) achieve("ALL_SCENES");
   if (Object.keys(SCENES).every(k => best[k] === 3)) achieve("ALL_STARS");
   if (dead >= 500) achieve("TRAGEDY");
+  if (abducted >= 100) achieve("SPACE_TOURISM");
+  if (stars === 3 && mega.n === 0) achieve("LOUD_AND_SAFE");
+  try { const seen = new Set(JSON.parse(localStorage.getItem("mh.mods") || "[]")); seen.add(MOD.id); localStorage.setItem("mh.mods", JSON.stringify([...seen])); if (seen.size >= 6) achieve("MOD_COLLECTOR"); } catch (e) { /* sin almacenamiento */ }
   showReport(stars, stuck); ui(); return;
   showCard(`<h2>${stars === 3 ? "Nadie salió herido" : stars ? "Recinto evacuado" : "Fue una tragedia"}</h2>
     <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("")}</div>
@@ -304,7 +307,7 @@ function finish() {
   ui();
 }
 function backToPlan() {
-  phase = "plan"; ag = []; fallen = []; movers = []; pops = []; MOD = null; showModChip(null); clearAttractor(); clearAlt(); spawned = 0; t = 0; evacT = 0; surgeT = 0; setDead(0, true); resetFx();
+  phase = "plan"; paused = false; slowT = 0; ag = []; fallen = []; movers = []; pops = []; MOD = null; $("#abd").hidden = true; showModChip(null); clearAttractor(); clearAlt(); spawned = 0; t = 0; evacT = 0; surgeT = 0; setDead(0, true); resetFx();
   hideCard(); caption("Tú lo planeas", false, 0); resetPreview(); ui();
 }
 

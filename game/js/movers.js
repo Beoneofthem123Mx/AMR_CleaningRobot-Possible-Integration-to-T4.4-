@@ -2,7 +2,20 @@
 // ===== Cosas que pasan entre la gente: animales, coches y objetos =====
 let movers = [], performers = [], pops = [], eventT = 0, MPUSH = 2, MPRES = .4, MSCARE = 4;
 const rnd = (a, b) => a + Math.random() * (b - a);
-function pop(x, y, text, h) { pops.push({ x, y, text, t: 0, h }); if (pops.length > 10) pops.shift(); if (typeof sfxFor === "function") sfxFor(text); }
+function pop(x, y, text, h) {
+  // no repetir la misma onomatopeya encima de sí misma
+  if (pops.some(q => q.text === text && q.t < 1.1 && Math.abs(q.x - x) < 4 && Math.abs(q.y - y) < 4)) return;
+  pops.push({ x, y, text, t: 0, h }); if (pops.length > 10) pops.shift(); if (typeof sfxFor === "function") sfxFor(text);
+}
+// modo caos total: cualquier evento de cualquier escenario puede pasar en cualquier lugar
+let chaosMode = false;
+try { chaosMode = localStorage.getItem("mh.chaos") === "1"; } catch (e) { /* sin almacenamiento */ }
+const GENERIC_EVENTS = ["car", "icecream", "dogs", "beachballs", "lion", "elephants", "clowncar", "balls", "cannon", "unicycles", "mascot", "flares", "ola",
+  "ball", "medic", "oleaje", "gaviotas", "flamenco", "bocina", "carrera", "desbocado", "fuegos", "taxi", "carroza", "policia"];
+function chaosPool() {
+  const own = Object.entries(SCENES).flatMap(([k, sc]) => Object.keys(sc.ev || {}).map(e => k + ":" + e));
+  return GENERIC_EVENTS.concat(own);
+}
 // fuerzas globales: oleaje del barco, la ola del estadio y fuegos artificiales
 let windF = { x: 0, t: 0 }, ola = null, rockets = [], sparks = [], puffs = [], cheerT = 0;
 // guardias de seguridad que coloca el jugador
@@ -13,6 +26,7 @@ function addMover(m) { movers.push(Object.assign({ t: 0, ang: 0, i: 0, push: 30,
 function crowdPoint() { return [rnd(4, 36), rnd(22, 60)]; }
 function spawnEvent(kind) {
   const side = Math.random() < .5;
+  if (kind.includes(":")) { const [sk, k] = kind.split(":"); eventLog.add(k); SCENES[sk].ev[k](side); return; }
   eventLog.add(kind);
   // eventos propios de cada escenario o de la condición del día
   const own = (scene.ev && scene.ev[kind]) || (MOD && MOD.ev && MOD.ev[kind]);
@@ -167,7 +181,7 @@ function stepMovers() {
   if (phase === "show" || phase === "evac") {
     eventT -= DT;
     if (eventT <= 0 && movers.length < 16) {
-      const pool = scene.events.concat(MOD && MOD.events || []);
+      const pool = chaosMode ? chaosPool() : scene.events.concat(MOD && MOD.events || []);
       spawnEvent(pool[(Math.random() * pool.length) | 0]); eventT = phase === "show" ? rnd(5.5, 8.5) : rnd(9, 13);
     }
   }

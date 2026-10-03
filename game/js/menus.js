@@ -31,6 +31,8 @@ function chooser() {
       <p class="tag">Simulador de seguridad para eventos que salen mal</p>
     </div>
     <p>Tú pones las vallas, las puertas y los guardias. Luego entra la gente y pasa de todo. Durante el show, <b>haz clic</b> para usar el megáfono. Si alguien aguanta demasiada presión, cae y lo pisotean.</p>
+    <div class="row chaosrow"><button id="chaos" class="${chaosMode ? "go" : ""}">Modo caos total: ${chaosMode ? "sí" : "no"}</button><small>Eventos de todos los escenarios en cualquier lugar y dos condiciones del día a la vez.</small></div>
+    <p class="keys">Atajos: <b>1–4</b> herramientas · <b>Espacio</b> abre puertas · <b>H</b> presión · <b>C</b> cámara · <b>V</b> velocidad · <b>M</b> sonido · <b>Esc</b> pausa</p>
     <p class="starline">Llevas <b>${total} de ${max}</b> estrellas. Las estrellas abren escenarios nuevos.</p>
     <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => {
       const b = best[key], open = isUnlocked(key);

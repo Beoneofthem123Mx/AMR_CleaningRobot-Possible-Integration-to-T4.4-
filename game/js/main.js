@@ -17,9 +17,12 @@ function onDrop(first) {
   flash = 1; burst(260); sfx("cheer");
   caption(first ? "Física de multitudes real" : scene.acts[(Math.random() * scene.acts.length) | 0], false, 1900);
 }
-function onFall(x, y) { rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream"); if (dead === 0) G3.wantPhoto = true; }
+function onFall(x, y) {
+  rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream");
+  if (dead === 0) { G3.wantPhoto = true; slowT = 1.8; focus = { x, y }; caption("¡Ay!", true, 1500); }
+}
 function updateFx(dt) {
-  let tz = 1, ty = WH / 2;
+  let tz = 1, ty = WH / 2, tx = WW / 2;
   if (phase === "show" || phase === "evac") {
     let sy = 0, n = 0;
     for (let i = 0; i < ag.length; i += 5) { const a = ag[i]; if (a.y < FENCE_Y) { sy += a.y; n++; } }
@@ -27,15 +30,16 @@ function updateFx(dt) {
     if (camMode === 1) tz *= 1.7; else if (camMode === 2) tz = 1;
     if (n > 40) ty = sy / n;
   }
-  if (camMode === 1 && phase !== "plan") ty = ty;
-  const kz = 1 - Math.pow(.3, dt);
-  cam.z += (tz - cam.z) * kz; cam.y += (ty - cam.y) * kz * .6;
+  // cámara lenta con acercamiento al primer pisoteado
+  if (slowT > 0 && focus) { tz = 2.7; ty = focus.y; tx = focus.x; }
+  const kz = 1 - Math.pow(slowT > 0 ? .02 : .3, Math.max(dt, slowT > 0 ? .016 : 0));
+  cam.z += (tz - cam.z) * kz; cam.y += (ty - cam.y) * kz * (slowT > 0 ? 1 : .6); cam.x += (tx - cam.x) * kz;
   const hw = WW / (2 * cam.z), hh = WH / (2 * cam.z);
-  cam.x = clamp(WW / 2, hw, WW - hw); cam.y = clamp(cam.y, hh, WH - hh);
+  cam.x = clamp(cam.x, hw, WW - hw); cam.y = clamp(cam.y, hh, WH - hh);
   shake *= Math.pow(.03, dt); flash *= Math.pow(.04, dt);
   heatMix += ((heat || surgeT > 0 ? 1 : 0) - heatMix) * (1 - Math.pow(.015, dt));
   for (const r of rings) r.t += dt; rings = rings.filter(r => r.t < 1.3);
-  for (const q of pops) q.t += dt; pops = pops.filter(q => q.t < 1.6);
+  for (const q of pops) q.t += Math.max(dt, .016); pops = pops.filter(q => q.t < 1.6);
   stepPerformers(dt);
   const drag = Math.pow(.35, dt);
   for (const c of confetti) {
@@ -58,16 +62,20 @@ function puff(x, y, h, col, r, life, vh) {
 // ===== Bucle =====
 const perf = { n: 0, sum: 0, level: 0 }, live3d = () => phase === "show" || phase === "evac";
 let last = performance.now();
+let paused = false, slowT = 0, focus = null, acc = 0;
 function frame(now) {
   const real = Math.min(.1, (now - last) / 1000); last = now;
+  const sp = paused ? 0 : speed * (slowT > 0 ? .22 : 1);
+  if (slowT > 0) slowT -= real;
   if (phase === "show" || phase === "evac") {
-    const n = Math.min(10, Math.round(real / DT * speed));
+    acc += real / DT * sp; const n = Math.min(10, Math.floor(acc)); acc -= n; if (acc > 10) acc = 0;
     for (let i = 0; i < n && (phase === "show" || phase === "evac"); i++) step();
+    const ab = $("#abd"); ab.hidden = !abducted; if (abducted) ab.textContent = `Abducidos ${abducted}`;
     $("#status").textContent = phase === "show"
       ? (spawned < CROWD ? `Entrando ${spawned} / ${CROWD}` : `En el show · termina en ${Math.max(0, Math.ceil(fullAt + SHOW_TIME - t))} s`) + ` · Megáfono ${mega.n}`
       : `Evacuando · quedan ${ag.length} · Megáfono ${mega.n}`;
   } else if (phase === "plan") stepPreview(real);
-  updateFx(real * (phase === "show" || phase === "evac" ? speed : 1));
+  updateFx(real * (phase === "show" || phase === "evac" ? sp : 1));
   audioTick();
   render3D(now, real);
   // calidad automática: si el equipo no da abasto, quitamos sombras de la gente y bajamos resolución
@@ -94,6 +102,10 @@ function loadScene(key) {
   buildWorld(); backToPlan();
 }
 $("#bScene").addEventListener("click", chooser);
+$("#card").addEventListener("click", e => {
+  if (e.target.id === "resume") togglePause();
+  if (e.target.id === "chaos") { chaosMode = !chaosMode; try { localStorage.setItem("mh.chaos", chaosMode ? "1" : "0"); } catch (er) { /* sin almacenamiento */ } chooser(); }
+});
 $("#bSound").textContent = "Sonido: " + (AU.on ? "sí" : "no");
 $("#bSound").addEventListener("click", () => { audioInit(); $("#bSound").textContent = "Sonido: " + (audioToggle() ? "sí" : "no"); });
 addEventListener("pointerdown", audioInit);

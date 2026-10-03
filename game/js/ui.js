@@ -103,6 +103,28 @@ function ui() {
   $("#status").hidden = plan;
   $("#bScene").disabled = !plan;
 }
+// pausa y atajos de teclado para jugar en PC
+function togglePause() {
+  if (phase !== "show" && phase !== "evac") return;
+  paused = !paused;
+  if (paused) showCard(`<h2>Pausa</h2><p>La gente se quedó congelada. Nadie se queja, por ahora.</p>
+    <div class="row"><button class="go" id="resume">Continuar</button><button id="retry">Volver a planear</button><button id="pick">Menú</button></div>`);
+  else hideCard();
+}
+addEventListener("keydown", e => {
+  if (e.target && e.target.tagName === "INPUT") return;
+  const k = e.key.toLowerCase(), cardOpen = !$("#overlay").hidden;
+  if (k === "escape" || k === "p") { if (phase === "show" || phase === "evac") togglePause(); else if (phase === "plan" && !cardOpen) chooser(); return; }
+  if (cardOpen) return;
+  if (phase === "plan") {
+    const tools = { "1": "fence", "2": "gate", "3": "guard", "4": "erase" };
+    if (tools[k]) { tool = tools[k]; ui(); return; }
+    if (k === " " || k === "enter") { e.preventDefault(); startWithRoulette(); return; }
+  }
+  if (k === "h") $("#bHeat").click();
+  if (k === "c") $("#bCam").click();
+  if (k === "v") $("#bSpeed").click();
+});
 document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => {
   tool = b.dataset.tool; ui();
   if (tool === "gate") toast("Toca la reja de abajo para abrir o cerrar puertas.");
@@ -116,7 +138,7 @@ $("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed =
 $("#card").addEventListener("click", e => {
   const sk = e.target.closest("[data-scene]");
   if (sk) { loadScene(sk.dataset.scene); hideCard(); caption("Tú lo planeas", false, 0); }
-  if (e.target.id === "retry") backToPlan();
+  if (e.target.id === "retry") { paused = false; backToPlan(); }
   if (e.target.id === "pick") chooser();
   if (e.target.id === "quit" && window.steam) window.steam.quit();
   if (e.target.id === "fs" && window.steam) window.steam.toggleFullscreen();
