@@ -1,0 +1,550 @@
+<title>Marea Humana</title>
+<meta name="description" content="Juego de navegador: planea vallas y salidas para que un público enorme llegue al concierto y evacúe sin aplastamientos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Layout: aerial-view console — header, venue canvas with the skull badge on top, tool tray below. One committed daylight-concrete look. */
+:root {
+  color-scheme: light;
+  --ground: #c9ccc6;
+  --page: #b9bdb6;
+  --ink: #1b1e22;
+  --paper: #f7f7f2;
+  --muted: #5d635f;
+  --line: #a3a8a1;
+  --roof: #e9ebe6;
+  --stage: #2b2f36;
+  --exit: #2fae5f;
+  --entry: #2f7fd6;
+  --barrier: #f08a24;
+  --badge: #ffd23a;
+  --danger: #e0322b;
+  --font-display: "Lilita One", "Arial Black", Impact, sans-serif;
+  --font-body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--page); color: var(--ink); font-family: var(--font-body); margin: 0; overflow: hidden; }
+.app {
+  height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 16px; max-width: 1180px; margin: 0 auto;
+}
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; margin: 0; letter-spacing: .01em; line-height: 1; }
+.lvl { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 500; }
+.stage { position: relative; flex: 1; min-height: 0; border-radius: 10px; background: var(--ground); overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.badge {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%) rotate(-2deg);
+  display: flex; align-items: center; gap: 8px; padding: 5px 14px 4px;
+  background: var(--paper); border: 3px solid var(--ink); border-radius: 10px; box-shadow: 0 3px 0 var(--ink);
+  font-family: var(--font-display); font-size: 1.05rem; letter-spacing: .03em; white-space: nowrap; pointer-events: none;
+}
+.badge b { color: var(--danger); font-weight: 400; font-size: 1.35rem; font-variant-numeric: tabular-nums; min-width: 1ch; }
+.badge.hot { background: var(--badge); }
+.badge.pop { animation: pop .35s; }
+@keyframes pop { 40% { transform: translateX(-50%) rotate(-2deg) scale(1.18); } }
+.banner {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+  font-family: var(--font-display); font-size: clamp(1.1rem, 3.4vw, 1.8rem); color: var(--paper);
+  text-shadow: 0 2px 0 var(--ink), 0 0 12px rgba(0,0,0,.45); letter-spacing: .03em; white-space: nowrap; pointer-events: none;
+}
+.toast {
+  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); max-width: calc(100% - 32px);
+  background: var(--ink); color: var(--paper); font-size: .85rem; padding: 6px 12px; border-radius: 6px;
+  pointer-events: none; transition: opacity .3s; text-align: center;
+}
+.overlay { position: absolute; inset: 0; display: flex; overflow: auto; padding: 16px; background: rgba(27, 30, 34, .45); }
+.card {
+  margin: auto; max-width: 470px; box-sizing: border-box; background: var(--paper);
+  border: 3px solid var(--ink); border-radius: 12px; box-shadow: 0 5px 0 var(--ink);
+  padding: 20px 22px; display: flex; flex-direction: column; gap: 12px;
+}
+.card h2 { font-family: var(--font-display); font-weight: 400; margin: 0; font-size: 1.6rem; text-wrap: balance; line-height: 1.1; }
+.card p { margin: 0; line-height: 1.5; }
+.card ul { margin: 0; padding-left: 18px; line-height: 1.55; font-size: .92rem; color: var(--muted); }
+.card .stats { display: grid; grid-template-columns: 1fr auto; gap: 3px 16px; font-variant-numeric: tabular-nums; }
+.card .stats span:nth-child(even) { font-weight: 700; text-align: right; }
+.stars { font-size: 1.9rem; letter-spacing: .1em; color: var(--badge); text-shadow: 0 2px 0 var(--ink); }
+.stars .off { color: var(--line); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+button {
+  font: 500 .92rem var(--font-body); color: var(--ink); background: var(--paper);
+  border: 2px solid var(--ink); border-radius: 8px; padding: 8px 12px; cursor: pointer; box-shadow: 0 2px 0 var(--ink);
+}
+button:active { transform: translateY(2px); box-shadow: none; }
+button:focus-visible { outline: 3px solid var(--entry); outline-offset: 2px; }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--badge); font-weight: 700; }
+button.on { background: var(--ink); color: var(--paper); }
+.tray { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.tools, .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.tools button { display: flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--ink); }
+.cnt { font-variant-numeric: tabular-nums; font-weight: 700; }
+@media (max-width: 560px) {
+  h1 { font-size: 1.35rem; }
+  button { padding: 7px 9px; font-size: .85rem; }
+}
+@media (prefers-reduced-motion: reduce) { .badge.pop { animation: none; } .toast { transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Marea Humana</h1>
+    <div class="lvl" id="lvl">Nivel 1 · Plaza Mayor</div>
+  </header>
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="Vista aérea del recinto"></canvas>
+    <div class="badge" id="badge">☠ PISOTEADOS <b id="dead">0</b></div>
+    <div class="toast" id="toast" style="opacity:0"></div>
+    <div class="banner" id="banner">TÚ LO PLANEAS</div>
+    <div class="overlay" id="overlay"><div class="card" id="card"></div></div>
+  </div>
+  <div class="tray">
+    <div class="tools" role="group" aria-label="Herramientas">
+      <button id="tBarrier" class="on" data-tool="barrier"><span class="sw" style="background:var(--barrier)"></span>Valla <span class="cnt" id="cBarrier">0</span></button>
+      <button id="tExit" data-tool="exit"><span class="sw" style="background:var(--exit)"></span>Salida <span class="cnt" id="cExit">0</span></button>
+      <button id="tErase" data-tool="erase">Borrar</button>
+    </div>
+    <div class="acts">
+      <button id="bHeat">Densidad</button>
+      <button id="bSpeed">Velocidad 1×</button>
+      <button id="bReset">Reiniciar</button>
+      <button id="bGo" class="primary">Abrir puertas</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Tipos de celda
+const FREE = 0, WALL = 1, STAGE = 2, EXIT = 3, ENTRY = 4, BARRIER = 5, PEXIT = 6;
+const blocked = t => t === WALL || t === STAGE || t === BARRIER;
+const isExit = t => t === EXIT || t === ENTRY || t === PEXIT;
+
+function rect(m, W, x0, y0, x1, y1, t) { for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) m[y * W + x] = t; }
+function border(m, W, H) { rect(m, W, 0, 0, W, 1, WALL); rect(m, W, 0, H - 1, W, H, WALL); rect(m, W, 0, 0, 1, H, WALL); rect(m, W, W - 1, 0, W, H, WALL); }
+
+const LEVELS = [
+  { name: "Plaza Mayor", sub: "Concierto gratuito al aire libre", W: 64, H: 44, crowd: 850, barriers: 60, exits: 2, show: 30,
+    tip: "La única salida lateral es estrecha. Abre otra y usa vallas para que la gente no se apriete contra el escenario.",
+    build(m, W, H) {
+      border(m, W, H);
+      rect(m, W, 25, 1, 39, 7, STAGE);
+      rect(m, W, 4, 12, 12, 19, WALL); rect(m, W, 52, 14, 60, 22, WALL);
+      rect(m, W, 6, 30, 14, 36, WALL); rect(m, W, 49, 32, 58, 38, WALL);
+      rect(m, W, 27, H - 1, 37, H, ENTRY);
+      rect(m, W, 0, 20, 1, 22, EXIT);
+    } },
+  { name: "Estadio", sub: "Final de copa con concierto en el medio tiempo", W: 64, H: 44, crowd: 950, barriers: 70, exits: 4, show: 30,
+    tip: "Las gradas solo tienen dos túneles de salida. Abre vomitorios en las gradas y reparte el flujo.",
+    build(m, W, H) {
+      rect(m, W, 0, 0, W, H, WALL);
+      rect(m, W, 7, 6, 57, 38, FREE);
+      rect(m, W, 24, 6, 40, 11, STAGE);
+      rect(m, W, 29, 38, 35, H, FREE); rect(m, W, 29, H - 1, 35, H, ENTRY);
+      rect(m, W, 0, 21, 7, 23, FREE); rect(m, W, 0, 21, 1, 23, EXIT);
+      rect(m, W, 57, 21, W, 23, FREE); rect(m, W, W - 1, 21, W, 23, EXIT);
+    } },
+  { name: "Toda la ciudad", sub: "Festival en la plaza central con las calles cerradas", W: 72, H: 50, crowd: 1400, barriers: 90, exits: 3, show: 30,
+    tip: "Todo el centro es el recinto. Las calles se vuelven embudos: cierra cruces con vallas y abre salidas cerca de la plaza.",
+    build(m, W, H) {
+      border(m, W, H);
+      for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+        const bx = (x - 1) % 14, by = (y - 1) % 12;
+        if (bx >= 4 && by >= 4) m[y * W + x] = WALL;
+      }
+      rect(m, W, 19, 13, 47, 33, FREE);
+      rect(m, W, 27, 14, 39, 19, STAGE);
+      rect(m, W, 1, H - 1, 5, H, ENTRY); rect(m, W, 57, H - 1, 61, H, ENTRY);
+      rect(m, W, 0, 25, 1, 29, EXIT); rect(m, W, W - 1, 13, W, 17, EXIT);
+    } }
+];
+
+const $ = s => document.querySelector(s);
+const cv = $("#cv"), ctx = cv.getContext("2d");
+const css = getComputedStyle(document.documentElement);
+const C = {};
+["ground","line","roof","stage","exit","entry","barrier","ink","paper","danger","badge"].forEach(k => C[k] = css.getPropertyValue("--" + k).trim());
+const SHIRTS = ["#d8433b","#2f6fc4","#e8b631","#3d9a5b","#8a4fbf","#e07a2e","#f2f2ee","#30353b","#3fb3c4","#c95d8f"];
+
+let L, W, H, map, base, fStage, fExit, phase = "intro", levelIdx = 0;
+let spawnZone = [], fullAt = 0, ag = [], fallen = [], spawned = 0, dead = 0, evacuated = 0, t = 0, evacT = 0, speed = 1, heat = false;
+let tool = "barrier", budget = { barrier: 0, exit: 0 }, pexits = [], dirty = true;
+let hashHead, hashNext, density;
+
+// ---------- recinto ----------
+function loadLevel(i, keepPlan) {
+  const prevPlan = keepPlan ? { map: map.slice(), pexits: pexits.map(g => g.slice()), budget: { ...budget } } : null;
+  L = LEVELS[i]; W = L.W; H = L.H;
+  base = new Uint8Array(W * H); L.build(base, W, H);
+  map = prevPlan ? prevPlan.map : base.slice();
+  pexits = prevPlan ? prevPlan.pexits : [];
+  budget = prevPlan ? prevPlan.budget : { barrier: L.barriers, exit: L.exits };
+  hashHead = new Int32Array(W * H); density = new Float32Array(W * H);
+  ag = []; fallen = []; spawned = 0; fullAt = 0; dead = 0; evacuated = 0; t = 0; evacT = 0;
+  phase = "plan"; dirty = true;
+  $("#lvl").textContent = `Nivel ${i + 1} · ${L.name}`;
+  updateTray(); setDead(0, true); banner("TÚ LO PLANEAS"); resize();
+}
+
+function field(goal) {
+  const d = new Float64Array(W * H).fill(Infinity), heap = [];
+  const push = (id, v) => { heap.push([v, id]); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let s = i; if (l < heap.length && heap[l][0] < heap[s][0]) s = l; if (r < heap.length && heap[r][0] < heap[s][0]) s = r; if (s === i) break; [heap[s], heap[i]] = [heap[i], heap[s]]; i = s; } } return top; };
+  for (let id = 0; id < W * H; id++) if (goal(id)) { d[id] = 0; push(id, 0); }
+  while (heap.length) {
+    const [v, id] = pop(); if (v > d[id]) continue;
+    const x = id % W, y = (id / W) | 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      const n = ny * W + nx; if (blocked(map[n])) continue;
+      if (dx && dy && (blocked(map[y * W + nx]) || blocked(map[ny * W + x]))) continue;
+      const nv = v + (dx && dy ? 1.414 : 1);
+      if (nv < d[n]) { d[n] = nv; push(n, nv); }
+    }
+  }
+  return d;
+}
+function nearStage(id) {
+  if (blocked(map[id])) return false;
+  const x = id % W, y = (id / W) | 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const nx = x + dx, ny = y + dy;
+    if (nx >= 0 && ny >= 0 && nx < W && ny < H && map[ny * W + nx] === STAGE) return true;
+  }
+  return false;
+}
+function rebuildFields() { fStage = field(nearStage); fExit = field(id => isExit(map[id])); dirty = false; staticLayer = null; }
+
+// ---------- edición ----------
+function cellAt(ev) {
+  const r = cv.getBoundingClientRect(), lx = ev.clientX - r.left - ox, ly = ev.clientY - r.top - oy;
+  return rot ? [Math.floor(ly / ts), Math.floor((H * ts - lx) / ts)] : [Math.floor(lx / ts), Math.floor(ly / ts)];
+}
+function wallNextToFree(x, y) {
+  if (x < 0 || y < 0 || x >= W || y >= H || map[y * W + x] !== WALL) return false;
+  return [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < W && ny < H && !blocked(map[ny * W + nx]); });
+}
+function paint(x, y) {
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  const id = y * W + x;
+  if (tool === "barrier") {
+    if (map[id] !== FREE || budget.barrier <= 0) { if (budget.barrier <= 0) toast("No quedan vallas. Borra alguna para moverla."); return; }
+    map[id] = BARRIER; budget.barrier--; dirty = true;
+  } else if (tool === "erase") {
+    if (map[id] === BARRIER) { map[id] = FREE; budget.barrier++; dirty = true; }
+    else if (map[id] === PEXIT) {
+      const gi = pexits.findIndex(g => g.includes(id));
+      for (const c of pexits[gi]) map[c] = WALL;
+      pexits.splice(gi, 1); budget.exit++; dirty = true;
+    }
+  }
+  updateTray();
+}
+function placeExit(x, y) {
+  if (budget.exit <= 0) { toast("Ya usaste todas las salidas extra."); return; }
+  if (!wallNextToFree(x, y)) { toast("Toca una pared que dé al público para abrir una salida."); return; }
+  const horiz = wallNextToFree(x - 1, y) || wallNextToFree(x + 1, y);
+  const cells = [[x, y]];
+  for (const s of [-1, 1]) { const nx = horiz ? x + s : x, ny = horiz ? y : y + s; if (wallNextToFree(nx, ny)) cells.push([nx, ny]); }
+  const ids = cells.map(([cx, cy]) => cy * W + cx);
+  ids.forEach(c => map[c] = PEXIT); pexits.push(ids); budget.exit--; dirty = true; updateTray();
+}
+let drawing = false, lastCell = null;
+cv.addEventListener("pointerdown", e => {
+  if (phase !== "plan") return;
+  const [x, y] = cellAt(e);
+  if (tool === "exit") { placeExit(x, y); return; }
+  drawing = true; lastCell = [x, y]; paint(x, y); cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener("pointermove", e => {
+  if (!drawing) return;
+  const [x, y] = cellAt(e), [x0, y0] = lastCell;
+  const n = Math.max(Math.abs(x - x0), Math.abs(y - y0));
+  for (let k = 1; k <= n; k++) paint(Math.round(x0 + (x - x0) * k / n), Math.round(y0 + (y - y0) * k / n));
+  lastCell = [x, y];
+});
+for (const ev of ["pointerup", "pointercancel"]) cv.addEventListener(ev, () => drawing = false);
+
+// ---------- simulación de multitudes ----------
+const R = .32, DT = 1 / 60;
+let PCRIT = 7;
+function spawn() {
+  const id = spawnZone[(Math.random() * spawnZone.length) | 0];
+  const x = id % W + .2 + Math.random() * .6, y = ((id / W) | 0) + .2 + Math.random() * .6;
+  for (const a of ag) if ((a.x - x) ** 2 + (a.y - y) ** 2 < .4) return false;
+  const eager = Math.random();
+  ag.push({ x, y, vx: 0, vy: -1, v0: 1.5 + Math.random() * .6, tol: 1.5 + eager * eager * 30, leave: Math.random() * 10, p: 0, dmg: 0, c: (Math.random() * SHIRTS.length) | 0 });
+  spawned++; return true;
+}
+function dirAt(f, x, y) {
+  const cx = Math.floor(x), cy = Math.floor(y), id = cy * W + cx;
+  let best = f[id], bx = 0, by = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    if (!dx && !dy) continue;
+    const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+    if (dx && dy && (blocked(map[cy * W + nx]) || blocked(map[ny * W + cx]))) continue;
+    const v = f[ny * W + nx]; if (v < best) { best = v; bx = nx + .5 - x; by = ny + .5 - y; }
+  }
+  const l = Math.hypot(bx, by); return l ? [bx / l, by / l, f[id]] : [0, 0, f[id]];
+}
+function step() {
+  t += DT;
+  const evac = phase === "evac"; if (evac) evacT += DT;
+  if (phase === "show") {
+    const rate = L.crowd / 10;
+    for (let k = 0; k < 12 && spawned < L.crowd && spawned < t * rate; k++) spawn();
+    if (spawned >= L.crowd) { if (!fullAt) fullAt = t; if (t > fullAt + L.show) startEvac(); }
+  }
+  // tabla espacial
+  hashHead.fill(-1); hashNext = new Int32Array(ag.length);
+  for (let i = 0; i < ag.length; i++) { const a = ag[i], id = Math.floor(a.y) * W + Math.floor(a.x); hashNext[i] = hashHead[id]; hashHead[id] = i; a.p = 0; a.fx = 0; a.fy = 0; }
+  // contacto entre personas
+  for (let i = 0; i < ag.length; i++) {
+    const a = ag[i], cx = Math.floor(a.x), cy = Math.floor(a.y);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      for (let j = hashHead[ny * W + nx]; j !== -1; j = hashNext[j]) {
+        if (j <= i) continue;
+        const b = ag[j], ex = b.x - a.x, ey = b.y - a.y, d2 = ex * ex + ey * ey;
+        if (d2 >= 4 * R * R || d2 < 1e-8) continue;
+        const d = Math.sqrt(d2), ov = 2 * R - d, f = 60 * ov, ux = ex / d, uy = ey / d;
+        a.fx -= ux * f; a.fy -= uy * f; b.fx += ux * f; b.fy += uy * f;
+        const pp = ov / (2 * R) * 3; a.p += pp; b.p += pp;
+      }
+    }
+  }
+  const out = [];
+  for (let i = 0; i < ag.length; i++) {
+    const a = ag[i];
+    const [dx, dy, dist] = dirAt(evac && evacT > a.leave ? fExit : fStage, a.x, a.y);
+    const leaving = evac && evacT > a.leave;
+    let want = leaving ? a.v0 * 1.25 : (dist > a.tol ? a.v0 : 0);
+    if (!isFinite(dist)) want = 0;
+    a.vx += ((dx * want - a.vx) / .45 + a.fx) * DT;
+    a.vy += ((dy * want - a.vy) / .45 + a.fy) * DT;
+    const sp = Math.hypot(a.vx, a.vy); if (sp > 3) { a.vx *= 3 / sp; a.vy *= 3 / sp; }
+    a.x += a.vx * DT; a.y += a.vy * DT;
+    // paredes y vallas
+    const cx = Math.floor(a.x), cy = Math.floor(a.y);
+    for (let oy2 = -1; oy2 <= 1; oy2++) for (let ox2 = -1; ox2 <= 1; ox2++) {
+      const nx = cx + ox2, ny = cy + oy2;
+      const wall = nx < 0 || ny < 0 || nx >= W || ny >= H || blocked(map[ny * W + nx]);
+      if (!wall) continue;
+      const qx = Math.max(nx, Math.min(a.x, nx + 1)), qy = Math.max(ny, Math.min(a.y, ny + 1));
+      let ex = a.x - qx, ey = a.y - qy, d = Math.hypot(ex, ey);
+      if (d >= R) continue;
+      if (d < 1e-6) { ex = a.x - (nx + .5); ey = a.y - (ny + .5); d = Math.hypot(ex, ey) || 1; a.x = nx + .5 + ex / d * (.5 + R); a.y = ny + .5 + ey / d * (.5 + R); continue; }
+      const ov = R - d; a.x += ex / d * ov; a.y += ey / d * ov;
+      const vn = (a.vx * ex + a.vy * ey) / d; if (vn < 0) { a.vx -= vn * ex / d; a.vy -= vn * ey / d; }
+      a.p += ov / R * 1.5;
+    }
+    // presión → aplastamiento
+    if (a.p > PCRIT) a.dmg += (a.p - PCRIT) * DT * 1.6; else a.dmg = Math.max(0, a.dmg - DT * .4);
+    if (a.dmg >= 1) { fallen.push([a.x, a.y]); setDead(dead + 1); continue; }
+    const id = Math.floor(a.y) * W + Math.floor(a.x);
+    if (evac && id >= 0 && id < W * H && isExit(map[id])) { evacuated++; continue; }
+    out.push(a);
+  }
+  ag = out;
+  if (evac && (ag.length === 0 || evacT > 90)) finish();
+}
+
+// ---------- fases ----------
+function start() {
+  if (dirty) rebuildFields();
+  const entries = []; for (let id = 0; id < W * H; id++) if (base[id] === ENTRY) entries.push(id);
+  if (entries.some(id => !isFinite(fStage[id]))) { toast("Las vallas cierran el paso entre la entrada y el escenario. Deja un camino abierto."); return; }
+  const fe = field(id => base[id] === ENTRY);
+  spawnZone = []; for (let id = 0; id < W * H; id++) if (fe[id] <= 7 && map[id] === FREE) spawnZone.push(id);
+  phase = "show"; t = 0; banner("¡QUE EMPIECE EL SHOW!"); updateTray();
+}
+function startEvac() { phase = "evac"; evacT = 0; banner("¡EVACUACIÓN!"); updateTray(); toast("Se acabó el concierto: todo el mundo hacia las salidas."); }
+function finish() {
+  phase = "done";
+  const stuck = ag.length, harmed = dead + stuck, pct = harmed / L.crowd;
+  const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;
+  const last = levelIdx === LEVELS.length - 1;
+  const starsHtml = [0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("");
+  showCard(`<h2>${stars ? (stars === 3 ? "Evacuación perfecta" : "Recinto evacuado") : "Fue una tragedia"}</h2>
+    <div class="stars">${starsHtml}</div>
+    <div class="stats">
+      <span>Público</span><span>${L.crowd}</span>
+      <span>Evacuados</span><span>${evacuated}</span>
+      <span>Pisoteados</span><span style="color:var(--danger)">${dead}</span>
+      <span>Atrapados al final</span><span>${stuck}</span>
+      <span>Tiempo de evacuación</span><span>${Math.round(evacT)} s</span>
+    </div>
+    <p>${stars === 3 ? "Nadie salió herido." : "Revisa el mapa de densidad: lo rojo es donde la gente se aplasta. Tu plan se conserva al reintentar."}</p>
+    <div class="row">
+      <button id="retry">Reintentar con este plan</button>
+      ${stars && !last ? '<button class="primary" id="next">Siguiente recinto</button>' : ""}
+      ${stars && last ? '<button class="primary" id="again">Jugar desde el inicio</button>' : ""}
+    </div>`);
+  updateTray();
+}
+function intro(i) {
+  phase = "intro";
+  const lv = LEVELS[i];
+  showCard(`<h2>${i === 0 ? "Marea Humana" : lv.name}</h2>
+    ${i === 0 ? `<p>Eres responsable de seguridad de un concierto. Miles de personas van a entrar, empujar hacia el escenario y luego salir todas a la vez. Si se aprietan demasiado, alguien cae y lo pisotean.</p>
+    <ul>
+      <li><b>Valla:</b> arrastra sobre el suelo para dividir a la multitud.</li>
+      <li><b>Salida:</b> toca una pared para abrir una puerta de emergencia.</li>
+      <li><b>Densidad:</b> muestra dónde se forma la presión.</li>
+      <li>Termina con cero pisoteados para ganar tres estrellas.</li>
+    </ul>` : ""}
+    <p><b>Nivel ${i + 1}: ${lv.name}.</b> ${lv.sub}, ${lv.crowd.toLocaleString("es")} personas. ${lv.tip}</p>
+    <div class="row"><button class="primary" id="plan">Planear el recinto</button></div>`);
+}
+$("#card").addEventListener("click", e => {
+  const id = e.target.id;
+  if (id === "plan") { hideCard(); loadLevel(levelIdx); }
+  else if (id === "retry") { hideCard(); loadLevel(levelIdx, true); }
+  else if (id === "next") { levelIdx++; intro(levelIdx); }
+  else if (id === "again") { levelIdx = 0; intro(0); }
+});
+
+// ---------- interfaz ----------
+function showCard(html) { $("#card").innerHTML = html; $("#overlay").hidden = false; const b = $("#card .primary") || $("#card button"); if (b) b.focus(); }
+function hideCard() { $("#overlay").hidden = true; }
+let toastT = 0;
+function toast(s) { const el = $("#toast"); el.textContent = s; el.style.opacity = 1; toastT = 3; }
+function banner(s) { $("#banner").textContent = s; }
+function setDead(n, quiet) {
+  dead = n; $("#dead").textContent = n;
+  const b = $("#badge"); b.classList.toggle("hot", n > 0);
+  if (!quiet) { b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
+}
+function updateTray() {
+  $("#cBarrier").textContent = budget.barrier; $("#cExit").textContent = budget.exit;
+  const planning = phase === "plan";
+  document.querySelectorAll(".tools button").forEach(b => { b.disabled = !planning; b.classList.toggle("on", b.dataset.tool === tool); });
+  $("#bGo").disabled = !planning;
+  $("#bGo").textContent = planning ? "Abrir puertas" : phase === "show" ? "Concierto en curso" : phase === "evac" ? "Evacuando…" : "Abrir puertas";
+}
+document.querySelectorAll(".tools button").forEach(b => b.addEventListener("click", () => { tool = b.dataset.tool; updateTray(); }));
+$("#bGo").addEventListener("click", start);
+$("#bHeat").addEventListener("click", () => { heat = !heat; $("#bHeat").classList.toggle("on", heat); });
+$("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = `Velocidad ${speed}×`; });
+$("#bReset").addEventListener("click", () => { if (phase !== "intro") { hideCard(); loadLevel(levelIdx); toast("Recinto reiniciado: vallas y salidas devueltas."); } });
+
+// ---------- dibujo ----------
+let ts = 10, ox = 0, oy = 0, dpr = 1, rot = false, staticLayer = null;
+const heatCv = document.createElement("canvas"), hctx = heatCv.getContext("2d");
+function resize() {
+  const r = $("#stage").getBoundingClientRect();
+  dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  if (!W) return;
+  // en pantallas verticales giramos el recinto 90° para aprovechar el espacio
+  rot = r.height > r.width * 1.1;
+  const vw = rot ? H : W, vh = rot ? W : H;
+  ts = Math.min(r.width / vw, r.height / vh);
+  ox = (r.width - ts * vw) / 2; oy = (r.height - ts * vh) / 2;
+  staticLayer = null;
+}
+new ResizeObserver(resize).observe($("#stage"));
+
+function buildStatic() {
+  const c = document.createElement("canvas"); c.width = Math.ceil(W * ts * dpr); c.height = Math.ceil(H * ts * dpr);
+  const g = c.getContext("2d"); g.scale(dpr, dpr);
+  g.fillStyle = C.ground; g.fillRect(0, 0, W * ts, H * ts);
+  // losas de la plaza
+  g.strokeStyle = C.line; g.lineWidth = 1; g.globalAlpha = .45; g.beginPath();
+  for (let x = 0; x <= W; x += 4) { g.moveTo(x * ts, 0); g.lineTo(x * ts, H * ts); }
+  for (let y = 0; y <= H; y += 4) { g.moveTo(0, y * ts); g.lineTo(W * ts, y * ts); }
+  g.stroke(); g.globalAlpha = 1;
+  // sombras de edificios
+  g.fillStyle = "rgba(27,30,34,.22)";
+  for (let id = 0; id < W * H; id++) if (map[id] === WALL || map[id] === STAGE) g.fillRect((id % W) * ts + ts * .35, ((id / W) | 0) * ts + ts * .45, ts, ts);
+  for (let id = 0; id < W * H; id++) {
+    const x = (id % W) * ts, y = ((id / W) | 0) * ts, tp = map[id];
+    if (tp === WALL) { g.fillStyle = C.roof; g.fillRect(x, y, ts + .5, ts + .5); }
+    else if (tp === STAGE) { g.fillStyle = C.stage; g.fillRect(x, y, ts + .5, ts + .5); }
+    else if (tp === EXIT || tp === PEXIT) { g.fillStyle = C.exit; g.fillRect(x, y, ts + .5, ts + .5); }
+    else if (tp === ENTRY) { g.fillStyle = C.entry; g.fillRect(x, y, ts + .5, ts + .5); }
+    else if (tp === BARRIER) {
+      g.fillStyle = C.barrier; g.fillRect(x + ts * .15, y + ts * .15, ts * .7, ts * .7);
+      g.fillStyle = C.paper; g.fillRect(x + ts * .4, y + ts * .15, ts * .2, ts * .7);
+    }
+  }
+  // focos del escenario
+  const cols = ["#ff4fa3", "#4fd3ff", "#ffe14f", "#8cff6a", "#b26bff"]; let k = 0;
+  for (let id = 0; id < W * H; id++) if (map[id] === STAGE && id + W < W * H && map[id + W] !== STAGE && (id % W) % 2 === 0) {
+    g.fillStyle = cols[k++ % cols.length]; g.beginPath(); g.arc((id % W + .5) * ts, (((id / W) | 0) + .6) * ts, ts * .22, 0, 6.29); g.fill();
+  }
+  return c;
+}
+
+function rainbow(v) { // 0..1 → azul → verde → amarillo → rojo
+  const h = (1 - Math.min(1, v)) * 240; return `hsla(${h},95%,50%,${Math.min(.85, .25 + v)})`;
+}
+
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = C.ground; ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!W) return;
+  if (dirty) rebuildFields();
+  if (!staticLayer) staticLayer = buildStatic();
+  ctx.save(); ctx.translate(ox, oy);
+  if (rot) { ctx.translate(H * ts, 0); ctx.rotate(Math.PI / 2); }
+  ctx.drawImage(staticLayer, 0, 0, W * ts, H * ts);
+  // caídos
+  ctx.strokeStyle = C.danger; ctx.lineWidth = Math.max(1.5, ts * .12);
+  ctx.beginPath();
+  for (const [x, y] of fallen) { const s = ts * .3; ctx.moveTo(x * ts - s, y * ts - s); ctx.lineTo(x * ts + s, y * ts + s); ctx.moveTo(x * ts + s, y * ts - s); ctx.lineTo(x * ts - s, y * ts + s); }
+  ctx.stroke();
+  if (heat) {
+    density.fill(0);
+    for (const a of ag) { const id = Math.floor(a.y) * W + Math.floor(a.x); if (id >= 0 && id < W * H) density[id] += 1; }
+    heatCv.width = W; heatCv.height = H;
+    const img = hctx.createImageData(W, H);
+    for (let id = 0; id < W * H; id++) {
+      const v = density[id] / 2.4; if (!v) continue;
+      const h = (1 - Math.min(1, v)) * 240 / 60, cc = 1, xx = cc * (1 - Math.abs(h % 2 - 1));
+      let r = 0, gg = 0, b = 0;
+      if (h < 1) [r, gg] = [cc, xx]; else if (h < 2) [r, gg] = [xx, cc]; else if (h < 3) [gg, b] = [cc, xx]; else [gg, b] = [xx, cc];
+      img.data[id * 4] = r * 255; img.data[id * 4 + 1] = gg * 255; img.data[id * 4 + 2] = b * 255; img.data[id * 4 + 3] = Math.min(230, 70 + v * 170);
+    }
+    hctx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true; ctx.drawImage(heatCv, 0, 0, W * ts, H * ts);
+  } else {
+    const rr = Math.max(1.2, R * ts);
+    for (let c = 0; c < SHIRTS.length; c++) {
+      ctx.fillStyle = SHIRTS[c]; ctx.beginPath();
+      for (const a of ag) if (a.c === c && a.dmg < .35) { ctx.moveTo(a.x * ts + rr, a.y * ts); ctx.arc(a.x * ts, a.y * ts, rr, 0, 6.29); }
+      ctx.fill();
+    }
+    ctx.fillStyle = C.danger; ctx.beginPath();
+    for (const a of ag) if (a.dmg >= .35) { ctx.moveTo(a.x * ts + rr, a.y * ts); ctx.arc(a.x * ts, a.y * ts, rr, 0, 6.29); }
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+let last = performance.now();
+function frame(now) {
+  const real = Math.min(.1, (now - last) / 1000); last = now;
+  if (phase === "show" || phase === "evac") {
+    const n = Math.min(8, Math.round(real / DT * speed));
+    for (let k = 0; k < n && (phase === "show" || phase === "evac"); k++) step();
+    if (phase === "show") {
+      const left = Math.max(0, Math.ceil(fullAt + L.show - t));
+      banner(spawned < L.crowd ? `ENTRANDO ${spawned}/${L.crowd}` : `CONCIERTO · ${left} s`);
+    } else if (phase === "evac") banner(`¡EVACUACIÓN! · quedan ${ag.length}`);
+  }
+  if (toastT > 0 && (toastT -= real) <= 0) $("#toast").style.opacity = 0;
+  draw();
+  requestAnimationFrame(frame);
+}
+
+// Exponer para pruebas
+window.__game = { setP: v => PCRIT = v, get ag() { return ag; }, get toast() { return $("#toast").textContent; }, get state() { return { phase, dead, evacuated, left: ag.length, t, evacT }; }, step, start, loadLevel: i => { levelIdx = i; hideCard(); loadLevel(i); }, setSpeed: s => speed = s };
+
+loadLevel(0); intro(0);
+requestAnimationFrame(frame);
+</script>
