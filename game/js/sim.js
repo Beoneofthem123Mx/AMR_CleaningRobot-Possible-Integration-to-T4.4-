@@ -1,0 +1,255 @@
+// Marea Humana · recinto, campos de flujo, multitud y fases
+function buildWorld() {
+  obs = [];
+  // bordes del recinto
+  seg(0, 0, 0, SH, .2, "edge"); seg(WW, 0, WW, SH, .2, "edge"); seg(0, 0, WW, 0, .2, "edge");
+  scene.build();
+  // reja de entrada con puertas
+  let x = 0;
+  for (let i = 0; i < SLOTS; i++) {
+    const g0 = slotX(i) - SLOT_W / 2, g1 = slotX(i) + SLOT_W / 2;
+    seg(x, FENCE_Y, g0, FENCE_Y, .3, "fence");
+    if (!gates[i]) seg(g0, FENCE_Y, g1, FENCE_Y, .3, "closed");
+    x = g1;
+  }
+  seg(x, FENCE_Y, WW, FENCE_Y, .3, "fence");
+  for (const f of fences) seg(f.ax, f.ay, f.bx, f.by, .35, "player");
+  // cubetas espaciales
+  buckets = Array.from({ length: BW * BH }, () => []);
+  obs.forEach((o, i) => {
+    const [x0, y0, x1, y1] = bbox(o);
+    for (let by = Math.max(0, Math.floor((y0 - 1) / BKS)); by <= Math.min(BH - 1, Math.floor((y1 + 1) / BKS)); by++)
+      for (let bx = Math.max(0, Math.floor((x0 - 1) / BKS)); bx <= Math.min(BW - 1, Math.floor((x1 + 1) / BKS)); bx++) buckets[by * BW + bx].push(i);
+  });
+  buildFields();
+  staticDirty = true;
+  resetPreview();
+}
+function bbox(o) {
+  if (o.t === "r") return [o.x0, o.y0, o.x1, o.y1];
+  if (o.t === "c") return [o.x - o.r, o.y - o.r, o.x + o.r, o.y + o.r];
+  return [Math.min(o.ax, o.bx) - o.th, Math.min(o.ay, o.by) - o.th, Math.max(o.ax, o.bx) + o.th, Math.max(o.ay, o.by) + o.th];
+}
+// distancia con signo a la superficie y normal hacia afuera
+function contact(o, px, py) {
+  if (o.t === "c") { const dx = px - o.x, dy = py - o.y, d = Math.hypot(dx, dy) || 1e-6; return [dx / d, dy / d, d - o.r]; }
+  if (o.t === "r") {
+    if (px > o.x0 && px < o.x1 && py > o.y0 && py < o.y1) {
+      const m = [px - o.x0, o.x1 - px, py - o.y0, o.y1 - py], k = m.indexOf(Math.min(...m));
+      return [[-1, 1, 0, 0][k], [0, 0, -1, 1][k], -m[k]];
+    }
+    const cx = clamp(px, o.x0, o.x1), cy = clamp(py, o.y0, o.y1), dx = px - cx, dy = py - cy, d = Math.hypot(dx, dy) || 1e-6;
+    return [dx / d, dy / d, d];
+  }
+  const vx = o.bx - o.ax, vy = o.by - o.ay, l2 = vx * vx + vy * vy || 1e-9;
+  const t = clamp(((px - o.ax) * vx + (py - o.ay) * vy) / l2, 0, 1);
+  const cx = o.ax + vx * t, cy = o.ay + vy * t, dx = px - cx, dy = py - cy, d = Math.hypot(dx, dy);
+  if (d < 1e-6) { const l = Math.sqrt(l2); return [-vy / l, vx / l, -o.th / 2]; }
+  return [dx / d, dy / d, d - o.th / 2];
+}
+
+// ===== Campos de flujo =====
+let blockedC, fStage, fExit, dirS, dirE;
+function buildFields() {
+  blockedC = new Uint8Array(GW * GH);
+  obs.forEach(o => {
+    const [x0, y0, x1, y1] = bbox(o);
+    for (let gy = Math.max(0, Math.floor((y0 - R) / CS)); gy <= Math.min(GH - 1, Math.floor((y1 + R) / CS)); gy++)
+      for (let gx = Math.max(0, Math.floor((x0 - R) / CS)); gx <= Math.min(GW - 1, Math.floor((x1 + R) / CS)); gx++)
+        if (contact(o, (gx + .5) * CS, (gy + .5) * CS)[2] < R * .8) blockedC[gy * GW + gx] = 1;
+  });
+  // meta del show: junto a las vallas del foso
+  const front = obs.filter(o => scene.goal(o));
+  fStage = dijkstra(id => {
+    if (blockedC[id]) return false;
+    const px = (id % GW + .5) * CS, py = ((id / GW) | 0) * CS + CS / 2;
+    if (py > scene.goalMaxY) return false;
+    return front.some(o => contact(o, px, py)[2] < 1.1);
+  });
+  fExit = dijkstra(id => !blockedC[id] && ((id / GW) | 0) >= GH - 2);
+  dirS = dirField(fStage); dirE = dirField(fExit);
+}
+function dijkstra(goal) {
+  const d = new Float64Array(GW * GH).fill(Infinity), heap = [];
+  const push = (v, id) => { heap.push([v, id]); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let s = i; if (l < heap.length && heap[l][0] < heap[s][0]) s = l; if (r < heap.length && heap[r][0] < heap[s][0]) s = r; if (s === i) break; [heap[s], heap[i]] = [heap[i], heap[s]]; i = s; } } return top; };
+  for (let id = 0; id < GW * GH; id++) if (goal(id)) { d[id] = 0; push(0, id); }
+  while (heap.length) {
+    const [v, id] = pop(); if (v > d[id]) continue;
+    const x = id % GW, y = (id / GW) | 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+      const n = ny * GW + nx; if (blockedC[n]) continue;
+      if (dx && dy && (blockedC[y * GW + nx] || blockedC[ny * GW + x])) continue;
+      const nv = v + (dx && dy ? 1.4142 : 1) * CS;
+      if (nv < d[n]) { d[n] = nv; push(nv, n); }
+    }
+  }
+  return d;
+}
+function dirField(f) {
+  const dir = new Float32Array(GW * GH * 2);
+  for (let id = 0; id < GW * GH; id++) {
+    if (!isFinite(f[id])) continue;
+    const x = id % GW, y = (id / GW) | 0;
+    let gx = 0, gy = 0, bw = 0, bx = 0, by = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+      if (dx && dy && (blockedC[y * GW + nx] || blockedC[ny * GW + x])) continue;
+      const v = f[ny * GW + nx]; if (!isFinite(v)) continue;
+      const w = (f[id] - v) / Math.hypot(dx, dy); if (w > 0) { gx += dx * w; gy += dy * w; }
+      if (w > bw) { bw = w; bx = dx; by = dy; }
+    }
+    // sumar la mejor vecina rompe empates (por ejemplo, justo entre dos puertas)
+    gx += bx * bw * 1.5; gy += by * bw * 1.5;
+    const l = Math.hypot(gx, gy);
+    if (l) { dir[id * 2] = gx / l; dir[id * 2 + 1] = gy / l; }
+  }
+  return dir;
+}
+const cellOf = (x, y) => clamp(Math.floor(y / CS), 0, GH - 1) * GW + clamp(Math.floor(x / CS), 0, GW - 1);
+
+// ===== Multitud =====
+const SHIRTS = ["#d8433b","#2f6fc4","#e8b631","#3d9a5b","#8a4fbf","#e07a2e","#f4f4f0","#2b2f35","#3fb3c4","#d0679b","#7a8c3a","#9b5a3c"];
+const HEAT = ["#2c4fd6","#2f86e0","#2fb8d0","#33c08a","#5cc63c","#b8d230","#f2c530","#f39424","#ec5a22","#e0322b"];
+let surgeT = 0, nextDrop = 0, drops = 0, SURGE = [.55, 1.1];
+let ag = [], fallen = [], phase = "plan", spawned = 0, fullAt = 0, t = 0, evacT = 0, dead = 0, evacuated = 0;
+let hashHead = new Int32Array(GW * GH), hashNext = new Int32Array(0);
+
+function looks() {
+  const r = Math.random();
+  return { m: r < .3 ? 0 : r < .5 ? 1 : r < .68 ? 2 : r < .84 ? 3 : 4, sc: Math.random() < .05 ? .72 : .88 + Math.random() * .2,
+    sk: (Math.random() * 5) | 0, pc: (Math.random() * 6) | 0, hc: (Math.random() * 6) | 0, ac: (Math.random() * SHIRTS.length) | 0, st: (Math.random() * 3) | 0, wp: Math.random() * 6 };
+}
+function spawn() {
+  const x = .6 + Math.random() * (WW - 1.2), y = WH + .6 + Math.random() * (SH - WH - 1.2);
+  for (let i = Math.max(0, ag.length - 400); i < ag.length; i++) { const a = ag[i]; if ((a.x - x) ** 2 + (a.y - y) ** 2 < .4) return; }
+  const e = Math.random();
+  ag.push({ x, y, vx: 0, vy: -.5, h: -Math.PI / 2, v0: 1.35 + Math.random() * .5, tol: .8 + e * e * 26,
+    leave: Math.random() * 16, ph: Math.random() * 6.28, dance: false, p: 0, ...looks(), ps: 0, dmg: 0, c: (Math.random() * SHIRTS.length) | 0, fx: 0, fy: 0 });
+  spawned++;
+}
+
+function step() {
+  t += DT;
+  const evac = phase === "evac"; if (evac) evacT += DT;
+  if (phase === "show") {
+    for (let k = 0; k < 30 && spawned < CROWD; k++) spawn();
+    if (spawned >= CROWD) {
+      if (!fullAt) { fullAt = t; nextDrop = t + 6; drops = 0; caption("Empieza el show", false, 2200); burst(140); }
+      if (t > nextDrop && t < fullAt + SHOW_TIME - 5) { surgeT = 3.5; nextDrop = t + 10 + Math.random() * 5; onDrop(drops++ === 0); }
+      if (t > fullAt + SHOW_TIME) startEvac();
+    }
+  }
+  if (surgeT > 0) surgeT -= DT;
+  hashHead.fill(-1); if (hashNext.length < ag.length) hashNext = new Int32Array(ag.length * 2);
+  for (let i = 0; i < ag.length; i++) { const a = ag[i], id = cellOf(a.x, a.y); hashNext[i] = hashHead[id]; hashHead[id] = i; a.p = 0; a.fx = 0; a.fy = 0; }
+  for (let i = 0; i < ag.length; i++) {
+    const a = ag[i], cx = clamp(Math.floor(a.x / CS), 0, GW - 1), cy = clamp(Math.floor(a.y / CS), 0, GH - 1);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+      for (let j = hashHead[ny * GW + nx]; j !== -1; j = hashNext[j]) {
+        if (j <= i) continue;
+        const b = ag[j], ex = b.x - a.x, ey = b.y - a.y, d2 = ex * ex + ey * ey;
+        if (d2 >= 4 * R * R || d2 < 1e-10) continue;
+        const d = Math.sqrt(d2), ov = 2 * R - d, f = 60 * ov, ux = ex / d, uy = ey / d;
+        a.fx -= ux * f; a.fy -= uy * f; b.fx += ux * f; b.fy += uy * f;
+        const pp = ov / (2 * R) * 3; a.p += pp; b.p += pp;
+      }
+    }
+  }
+  stepMovers(); moverForces();
+  const out = [];
+  for (const a of ag) {
+    const leaving = evac && evacT > a.leave;
+    const id = cellOf(a.x, a.y), f = leaving ? fExit : fStage, dir = leaving ? dirE : dirS;
+    const surging = surgeT > 0 && !evac;
+    let want = leaving ? a.v0 * 1.25 : surging ? (f[id] > a.tol * SURGE[0] ? a.v0 * SURGE[1] : 0) : (f[id] > a.tol ? a.v0 : 0);
+    // la gente que ya llegó baila y se mueve sin parar
+    a.dance = phase === "show" && !leaving && fullAt > 0 && f[id] <= a.tol + 1;
+    if (a.dance) { a.fx += Math.cos(t * 5.5 + a.ph) * .9; a.fy += Math.sin(t * 4.3 + a.ph * 1.7) * .9; a.h += Math.sin(t * 2.7 + a.ph) * .04; }
+    let dx = dir[id * 2], dy = dir[id * 2 + 1];
+    if (!isFinite(f[id])) {
+      // atrapado en una celda bloqueada: buscar la celda libre más cercana
+      const gx = id % GW, gy = (id / GW) | 0; let best = Infinity;
+      for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) {
+        const nx = gx + ox, ny = gy + oy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+        const v = isFinite(f[ny * GW + nx]) ? Math.hypot(ox, oy) + f[ny * GW + nx] * 1e-3 : Infinity;
+        if (v < best) { best = v; const l = Math.hypot(ox, oy); dx = ox / l; dy = oy / l; }
+      }
+      want = isFinite(best) ? a.v0 * .6 : 0;
+    }
+    if (leaving && f[id] === 0) { dx = 0; dy = 1; }
+    a.vx += ((dx * want - a.vx) / .5 + a.fx) * DT;
+    a.vy += ((dy * want - a.vy) / .5 + a.fy) * DT;
+    const sp = Math.hypot(a.vx, a.vy); if (sp > 2.6) { a.vx *= 2.6 / sp; a.vy *= 2.6 / sp; }
+    a.x += a.vx * DT; a.y += a.vy * DT;
+    if (sp > .15) a.h = Math.atan2(a.vy, a.vx);
+    // choques con escenario, vallas y reja
+    const bk = buckets[clamp(Math.floor(a.y / BKS), 0, BH - 1) * BW + clamp(Math.floor(a.x / BKS), 0, BW - 1)];
+    for (const oi of bk) {
+      const [nx, ny, d] = contact(obs[oi], a.x, a.y);
+      if (d >= R) continue;
+      const ov = R - d; a.x += nx * ov; a.y += ny * ov;
+      const vn = a.vx * nx + a.vy * ny; if (vn < 0) { a.vx -= vn * nx; a.vy -= vn * ny; }
+      a.p += ov / R * 1.5;
+    }
+    a.x = clamp(a.x, R, WW - R);
+    if (!evac) a.y = Math.min(a.y, SH - R);
+    a.ps += (a.p - a.ps) * .1;
+    if (a.p > PCRIT) a.dmg += (a.p - PCRIT) * DT * 1.6; else a.dmg = Math.max(0, a.dmg - DT * .4);
+    if (a.dmg >= 1) { fallen.push(a); onFall(a.x, a.y); setDead(dead + 1); continue; }
+    if (evac && a.y > SH - .6) { evacuated++; continue; }
+    out.push(a);
+  }
+  ag = out;
+  if (evac && (ag.length === 0 || evacT > 100)) finish();
+}
+
+// ===== Steam: logros y récords =====
+// window.steam lo pone la app de escritorio (desktop/preload.js); sin Steam, no hace nada
+const achieve = id => { try { window.steam && window.steam.achieve(id); } catch (e) { /* sin Steam */ } };
+let sceneKey = "plaza";
+function loadBest() { try { return JSON.parse(localStorage.getItem("mh.best") || "{}"); } catch (e) { return {}; } }
+function saveBest(key, stars) {
+  const best = loadBest(); if ((best[key] ?? -1) >= stars) return;
+  best[key] = stars; try { localStorage.setItem("mh.best", JSON.stringify(best)); } catch (e) { /* sin almacenamiento */ }
+}
+
+// ===== Fases =====
+function start() {
+  for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {
+    toast("Una valla deja una puerta sin camino al escenario. Ábrele paso."); return;
+  }
+  phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
+  caption("¡Abren las puertas!", false, 2200); ui();
+}
+function startEvac() { phase = "evac"; evacT = 0; surgeT = 0; caption("Se acabó el show. ¡Todos a la salida!", false, 2600); ui(); }
+function finish() {
+  phase = "done";
+  const stuck = ag.length, pct = (dead + stuck) / CROWD;
+  const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;
+  saveBest(sceneKey, stars);
+  achieve("FIRST_SHOW");
+  if (stars === 3) achieve(sceneKey === "plaza" ? "PERFECT_PLAZA" : "PERFECT_CIRCO");
+  if (dead >= 500) achieve("TRAGEDY");
+  showCard(`<h2>${stars === 3 ? "Nadie salió herido" : stars ? "Recinto evacuado" : "Fue una tragedia"}</h2>
+    <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("")}</div>
+    <div class="stats">
+      <span>Público</span><span>${CROWD}</span>
+      <span>Salieron sanos</span><span>${evacuated}</span>
+      <span>Pisoteados</span><span style="color:var(--danger)">${dead}</span>
+      <span>Siguen atrapados</span><span>${stuck}</span>
+      <span>Tiempo de evacuación</span><span>${Math.round(evacT)} s</span>
+    </div>
+    <p>${stars === 3 ? "Plan perfecto. Prueba con menos vallas o menos puertas." : "Mira la vista de presión: lo rojo es donde la gente se aplasta. Tu plan se conserva."}</p>
+    <div class="row"><button class="go" id="retry">Ajustar el plan</button><button id="pick">Cambiar escenario</button></div>`);
+  ui();
+}
+function backToPlan() {
+  phase = "plan"; ag = []; fallen = []; movers = []; pops = []; spawned = 0; t = 0; evacT = 0; surgeT = 0; setDead(0, true); resetFx();
+  hideCard(); caption("Tú lo planeas", false, 0); resetPreview(); ui();
+}
+
