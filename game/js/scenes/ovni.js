@@ -2,7 +2,7 @@
 const RANCH = { x: 20, y: 14, r: 6.5 };
 SCENES.ovni = {
   name: "Encuentro Cercano", tag: "Aterrizaje confirmado (más o menos)", outside: "#3a4a2a", bulbH: .9, night: true, music: "space",
-  light: { sky: 0x7fa0ff, ground: 0x1a2416, hemi: .45, sun: 0xb8ffb0, sunI: .9 }, crowd: 2600, fenceBudget: 70, maxGates: 5, guards: 4,
+  light: { sky: 0x6f90f0, ground: 0x121a10, hemi: .32, sun: 0xa8f0a0, sunI: .65 }, crowd: 2600, fenceBudget: 70, maxGates: 5, guards: 4,
   gates: [F, T, F, T, F, T, F], unlock: 14,
   intro: "Un ovni aterrizó en el maizal de don Chuy. Llegó todo el pueblo con celulares. Hay vacas, agentes de negro, un alien que quiere selfies y un rayo que levanta gente.",
   acts: ["¡Nos están viendo!", "¡Saluden!", "¡Graben, graben!", "¡Vienen en son de paz!"],

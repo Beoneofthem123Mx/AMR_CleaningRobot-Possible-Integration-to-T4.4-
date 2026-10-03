@@ -24,7 +24,7 @@ function sceneThumb(key) {
 
 // ---------- pantalla de título y elección de escenario ----------
 function chooser() {
-  if (phase === "show" || phase === "evac") return;
+  if ((phase === "show" || phase === "evac") && !demo) return;
   const best = loadBest(), total = totalStars(), max = Object.keys(SCENES).length * 3;
   showCard(`<div class="title">
       <h1 class="logo">MAREA<br>HUMANA</h1>

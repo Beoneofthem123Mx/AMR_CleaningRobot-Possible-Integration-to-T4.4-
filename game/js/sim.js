@@ -279,6 +279,7 @@ function start(mod) {
 }
 function startEvac() { phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Se acabó el show. ¡Todos a la salida!", false, 2600); ui(); }
 function finish() {
+  if (demo) { startDemo(); return; }
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
   const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;

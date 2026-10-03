@@ -96,7 +96,15 @@ function frame(now) {
 window.__game = { forceMod: id => { window.__forceMod = id; }, bestGates: () => { const ok = [...Array(SLOTS).keys()].filter(i => !(scene.noSlots || []).includes(i)); const pick = ok.length <= MAX_GATES ? ok : [0, 1, 2, 3, 4].map(k => ok[Math.round(k * (ok.length - 1) / 4)]); gates = gates.map((_, i) => pick.includes(i)); buildWorld(); }, unlockAll: () => { window.__unlockAll = true; }, event: k => spawnEvent(k), mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene: k => loadScene(k), setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
   get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; backToPlan(); } };
 
+// demostración detrás del menú: un show de verdad para que la pantalla de título se vea viva
+let demo = false;
+function startDemo() {
+  demo = true; const keys = ["plaza", "circo"], k = keys[(Math.random() * keys.length) | 0];
+  sceneKey = k; scene = SCENES[k]; CROWD = scene.crowd; gates = scene.gates.slice(); fences = []; guards = []; performers = scene.performers();
+  buildWorld(); phase = "plan"; start(MODS_BY_ID.normal); camMode = 0;
+}
 function loadScene(key) {
+  demo = false;
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = scene.maxGates;
   gates = scene.gates.slice(); fences = []; guards = []; performers = scene.performers();
   buildWorld(); backToPlan();
@@ -113,5 +121,5 @@ addEventListener("keydown", e => { if (e.key === "m" || e.key === "M") $("#bSoun
 try { init3D(); } catch (err) {
   showCard(`<h2>Tu navegador no muestra 3D</h2><p>Este juego necesita WebGL. Prueba con Chrome, Edge, Firefox o Safari actualizados.</p>`);
 }
-resize(); loadScene("plaza"); chooser();
+resize(); loadScene("plaza"); startDemo(); chooser();
 requestAnimationFrame(frame);

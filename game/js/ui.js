@@ -100,12 +100,12 @@ function ui() {
   document.querySelectorAll("[data-tool]").forEach(b => { b.disabled = !plan; b.classList.toggle("on", b.dataset.tool === tool); });
   $("#bGo").textContent = plan ? "Abrir puertas" : phase === "done" ? "Abrir puertas" : "Detener";
   $("#bGo").disabled = phase === "done";
-  $("#status").hidden = plan;
+  $("#status").hidden = plan || (typeof demo !== "undefined" && demo);
   $("#bScene").disabled = !plan;
 }
 // pausa y atajos de teclado para jugar en PC
 function togglePause() {
-  if (phase !== "show" && phase !== "evac") return;
+  if ((phase !== "show" && phase !== "evac") || demo) return;
   paused = !paused;
   if (paused) showCard(`<h2>Pausa</h2><p>La gente se quedó congelada. Nadie se queja, por ahora.</p>
     <div class="row"><button class="go" id="resume">Continuar</button><button id="retry">Volver a planear</button><button id="pick">Menú</button></div>`);

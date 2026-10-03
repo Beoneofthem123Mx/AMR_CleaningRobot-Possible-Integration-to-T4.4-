@@ -273,6 +273,7 @@ function renderPeople(tt, dtR, vb) {
         const ph = tt * 8 + a.ph; armL = 2.95 + Math.sin(ph) * .12; armR = 2.95 - Math.sin(ph) * .12;
         bob = olaD < 2.6 ? .4 * (1 - olaD / 2.6) : .18 * Math.abs(Math.sin(ph));
       }
+      if (scene.night && a.dance && a.ph < 2.2 && !surging) { armR = 2.55 + Math.sin(tt * 2 + a.ph) * .15; a.phone = true; } else a.phone = false;
       if (a.ps > PCRIT * .55) { const ph = tt * 15 + a.ph; armL = 2.3 + Math.sin(ph) * .55; armR = 2.3 + Math.cos(ph) * .55; }
       if (MOD && MOD.bounce && a.dance) bob *= MOD.bounce;
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
@@ -296,7 +297,8 @@ function renderPeople(tt, dtR, vb) {
     if (!detail && !down) return;
     emit(P.arm, C.arm, limb(0, 1.4, -.25, armL, .6)); colW(P.arm, C.arm++, r, g, b);
     emit(P.arm, C.arm, limb(0, 1.4, .25, armR, .6)); colW(P.arm, C.arm++, r, g, b);
-    if (a.m === 4) { const gc = GLOW_L[a.ac % GLOW_L.length]; emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .42)); colW(P.glow, C.glow++, gc[0] * 1.6, gc[1] * 1.6, gc[2] * 1.6); }
+    if (a.phone && !down) { emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .3)); colW(P.glow, C.glow++, 2.4, 2.4, 2.2); }
+    else if (a.m === 4) { const gc = GLOW_L[a.ac % GLOW_L.length]; emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .42)); colW(P.glow, C.glow++, gc[0] * 1.6, gc[1] * 1.6, gc[2] * 1.6); }
     const pr = pa[0] + (hq[0] - pa[0]) * hm * .8, pg = pa[1] + (hq[1] - pa[1]) * hm * .8, pb = pa[2] + (hq[2] - pa[2]) * hm * .8;
     emit(P.leg, C.leg, limb(0, .84, -.1, legL, .8)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
     emit(P.leg, C.leg, limb(0, .84, .1, legR, .8)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);

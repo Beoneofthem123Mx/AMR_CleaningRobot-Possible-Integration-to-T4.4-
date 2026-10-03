@@ -2,7 +2,7 @@
 const BLOCKS_X = [[0, 7], [12, 17.5], [22.5, 28], [33, WW]], BLOCKS_Y = [[20, 30], [35, 45], [50, 60]];
 SCENES.ciudad = {
   name: "La Ciudad", tag: "Festival nocturno", outside: "#2a2d33", bulbH: 2.2, night: true, music: "edm",
-  light: { sky: 0x6c7fb8, ground: 0x1d2028, hemi: .42, sun: 0xbccbff, sunI: .85 }, crowd: 3800, fenceBudget: 80, maxGates: 5, guards: 5,
+  light: { sky: 0x5c70b0, ground: 0x15181f, hemi: .32, sun: 0xb0c0ff, sunI: .6 }, crowd: 3800, fenceBudget: 80, maxGates: 5, guards: 5,
   gates: [F, T, F, T, F, T, F], unlock: 9,
   intro: "Toda la ciudad es el escenario. Calles llenas entre edificios altos, fuegos artificiales, un desfile y taxis que no saben que la calle está cerrada.",
   acts: ["¡La ciudad está de fiesta!", "¡Más fuerte!", "¡Todas las calles cantan!", "¡Último tema!"],

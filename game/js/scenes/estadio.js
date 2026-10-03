@@ -1,7 +1,7 @@
 // Marea Humana · escenario: El Estadio (de noche, concierto en la cancha)
 SCENES.estadio = {
   name: "El Estadio", tag: "Concierto en la cancha", outside: "#3b3f45", bulbH: 2.0, night: true, music: "edm",
-  light: { sky: 0x9fb4e6, ground: 0x2a2e34, hemi: .5, sun: 0xe4ecff, sunI: 1.15 }, crowd: 3600, fenceBudget: 70, maxGates: 5, guards: 4,
+  light: { sky: 0x8aa2e0, ground: 0x1e2228, hemi: .34, sun: 0xdfe8ff, sunI: .8 }, crowd: 3600, fenceBudget: 70, maxGates: 5, guards: 4,
   gates: [F, T, F, T, F, T, F], noSlots: [0, 6], slotWhy: "Ahí están las gradas", unlock: 2,
   intro: "La final terminó en concierto. La afición llena la cancha, hay bengalas, la mascota anda suelta y la ola no se detiene.",
   acts: ["¡Golazo de canción!", "¡Todos a saltar!", "¡La ola!", "¡Campeones!"],
