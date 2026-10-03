@@ -35,7 +35,7 @@ const SEG = [
   { card: "1 MEGAPHONE", dur: B * 2, style: "yellow" },
   { clip: "estadio", warm: 28, secs: B * 6, cam: 1, ev: [[.3, "mega", 20, 34], [1.2, "mega", 14, 42]] },
   { card: "TOMORROW'S<br>HEADLINES", dur: B * 3, bg: "mitin" },
-  { clip: "arena", warm: 0, secs: B * 7, cam: 0, report: true },
+  { clip: "arena", warm: 0, secs: B * 7, cam: 0, report: true, zoom: 1.75 },
   { card: "HUMAN<br>TSUNAMI", sub: "Coming soon to Steam · cheaper than a coffee", dur: B * 9, bg: "arena", end: true },
 ];
 
@@ -160,7 +160,7 @@ function assemble() {
         "-vf", `scale=2112:1188,zoompan=z='1+0.06*on/${n}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=${FPS}`, ...enc, out]);
     } else {
       sh("ffmpeg", ["-y", "-loglevel", "error", "-framerate", String(FPS), "-i", path.join(WORK, "seg" + i, "%05d.png"),
-        "-vf", "scale=-2:1080:flags=lanczos,crop=1920:1080", ...enc, out]);
+        "-vf", "scale=-2:1080:flags=lanczos,crop=1920:1080" + (g.zoom ? `,crop=iw/${g.zoom}:ih/${g.zoom},scale=1920:1080:flags=lanczos` : ""), ...enc, out]);
     }
   });
   fs.writeFileSync(path.join(WORK, "list.txt"), parts.map(p => `file '${p}'`).join("\n"));

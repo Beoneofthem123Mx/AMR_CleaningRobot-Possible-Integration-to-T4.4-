@@ -63,7 +63,7 @@ SCENE_MODELS.park_carousel = (g, u) => {
   part(g, "cyl", "#e8c86a", 3.5, .3, 3.5, 0, .15, 0);
   part(g, "cyl", mat("#bfe8ff", { metalness: .7, roughness: .15 }), .7, 3.6, .7, 0, 2, 0);
   const roof = pivot(g, 0, 3.8, 0);
-  for (let i = 0; i < 12; i++) { const p = pivot(roof, 0, 0, 0); p.rotation.y = i / 12 * 6.283; const c = part(p, "box", i % 2 ? "#ffffff" : "#ff4d8d", 3.7, .12, 1, 1.85, .55, 0); c.rotation.z = .3; }
+  for (let i = 0; i < 12; i++) { const p = pivot(roof, 0, 0, 0); p.rotation.y = i / 12 * 6.283; const c = part(p, "box", i % 2 ? "#ffffff" : "#ff4d8d", 3.7, .12, 1.95, 1.85, .55 + (i % 2) * .06, 0); c.rotation.z = .3; }
   part(roof, "cone", "#ff4d8d", 1.3, 1.4, 1.3, 0, 1.6, 0); part(roof, "sph", "#ffd23a", .3, .3, .3, 0, 2.4, 0);
   for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283; part(roof, "sph", basic(i % 2 ? "#fff3a0" : "#ffb0d8"), .12, .12, .12, Math.cos(a) * 3.55, 0, Math.sin(a) * 3.55); }
   u.horses = [];
@@ -184,7 +184,7 @@ SCENE_PERSONS.park_teen = { body: "#ff4d8d", legs: "#2b3a55", hat: "cap", hatCol
 // ---------- the venue ----------
 SCENES.park = {
   name: "Grand Opening", tag: "The theme park opens today. Most rides do too.", place: "WONDERLANDIA", outside: "#7cc45a", bulbH: 1.2, music: "circus",
-  light: { sky: 0xe6f4ff, ground: 0x6a9a4a, hemi: .64, sun: 0xfff2d6, sunI: 1.2 }, crowd: 3300, fenceBudget: 70, maxGates: 5, guards: 4,
+  light: { sky: 0xe6f4ff, ground: 0x6a9a4a, hemi: .64, sun: 0xfff2d6, sunI: 1.2 }, crowd: 2850, fenceBudget: 70, maxGates: 5, guards: 4,
   gates: [F, F, F, F, F, T, T], unlock: 30,
   intro: "Wonderlandia opens its gates today with a castle, fireworks and a mascot who is definitely not a mouse. Most rides passed inspection; the others passed near an inspector.",
   acts: ["Welcome to Wonderlandia!", "Fireworks!", "Make magic memories!", "Most rides open soon!", "Wave at Mousebear!"],
@@ -380,7 +380,7 @@ SCENES.park = {
     },
     dinos(side) {
       const y = rnd(36, 52);
-      addMover({ kind: "park_dinofloat", x: side ? -5 : WW + 5, y, pts: [[20, y + rnd(-3, 3)], [side ? WW + 7 : -7, y + rnd(-3, 3)]], speed: 1.4, r: 1.9, push: 26, scare: 2.4, say: "DINO DISCO!", sayEvery: 2.8,
+      addMover({ kind: "park_dinofloat", x: side ? -5 : WW + 5, y, pts: [[20, y + rnd(-3, 3)], [side ? WW + 7 : -7, y + rnd(-3, 3)]], speed: 1.5, r: 1.9, push: 20, scare: 1.9, say: "DINO DISCO!", sayEvery: 2.8,
         tick(m) { m.rw = (m.rw || 0) + DT; if (m.rw > 3.7) { m.rw = 0; pop(m.x + 1, m.y - 2.2, "RAWR!"); } } });
       caption("The dinosaur parade float is here! It only knows one song", false, 2200);
     },
@@ -405,7 +405,8 @@ SCENES.park = {
     },
     teacup() {
       const a = rnd(2.2, 4.2), x = PARK_CUPS.x + Math.cos(a) * (PARK_CUPS.r + 1.3), y = PARK_CUPS.y + Math.sin(a) * (PARK_CUPS.r + 1.3), sp = rnd(3.5, 4.5);
-      addMover({ kind: "park_teacup", beh: "bounce", x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 1.1, push: 14, life: 11, col: pick(PARK_COLS), say: "RUNAWAY TEACUP!", sayEvery: 3.5 });
+      addMover({ kind: "park_teacup", beh: "bounce", x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 1.1, push: 10, life: 9, col: pick(PARK_COLS), say: "RUNAWAY TEACUP!", sayEvery: 3.5,
+        tick(m) { if (m.y < 24 && m.vy < 0) m.vy *= -1; } });
       caption("A teacup broke free from the teacup ride! The rider refuses to get out", true, 2200);
     },
     churros(side) {
