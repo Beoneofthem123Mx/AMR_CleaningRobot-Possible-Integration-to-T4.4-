@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Marea Humana</title>
+<meta name="description" content="Planea el recinto de un concierto en la plaza para que miles de personas entren, disfruten y salgan sin que nadie salga pisoteado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&display=swap">
+<style>
+/* Layout: a vertical "phone video" frame showing the plaza from above, tool bar under it. One committed look: dark surround, daylight concrete inside. */
+:root {
+  color-scheme: dark;
+  --surround: #141516;
+  --bar: #1f2123;
+  --bar-line: #34383b;
+  --text: #f1f1ee;
+  --muted: #9da3a6;
+  --paper: #ffffff;
+  --ink: #111214;
+  --danger: #e53229;
+  --caution: #ffd23a;
+  --go: #ffd23a;
+  --font: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html, body { height: 100%; margin: 0; }
+[hidden] { display: none !important; }
+body { background: var(--surround); color: var(--text); font-family: var(--font); overflow: hidden; }
+.app { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 16px; }
+.wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
+.frame { position: relative; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.5); background: #bdbdb8; }
+canvas { display: block; touch-action: none; }
+.badge {
+  position: absolute; top: 3.2%; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: .45em; padding: .32em .4em .32em .7em;
+  background: var(--paper); color: var(--ink); border: .2em solid var(--ink); border-radius: .7em;
+  box-shadow: 0 .18em 0 rgba(0,0,0,.35); font-weight: 900; letter-spacing: .02em; white-space: nowrap; pointer-events: none;
+}
+.badge svg { width: 1.15em; height: 1.15em; }
+.badge .num {
+  color: var(--danger); background: var(--paper); border: .14em solid var(--ink); border-radius: .5em;
+  min-width: 1.2em; text-align: center; padding: 0 .25em; font-variant-numeric: tabular-nums; font-size: 1.15em; line-height: 1.1;
+}
+.badge.pop { animation: pop .4s; }
+@keyframes pop { 35% { transform: translateX(-50%) scale(1.22) rotate(-3deg); } }
+.caption {
+  position: absolute; left: 6%; right: 6%; top: 57%; text-align: center; pointer-events: none;
+  font-weight: 900; text-transform: uppercase; letter-spacing: .01em; line-height: 1.05; text-wrap: balance;
+  color: var(--paper); text-shadow: 0 .06em .18em rgba(0,0,0,.55), 0 0 .5em rgba(0,0,0,.25);
+  transition: opacity .35s;
+}
+.caption.yellow { color: var(--caution); }
+.status {
+  position: absolute; left: 50%; bottom: 2.4%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+  background: rgba(17,18,20,.72); color: var(--text); border-radius: 99px; padding: .3em .9em; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.overlay { position: absolute; inset: 0; display: flex; overflow: auto; padding: 14px; background: rgba(10,10,12,.42); }
+.card {
+  margin: auto; max-width: 340px; box-sizing: border-box; background: var(--paper); color: var(--ink);
+  border: 4px solid var(--ink); border-radius: 16px; box-shadow: 0 6px 0 rgba(0,0,0,.4);
+  padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 10px; font-size: .92rem;
+}
+.card h2 { margin: 0; font-weight: 900; font-size: 1.45rem; line-height: 1.05; text-transform: uppercase; text-wrap: balance; }
+.card p { margin: 0; line-height: 1.45; }
+.card ul { margin: 0; padding-left: 18px; line-height: 1.5; color: #45494c; }
+.card .stats { display: grid; grid-template-columns: 1fr auto; gap: 2px 14px; font-variant-numeric: tabular-nums; }
+.card .stats span:nth-child(even) { font-weight: 900; text-align: right; }
+.stars { font-size: 2rem; letter-spacing: .08em; color: var(--caution); -webkit-text-stroke: 2px var(--ink); }
+.stars .off { color: #d9d9d4; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+button {
+  font: 700 .88rem var(--font); color: var(--text); background: var(--bar); border: 2px solid var(--bar-line);
+  border-radius: 999px; padding: 8px 13px; cursor: pointer;
+}
+button:focus-visible { outline: 3px solid var(--caution); outline-offset: 2px; }
+button:disabled { opacity: .4; cursor: default; }
+button.on { background: var(--text); color: var(--ink); border-color: var(--text); }
+button.go { background: var(--go); color: var(--ink); border-color: var(--go); font-weight: 900; }
+.card button { color: var(--ink); background: var(--paper); border: 3px solid var(--ink); }
+.card button.go { background: var(--caution); }
+.bar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 100%; }
+.bar .sep { width: 1px; background: var(--bar-line); margin: 4px 2px; }
+.cnt { font-variant-numeric: tabular-nums; opacity: .8; font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .badge.pop { animation: none; } .caption { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="wrap" id="wrap">
+    <div class="frame" id="frame">
+      <canvas id="cv" aria-label="Vista aérea de la plaza y el escenario"></canvas>
+      <div class="badge" id="badge">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#111214" d="M12 2C6.9 2 3 5.6 3 10.3c0 2.7 1.3 4.9 3.4 6.3V20c0 1.1.9 2 2 2h7.2c1.1 0 2-.9 2-2v-3.4c2.1-1.4 3.4-3.6 3.4-6.3C21 5.6 17.1 2 12 2Zm-3.6 11.6a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2Zm7.2 0a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2ZM10 22v-2.4h1.2V22H10Zm2.8 0v-2.4H14V22h-1.2Z"/></svg>
+        <span>PISOTEADOS</span><span class="num" id="dead">0</span>
+      </div>
+      <div class="caption" id="caption">Tú lo planeas</div>
+      <div class="status" id="status" hidden></div>
+      <div class="overlay" id="overlay"><div class="card" id="card"></div></div>
+    </div>
+  </div>
+  <div class="bar" id="bar">
+    <button id="tFence" data-tool="fence" class="on">Valla <span class="cnt" id="cFence">60 m</span></button>
+    <button id="tGate" data-tool="gate">Puertas <span class="cnt" id="cGate">3/5</span></button>
+    <button id="tErase" data-tool="erase">Borrar</button>
+    <span class="sep"></span>
+    <button id="bHeat">Presión</button>
+    <button id="bSpeed">1×</button>
+    <button id="bGo" class="go">Abrir puertas</button>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const cv = $("#cv"), ctx = cv.getContext("2d");
+// ===== Mundo (metros) =====
+const WW = 40, WH = 72, CS = .5, GW = WW / CS, GH = WH / CS;
+const R = .24, DT = 1 / 60;
+let PCRIT = 7;
+const CROWD = 2200, FENCE_BUDGET = 60, MAX_GATES = 5, SHOW_TIME = 40;
+const FENCE_Y = 66, SLOTS = 7, SLOT_W = 2.6;
+const slotX = i => WW * (i + .5) / SLOTS;
+let gates = [false, false, true, false, true, false, false];
+let fences = [];           // vallas del jugador {ax,ay,bx,by,len}
+
+// ===== Obstáculos =====
+let obs = [], buckets, BKS = 2, BW = Math.ceil(WW / BKS), BH = Math.ceil(WH / BKS);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+function seg(ax, ay, bx, by, th, kind) { obs.push({ t: "s", ax, ay, bx, by, th, kind }); }
+function rect(x0, y0, x1, y1, kind) { obs.push({ t: "r", x0, y0, x1, y1, kind }); }
+function circ(x, y, r, kind) { obs.push({ t: "c", x, y, r, kind }); }
+const RING = { x: 20, y: 21.5, r: 4.8 };
+
+function buildWorld() {
+  obs = [];
+  // bordes de la plaza
+  seg(0, 0, 0, WH, .2, "edge"); seg(WW, 0, WW, WH, .2, "edge"); seg(0, 0, WW, 0, .2, "edge");
+  // escenario, bocinas, pasarela y plataforma
+  rect(6, 0, 34, 11, "stage");
+  rect(2.6, 7.4, 4.8, 9.6, "speaker"); rect(35.2, 7.4, 37.4, 9.6, "speaker");
+  rect(18.6, 11, 21.4, 18.5, "catwalk");
+  circ(RING.x, RING.y, 3.2, "platform");
+  // vallas negras del foso
+  seg(0, 12.6, 17, 12.6, .5, "barrier"); seg(23, 12.6, WW, 12.6, .5, "barrier");
+  seg(17, 12.6, 17, 18.4, .5, "barrier"); seg(23, 12.6, 23, 18.4, .5, "barrier");
+  const n = 12;
+  for (let k = 0; k < n; k++) {
+    const a0 = (k + .5) / n * Math.PI * 2, a1 = (k + 1.5) / n * Math.PI * 2;
+    const ax = RING.x + Math.cos(a0) * RING.r, ay = RING.y + Math.sin(a0) * RING.r;
+    const bx = RING.x + Math.cos(a1) * RING.r, by = RING.y + Math.sin(a1) * RING.r;
+    if ((ay + by) / 2 < RING.y - 2.5 && Math.abs((ax + bx) / 2 - RING.x) < 3) continue;
+    seg(ax, ay, bx, by, .5, "barrier");
+  }
+  // carpa, puesto azul y primeros auxilios
+  rect(17.5, 39.5, 22.5, 44.5, "tent");
+  rect(2.5, 52, 5.5, 55, "booth");
+  rect(34.5, 52, 37.5, 55, "aid");
+  // reja de entrada con puertas
+  let x = 0;
+  for (let i = 0; i < SLOTS; i++) {
+    const g0 = slotX(i) - SLOT_W / 2, g1 = slotX(i) + SLOT_W / 2;
+    seg(x, FENCE_Y, g0, FENCE_Y, .3, "fence");
+    if (!gates[i]) seg(g0, FENCE_Y, g1, FENCE_Y, .3, "closed");
+    x = g1;
+  }
+  seg(x, FENCE_Y, WW, FENCE_Y, .3, "fence");
+  for (const f of fences) seg(f.ax, f.ay, f.bx, f.by, .35, "player");
+  // cubetas espaciales
+  buckets = Array.from({ length: BW * BH }, () => []);
+  obs.forEach((o, i) => {
+    const [x0, y0, x1, y1] = bbox(o);
+    for (let by = Math.max(0, Math.floor((y0 - 1) / BKS)); by <= Math.min(BH - 1, Math.floor((y1 + 1) / BKS)); by++)
+      for (let bx = Math.max(0, Math.floor((x0 - 1) / BKS)); bx <= Math.min(BW - 1, Math.floor((x1 + 1) / BKS)); bx++) buckets[by * BW + bx].push(i);
+  });
+  buildFields();
+  staticLayer = null;
+  resetPreview();
+}
+function bbox(o) {
+  if (o.t === "r") return [o.x0, o.y0, o.x1, o.y1];
+  if (o.t === "c") return [o.x - o.r, o.y - o.r, o.x + o.r, o.y + o.r];
+  return [Math.min(o.ax, o.bx) - o.th, Math.min(o.ay, o.by) - o.th, Math.max(o.ax, o.bx) + o.th, Math.max(o.ay, o.by) + o.th];
+}
+// distancia con signo a la superficie y normal hacia afuera
+function contact(o, px, py) {
+  if (o.t === "c") { const dx = px - o.x, dy = py - o.y, d = Math.hypot(dx, dy) || 1e-6; return [dx / d, dy / d, d - o.r]; }
+  if (o.t === "r") {
+    if (px > o.x0 && px < o.x1 && py > o.y0 && py < o.y1) {
+      const m = [px - o.x0, o.x1 - px, py - o.y0, o.y1 - py], k = m.indexOf(Math.min(...m));
+      return [[-1, 1, 0, 0][k], [0, 0, -1, 1][k], -m[k]];
+    }
+    const cx = clamp(px, o.x0, o.x1), cy = clamp(py, o.y0, o.y1), dx = px - cx, dy = py - cy, d = Math.hypot(dx, dy) || 1e-6;
+    return [dx / d, dy / d, d];
+  }
+  const vx = o.bx - o.ax, vy = o.by - o.ay, l2 = vx * vx + vy * vy || 1e-9;
+  const t = clamp(((px - o.ax) * vx + (py - o.ay) * vy) / l2, 0, 1);
+  const cx = o.ax + vx * t, cy = o.ay + vy * t, dx = px - cx, dy = py - cy, d = Math.hypot(dx, dy);
+  if (d < 1e-6) { const l = Math.sqrt(l2); return [-vy / l, vx / l, -o.th / 2]; }
+  return [dx / d, dy / d, d - o.th / 2];
+}
+
+// ===== Campos de flujo =====
+let blockedC, fStage, fExit, dirS, dirE;
+function buildFields() {
+  blockedC = new Uint8Array(GW * GH);
+  obs.forEach(o => {
+    const [x0, y0, x1, y1] = bbox(o);
+    for (let gy = Math.max(0, Math.floor((y0 - R) / CS)); gy <= Math.min(GH - 1, Math.floor((y1 + R) / CS)); gy++)
+      for (let gx = Math.max(0, Math.floor((x0 - R) / CS)); gx <= Math.min(GW - 1, Math.floor((x1 + R) / CS)); gx++)
+        if (contact(o, (gx + .5) * CS, (gy + .5) * CS)[2] < R * .8) blockedC[gy * GW + gx] = 1;
+  });
+  // meta del show: junto a las vallas del foso
+  const front = obs.filter(o => o.kind === "barrier");
+  fStage = dijkstra(id => {
+    if (blockedC[id]) return false;
+    const px = (id % GW + .5) * CS, py = ((id / GW) | 0) * CS + CS / 2;
+    if (py > 30) return false;
+    return front.some(o => contact(o, px, py)[2] < 1.1);
+  });
+  fExit = dijkstra(id => !blockedC[id] && ((id / GW) | 0) >= GH - 2);
+  dirS = dirField(fStage); dirE = dirField(fExit);
+}
+function dijkstra(goal) {
+  const d = new Float64Array(GW * GH).fill(Infinity), heap = [];
+  const push = (v, id) => { heap.push([v, id]); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let s = i; if (l < heap.length && heap[l][0] < heap[s][0]) s = l; if (r < heap.length && heap[r][0] < heap[s][0]) s = r; if (s === i) break; [heap[s], heap[i]] = [heap[i], heap[s]]; i = s; } } return top; };
+  for (let id = 0; id < GW * GH; id++) if (goal(id)) { d[id] = 0; push(0, id); }
+  while (heap.length) {
+    const [v, id] = pop(); if (v > d[id]) continue;
+    const x = id % GW, y = (id / GW) | 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+      const n = ny * GW + nx; if (blockedC[n]) continue;
+      if (dx && dy && (blockedC[y * GW + nx] || blockedC[ny * GW + x])) continue;
+      const nv = v + (dx && dy ? 1.4142 : 1) * CS;
+      if (nv < d[n]) { d[n] = nv; push(nv, n); }
+    }
+  }
+  return d;
+}
+function dirField(f) {
+  const dir = new Float32Array(GW * GH * 2);
+  for (let id = 0; id < GW * GH; id++) {
+    if (!isFinite(f[id])) continue;
+    const x = id % GW, y = (id / GW) | 0;
+    let gx = 0, gy = 0, bw = 0, bx = 0, by = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+      if (dx && dy && (blockedC[y * GW + nx] || blockedC[ny * GW + x])) continue;
+      const v = f[ny * GW + nx]; if (!isFinite(v)) continue;
+      const w = (f[id] - v) / Math.hypot(dx, dy); if (w > 0) { gx += dx * w; gy += dy * w; }
+      if (w > bw) { bw = w; bx = dx; by = dy; }
+    }
+    // sumar la mejor vecina rompe empates (por ejemplo, justo entre dos puertas)
+    gx += bx * bw * 1.5; gy += by * bw * 1.5;
+    const l = Math.hypot(gx, gy);
+    if (l) { dir[id * 2] = gx / l; dir[id * 2 + 1] = gy / l; }
+  }
+  return dir;
+}
+const cellOf = (x, y) => clamp(Math.floor(y / CS), 0, GH - 1) * GW + clamp(Math.floor(x / CS), 0, GW - 1);
+
+// ===== Multitud =====
+const SHIRTS = ["#d8433b","#2f6fc4","#e8b631","#3d9a5b","#8a4fbf","#e07a2e","#f4f4f0","#2b2f35","#3fb3c4","#d0679b","#7a8c3a","#9b5a3c"];
+const HEAT = ["#3b6fd8","#2fb4c9","#3fbf5a","#d9d23a","#f08a24","#e0322b"];
+let ag = [], fallen = [], phase = "plan", spawned = 0, fullAt = 0, t = 0, evacT = 0, dead = 0, evacuated = 0;
+let hashHead = new Int32Array(GW * GH), hashNext = new Int32Array(0);
+
+function spawn() {
+  const x = .6 + Math.random() * (WW - 1.2), y = FENCE_Y + 1.2 + Math.random() * (WH - FENCE_Y - 1.6);
+  for (let i = Math.max(0, ag.length - 400); i < ag.length; i++) { const a = ag[i]; if ((a.x - x) ** 2 + (a.y - y) ** 2 < .3) return; }
+  const e = Math.random();
+  ag.push({ x, y, vx: 0, vy: -.5, h: -Math.PI / 2, v0: 1.35 + Math.random() * .5, tol: .8 + e * e * 26,
+    leave: Math.random() * 16, p: 0, ps: 0, dmg: 0, c: (Math.random() * SHIRTS.length) | 0, fx: 0, fy: 0 });
+  spawned++;
+}
+
+function step() {
+  t += DT;
+  const evac = phase === "evac"; if (evac) evacT += DT;
+  if (phase === "show") {
+    for (let k = 0; k < 10 && spawned < CROWD; k++) spawn();
+    if (spawned >= CROWD) { if (!fullAt) { fullAt = t; caption("Empieza el show", false, 2200); } if (t > fullAt + SHOW_TIME) startEvac(); }
+  }
+  hashHead.fill(-1); if (hashNext.length < ag.length) hashNext = new Int32Array(ag.length * 2);
+  for (let i = 0; i < ag.length; i++) { const a = ag[i], id = cellOf(a.x, a.y); hashNext[i] = hashHead[id]; hashHead[id] = i; a.p = 0; a.fx = 0; a.fy = 0; }
+  for (let i = 0; i < ag.length; i++) {
+    const a = ag[i], cx = clamp(Math.floor(a.x / CS), 0, GW - 1), cy = clamp(Math.floor(a.y / CS), 0, GH - 1);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+      for (let j = hashHead[ny * GW + nx]; j !== -1; j = hashNext[j]) {
+        if (j <= i) continue;
+        const b = ag[j], ex = b.x - a.x, ey = b.y - a.y, d2 = ex * ex + ey * ey;
+        if (d2 >= 4 * R * R || d2 < 1e-10) continue;
+        const d = Math.sqrt(d2), ov = 2 * R - d, f = 60 * ov, ux = ex / d, uy = ey / d;
+        a.fx -= ux * f; a.fy -= uy * f; b.fx += ux * f; b.fy += uy * f;
+        const pp = ov / (2 * R) * 3; a.p += pp; b.p += pp;
+      }
+    }
+  }
+  const out = [];
+  for (const a of ag) {
+    const leaving = evac && evacT > a.leave;
+    const id = cellOf(a.x, a.y), f = leaving ? fExit : fStage, dir = leaving ? dirE : dirS;
+    let want = leaving ? a.v0 * 1.25 : (f[id] > a.tol ? a.v0 : 0);
+    let dx = dir[id * 2], dy = dir[id * 2 + 1];
+    if (!isFinite(f[id])) {
+      // atrapado en una celda bloqueada: buscar la celda libre más cercana
+      const gx = id % GW, gy = (id / GW) | 0; let best = Infinity;
+      for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) {
+        const nx = gx + ox, ny = gy + oy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+        const v = isFinite(f[ny * GW + nx]) ? Math.hypot(ox, oy) + f[ny * GW + nx] * 1e-3 : Infinity;
+        if (v < best) { best = v; const l = Math.hypot(ox, oy); dx = ox / l; dy = oy / l; }
+      }
+      want = isFinite(best) ? a.v0 * .6 : 0;
+    }
+    if (leaving && f[id] === 0) { dx = 0; dy = 1; }
+    a.vx += ((dx * want - a.vx) / .5 + a.fx) * DT;
+    a.vy += ((dy * want - a.vy) / .5 + a.fy) * DT;
+    const sp = Math.hypot(a.vx, a.vy); if (sp > 2.6) { a.vx *= 2.6 / sp; a.vy *= 2.6 / sp; }
+    a.x += a.vx * DT; a.y += a.vy * DT;
+    if (sp > .15) a.h = Math.atan2(a.vy, a.vx);
+    // choques con escenario, vallas y reja
+    const bk = buckets[clamp(Math.floor(a.y / BKS), 0, BH - 1) * BW + clamp(Math.floor(a.x / BKS), 0, BW - 1)];
+    for (const oi of bk) {
+      const [nx, ny, d] = contact(obs[oi], a.x, a.y);
+      if (d >= R) continue;
+      const ov = R - d; a.x += nx * ov; a.y += ny * ov;
+      const vn = a.vx * nx + a.vy * ny; if (vn < 0) { a.vx -= vn * nx; a.vy -= vn * ny; }
+      a.p += ov / R * 1.5;
+    }
+    a.x = clamp(a.x, R, WW - R);
+    if (!evac) a.y = Math.min(a.y, WH - R);
+    a.ps += (a.p - a.ps) * .1;
+    if (a.p > PCRIT) a.dmg += (a.p - PCRIT) * DT * 1.6; else a.dmg = Math.max(0, a.dmg - DT * .4);
+    if (a.dmg >= 1) { fallen.push([a.x, a.y, a.h]); setDead(dead + 1); continue; }
+    if (evac && a.y > WH - .3) { evacuated++; continue; }
+    out.push(a);
+  }
+  ag = out;
+  if (evac && (ag.length === 0 || evacT > 100)) finish();
+}
+
+// ===== Fases =====
+function start() {
+  for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {
+    toast("Una valla deja una puerta sin camino al escenario. Ábrele paso."); return;
+  }
+  phase = "show"; t = 0; spawned = 0; fullAt = 0; ag = []; fallen = []; evacuated = 0; evacT = 0; setDead(0, true);
+  caption("¡Abren las puertas!", false, 2200); ui();
+}
+function startEvac() { phase = "evac"; evacT = 0; caption("Se acabó el show. ¡Todos a la salida!", false, 2600); ui(); }
+function finish() {
+  phase = "done";
+  const stuck = ag.length, pct = (dead + stuck) / CROWD;
+  const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;
+  showCard(`<h2>${stars === 3 ? "Nadie salió herido" : stars ? "Plaza evacuada" : "Fue una tragedia"}</h2>
+    <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("")}</div>
+    <div class="stats">
+      <span>Público</span><span>${CROWD}</span>
+      <span>Salieron sanos</span><span>${evacuated}</span>
+      <span>Pisoteados</span><span style="color:var(--danger)">${dead}</span>
+      <span>Siguen atrapados</span><span>${stuck}</span>
+      <span>Tiempo de evacuación</span><span>${Math.round(evacT)} s</span>
+    </div>
+    <p>${stars === 3 ? "Plan perfecto. Prueba con menos vallas o menos puertas." : "Mira la vista de presión: lo rojo es donde la gente se aplasta. Tu plan se conserva."}</p>
+    <div class="row"><button class="go" id="retry">Ajustar el plan</button></div>`);
+  ui();
+}
+function backToPlan() {
+  phase = "plan"; ag = []; fallen = []; spawned = 0; t = 0; evacT = 0; setDead(0, true);
+  hideCard(); caption("Tú lo planeas", false, 0); resetPreview(); ui();
+}
+
+// ===== Edición del plan =====
+let tool = "fence", drag = null;
+const fenceUsed = () => fences.reduce((s, f) => s + f.len, 0);
+function toWorld(ev) { const r = cv.getBoundingClientRect(); return [(ev.clientX - r.left) / S, (ev.clientY - r.top) / S]; }
+const snap = v => Math.round(v * 2) / 2;
+cv.addEventListener("pointerdown", ev => {
+  if (phase !== "plan") return;
+  const [x, y] = toWorld(ev);
+  if (tool === "gate") {
+    if (Math.abs(y - FENCE_Y) > 3) { toast("Toca una puerta de la reja de abajo."); return; }
+    const i = clamp(Math.floor(x / (WW / SLOTS)), 0, SLOTS - 1), open = gates.filter(Boolean).length;
+    if (gates[i] && open <= 1) { toast("Necesitas al menos una puerta abierta."); return; }
+    if (!gates[i] && open >= MAX_GATES) { toast(`Solo hay personal para ${MAX_GATES} puertas.`); return; }
+    gates[i] = !gates[i]; buildWorld(); ui(); return;
+  }
+  if (tool === "erase") {
+    let best = -1, bd = 1.2;
+    fences.forEach((f, i) => { const d = contact({ t: "s", ...f, th: 0 }, x, y)[2]; if (d < bd) { bd = d; best = i; } });
+    if (best >= 0) { fences.splice(best, 1); buildWorld(); ui(); }
+    return;
+  }
+  drag = { ax: snap(x), ay: snap(y), bx: snap(x), by: snap(y) }; cv.setPointerCapture(ev.pointerId);
+});
+cv.addEventListener("pointermove", ev => {
+  if (!drag) return;
+  const [x, y] = toWorld(ev); let bx = snap(x), by = snap(y);
+  const left = FENCE_BUDGET - fenceUsed(), l = Math.hypot(bx - drag.ax, by - drag.ay);
+  if (l > left) { bx = drag.ax + (bx - drag.ax) * left / l; by = drag.ay + (by - drag.ay) * left / l; }
+  drag.bx = clamp(bx, 0, WW); drag.by = clamp(by, 0, WH);
+});
+const endDrag = () => {
+  if (!drag) return;
+  const len = Math.hypot(drag.bx - drag.ax, drag.by - drag.ay);
+  if (len >= 1) { fences.push({ ...drag, len: Math.round(len * 10) / 10 }); buildWorld(); }
+  else if (FENCE_BUDGET - fenceUsed() < 1) toast("No te quedan metros de valla. Borra alguna.");
+  drag = null; ui();
+};
+cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
+
+// ===== Vista previa del flujo (las estelas del video) =====
+let preview = [];
+function resetPreview() { preview = []; }
+function seedParticle() {
+  const open = []; for (let i = 0; i < SLOTS; i++) if (gates[i]) open.push(i);
+  const i = open[(Math.random() * open.length) | 0];
+  const x = slotX(i) + (Math.random() - .5) * SLOT_W * .8, y = FENCE_Y + .6 + Math.random() * 3;
+  return { x, y, trail: [], age: 0, life: 6 + Math.random() * 4 };
+}
+function stepPreview(dt) {
+  while (preview.length < 220) { const p = seedParticle(); p.age = Math.random() * p.life; preview.push(p); }
+  for (let k = 0; k < preview.length; k++) {
+    let p = preview[k]; p.age += dt;
+    const id = cellOf(p.x, p.y);
+    if (p.age > p.life || !isFinite(fStage[id]) || fStage[id] < .6) { preview[k] = seedParticle(); continue; }
+    const sp = 7 + (k % 5);
+    p.x += (dirS[id * 2] + (Math.random() - .5) * .5) * sp * dt; p.y += (dirS[id * 2 + 1] + (Math.random() - .5) * .5) * sp * dt;
+    p.trail.push(p.x, p.y, fStage[id]); if (p.trail.length > 90) p.trail.splice(0, 3);
+  }
+}
+
+// ===== Interfaz =====
+let toastTimer, capTimer;
+function caption(text, yellow, ms) {
+  const el = $("#caption"); el.textContent = text; el.classList.toggle("yellow", !!yellow); el.style.opacity = 1;
+  clearTimeout(capTimer); if (ms) capTimer = setTimeout(() => el.style.opacity = 0, ms);
+}
+function toast(text) { caption(text, true, 2600); }
+function setDead(n, quiet) {
+  const first = dead === 0 && n > 0;
+  dead = n; $("#dead").textContent = n;
+  if (!quiet) { const b = $("#badge"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
+  if (first && !quiet) caption("Y eso no nos gusta.", true, 2600);
+}
+function showCard(html) { $("#card").innerHTML = html; $("#overlay").hidden = false; const b = $("#card .go"); if (b) b.focus(); }
+function hideCard() { $("#overlay").hidden = true; }
+function ui() {
+  const plan = phase === "plan";
+  $("#cFence").textContent = `${Math.round(FENCE_BUDGET - fenceUsed())} m`;
+  $("#cGate").textContent = `${gates.filter(Boolean).length}/${MAX_GATES}`;
+  document.querySelectorAll("[data-tool]").forEach(b => { b.disabled = !plan; b.classList.toggle("on", b.dataset.tool === tool); });
+  $("#bGo").textContent = plan ? "Abrir puertas" : phase === "done" ? "Abrir puertas" : "Detener";
+  $("#bGo").disabled = phase === "done";
+  $("#status").hidden = plan;
+}
+document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => {
+  tool = b.dataset.tool; ui();
+  if (tool === "gate") toast("Toca la reja de abajo para abrir o cerrar puertas.");
+}));
+$("#bGo").addEventListener("click", () => phase === "plan" ? start() : backToPlan());
+let heat = false, speed = 1;
+$("#bHeat").addEventListener("click", () => { heat = !heat; $("#bHeat").classList.toggle("on", heat); });
+$("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = speed + "×"; });
+$("#card").addEventListener("click", e => {
+  if (e.target.id === "begin") { hideCard(); caption("Tú lo planeas", false, 0); }
+  if (e.target.id === "retry") backToPlan();
+});
+
+// ===== Dibujo =====
+let S = 10, dpr = 1, staticLayer = null, atlas = null, SP = 8;
+function resize() {
+  const r = $("#wrap").getBoundingClientRect();
+  const w = Math.min(r.width, r.height * WW / WH), h = w * WH / WW;
+  dpr = Math.min(2, window.devicePixelRatio || 1); S = w / WW;
+  cv.style.width = w + "px"; cv.style.height = h + "px";
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  $("#frame").style.fontSize = Math.max(11, w * .042) + "px";
+  staticLayer = null; atlas = null;
+}
+new ResizeObserver(resize).observe($("#wrap"));
+
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
+function buildStatic() {
+  const c = document.createElement("canvas"); c.width = cv.width; c.height = cv.height;
+  const g = c.getContext("2d"); g.scale(S * dpr, S * dpr);
+  const px = 1 / (S * dpr);
+  // hormigón con cuadrícula y confeti
+  g.fillStyle = "#bdbdb8"; g.fillRect(0, 0, WW, WH);
+  g.fillStyle = "#b3b4af"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
+  g.lineWidth = px; g.strokeStyle = "rgba(255,255,255,.14)"; g.beginPath();
+  for (let x = 0; x <= WW; x += 1) { g.moveTo(x, 0); g.lineTo(x, WH); }
+  for (let y = 0; y <= WH; y += 1) { g.moveTo(0, y); g.lineTo(WW, y); }
+  g.stroke();
+  g.strokeStyle = "rgba(0,0,0,.07)"; g.beginPath();
+  for (let x = 0; x <= WW; x += 4) { g.moveTo(x, 0); g.lineTo(x, WH); }
+  for (let y = 0; y <= WH; y += 4) { g.moveTo(0, y); g.lineTo(WW, y); }
+  g.stroke();
+  const rand = rng(7), conf = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a", "#ffffff"];
+  for (let k = 0; k < 1400; k++) { g.fillStyle = conf[k % conf.length]; g.globalAlpha = .55; g.fillRect(rand() * WW, rand() * WH, .09, .09); }
+  g.globalAlpha = 1;
+  // líneas guía amarillas y negras pintadas en el piso
+  const hazard = (ax, ay, bx, by, w) => {
+    g.lineCap = "butt"; g.lineWidth = w; g.strokeStyle = "#e9b923"; g.setLineDash([]);
+    g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
+    g.strokeStyle = "#1c1c1c"; g.setLineDash([.45, .45]); g.stroke(); g.setLineDash([]);
+  };
+  hazard(20, 26.3, 20, 37, .18); hazard(0, 50, 13, 50, .18); hazard(27, 48.5, WW, 48.5, .18);
+  // sombras
+  g.fillStyle = "rgba(0,0,0,.22)";
+  for (const o of obs) {
+    if (o.kind === "edge") continue;
+    const sx = .55, sy = .75;
+    if (o.t === "r") g.fillRect(o.x0 + sx, o.y0 + sy, o.x1 - o.x0, o.y1 - o.y0);
+    else if (o.t === "c") { g.beginPath(); g.arc(o.x + sx, o.y + sy, o.r, 0, 7); g.fill(); }
+    else if (o.kind === "barrier") { g.lineWidth = o.th; g.strokeStyle = "rgba(0,0,0,.22)"; g.lineCap = "square"; g.beginPath(); g.moveTo(o.ax + sx * .6, o.ay + sy * .6); g.lineTo(o.bx + sx * .6, o.by + sy * .6); g.stroke(); }
+  }
+  // escenario
+  g.fillStyle = "#dcdcd8"; g.fillRect(6, 0, 28, 11);
+  g.strokeStyle = "#3a3c3e"; g.lineWidth = .14; g.strokeRect(6.4, .4, 27.2, 10.2);
+  g.setLineDash([.25, .25]); g.lineWidth = .3;
+  for (const y of [1.6, 6.3, 10.1]) { g.beginPath(); g.moveTo(6.6, y); g.lineTo(33.4, y); g.stroke(); }
+  g.setLineDash([]);
+  g.lineWidth = .08; g.strokeStyle = "rgba(0,0,0,.25)";
+  for (const x of [12, 20, 28]) { g.beginPath(); g.moveTo(x, .4); g.lineTo(x, 10.6); g.stroke(); }
+  g.fillStyle = "#2a2b2d";
+  [[8, 2.6, 3, 1.4], [12.6, 3.4, 1.2, .6], [24.6, 3.4, 1.2, .6], [28.6, 2.8, 1.4, .8], [9, 7.6, 1, .5], [30, 7.6, 1, .5], [14, 8, .8, .5], [25, 8, .8, .5]].forEach(([x, y, w, h]) => g.fillRect(x, y, w, h));
+  g.fillStyle = "#5a3b1f"; g.fillRect(18.6, 3, 2.8, 2.2);
+  g.fillStyle = "#c7883a"; for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) if ((i + j) % 2) g.fillRect(18.7 + i * .65, 3.1 + j * .65, .55, .55);
+  // bocinas
+  g.fillStyle = "#151617";
+  for (const o of obs) if (o.kind === "speaker") { g.fillRect(o.x0, o.y0, (o.x1 - o.x0) / 2 - .05, o.y1 - o.y0); g.fillRect(o.x0 + (o.x1 - o.x0) / 2 + .05, o.y0 + .5, (o.x1 - o.x0) / 2 - .05, o.y1 - o.y0 - .5); }
+  // pasarela y plataforma
+  g.fillStyle = "#d4d4d0"; g.fillRect(18.6, 11, 2.8, 8);
+  g.fillStyle = "#ececea"; g.beginPath(); g.arc(RING.x, RING.y, 3.2, 0, 7); g.fill();
+  g.strokeStyle = "#2f3133"; g.lineWidth = .4; g.beginPath(); g.arc(RING.x, RING.y, 1.6, 0, 7); g.stroke();
+  // vallas negras
+  for (const o of obs) if (o.kind === "barrier") {
+    g.lineCap = "square"; g.lineWidth = o.th; g.strokeStyle = "#26282a"; g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke();
+    g.lineWidth = o.th * .3; g.strokeStyle = "#4a4d50"; g.stroke();
+  }
+  // carpa con techo a cuatro aguas
+  g.fillStyle = "#ebebe8"; g.fillRect(17.5, 39.5, 5, 5);
+  g.fillStyle = "#d7d7d3"; g.beginPath(); g.moveTo(22.5, 39.5); g.lineTo(22.5, 44.5); g.lineTo(20, 42); g.fill();
+  g.fillStyle = "#cfcfcb"; g.beginPath(); g.moveTo(17.5, 44.5); g.lineTo(22.5, 44.5); g.lineTo(20, 42); g.fill();
+  // puestos
+  g.fillStyle = "#2f7fd6"; g.fillRect(2.5, 52, 3, 3); g.strokeStyle = "#215da0"; g.lineWidth = .15; g.strokeRect(2.6, 52.1, 2.8, 2.8);
+  g.fillStyle = "#f2f2ef"; g.fillRect(34.5, 52, 3, 3);
+  g.fillStyle = "#d8322b"; g.fillRect(35.75, 52.6, .5, 1.8); g.fillRect(35.1, 53.25, 1.8, .5);
+  // reja y puertas
+  for (const o of obs) if (o.kind === "fence" || o.kind === "closed") {
+    g.lineCap = "butt"; g.lineWidth = .16; g.strokeStyle = o.kind === "closed" ? "#6f716f" : "#8a8c89";
+    g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke();
+    g.fillStyle = "#5e605e"; for (let x = o.ax; x <= o.bx; x += 2) g.fillRect(x - .08, o.ay - .12, .16, .24);
+  }
+  for (let i = 0; i < SLOTS; i++) {
+    const cx = slotX(i);
+    if (gates[i]) {
+      g.fillStyle = "#d8322b";
+      for (const s of [-1, 1]) { g.fillRect(cx + s * SLOT_W / 2 - .15, FENCE_Y - .9, .3, 1.8); }
+      g.strokeStyle = "rgba(216,50,43,.85)"; g.lineWidth = .12; g.strokeRect(cx - SLOT_W / 2, FENCE_Y - .9, SLOT_W, 1.8);
+    } else {
+      g.strokeStyle = "#6f716f"; g.lineWidth = .1;
+      for (let x = cx - SLOT_W / 2; x < cx + SLOT_W / 2; x += .5) { g.beginPath(); g.moveTo(x, FENCE_Y - .3); g.lineTo(x + .5, FENCE_Y + .3); g.stroke(); }
+    }
+  }
+  // vallas del jugador
+  for (const f of fences) drawFence(g, f);
+  return c;
+}
+function drawFence(g, f, ghost) {
+  g.lineCap = "round"; g.lineWidth = .35; g.strokeStyle = ghost ? "rgba(255,210,58,.6)" : "#f2c230";
+  g.beginPath(); g.moveTo(f.ax, f.ay); g.lineTo(f.bx, f.by); g.stroke();
+  g.lineCap = "butt"; g.strokeStyle = "#1c1c1c"; g.setLineDash([.5, .5]); g.lineWidth = .35; g.stroke(); g.setLineDash([]);
+}
+
+// sprites de personas vistas desde arriba: 16 orientaciones × colores
+const ANG = 16, HAIR = ["#2b1d14", "#14110f", "#6b4a2b", "#c9a15a", "#3b2a20"];
+function buildAtlas() {
+  SP = Math.max(6, Math.ceil(S * dpr * .95));
+  const cols = SHIRTS.concat(HEAT);
+  const a = document.createElement("canvas"); a.width = SP * ANG; a.height = SP * cols.length;
+  const g = a.getContext("2d"), m = S * dpr;
+  cols.forEach((col, ci) => {
+    for (let k = 0; k < ANG; k++) {
+      const th = k / ANG * Math.PI * 2;
+      g.save(); g.translate(k * SP + SP / 2, ci * SP + SP / 2);
+      g.fillStyle = "rgba(0,0,0,.3)"; g.beginPath(); g.ellipse(.1 * m, .14 * m, .25 * m, .17 * m, th + Math.PI / 2, 0, 7); g.fill();
+      g.rotate(th);
+      g.fillStyle = col; g.beginPath(); g.ellipse(0, 0, .12 * m, .24 * m, 0, 0, 7); g.fill();
+      g.fillStyle = "rgba(0,0,0,.18)"; g.beginPath(); g.ellipse(-.03 * m, 0, .07 * m, .2 * m, 0, 0, 7); g.fill();
+      g.fillStyle = ci < SHIRTS.length ? HAIR[ci % HAIR.length] : "#2a1c12"; g.beginPath(); g.arc(.02 * m, 0, .095 * m, 0, 7); g.fill();
+      g.restore();
+    }
+  });
+  return a;
+}
+
+function draw(now) {
+  if (!staticLayer) staticLayer = buildStatic();
+  if (!atlas) atlas = buildAtlas();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(staticLayer, 0, 0);
+  const k = S * dpr;
+  // luces del escenario
+  const bulbs = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"];
+  for (let i = 0; i < 14; i++) {
+    const x = 7 + i * 2, on = phase === "show" || phase === "evac" ? .45 + .55 * Math.max(0, Math.sin(now / 220 + i * .9)) : .8;
+    ctx.globalAlpha = on; ctx.fillStyle = bulbs[i % bulbs.length];
+    ctx.beginPath(); ctx.arc(x * k, 11.25 * k, .22 * k, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // estelas de flujo previsto
+  if (phase === "plan") {
+    ctx.lineCap = "round"; ctx.lineWidth = Math.max(1, .22 * k);
+    const maxF = 60;
+    for (const p of preview) {
+      const tr = p.trail; if (tr.length < 6) continue;
+      const fade = Math.min(1, p.age / .6, (p.life - p.age) / .8);
+      for (let i = 3; i < tr.length; i += 3) {
+        const q = clamp(tr[i + 2] / maxF, 0, 1), a = (i / tr.length) * .55 * fade;
+        ctx.strokeStyle = `rgba(${Math.round(255 - q * 50)},${Math.round(140 + q * 95)},${Math.round(60 + q * 195)},${a.toFixed(3)})`;
+        ctx.beginPath(); ctx.moveTo(tr[i - 3] * k, tr[i - 2] * k); ctx.lineTo(tr[i] * k, tr[i + 1] * k); ctx.stroke();
+      }
+    }
+  }
+  if (drag) { ctx.save(); ctx.scale(k, k); drawFence(ctx, drag, true); ctx.restore(); }
+  // caídos
+  ctx.strokeStyle = "#e53229"; ctx.lineWidth = Math.max(1.5, .1 * k); ctx.beginPath();
+  for (const [x, y] of fallen) { const s = .22 * k; ctx.moveTo(x * k - s, y * k - s); ctx.lineTo(x * k + s, y * k + s); ctx.moveTo(x * k + s, y * k - s); ctx.lineTo(x * k - s, y * k + s); }
+  ctx.stroke();
+  // personas
+  const half = SP / 2;
+  for (const a of ag) {
+    let ci = a.c;
+    if (heat) ci = SHIRTS.length + clamp(Math.floor(a.ps / PCRIT * HEAT.length), 0, HEAT.length - 1);
+    else if (a.dmg > .4) ci = SHIRTS.length + HEAT.length - 1;
+    const ai = ((Math.round(a.h / (Math.PI * 2) * ANG) % ANG) + ANG) % ANG;
+    ctx.drawImage(atlas, ai * SP, ci * SP, SP, SP, a.x * k - half, a.y * k - half, SP, SP);
+  }
+}
+
+// ===== Bucle =====
+let last = performance.now();
+function frame(now) {
+  const real = Math.min(.1, (now - last) / 1000); last = now;
+  if (phase === "show" || phase === "evac") {
+    const n = Math.min(10, Math.round(real / DT * speed));
+    for (let i = 0; i < n && (phase === "show" || phase === "evac"); i++) step();
+    $("#status").textContent = phase === "show"
+      ? (spawned < CROWD ? `Entrando ${spawned} / ${CROWD}` : `En el show · termina en ${Math.max(0, Math.ceil(fullAt + SHOW_TIME - t))} s`)
+      : `Evacuando · quedan ${ag.length}`;
+  } else if (phase === "plan") stepPreview(real);
+  draw(now);
+  requestAnimationFrame(frame);
+}
+
+window.__game = { setP: v => PCRIT = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
+  get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; backToPlan(); } };
+
+resize(); buildWorld(); ui();
+showCard(`<h2>Marea Humana</h2>
+  <p>Hoy hay concierto gratis en la plaza y vienen <b>${CROWD.toLocaleString("es")} personas</b>. Tú eres responsable de la seguridad.</p>
+  <ul>
+    <li><b>Valla:</b> arrastra para trazar una valla. Tienes ${FENCE_BUDGET} m.</li>
+    <li><b>Puertas:</b> toca la reja de abajo para abrir o cerrar entradas (máximo ${MAX_GATES}).</li>
+    <li>Las estelas muestran por dónde caminará la gente.</li>
+    <li><b>Presión:</b> pinta a la multitud de azul a rojo según cuánto la aprietan.</li>
+  </ul>
+  <p>Si alguien aguanta demasiada presión, cae y lo pisotean. Termina el show con cero pisoteados.</p>
+  <div class="row"><button class="go" id="begin">Planear la plaza</button></div>`);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
