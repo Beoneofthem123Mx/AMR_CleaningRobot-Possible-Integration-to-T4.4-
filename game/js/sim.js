@@ -1,10 +1,10 @@
-// Marea Humana · recinto, campos de flujo, multitud y fases
+// Human Tide · venue, flow fields, crowd and phases
 function buildWorld() {
   obs = [];
-  // bordes del recinto
+  // venue edges
   seg(0, 0, 0, SH, .2, "edge"); seg(WW, 0, WW, SH, .2, "edge"); seg(0, 0, WW, 0, .2, "edge");
   scene.build();
-  // reja de entrada con puertas
+  // entrance fence with gates
   let x = 0;
   for (let i = 0; i < SLOTS; i++) {
     const g0 = slotX(i) - SLOT_W / 2, g1 = slotX(i) + SLOT_W / 2;
@@ -15,7 +15,7 @@ function buildWorld() {
   seg(x, FENCE_Y, WW, FENCE_Y, .3, "fence");
   for (const f of fences) seg(f.ax, f.ay, f.bx, f.by, .35, "player");
   for (const gd of guards) circ(gd.x, gd.y, .35, "guard");
-  // cubetas espaciales
+  // spatial buckets
   buckets = Array.from({ length: BW * BH }, () => []);
   obs.forEach((o, i) => {
     const [x0, y0, x1, y1] = bbox(o);
@@ -31,7 +31,7 @@ function bbox(o) {
   if (o.t === "c") return [o.x - o.r, o.y - o.r, o.x + o.r, o.y + o.r];
   return [Math.min(o.ax, o.bx) - o.th, Math.min(o.ay, o.by) - o.th, Math.max(o.ax, o.bx) + o.th, Math.max(o.ay, o.by) + o.th];
 }
-// distancia con signo a la superficie y normal hacia afuera
+// signed distance to the surface and outward normal
 function contact(o, px, py) {
   if (o.t === "c") { const dx = px - o.x, dy = py - o.y, d = Math.hypot(dx, dy) || 1e-6; return [dx / d, dy / d, d - o.r]; }
   if (o.t === "r") {
@@ -49,7 +49,7 @@ function contact(o, px, py) {
   return [dx / d, dy / d, d - o.th / 2];
 }
 
-// ===== Campos de flujo =====
+// ===== Flow fields =====
 let blockedC, fStage, fExit, dirS, dirE;
 function buildFields() {
   blockedC = new Uint8Array(GW * GH);
@@ -59,7 +59,7 @@ function buildFields() {
       for (let gx = Math.max(0, Math.floor((x0 - R) / CS)); gx <= Math.min(GW - 1, Math.floor((x1 + R) / CS)); gx++)
         if (contact(o, (gx + .5) * CS, (gy + .5) * CS)[2] < R * .8) blockedC[gy * GW + gx] = 1;
   });
-  // meta del show: junto a las vallas del foso
+  // show goal: right up against the pit barriers
   const front = obs.filter(o => scene.goal(o));
   fStage = dijkstra(id => {
     if (blockedC[id]) return false;
@@ -71,20 +71,20 @@ function buildFields() {
   dirS = dirField(fStage); dirE = dirField(fExit);
   baseS = null; attr = null; altF = null; altDir = null;
 }
-// metas que se mueven: una oferta, un ramo de novia, una estrella que camina
+// moving goals: a sale, a bridal bouquet, a walking celebrity
 let baseS = null, attr = null, altF = null, altDir = null;
 function goalField(x, y, r) {
   const f = dijkstra(id => !blockedC[id] && Math.hypot((id % GW + .5) * CS - x, ((id / GW) | 0) * CS + CS / 2 - y) < r);
   return f.some(isFinite) ? f : null;
 }
-// una parte del público (share) cambia de meta: los fans siguen al ídolo, los solteros van por el ramo
+// part of the crowd (share) switches goals: fans follow the idol, singles go for the bouquet
 let attF = null, attDir = null, attShare = .5;
 function setAttractor(x, y, r, share) {
   const f = goalField(x, y, r || 2.5); if (!f) return false;
   attF = f; attDir = dirField(f); attShare = share ?? attShare; attr = { x, y, r: r || 2.5 }; return true;
 }
 function clearAttractor() { attF = null; attDir = null; attr = null; }
-// solo una parte del público (los que tienen a.alt) va a otra meta
+// only part of the crowd (those with a.alt) heads to another goal
 function setAlt(x, y, r) { const f = goalField(x, y, r || 2.5); if (!f) return false; altF = f; altDir = dirField(f); return true; }
 function clearAlt() { altF = null; altDir = null; }
 function dijkstra(goal) {
@@ -120,7 +120,7 @@ function dirField(f) {
       const w = (f[id] - v) / Math.hypot(dx, dy); if (w > 0) { gx += dx * w; gy += dy * w; }
       if (w > bw) { bw = w; bx = dx; by = dy; }
     }
-    // sumar la mejor vecina rompe empates (por ejemplo, justo entre dos puertas)
+    // adding the best neighbor breaks ties (e.g. right between two gates)
     gx += bx * bw * 1.5; gy += by * bw * 1.5;
     const l = Math.hypot(gx, gy);
     if (l) { dir[id * 2] = gx / l; dir[id * 2 + 1] = gy / l; }
@@ -129,7 +129,7 @@ function dirField(f) {
 }
 const cellOf = (x, y) => clamp(Math.floor(y / CS), 0, GH - 1) * GW + clamp(Math.floor(x / CS), 0, GW - 1);
 
-// ===== Multitud =====
+// ===== Crowd =====
 const SHIRTS = ["#d8433b","#2f6fc4","#e8b631","#3d9a5b","#8a4fbf","#e07a2e","#f4f4f0","#2b2f35","#3fb3c4","#d0679b","#7a8c3a","#9b5a3c"];
 const HEAT = ["#2c4fd6","#2f86e0","#2fb8d0","#33c08a","#5cc63c","#b8d230","#f2c530","#f39424","#ec5a22","#e0322b"];
 let surgeT = 0, nextDrop = 0, drops = 0, SURGE = [.55, 1.1];
@@ -142,7 +142,7 @@ function looks() {
   const L = { m: r < .3 ? 0 : r < .5 ? 1 : r < .68 ? 2 : r < .84 ? 3 : 4, sc: Math.random() < .05 ? .72 : .88 + Math.random() * .2,
     sk: (Math.random() * 5) | 0, pc: (Math.random() * 6) | 0, hc: (Math.random() * 6) | 0, ac: (Math.random() * SHIRTS.length) | 0, st: (Math.random() * 3) | 0, wp: Math.random() * 6,
     c: (Math.random() * SHIRTS.length) | 0 };
-  // condiciones del día: Día del Niño (todos bajitos) y uniforme obligatorio (todos iguales)
+  // today's twists: Children's Day (everyone tiny) and mandatory uniform (everyone identical)
   if (MOD && MOD.sizeMul) L.sc *= MOD.sizeMul;
   if (MOD && MOD.uniform) { L.c = L.ac = MOD.uc || 0; L.pc = 0; }
   return L;
@@ -156,7 +156,7 @@ function spawn() {
   spawned++;
 }
 
-// llegan más personas a mitad del show (por ejemplo, un camión de acarreados)
+// more people show up mid-show (e.g. a truckload of bused-in supporters)
 function spawnAt(x, y, n) {
   let k = 0;
   for (let tries = 0; tries < n * 4 && k < n; tries++) {
@@ -174,7 +174,7 @@ function step() {
   if (phase === "show") {
     for (let k = 0; k < 30 && spawned < CROWD; k++) spawn();
     if (spawned >= CROWD) {
-      if (!fullAt) { fullAt = t; nextDrop = t + 6; drops = 0; caption("Empieza el show", false, 2200); burst(140); }
+      if (!fullAt) { fullAt = t; nextDrop = t + 6; drops = 0; caption("The show begins", false, 2200); burst(140); }
       if (t > nextDrop && t < fullAt + SHOW_TIME - 5) { surgeT = 3.5; nextDrop = t + (10 + Math.random() * 5) * (MOD && MOD.dropMul || 1); onDrop(drops++ === 0); }
       if (t > fullAt + SHOW_TIME) startEvac();
     }
@@ -205,12 +205,12 @@ function step() {
     const id = cellOf(a.x, a.y), f = leaving ? fExit : useAtt ? attF : useAlt ? altF : fStage, dir = leaving ? dirE : useAtt ? attDir : useAlt ? altDir : dirS;
     const surging = surgeT > 0 && !evac;
     let want = leaving ? a.v0 * 1.25 : surging ? (f[id] > a.tol * SURGE[0] ? a.v0 * SURGE[1] : 0) : (f[id] > a.tol ? a.v0 : 0);
-    // la gente que ya llegó baila y se mueve sin parar
+    // people who already made it dance and never stop moving
     a.dance = phase === "show" && !leaving && fullAt > 0 && f[id] <= a.tol + 1;
     if (a.dance) { a.fx += Math.cos(t * 5.5 + a.ph) * .9; a.fy += Math.sin(t * 4.3 + a.ph * 1.7) * .9; a.h += Math.sin(t * 2.7 + a.ph) * .04; }
     let dx = dir[id * 2], dy = dir[id * 2 + 1];
     if (!isFinite(f[id])) {
-      // atrapado en una celda bloqueada: buscar la celda libre más cercana
+      // stuck in a blocked cell: look for the nearest free cell
       const gx = id % GW, gy = (id / GW) | 0; let best = Infinity;
       for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) {
         const nx = gx + ox, ny = gy + oy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
@@ -220,17 +220,17 @@ function step() {
       want = isFinite(best) ? a.v0 * .6 : 0;
     }
     if (leaving && f[id] === 0) { dx = 0; dy = 1; }
-    // un rayo de ovni levanta a la gente
+    // a UFO beam lifts people up
     if (a.beam) a.lift += DT * .75; else if (a.lift > 0) a.lift = Math.max(0, a.lift - DT * 1.5);
     if (a.lift > 0) { want = 0; a.fx *= .2; a.fy *= .2; }
     if (a.lift > 1.5) { abducted++; continue; }
-    const tau = slipT > 0 ? 2.2 : .5;   // en el piso resbaloso nadie frena
+    const tau = slipT > 0 ? 2.2 : .5;   // on the slippery floor nobody can stop
     a.vx += ((dx * want - a.vx) / tau + a.fx) * DT;
     a.vy += ((dy * want - a.vy) / tau + a.fy) * DT;
     const sp = Math.hypot(a.vx, a.vy); if (sp > 2.6) { a.vx *= 2.6 / sp; a.vy *= 2.6 / sp; }
     a.x += a.vx * DT; a.y += a.vy * DT;
     if (sp > .15) a.h = Math.atan2(a.vy, a.vx);
-    // choques con escenario, vallas y reja
+    // collisions with the stage, fences and gate fence
     const bk = buckets[clamp(Math.floor(a.y / BKS), 0, BH - 1) * BW + clamp(Math.floor(a.x / BKS), 0, BW - 1)];
     for (const oi of bk) {
       const [nx, ny, d] = contact(obs[oi], a.x, a.y);
@@ -252,38 +252,38 @@ function step() {
   if (evac && (ag.length === 0 || evacT > 100)) finish();
 }
 
-// ===== Steam: logros y récords =====
-// window.steam lo pone la app de escritorio (desktop/preload.js); sin Steam, no hace nada
-const achieve = id => { try { window.steam && window.steam.achieve(id); } catch (e) { /* sin Steam */ } };
+// ===== Steam: achievements and records =====
+// window.steam is set by the desktop app (desktop/preload.js); without Steam, this does nothing
+const achieve = id => { try { window.steam && window.steam.achieve(id); } catch (e) { /* no Steam */ } };
 let sceneKey = "plaza";
 function loadBest() { try { return JSON.parse(localStorage.getItem("mh.best") || "{}"); } catch (e) { return {}; } }
 const totalStars = () => Object.values(loadBest()).reduce((s, v) => s + v, 0);
 const isUnlocked = key => !!window.__unlockAll || totalStars() >= (SCENES[key].unlock || 0);
 function saveBest(key, stars) {
   const best = loadBest(); if ((best[key] ?? -1) >= stars) return;
-  best[key] = stars; try { localStorage.setItem("mh.best", JSON.stringify(best)); } catch (e) { /* sin almacenamiento */ }
+  best[key] = stars; try { localStorage.setItem("mh.best", JSON.stringify(best)); } catch (e) { /* no storage */ }
 }
 
-// ===== Fases =====
+// ===== Phases =====
 function canStart() {
   for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {
-    toast("Una valla deja una puerta sin camino al escenario. Ábrele paso."); return false;
+    toast("A fence leaves a gate with no path to the stage. Clear the way."); return false;
   }
   return true;
 }
-// el botón pasa por la ruleta de la condición del día; las pruebas llaman a start() directo
+// the button goes through the today's-twist roulette; tests call start() directly
 function start(mod) {
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.round(scene.crowd * (MOD.crowdMul || 1));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] };
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
-  caption("¡Abren las puertas!", false, 2200); ui();
+  caption("The gates are open!", false, 2200); ui();
   if (MOD.uniform) MOD.uc = (Math.random() * SHIRTS.length) | 0;
   if (MOD.start) MOD.start();
   if (scene.onStart) scene.onStart();
   G3.photo = null;
 }
-function startEvac() { phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Se acabó el show. ¡Todos a la salida!", false, 2600); ui(); }
+function startEvac() { phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }
 function finish() {
   if (demo) { startDemo(); return; }
   phase = "done";
@@ -298,23 +298,23 @@ function finish() {
   if (dead >= 500) achieve("TRAGEDY");
   if (abducted >= 100) achieve("SPACE_TOURISM");
   if (stars === 3 && mega.n === 0) achieve("LOUD_AND_SAFE");
-  try { const seen = new Set(JSON.parse(localStorage.getItem("mh.mods") || "[]")); seen.add(MOD.id); localStorage.setItem("mh.mods", JSON.stringify([...seen])); if (seen.size >= 6) achieve("MOD_COLLECTOR"); } catch (e) { /* sin almacenamiento */ }
+  try { const seen = new Set(JSON.parse(localStorage.getItem("mh.mods") || "[]")); seen.add(MOD.id); localStorage.setItem("mh.mods", JSON.stringify([...seen])); if (seen.size >= 6) achieve("MOD_COLLECTOR"); } catch (e) { /* no storage */ }
   showReport(stars, stuck); ui(); return;
-  showCard(`<h2>${stars === 3 ? "Nadie salió herido" : stars ? "Recinto evacuado" : "Fue una tragedia"}</h2>
+  showCard(`<h2>${stars === 3 ? "Nobody got hurt" : stars ? "Venue evacuated" : "It was a tragedy"}</h2>
     <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("")}</div>
     <div class="stats">
-      <span>Público</span><span>${CROWD}</span>
-      <span>Salieron sanos</span><span>${evacuated}</span>
-      <span>Pisoteados</span><span style="color:var(--danger)">${dead}</span>
-      <span>Siguen atrapados</span><span>${stuck}</span>
-      <span>Tiempo de evacuación</span><span>${Math.round(evacT)} s</span>
+      <span>Crowd</span><span>${CROWD}</span>
+      <span>Made it out OK</span><span>${evacuated}</span>
+      <span>Trampled</span><span style="color:var(--danger)">${dead}</span>
+      <span>Still trapped</span><span>${stuck}</span>
+      <span>Evacuation time</span><span>${Math.round(evacT)} s</span>
     </div>
-    <p>${stars === 3 ? "Plan perfecto. Prueba con menos vallas o menos puertas." : "Mira la vista de presión: lo rojo es donde la gente se aplasta. Tu plan se conserva."}</p>
-    <div class="row"><button class="go" id="retry">Ajustar el plan</button><button id="pick">Cambiar escenario</button></div>`);
+    <p>${stars === 3 ? "Perfect plan. Try again with fewer fences or fewer gates." : "Check the pressure view: red is where people get squished. Your plan has been saved."}</p>
+    <div class="row"><button class="go" id="retry">Adjust the plan</button><button id="pick">Change venue</button></div>`);
   ui();
 }
 function backToPlan() {
   phase = "plan"; paused = false; slowT = 0; ag = []; fallen = []; movers = []; pops = []; MOD = null; $("#abd").hidden = true; showModChip(null); clearAttractor(); clearAlt(); spawned = 0; t = 0; evacT = 0; surgeT = 0; setDead(0, true); resetFx();
-  hideCard(); caption("Tú lo planeas", false, 0); resetPreview(); ui();
+  hideCard(); caption("You plan it", false, 0); resetPreview(); ui();
 }
 

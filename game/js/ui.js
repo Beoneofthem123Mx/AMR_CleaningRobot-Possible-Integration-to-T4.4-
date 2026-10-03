@@ -1,30 +1,30 @@
-// Marea Humana · edición del plan e interfaz
-// ===== Edición del plan =====
+// Human Tide · plan editing and interface
+// ===== Plan editing =====
 let tool = "fence", drag = null;
 const fenceUsed = () => fences.reduce((s, f) => s + f.len, 0);
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
-  // durante el show, cada clic usa el megáfono (tres veces por show)
+  // during the show, each click uses the megaphone (three times per show)
   if (phase === "show" || phase === "evac") {
     const [x, y] = toWorld(ev);
-    if (mega.n <= 0) { caption("Ya no queda batería en el megáfono.", true, 1400); return; }
+    if (mega.n <= 0) { caption("The megaphone is out of battery.", true, 1400); return; }
     mega.n--; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true });
-    pop(x, y, "¡CALMA, POR FAVOR!"); sfx("whistle"); return;
+    pop(x, y, "CALM DOWN, PLEASE!"); sfx("whistle"); return;
   }
   if (phase !== "plan") return;
   const [x, y] = toWorld(ev);
   if (tool === "gate") {
-    if (Math.abs(y - FENCE_Y) > 3) { toast("Toca una puerta de la reja de abajo."); return; }
+    if (Math.abs(y - FENCE_Y) > 3) { toast("Tap a gate on the fence at the bottom."); return; }
     const i = clamp(Math.floor(x / (WW / SLOTS)), 0, SLOTS - 1), open = gates.filter(Boolean).length;
-    if ((scene.noSlots || []).includes(i)) { toast(`${scene.slotWhy}: no se puede abrir esa puerta.`); return; }
-    if (gates[i] && open <= 1) { toast("Necesitas al menos una puerta abierta."); return; }
-    if (!gates[i] && open >= MAX_GATES) { toast(`Solo hay personal para ${MAX_GATES} puertas.`); return; }
+    if ((scene.noSlots || []).includes(i)) { toast(`${scene.slotWhy}: that gate can't be opened.`); return; }
+    if (gates[i] && open <= 1) { toast("You need at least one open gate."); return; }
+    if (!gates[i] && open >= MAX_GATES) { toast(`There's only enough staff for ${MAX_GATES} gates.`); return; }
     gates[i] = !gates[i]; buildWorld(); ui(); return;
   }
   if (tool === "guard") {
-    if (guards.length >= (scene.guards || 3)) { toast("No quedan guardias. Borra uno para moverlo."); return; }
+    if (guards.length >= (scene.guards || 3)) { toast("No guards left. Erase one to move it."); return; }
     const gx = snap(x), gy = snap(y), id = cellOf(gx, gy);
-    if (gy >= FENCE_Y - .5 || blockedC[id] || !isFinite(fStage[id])) { toast("Pon al guardia en una zona donde esté el público."); return; }
+    if (gy >= FENCE_Y - .5 || blockedC[id] || !isFinite(fStage[id])) { toast("Put the guard somewhere the crowd will actually be."); return; }
     guards.push({ kind: "guard", x: gx, y: gy, ang: -Math.PI / 2, t: 0 }); buildWorld(); ui(); return;
   }
   if (tool === "erase") {
@@ -48,12 +48,12 @@ const endDrag = () => {
   if (!drag) return;
   const len = Math.hypot(drag.bx - drag.ax, drag.by - drag.ay);
   if (len >= 1) { fences.push({ ...drag, len: Math.round(len * 10) / 10 }); buildWorld(); }
-  else if (FENCE_BUDGET - fenceUsed() < 1) toast("No te quedan metros de valla. Borra alguna.");
+  else if (FENCE_BUDGET - fenceUsed() < 1) toast("You're out of fence. Erase some.");
   drag = null; ui();
 };
 cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
 
-// ===== Vista previa del flujo (las estelas del video) =====
+// ===== Flow preview (the trails from the video) =====
 let preview = [];
 function resetPreview() { preview = []; }
 function seedParticle() {
@@ -74,7 +74,7 @@ function stepPreview(dt) {
   }
 }
 
-// ===== Interfaz =====
+// ===== Interface =====
 let toastTimer, capTimer;
 function caption(text, yellow, ms) {
   const el = $("#caption"); el.textContent = text; el.classList.toggle("yellow", !!yellow); el.style.opacity = 1;
@@ -85,7 +85,7 @@ function setDead(n, quiet) {
   const first = dead === 0 && n > 0;
   dead = n; $("#dead").textContent = n;
   if (!quiet) { const b = $("#badge"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
-  if (first && !quiet) caption("Y eso no nos gusta.", true, 2600);
+  if (first && !quiet) caption("And we don't like that.", true, 2600);
 }
 function showCard(html, kind) {
   const c = $("#card"); c.innerHTML = html; c.className = "card" + (kind ? " " + kind : ""); c.onclick = null;
@@ -98,17 +98,17 @@ function ui() {
   $("#cGuard").textContent = `${(scene.guards || 3) - guards.length}`;
   $("#cGate").textContent = `${gates.filter(Boolean).length}/${MAX_GATES}`;
   document.querySelectorAll("[data-tool]").forEach(b => { b.disabled = !plan; b.classList.toggle("on", b.dataset.tool === tool); });
-  $("#bGo").textContent = plan ? "Abrir puertas" : phase === "done" ? "Abrir puertas" : "Detener";
+  $("#bGo").textContent = plan ? "Open gates" : phase === "done" ? "Open gates" : "Stop";
   $("#bGo").disabled = phase === "done";
   $("#status").hidden = plan || (typeof demo !== "undefined" && demo);
   $("#bScene").disabled = !plan;
 }
-// pausa y atajos de teclado para jugar en PC
+// pause and keyboard shortcuts for playing on PC
 function togglePause() {
   if ((phase !== "show" && phase !== "evac") || demo) return;
   paused = !paused;
-  if (paused) showCard(`<h2>Pausa</h2><p>La gente se quedó congelada. Nadie se queja, por ahora.</p>
-    <div class="row"><button class="go" id="resume">Continuar</button><button id="retry">Volver a planear</button><button id="pick">Menú</button></div>`);
+  if (paused) showCard(`<h2>Paused</h2><p>Everyone is frozen in place. Nobody's complaining, for now.</p>
+    <div class="row"><button class="go" id="resume">Resume</button><button id="retry">Back to planning</button><button id="pick">Menu</button></div>`);
   else hideCard();
 }
 addEventListener("keydown", e => {
@@ -127,17 +127,17 @@ addEventListener("keydown", e => {
 });
 document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => {
   tool = b.dataset.tool; ui();
-  if (tool === "gate") toast("Toca la reja de abajo para abrir o cerrar puertas.");
-  if (tool === "guard") toast("Toca la plaza para poner un guardia: calma a la gente y detiene animales y coches.");
+  if (tool === "gate") toast("Tap the fence at the bottom to open or close gates.");
+  if (tool === "guard") toast("Tap the venue to place a guard: they calm people down and stop animals and cars.");
 }));
 $("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : backToPlan());
 let heat = false, speed = 1;
 $("#bHeat").addEventListener("click", () => { heat = !heat; $("#bHeat").classList.toggle("on", heat); });
-$("#bCam").addEventListener("click", () => { camMode = (camMode + 1) % 3; $("#bCam").textContent = "Cámara: " + ["auto", "cerca", "lejos"][camMode]; });
+$("#bCam").addEventListener("click", () => { camMode = (camMode + 1) % 3; $("#bCam").textContent = "Camera: " + ["auto", "close", "far"][camMode]; });
 $("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = speed + "×"; });
 $("#card").addEventListener("click", e => {
   const sk = e.target.closest("[data-scene]");
-  if (sk) { loadScene(sk.dataset.scene); hideCard(); caption("Tú lo planeas", false, 0); }
+  if (sk) { loadScene(sk.dataset.scene); hideCard(); caption("You plan it", false, 0); }
   if (e.target.id === "retry") { paused = false; backToPlan(); }
   if (e.target.id === "pick") chooser();
   if (e.target.id === "quit" && window.steam) window.steam.quit();
