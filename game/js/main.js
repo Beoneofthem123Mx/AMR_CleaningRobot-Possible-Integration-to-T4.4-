@@ -131,3 +131,4 @@ try { init3D(); } catch (err) {
 }
 resize(); loadScene("plaza"); startDemo(); chooser();
 requestAnimationFrame(frame);
+try { if (localStorage.getItem("mh.fx") === "off") POST.on = false; } catch (er) { /* no storage */ }

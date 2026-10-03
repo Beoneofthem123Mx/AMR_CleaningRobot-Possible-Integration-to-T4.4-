@@ -92,7 +92,7 @@ SCENES.cheese = {
   light: { sky: 0xeaf6ff, ground: 0x4f7a2a, hemi: .62, sun: 0xfff1d0, sunI: 1.3 }, crowd: 2900, fenceBudget: 64, maxGates: 5, guards: 4,
   gates: [T, T, F, F, F, F, F], unlock: 24,
   heights: { cheese_podium: 1.3, cheese_hay: .9, cheese_rope: .8, cheese_line: .9, cheese_amb: 2.4, cheese_stall: 2.2, cheese_hedge: 1.6, cheese_ramp: 1.1 },
-  sfx: { "CHEESE!": "cheer", "MEEEH!": "moo", "WHEEE!": "scream", "PUTT PUTT!": "honk", "AHEM!": "trumpet", "FREE FONDUE!": "jingle", "PEE-YOO!": "scream", "MY CHEESE!": "crash", "MY SPLEEN!": "crash", "NEE-NAW!": "siren" },
+  sfx: { "CHEESE!": "cheer", "MEEEH!": "bleat", "WHEEE!": "scream", "PUTT PUTT!": "honk", "AHEM!": "trumpet", "FREE FONDUE!": "jingle", "PEE-YOO!": "scream", "MY CHEESE!": "crash", "MY SPLEEN!": "crash", "NEE-NAW!": "siren" },
   intro: "Six hundred years of tradition: the village throws a wheel of cheese down a cliff-steep hill and grown adults chase it. The ambulance is already parked and the crowd insists on standing exactly where the cheese lands.",
   acts: ["Chase the cheese!", "Long live the Queen!", "Roll! Roll! Roll!", "Mind the goat!"],
   events: ["wheel", "goat", "tumble", "tractor", "mayor", "fondue", "bluecheese", "wheel"],

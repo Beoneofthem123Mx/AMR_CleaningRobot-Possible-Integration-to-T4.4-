@@ -118,4 +118,4 @@ around.
 ## Keyboard shortcuts
 
 **1–4** tools · **Space** opens the gates · **H** pressure · **C** camera · **V** speed ·
-**M** sound · **Esc** or **P** pause · **F11** fullscreen
+**M** sound · **G** glow and focus effects (turn off on slow PCs) · **Esc** or **P** pause · **F11** fullscreen

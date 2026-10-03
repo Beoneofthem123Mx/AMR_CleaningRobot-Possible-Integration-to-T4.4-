@@ -151,7 +151,7 @@ SCENES.zoo = {
   events: ["penguins", "giraffe", "gorilla", "alpaca", "bananas", "hippo", "sneeze", "penguins"],
   goal: o => o.kind === "zoo_glass", goalMaxY: 17,
   heights: { zoo_glass: 1.5, zoo_pen: 1.1, zoo_hedge: 1.2, zoo_house: 3.2, zoo_pond: .35, zoo_kiosk: 2.4, zoo_rock: 1.4 },
-  sfx: { "WADDLE WADDLE!": "quack", "OOK OOK!": "roar", "MY PHONE!": "scream", "SELFIE!": "flash", "MWEEEH!": "neigh", "COME BACK, KEVIN!": "whistle",
+  sfx: { "WADDLE WADDLE!": "quack", "OOK OOK!": "roar", "MY PHONE!": "scream", "SELFIE!": "flash", "MWEEEH!": "bleat", "COME BACK, KEVIN!": "whistle",
     "FREE BANANAS!": "honk", "SPLOOSH!": "splash", "HROOOOAAAH!": "trumpet", "ACHOO!": "boom", "AWWWWW!": "cheer", "MUNCH MUNCH!": "moo" },
   lines: {
     penguins: "A penguin parade crossed the main path in formal wear; nobody dared overtake them.",

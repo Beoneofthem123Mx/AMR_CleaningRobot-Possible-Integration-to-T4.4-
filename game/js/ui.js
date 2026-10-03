@@ -124,6 +124,10 @@ addEventListener("keydown", e => {
   if (k === "h") $("#bHeat").click();
   if (k === "c") $("#bCam").click();
   if (k === "v") $("#bSpeed").click();
+  if (k === "g") {  // glow and focus effects on/off (for slower PCs)
+    POST.on = !POST.on; try { localStorage.setItem("mh.fx", POST.on ? "on" : "off"); } catch (er) { /* no storage */ }
+    caption(POST.on ? "Fancy effects: ON" : "Fancy effects: OFF (faster)", false, 1400);
+  }
 });
 document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => {
   tool = b.dataset.tool; ui();
