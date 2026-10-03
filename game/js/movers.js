@@ -1,5 +1,6 @@
 // Marea Humana · animales, coches y objetos que cruzan entre la gente
 // ===== Cosas que pasan entre la gente: animales, coches y objetos =====
+let blackT = 0, black = 0;  // apagón: segundos restantes y oscuridad visible (0..1)
 let movers = [], performers = [], pops = [], eventT = 0, MPUSH = 2, MPRES = .4, MSCARE = 4;
 const rnd = (a, b) => a + Math.random() * (b - a);
 function pop(x, y, text, h) {
@@ -24,7 +25,16 @@ const GUARD_CALM = 3.6;
 function openGateX() { const open = []; for (let i = 0; i < SLOTS; i++) if (gates[i]) open.push(slotX(i)); return open[(Math.random() * open.length) | 0] || WW / 2; }
 function addMover(m) { movers.push(Object.assign({ t: 0, ang: 0, i: 0, push: 30, scare: 0, spin: 0, h: 0, home: [m.x, m.y] }, m)); }
 function crowdPoint() { return [rnd(4, 36), rnd(22, 60)]; }
+// cámara de director: al empezar un evento, la cámara automática se asoma unos segundos a su protagonista
+let evCam = null;
 function spawnEvent(kind) {
+  const before = new Set(movers);
+  spawnEventRaw(kind);
+  let best = null;
+  for (const m of movers) if (!before.has(m) && !m.small && m.kind !== "router" && (!best || m.r > best.r)) best = m;
+  if (best) evCam = { m: best, t: 3.2 };
+}
+function spawnEventRaw(kind) {
   const side = Math.random() < .5;
   if (kind.includes(":")) { const [sk, k] = kind.split(":"); eventLog.add(k); SCENES[sk].ev[k](side); return; }
   eventLog.add(kind);
@@ -282,6 +292,7 @@ function calmForces() {
 function stepGlobal() {
   if (windF.t > 0) windF.t -= DT;
   if (slipT > 0) slipT -= DT;
+  if (blackT > 0) blackT -= DT;
   if (attrT > 0) { attrT -= DT; if (attrT <= 0) clearAttractor(); }
   for (const tm of timers) { tm.t -= DT; if (tm.t <= 0 && !tm.done) { tm.done = true; tm.fn(); } }
   timers = timers.filter(tm => !tm.done);

@@ -27,6 +27,17 @@ const MODS = [
     ev: { palomas() { for (let n = 0; n < 7; n++) { const y = rnd(14, 60), side = Math.random() < .5;
       addMover({ kind: "gull", grey: true, x: side ? -3 - n : WW + 3 + n, y, pts: [crowdPoint(), [side ? WW + 4 : -4, y + rnd(-10, 10)]], speed: 6, r: .3, push: 0, scare: 2, air: true, h: 6 + n * .4, swoop: true, say: n ? "" : "¡CURRUCÚ!", sayEvery: 2 }); }
       caption("¡Ataque de palomas!", true, 1600); } } },
+  { id: "apagon", name: "Apagones", desc: "La luz se va y regresa cuando quiere. Todos sacan el celular y caminan a ciegas.", w: 2, speed: .92, events: ["apagon", "apagon"],
+    ev: { apagon() { const d = rnd(5, 8); blackT = d; sfx("boom"); caption("¡Se fue la luz!", true, 1800);
+      later(d, () => { if (phase === "show") { cheerT = 3; burst(160); sfx("cheer"); caption("¡Volvió la luz! Nadie sabe dónde quedó su grupo", false, 1800); } }); } } },
+  { id: "nino", name: "Día del Niño", desc: "Entrada gratis a menores. Son bajitos, rapidísimos, hay muchísimos y rebotan como pelotas.", w: 2, speed: 1.18, crowdMul: 1.15, sizeMul: .66, pcritMul: 1.2 },
+  { id: "uniforme", name: "Uniforme obligatorio", desc: "El patrocinador regaló playeras iguales para todos. Nadie encuentra a su grupo.", w: 2, uniform: true },
+  { id: "tio", name: "El tío de la fiesta", desc: "Vino el tío. Baila, grita, saluda a todos y una quinta parte del público lo sigue.", w: 2, altShare: .2,
+    start() {
+      const lines = ["¡ESA ES MI CANCIÓN!", "¡UNA FOTO, SOBRINO!", "¡YO CONOZCO AL DUEÑO!", "¡OTRA, OTRA!", "¡EN MIS TIEMPOS ESTO ERA UN LLANO!", "¡SÁQUENLE AL DJ!"];
+      addMover({ kind: "tio", x: openGateX(), y: 62, pts: Array.from({ length: 12 }, () => crowdPoint()), speed: .8, r: .4, push: 15, scare: 0, say: lines[0], sayEvery: 3.5,
+        tick(m) { m.next = (m.next || 0) - DT; if (m.next <= 0) { m.next = 1.5; setAlt(m.x, m.y, 2.6); } if (m.t >= (m.nextSay || 0) - .05) m.say = pick(lines); } });
+    } },
 ];
 const MODS_BY_ID = Object.fromEntries(MODS.map(m => [m.id, m]));
 // en modo caos se combinan dos condiciones del día
@@ -34,7 +45,7 @@ function comboMod(a, b) {
   if (a.id === "normal") return b; if (b.id === "normal" || a.id === b.id) return a;
   const prod = k => (a[k] || 1) * (b[k] || 1);
   return { id: a.id + "+" + b.id, name: `${a.name} + ${b.name}`, desc: `${a.desc} Además: ${b.desc.charAt(0).toLowerCase() + b.desc.slice(1)}`,
-    speed: prod("speed"), pcritMul: prod("pcritMul"), crowdMul: prod("crowdMul"), dropMul: prod("dropMul"), bounce: a.bounce || b.bounce, rain: a.rain || b.rain,
+    speed: prod("speed"), pcritMul: prod("pcritMul"), crowdMul: prod("crowdMul"), dropMul: prod("dropMul"), sizeMul: prod("sizeMul"), bounce: a.bounce || b.bounce, rain: a.rain || b.rain, uniform: a.uniform || b.uniform,
     altShare: Math.max(a.altShare || 0, b.altShare || 0) || undefined, events: (a.events || []).concat(b.events || []), ev: { ...(a.ev || {}), ...(b.ev || {}) },
     start() { if (a.start) a.start(); if (b.start) b.start(); } };
 }

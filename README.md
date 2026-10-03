@@ -87,6 +87,7 @@ abren escenarios nuevos.
 | **El Taco Gigante** | 12 ★ | Récord mundial de taco: salsa que vuelve el piso resbaloso, un taquero que regala tacos y chiles que explotan. |
 | **Encuentro Cercano** | 14 ★ | Un ovni en el maizal: rayo que abduce gente, vacas (una flotando), agentes de negro y un alien que quiere selfies. |
 | **Llega la Estrella** | 16 ★ | Sala de llegadas: sale el ídolo pop y sus fans lo persiguen; maletas sueltas, carritos y el perro de seguridad. |
+| **La Arena** | 18 ★ | Gran final de lucha libre: topes suicidas al público, sillazos, máscaras que vuelan, el rudo que baja a pelear y doña Chona, de 84 años, que quiere subirse al ring. |
 
 Las vallas y los guardias también sirven contra el caos: los animales y vehículos que chocan con
 ellos se dan la vuelta.
@@ -95,13 +96,16 @@ ellos se dan la vuelta.
 
 - **Condición del día**: al abrir las puertas, una ruleta elige una sorpresa: wifi gratis en una
   esquina, influencer en vivo, aguacero, noche de reguetón, gravedad lunar, hora pico, público en
-  cámara lenta, lluvia de chanclas o palomas hambrientas.
+  cámara lenta, lluvia de chanclas, palomas hambrientas, apagones, Día del Niño, uniforme
+  obligatorio (todos con la misma playera) o el tío de la fiesta.
 - **Megáfono**: durante el show, cada clic calma a la gente en esa zona (tres usos por show).
 - **Modo caos total** (en el menú): cualquier evento de cualquier escenario puede pasar en
   cualquier lugar, y se combinan dos condiciones del día.
 - **El periódico**: al terminar, la portada de *El Chismógrafo* cuenta lo que pasó con titulares
   satíricos y una foto tomada durante el show.
 - La primera persona que cae activa una repetición en cámara lenta.
+- **Cámara de director**: en modo automático, la cámara se asoma unos segundos a cada evento
+  (el elefante, el ovni, el taxi que no sabía que la calle estaba cerrada).
 
 ## Atajos de teclado
 

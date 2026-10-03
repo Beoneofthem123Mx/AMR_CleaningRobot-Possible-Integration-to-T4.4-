@@ -47,7 +47,7 @@ function chooser() {
 
 // ---------- el periódico del día siguiente ----------
 const PLACE = { plaza: "LA PLAZA", circo: "EL CIRCO", estadio: "EL ESTADIO", crucero: "EL CRUCERO", hipodromo: "EL HIPÓDROMO", ciudad: "LA CIUDAD",
-  viernes: "EL CENTRO COMERCIAL", boda: "LA BODA DEL AÑO", trono: "EL BAÑO DE ORO", mitin: "EL MITIN DEL PATO", taco: "EL FESTIVAL DEL TACO", ovni: "EL MAIZAL DE DON CHUY", aeropuerto: "EL AEROPUERTO" };
+  viernes: "EL CENTRO COMERCIAL", boda: "LA BODA DEL AÑO", trono: "EL BAÑO DE ORO", mitin: "EL MITIN DEL PATO", taco: "EL FESTIVAL DEL TACO", ovni: "EL MAIZAL DE DON CHUY", aeropuerto: "EL AEROPUERTO", arena: "LA ARENA" };
 const HEADLINES = {
   perfect: [
     "MILAGRO EN {P}: {N} ENTRAN, {N} SALEN Y TODOS SE QUEJAN DEL BAÑO",
@@ -84,6 +84,22 @@ const EVENT_LINES = {
   chancla: "Llovieron chanclas; las mamás no dieron explicaciones.",
   palomas: "Las palomas se quedaron con todas las palomitas.",
 };
+// lo que el periódico dice de cada condición del día
+const MOD_LINES = {
+  wifi: "Un router gratis reunió a más gente que el evento principal.",
+  influencer: "Una influencer transmitió en vivo todo el evento; dice que «fue muy auténtico».",
+  rain: "Llovió a cántaros y nadie trajo paraguas, pero sí bocinas.",
+  reggaeton: "El DJ puso reguetón sin pausa durante dos horas.",
+  moon: "Por razones que la ciencia no explica, la gravedad bajó a la mitad.",
+  rush: "Se vendieron 25 % más boletos de los que cabían; el organizador lo llamó «éxito».",
+  slowmo: "El público entero caminó en cámara lenta, como en un video musical de los noventa.",
+  chanclas: "Llovieron chanclas; las mamás no dieron explicaciones.",
+  pigeons: "Las palomas se quedaron con todas las palomitas.",
+  apagon: "Se fue la luz varias veces; la compañía eléctrica culpó «a una ardilla».",
+  nino: "Fue Día del Niño: entraron miles de menores y ninguno con un adulto.",
+  uniforme: "Todos llevaban la misma playera; tres familias se fueron con la familia equivocada.",
+  tio: "Un tío bailó toda la noche y juró que conocía al dueño del lugar.",
+};
 const QUOTES = [
   "«Teníamos todo bajo control», declaró el jefe de seguridad desde un árbol.",
   "«Las vallas eran decorativas», aclaró el organizador.",
@@ -97,7 +113,10 @@ function showReport(stars, stuck) {
   const p = PLACE[sceneKey] || scene.name.toUpperCase(), v = { P: p, N: CROWD.toLocaleString("es"), D: dead.toLocaleString("es") };
   const head = fill(pick(stars === 3 ? HEADLINES.perfect : stars ? HEADLINES.some : HEADLINES.bad), v);
   const lines = [...eventLog].map(k => (scene.lines && scene.lines[k]) || EVENT_LINES[k]).filter(Boolean).sort(() => Math.random() - .5).slice(0, 2);
-  if (MOD && MOD.id !== "normal") lines.unshift(`Condición del día: ${MOD.name.toLowerCase()}. Nadie la anunció.`);
+  if (MOD && MOD.id !== "normal") {
+    const ml = MOD.id.split("+").map(k => MOD_LINES[k]).filter(Boolean);
+    lines.unshift(...(ml.length ? ml : [`Condición del día: ${MOD.name.toLowerCase()}. Nadie la anunció.`]));
+  }
   if (abducted) lines.unshift(`${abducted} asistentes fueron abducidos. Sus familias esperan que les vaya mejor allá arriba.`);
   const date = new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" });
   showCard(`<div class="paper">

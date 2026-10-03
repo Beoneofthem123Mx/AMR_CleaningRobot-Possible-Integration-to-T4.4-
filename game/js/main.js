@@ -3,7 +3,7 @@
 const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", "#7dff9e"];
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
 let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [];
-function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; shake = 0; flash = 0; rings = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
+function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
 function confettiAt(x, y, h, n, spread) {
   for (let i = 0; i < n && confetti.length < 1400; i++) {
     const a = Math.random() * 6.283, v = Math.random() * spread;
@@ -29,6 +29,11 @@ function updateFx(dt) {
     tz = phase === "show" ? (surgeT > 0 ? 1.95 : 1.6) : 1.3;
     if (camMode === 1) tz *= 1.7; else if (camMode === 2) tz = 1;
     if (n > 40) ty = sy / n;
+  }
+  if (evCam) {
+    evCam.t -= dt;
+    if (evCam.t <= 0 || phase !== "show" || camMode === 2 || !movers.includes(evCam.m)) evCam = null;
+    else { const k = Math.min(1, evCam.t / .8) * .6, m = evCam.m; tx += (clamp(m.x, 0, WW) - tx) * k; ty += (clamp(m.y, 0, WH) - ty) * k; }
   }
   // cámara lenta con acercamiento al primer pisoteado
   if (slowT > 0 && focus) { tz = 2.7; ty = focus.y; tx = focus.x; }
@@ -63,8 +68,10 @@ function puff(x, y, h, col, r, life, vh) {
 const perf = { n: 0, sum: 0, level: 0 }, live3d = () => phase === "show" || phase === "evac";
 let last = performance.now();
 let paused = false, slowT = 0, focus = null, acc = 0;
-function frame(now) {
-  const real = Math.min(.1, (now - last) / 1000); last = now;
+function frame(now, fixed) {
+  // modo de grabación (solo pruebas/tráiler): los cuadros avanzan a mano con __game.tick
+  if (window.__manual && fixed === undefined) { requestAnimationFrame(frame); return; }
+  const real = fixed ?? Math.max(0, Math.min(.1, (now - last) / 1000)); last = now;
   const sp = paused ? 0 : speed * (slowT > 0 ? .22 : 1);
   if (slowT > 0) slowT -= real;
   if (phase === "show" || phase === "evac") {
@@ -79,7 +86,7 @@ function frame(now) {
   audioTick();
   render3D(now, real);
   // calidad automática: si el equipo no da abasto, quitamos sombras de la gente y bajamos resolución
-  if (G3.renderer && live3d()) {
+  if (G3.renderer && live3d() && fixed === undefined) {
     perf.n++; perf.sum += real;
     if (perf.n >= 90) {
       if (perf.sum / perf.n > .045 && perf.level < 2) {
@@ -90,10 +97,11 @@ function frame(now) {
       perf.n = 0; perf.sum = 0;
     }
   }
-  requestAnimationFrame(frame);
+  if (fixed === undefined) requestAnimationFrame(frame);
 }
 
-window.__game = { forceMod: id => { window.__forceMod = id; }, bestGates: () => { const ok = [...Array(SLOTS).keys()].filter(i => !(scene.noSlots || []).includes(i)); const pick = ok.length <= MAX_GATES ? ok : [0, 1, 2, 3, 4].map(k => ok[Math.round(k * (ok.length - 1) / 4)]); gates = gates.map((_, i) => pick.includes(i)); buildWorld(); }, unlockAll: () => { window.__unlockAll = true; }, event: k => spawnEvent(k), mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene: k => loadScene(k), setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
+let vnow = 0;
+window.__game = { manual: on => { window.__manual = on; vnow = performance.now(); }, tick: dt => { vnow += dt * 1000; frame(vnow, dt); }, forceMod: id => { window.__forceMod = id; }, bestGates: () => { const ok = [...Array(SLOTS).keys()].filter(i => !(scene.noSlots || []).includes(i)); const pick = ok.length <= MAX_GATES ? ok : [0, 1, 2, 3, 4].map(k => ok[Math.round(k * (ok.length - 1) / 4)]); gates = gates.map((_, i) => pick.includes(i)); buildWorld(); }, unlockAll: () => { window.__unlockAll = true; }, event: k => spawnEvent(k), mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene: k => loadScene(k), setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
   get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; backToPlan(); } };
 
 // demostración detrás del menú: un show de verdad para que la pantalla de título se vea viva

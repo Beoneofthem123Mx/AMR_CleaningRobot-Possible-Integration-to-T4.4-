@@ -139,15 +139,20 @@ let hashHead = new Int32Array(GW * GH), hashNext = new Int32Array(0);
 
 function looks() {
   const r = Math.random();
-  return { m: r < .3 ? 0 : r < .5 ? 1 : r < .68 ? 2 : r < .84 ? 3 : 4, sc: Math.random() < .05 ? .72 : .88 + Math.random() * .2,
-    sk: (Math.random() * 5) | 0, pc: (Math.random() * 6) | 0, hc: (Math.random() * 6) | 0, ac: (Math.random() * SHIRTS.length) | 0, st: (Math.random() * 3) | 0, wp: Math.random() * 6 };
+  const L = { m: r < .3 ? 0 : r < .5 ? 1 : r < .68 ? 2 : r < .84 ? 3 : 4, sc: Math.random() < .05 ? .72 : .88 + Math.random() * .2,
+    sk: (Math.random() * 5) | 0, pc: (Math.random() * 6) | 0, hc: (Math.random() * 6) | 0, ac: (Math.random() * SHIRTS.length) | 0, st: (Math.random() * 3) | 0, wp: Math.random() * 6,
+    c: (Math.random() * SHIRTS.length) | 0 };
+  // condiciones del día: Día del Niño (todos bajitos) y uniforme obligatorio (todos iguales)
+  if (MOD && MOD.sizeMul) L.sc *= MOD.sizeMul;
+  if (MOD && MOD.uniform) { L.c = L.ac = MOD.uc || 0; L.pc = 0; }
+  return L;
 }
 function spawn() {
   const x = .6 + Math.random() * (WW - 1.2), y = WH + .6 + Math.random() * (SH - WH - 1.2);
   for (let i = Math.max(0, ag.length - 400); i < ag.length; i++) { const a = ag[i]; if ((a.x - x) ** 2 + (a.y - y) ** 2 < .4) return; }
   const e = Math.random();
   ag.push({ x, y, vx: 0, vy: -.5, h: -Math.PI / 2, v0: (1.35 + Math.random() * .5) * (MOD && MOD.speed || 1), alt: !!(MOD && MOD.altShare && Math.random() < MOD.altShare), fol: Math.random(), lift: 0, beam: false, tol: .8 + e * e * 26,
-    leave: Math.random() * 16, ph: Math.random() * 6.28, dance: false, p: 0, ...looks(), ps: 0, dmg: 0, c: (Math.random() * SHIRTS.length) | 0, fx: 0, fy: 0 });
+    leave: Math.random() * 16, ph: Math.random() * 6.28, dance: false, p: 0, ...looks(), ps: 0, dmg: 0, fx: 0, fy: 0 });
   spawned++;
 }
 
@@ -158,7 +163,7 @@ function spawnAt(x, y, n) {
     const px = x + (Math.random() - .5) * 6, py = y + (Math.random() - .5) * 4;
     if (blockedC[cellOf(px, py)]) continue;
     const e = Math.random();
-    ag.push({ x: px, y: py, vx: 0, vy: 0, h: 0, v0: 1.4 + Math.random() * .5, alt: false, fol: Math.random(), lift: 0, beam: false, tol: .8 + e * e * 26, leave: Math.random() * 16, ph: Math.random() * 6.28, dance: false, p: 0, ...looks(), ps: 0, dmg: 0, c: (Math.random() * SHIRTS.length) | 0, fx: 0, fy: 0 });
+    ag.push({ x: px, y: py, vx: 0, vy: 0, h: 0, v0: 1.4 + Math.random() * .5, alt: false, fol: Math.random(), lift: 0, beam: false, tol: .8 + e * e * 26, leave: Math.random() * 16, ph: Math.random() * 6.28, dance: false, p: 0, ...looks(), ps: 0, dmg: 0, fx: 0, fy: 0 });
     k++;
   }
   CROWD += k; spawned += k; return k;
@@ -273,6 +278,7 @@ function start(mod) {
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] };
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
   caption("¡Abren las puertas!", false, 2200); ui();
+  if (MOD.uniform) MOD.uc = (Math.random() * SHIRTS.length) | 0;
   if (MOD.start) MOD.start();
   if (scene.onStart) scene.onStart();
   G3.photo = null;

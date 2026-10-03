@@ -144,6 +144,8 @@ const SFX = {
   siren(t) { const c = AU.ctx, o = c.createOscillator(), g = c.createGain(); o.type = "triangle"; o.frequency.setValueAtTime(600, t); o.frequency.linearRampToValueAtTime(1100, t + .5); o.frequency.linearRampToValueAtTime(600, t + 1); o.frequency.linearRampToValueAtTime(1100, t + 1.5); env(g, t, .05, .12, 1.6); o.connect(g); g.connect(AU.master); o.start(t); o.stop(t + 1.8); },
 };
 function sfx(name) {
+  // en la grabación del tráiler se anotan los efectos para mezclarlos después
+  if (window.__sfxLog) { const tt = vnow / 1000, L = window.__sfxLog, prev = L.findLast(e => e[0] === name); if (!prev || tt - prev[1] > .12) L.push([name, tt]); }
   const c = AU.ctx; if (!c || !AU.on || !SFX[name]) return;
   const now = c.currentTime; if (now - (AU.lastSfx[name] || 0) < .12) return;
   AU.lastSfx[name] = now; SFX[name](now + .01);
@@ -156,5 +158,6 @@ const SFX_BY_TEXT = { "¡ROAR!": "roar", "¡GRRR!": "roar", "¡MEC MEC!": "honk"
   "¡CUAC!": "quack", "¡CUAC CUAC!": "quack", "¡TORTAS GRATIS!": "honk", "¡LLEGAMOS!": "horn", "¡SPLAT!": "crash", "¡SE REGÓ LA SALSA!": "splash",
   "¡TACOS GRATIS!": "jingle", "¡FUUUM!": "ufo", "¡MUUU!": "moo", "¡FLASH!": "flash", "¡HOLA, FANS!": "cheer", "¡PI-PI-PI!": "beep", "¡SNIF, SNIF!": "bark",
   "¡NOOO!": "scream", "¡WIFI GRATIS!": "jingle", "¡HOLA MIS AMORES!": "cheer", "¡ZAS!": "crash", "¡CURRUCÚ!": "quack", "¡AHÍ VA EL RAMO!": "cheer", "¡ES MÍO!": "cheer",
-  "¡VAMOS!": "cheer", "¡PERMISO, JOVEN!": "honk", "¡PISO MOJADO!": "beep" };
+  "¡VAMOS!": "cheer", "¡PERMISO, JOVEN!": "honk", "¡PISO MOJADO!": "beep", "¡ESA ES MI CANCIÓN!": "cheer", "¡OTRA, OTRA!": "cheer", "¡UNA FOTO, SOBRINO!": "flash",
+  "¡TOPE SUICIDA!": "fiu", "¡SILLAZO!": "crash", "¡LA MÁSCARA!": "fiu", "¡ES MÍA!": "cheer", "¡FUERA, FUERA!": "roar", "¡ABRAN PASO, MIJOS!": "cheer", "¡SEPÁRENSE!": "whistle", "¡NO ME DOLIÓ!": "scream" };
 function sfxFor(text) { const n = SFX_BY_TEXT[text]; if (n) sfx(n); }

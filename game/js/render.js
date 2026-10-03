@@ -119,7 +119,8 @@ const HEIGHTS = { stage: 1.8, speaker: 3.2, catwalk: 1.3, platform: 1.35, barrie
   stands: 2.6, bench: 1, hull: 1.2, pool: .15, jacuzzi: .45, lounger: .45, bar: 1.2, outerrail: .9, rail: 1, startgate: 2.2,
   grandstand: 2.2, tote: 4, winner: .3, fountain: .7,
   shop: 3.2, megastore: 3.4, escalator: 1.2, kiosk: 1.6, gazebo: .4, bench: .5, caketable: .9, pavilion: .5, portapotty: 2.4, post: 1,
-  riser: 1.2, foodtruck: 2.6, tacotable: 1, taqueria: 2.6, salsabar: 1, barn: 4, farmhouse: 3, haybale: 1, arrivals: 4, carousel: .6, info: 1.1, counter: 1.1 };
+  riser: 1.2, foodtruck: 2.6, tacotable: 1, taqueria: 2.6, salsabar: 1, barn: 4, farmhouse: 3, haybale: 1, arrivals: 4, carousel: .6, info: 1.1, counter: 1.1,
+  ring: 1.0, ramp: .4, merch: 2.2 };
 // fachadas de edificios: ventanas que se repiten (de noche se encienden)
 function windowTex() {
   const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), r = rng(12);
@@ -273,7 +274,7 @@ function renderPeople(tt, dtR, vb) {
         const ph = tt * 8 + a.ph; armL = 2.95 + Math.sin(ph) * .12; armR = 2.95 - Math.sin(ph) * .12;
         bob = olaD < 2.6 ? .4 * (1 - olaD / 2.6) : .18 * Math.abs(Math.sin(ph));
       }
-      if (scene.night && a.dance && a.ph < 2.2 && !surging) { armR = 2.55 + Math.sin(tt * 2 + a.ph) * .15; a.phone = true; } else a.phone = false;
+      if ((scene.night || black > .4) && (a.dance || black > .4) && a.ph < 2.2 && !surging) { armR = 2.55 + Math.sin(tt * 2 + a.ph) * .15; a.phone = true; } else a.phone = false;
       if (a.ps > PCRIT * .55) { const ph = tt * 15 + a.ph; armL = 2.3 + Math.sin(ph) * .55; armR = 2.3 + Math.cos(ph) * .55; }
       if (MOD && MOD.bounce && a.dance) bob *= MOD.bounce;
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
@@ -654,6 +655,9 @@ function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
   const tt = now / 1000, live = phase === "show" || phase === "evac";
+  // apagón: la luz baja poco a poco y regresa de golpe
+  const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
+  G3.hemi.intensity = scene.light.hemi * (1 - .8 * black); G3.sun.intensity = scene.light.sunI * (1 - .9 * black);
   const vb = updateCamera();
   // focos y haces
   const cols = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"].map(lin);
