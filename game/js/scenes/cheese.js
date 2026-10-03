@@ -1,4 +1,4 @@
-// Human Tide · scene: The Cheese Chase (a village rolls giant cheeses down a hill and chases them, as it has for 600 years)
+// Human Tsunami · scene: The Cheese Chase (a village rolls giant cheeses down a hill and chases them, as it has for 600 years)
 const CHILL = { x0: 16.5, x1: 23.5, y0: 8, y1: 42 };   // the race course down the middle of the hill
 const CH_FONDUE = [4.5, 31], CH_COLS = ["#d8322b", "#2f6fc4", "#3d9a5b", "#8a4fbf", "#ff7a3c"];
 let CHEESE_GEO = null;
@@ -90,7 +90,7 @@ SCENE_MODELS.cheese_fondue = (g, u) => {
 SCENES.cheese = {
   name: "The Cheese Chase", tag: "Annual downhill cheese rolling championship", place: "CHEESE HILL", outside: "#5f8f3a", bulbH: 2.2, music: "brass",
   light: { sky: 0xeaf6ff, ground: 0x4f7a2a, hemi: .62, sun: 0xfff1d0, sunI: 1.3 }, crowd: 2900, fenceBudget: 64, maxGates: 5, guards: 4,
-  gates: [F, T, F, F, F, F, F], unlock: 24,
+  gates: [T, T, F, F, F, F, F], unlock: 24,
   heights: { cheese_podium: 1.3, cheese_hay: .9, cheese_rope: .8, cheese_line: .9, cheese_amb: 2.4, cheese_stall: 2.2, cheese_hedge: 1.6, cheese_ramp: 1.1 },
   sfx: { "CHEESE!": "cheer", "MEEEH!": "moo", "WHEEE!": "scream", "PUTT PUTT!": "honk", "AHEM!": "trumpet", "FREE FONDUE!": "jingle", "PEE-YOO!": "scream", "MY CHEESE!": "crash", "MY SPLEEN!": "crash", "NEE-NAW!": "siren" },
   intro: "Six hundred years of tradition: the village throws a wheel of cheese down a cliff-steep hill and grown adults chase it. The ambulance is already parked and the crowd insists on standing exactly where the cheese lands.",

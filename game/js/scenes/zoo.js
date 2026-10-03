@@ -1,4 +1,4 @@
-// Human Tide · scene: Free Zoo Day (the baby panda's debut; the enclosures are more of a suggestion)
+// Human Tsunami · scene: Free Zoo Day (the baby panda's debut; the enclosures are more of a suggestion)
 const ZPANDA = { x0: 11, x1: 29, y: 15 }, ZPOND = { x: 34, y: 43, r: 3.6 }, ZOO_FX = { yawn: 0, sneeze: 0 };
 const zooNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
 

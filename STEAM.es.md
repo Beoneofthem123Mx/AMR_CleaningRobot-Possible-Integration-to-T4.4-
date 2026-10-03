@@ -63,6 +63,10 @@ El juego ya los activa. Créalos en *Stats & Achievements* con estos nombres de 
 | `PERFECT_OVNI`       | Contacto pacífico         | Encuentro Cercano con cero pisoteados y nadie atrapado |
 | `PERFECT_AEROPUERTO` | Aterrizaje suave          | Llega la Estrella con cero pisoteados y nadie atrapado |
 | `PERFECT_ARENA`      | Dos de tres caídas        | La Arena con cero pisoteados y nadie atrapado          |
+| `PERFECT_ROCKET`     | Todo en orden             | Launch Day con cero pisoteados y nadie atrapado         |
+| `PERFECT_ZOO`        | Nadie fue devorado        | Free Zoo Day con cero pisoteados y nadie atrapado       |
+| `PERFECT_CHEESE`     | Queso sin heridos         | The Cheese Chase con cero pisoteados y nadie atrapado   |
+| `PERFECT_ZOMBIE`     | Ningún cerebro perdido    | Zombie Walk con cero pisoteados y nadie atrapado        |
 | `SPACE_TOURISM`      | Turismo espacial          | 100 abducidos en un solo show |
 | `LOUD_AND_SAFE`      | A gritos pero a salvo     | Tres estrellas usando los tres megáfonos |
 | `MOD_COLLECTOR`      | Ya lo vi todo             | Terminar shows con seis condiciones del día distintas |

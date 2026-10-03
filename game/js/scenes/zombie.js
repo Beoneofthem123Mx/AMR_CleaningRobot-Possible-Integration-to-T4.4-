@@ -1,4 +1,4 @@
-// Human Tide · scene: Zombie Walk (Halloween street party in the old town square; the band is literally dead)
+// Human Tsunami · scene: Zombie Walk (Halloween street party in the old town square; the band is literally dead)
 const ZMAN = { x0: 6, x1: 34, y1: 4 }, ZSTAGE = { x0: 11, y0: 4, x1: 29, y1: 9 }, ZWELL = { x: 20, y: 31, r: 1.6 };
 const ZCOSTUME = ["#7a2a8a", "#d8322b", "#2f6fc4", "#e36a12", "#f4f4f2", "#3d9a5b", "#151617"];
 

@@ -62,6 +62,10 @@ The game already unlocks them. Create them under *Stats & Achievements* with the
 | `PERFECT_OVNI`       | Peaceful Contact         | Close Encounter with zero trampled and nobody stuck      |
 | `PERFECT_AEROPUERTO` | Soft Landing             | The Star Arrives with zero trampled and nobody stuck     |
 | `PERFECT_ARENA`      | Two Out of Three Falls   | The Arena with zero trampled and nobody stuck            |
+| `PERFECT_ROCKET`     | Nominal                  | Launch Day with zero trampled and nobody stuck           |
+| `PERFECT_ZOO`        | Nobody Got Eaten         | Free Zoo Day with zero trampled and nobody stuck         |
+| `PERFECT_CHEESE`     | Grate Success            | The Cheese Chase with zero trampled and nobody stuck     |
+| `PERFECT_ZOMBIE`     | No Brains Lost           | Zombie Walk with zero trampled and nobody stuck          |
 | `SPACE_TOURISM`      | Space Tourism            | 100 abducted in a single show                            |
 | `LOUD_AND_SAFE`      | Loud but Safe            | Three stars using all three megaphones                   |
 | `MOD_COLLECTOR`      | Seen It All              | Finish shows under six different "today's twists"        |

@@ -29,7 +29,7 @@ Everything works offline: three.js and the fonts ship inside `game/`. To publish
 - **Gates**: tap the barrier at the bottom to open or close entrances.
 - **Security**: place guards. They calm the people around them and stop animals and vehicles.
 - **Erase**: tap a fence or a guard to remove it.
-- **Venue**: choose where to play (there are 14).
+- **Venue**: choose where to play (there are 18).
 - **Pressure**: paints the crowd from blue to red depending on how hard they're being squeezed.
 - **1× / 2× / 4×**: simulation speed.
 - **Camera**: automatic (zooms in and tilts during the big moments), near or far.
@@ -89,6 +89,10 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 | **Close Encounter** | 14 ★ | A UFO in the cornfield: a beam that abducts people, cows (one of them floating), men in black and an alien who wants selfies. |
 | **The Star Arrives** | 16 ★ | Arrivals hall: the pop idol walks out and the fans give chase; loose suitcases, luggage carts and the security dog. |
 | **The Arena** | 18 ★ | Lucha libre grand finale: suicide dives into the crowd, chair shots, flying masks, the villain coming down to brawl and doña Chona, 84, who wants to climb into the ring. |
+| **Launch Day** | 20 ★ | A billionaire's rocket launch "for the vibes": countdowns that never finish, a booster landing next to the crowd, robot dogs, a hoodie cannon, a driverless taxi and free NFTs in cardboard boxes. |
+| **Free Zoo Day** | 22 ★ | The baby panda's debut: penguin parades, a giraffe strolling through the crowd, a gorilla that steals a phone, Kevin the runaway alpaca, a banana truck and a hippo that yawns at the wrong moment. |
+| **The Cheese Chase** | 24 ★ | Downhill cheese rolling: wheels bouncing through the crowd, tumbling contestants, a runaway goat, a tractor with a car-sized cheese and a blue cheese so smelly everyone flees. |
+| **Zombie Walk** | 26 ★ | Night-time zombie parade by a haunted mansion: shambling hordes, a hearse, a giant inflatable pumpkin, fog machines, bats, a werewolf and a vampire who turns out to be the mayor. |
 
 Fences and guards also work against the chaos: animals and vehicles that bump into them turn
 around.
@@ -105,6 +109,9 @@ around.
 - **The newspaper**: at the end, the front page of *The Daily Gossip* recounts what happened with
   satirical headlines and a photo taken during the show.
 - The first person to go down triggers a slow-motion replay.
+- **Street life**: balloon sellers, hot-dog carts, a photographer, a mime and a live-streamer wander
+  through every venue. The crowd brings balloons, party hats, sun hats, kids on their shoulders and,
+  when it rains, a sea of umbrellas. When the music drops, a few lucky people go crowd surfing.
 - **Director's camera**: in automatic mode, the camera peeks at each event for a few seconds (the
   elephant, the UFO, the taxi that didn't know the street was closed).
 
