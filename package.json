@@ -1,8 +1,8 @@
 {
-  "name": "marea-humana",
-  "productName": "Marea Humana",
+  "name": "human-tide",
+  "productName": "Human Tide",
   "version": "0.1.0",
-  "description": "Juego de gestión de multitudes: planea vallas y puertas para que nadie salga pisoteado.",
+  "description": "Crowd management game: plan fences and gates so nobody gets trampled.",
   "main": "desktop/main.js",
   "private": true,
   "scripts": {
@@ -19,8 +19,8 @@
     "electron-builder": "25.1.8"
   },
   "build": {
-    "appId": "com.mareahumana.game",
-    "productName": "Marea Humana",
+    "appId": "com.humantide.game",
+    "productName": "Human Tide",
     "directories": {
       "output": "dist"
     },

@@ -1,27 +1,27 @@
-// Graba el tráiler de Marea Humana a partir del juego real.
+// Records the Human Tide trailer from the real game.
 //   xvfb-run -a -s "-screen 0 1920x1080x24" node steam/trailer/trailer.cjs
-// Necesita Playwright (con Chromium) y ffmpeg con libx264. Escribe steam/trailer/marea_humana_trailer.mp4.
-// Los cuadros se generan uno por uno (modo manual del juego), así que el resultado es fluido aunque la PC sea lenta.
+// Needs Playwright (with Chromium) and ffmpeg with libx264. Writes steam/trailer/human_tide_trailer.mp4.
+// Frames are generated one by one (the game's manual mode), so the result is smooth even on a slow PC.
 const { _electron, chromium } = require(process.env.PLAYWRIGHT_PATH || "playwright");
 const fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
 const ROOT = path.resolve(__dirname, "../.."), WORK = path.join(__dirname, "work"), FPS = 30;
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map(Number) : null;
 
-// guion: tarjetas de texto y tomas del juego
+// script: title cards and gameplay shots
 const SEG = [
-  { card: "DE LOS CREADORES DE<br>NADA EN PARTICULAR", dur: 2.2, bg: "ciudad" },
+  { card: "FROM THE MAKERS OF<br>NOTHING IN PARTICULAR", dur: 2.2, bg: "ciudad" },
   { clip: "plaza", warm: 2.5, secs: 4.5, cam: 2 },
-  { card: "TÚ ORGANIZAS<br>EL EVENTO", dur: 1.6, bg: "plaza" },
+  { card: "YOU PLAN<br>THE EVENT", dur: 1.6, bg: "plaza" },
   { clip: "plaza", warm: 24, secs: 3.5, cam: 0, heat: true, ev: [[-1.2, "car"]] },
-  { card: "LA GENTE HACE<br>LO QUE QUIERE", dur: 1.6, bg: "plaza" },
+  { card: "THE CROWD DOES<br>WHATEVER IT WANTS", dur: 1.6, bg: "plaza" },
   { clip: "circo", warm: 28, secs: 4, cam: 1, ev: [[-1.5, "elephants"], [-.4, "cannon"], [1.6, "balls"]] },
-  { card: "HAY ELEFANTES", dur: 1.1, bg: "circo" },
+  { card: "THERE ARE ELEPHANTS", dur: 1.1, bg: "circo" },
   { clip: "ovni", warm: 26, secs: 4.5, cam: 0, ev: [[-2, "abduccion"], [1.8, "vacas"]] },
-  { card: "HAY OVNIS", dur: 1.0, bg: "ciudad" },
+  { card: "THERE ARE UFOS", dur: 1.0, bg: "ciudad" },
   { clip: "boda", warm: 26, secs: 3.5, cam: 1, ev: [[-1, "ramo"], [.3, "suegra"]] },
-  { card: "HAY SUEGRAS", dur: 1.0, bg: "circo" },
+  { card: "THERE ARE<br>MOTHERS-IN-LAW", dur: 1.0, bg: "circo" },
   { clip: "mitin", warm: 26, secs: 3.5, cam: 1, ev: [[-1.5, "botargas"], [-.2, "promesas"], [1.2, "huevazo"]] },
-  { card: "HAY UN CANDIDATO<br>QUE ES UN PATO", dur: 1.4, bg: "mitin" },
+  { card: "THERE'S A CANDIDATE<br>WHO IS A DUCK", dur: 1.4, bg: "mitin" },
   { clip: "crucero", warm: 26, secs: 1.4, cam: 0, ev: [[-.6, "oleaje"]], hot: true },
   { clip: "hipodromo", warm: 26, secs: 1.4, cam: 0, ev: [[-1.5, "carrera"]], hot: true },
   { clip: "taco", warm: 26, secs: 1.4, cam: 1, ev: [[-.4, "salsa"]], hot: true },
@@ -31,10 +31,10 @@ const SEG = [
   { clip: "viernes", warm: 26, secs: 1.4, cam: 1, ev: [[-.8, "oferta"]], hot: true },
   { clip: "estadio", warm: 26, secs: 1.4, cam: 0, ev: [[-.5, "ola"], [-.4, "flares"]], hot: true },
   { clip: "arena", warm: 26, secs: 1.6, cam: 1, ev: [[-1.3, "tope"], [-.4, "sillazo"]], hot: true },
-  { card: "14 ESCENARIOS<br>CERO PERMISOS", dur: 1.8, bg: "circo" },
+  { card: "14 VENUES<br>ZERO PERMITS", dur: 1.8, bg: "circo" },
   { clip: "plaza", warm: 0, secs: 6, cam: 0, crush: true, hot: true },
-  { card: "¿CUÁNTOS PISOTEADOS<br>AGUANTA TU CONCIENCIA?", dur: 2.2, bg: "plaza" },
-  { card: "MAREA<br>HUMANA", sub: "Próximamente en Steam · precio ridículo", dur: 3.4, bg: "circo", end: true },
+  { card: "HOW MANY TRAMPLED<br>CAN YOUR CONSCIENCE TAKE?", dur: 2.2, bg: "plaza" },
+  { card: "HUMAN<br>TIDE", sub: "Coming soon to Steam · ridiculously cheap", dur: 3.4, bg: "circo", end: true },
 ];
 
 const sh = (cmd, args) => execFileSync(cmd, args, { stdio: ["ignore", "ignore", "inherit"] });
@@ -49,7 +49,7 @@ async function captureClips() {
   await w.evaluate(() => { __game.manual(true); __game.unlockAll(); window.__sfxLog = []; document.querySelector("#overlay").hidden = true;
     for (const s of ["#status", ".bar", "#mod"]) document.querySelectorAll(s).forEach(e => e.style.visibility = "hidden"); });
   const frame = w.locator("#frame"), sfxFile = path.join(WORK, "sfx.json");
-  // si solo se regraban algunas tomas, se conservan los efectos de las demás
+  // when only some shots are re-recorded, keep the sound effects of the others
   const sfx = ONLY && fs.existsSync(sfxFile) ? JSON.parse(fs.readFileSync(sfxFile)).filter(e => !ONLY.includes(e.seg)) : [];
   for (let i = 0; i < SEG.length; i++) {
     const g = SEG[i]; if (!g.clip || (ONLY && !ONLY.includes(i))) continue;
@@ -61,13 +61,13 @@ async function captureClips() {
       const evs = (g.ev || []).slice().sort((a, b) => a[0] - b[0]);
       const pre = evs.length ? Math.min(0, evs[0][0]) : 0;
       let steps = Math.round((g.warm + pre) * 60);
-      if (g.crush) { // con las puertas de fábrica, la evacuación se atasca: grabamos desde el primer pisoteado
+      if (g.crush) { // with the default gates the evacuation jams: record from the first trampled person
         for (let k = 0; k < 60 * 140 && __game.s.dead === 0; k++) __game.step();
       } else for (let k = 0; k < steps; k++) __game.step();
       movers = movers.filter(m => m.kind === "router" || m.kind === "influencer");
       for (const [at, e] of evs) if (at < 0) { __game.event(e); }
       const lead = -pre; for (let k = 0; k < lead * 60; k++) __game.step();
-      for (let k = 0; k < 20; k++) __game.tick(1 / 60); // que la cámara se acomode
+      for (let k = 0; k < 20; k++) __game.tick(1 / 60); // let the camera settle
       window.__pending = evs.filter(e => e[0] >= 0);
       return vnow / 1000;
     }, g);
@@ -78,10 +78,10 @@ async function captureClips() {
     }
     const log = await w.evaluate(() => { const L = window.__sfxLog; window.__sfxLog = []; return L; });
     sfx.push({ seg: i, list: log.map(([nm, t]) => [nm, Math.max(0, t - t0)]).filter(e => e[1] < g.secs) });
-    console.log("clip", i, g.clip, n, "cuadros, muertos:", (await w.evaluate(() => __game.s.dead)));
+    console.log("clip", i, g.clip, n, "frames, trampled:", (await w.evaluate(() => __game.s.dead)));
   }
   fs.writeFileSync(sfxFile, JSON.stringify(sfx));
-  // banda sonora: la música y los efectos del propio juego, renderizados sin conexión
+  // soundtrack: the game's own music and effects, rendered offline
   const plan = { segs: SEG.map(g => ({ dur: g.card ? g.dur : g.secs, card: !!g.card, hot: !!g.hot, end: !!g.end })), sfx };
   const wavB64 = await w.evaluate(async plan => {
     const total = plan.segs.reduce((s, g) => s + g.dur, 0) + 1.5, sr = 44100, off = new OfflineAudioContext(2, Math.ceil(sr * total), sr);
@@ -141,11 +141,11 @@ function assemble() {
     }
   });
   fs.writeFileSync(path.join(WORK, "list.txt"), parts.map(p => `file '${p}'`).join("\n"));
-  const final = path.join(__dirname, "marea_humana_trailer.mp4");
+  const final = path.join(__dirname, "human_tide_trailer.mp4");
   sh("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", path.join(WORK, "list.txt"), "-i", path.join(WORK, "audio.wav"),
     "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
     "-af", "afade=t=out:st=" + (SEG.reduce((s, g) => s + (g.card ? g.dur : g.secs), 0) - 1) + ":d=1", "-shortest", "-movflags", "+faststart", final]);
-  console.log("listo:", final);
+  console.log("done:", final);
 }
 
 (async () => {

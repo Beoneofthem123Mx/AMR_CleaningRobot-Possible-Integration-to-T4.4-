@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8">
-<!-- Plantilla de arte de tienda. Se renderiza con steam/art/render.cjs:  capsule.html?w=920&h=430&bg=circo&mode=full -->
+<html lang="en"><head><meta charset="utf-8">
+<!-- Store art template. Rendered by steam/art/render.cjs:  capsule.html?w=920&h=430&bg=circo&mode=full -->
 <style>
 @font-face { font-family: Rubik; font-weight: 900; src: url(../../game/fonts/rubik-latin-900-normal.woff2) format("woff2"); }
 @font-face { font-family: Rubik; font-weight: 700; src: url(../../game/fonts/rubik-latin-700-normal.woff2) format("woff2"); }
@@ -28,13 +28,13 @@ if (mode !== "logo") c.innerHTML += `<div class="bg" style="background-image:${i
 if (mode === "full" || mode === "logo") {
   const fs = Math.min(W * .82 / 4.9, H * (tall ? .2 : W < 600 ? .36 : .3));
   c.innerHTML += `<div class="lock" style="font-size:${fs}px">
-    <h1 class="logo">MAREA<br>HUMANA</h1>
-    ${W >= 600 && mode === "full" ? `<div class="tag" style="font-size:${fs * .2}px">Organiza el caos. Evita la tragedia.</div>` : ""}
+    <h1 class="logo">HUMAN<br>TIDE</h1>
+    ${W >= 600 && mode === "full" ? `<div class="tag" style="font-size:${fs * .2}px">Plan the chaos. Avoid the tragedy.</div>` : ""}
   </div>`;
-  if (mode === "full" && W >= 600) c.innerHTML += `<div class="badge" style="font-size:${m * .06}px;${tall ? `left:6%;top:5%` : `right:3%;top:6%`}"><svg viewBox="0 0 24 24" style="width:1em;height:1em"><path fill="#111214" d="M12 2C6.9 2 3 5.6 3 10.3c0 2.7 1.3 4.9 3.4 6.3V20c0 1.1.9 2 2 2h7.2c1.1 0 2-.9 2-2v-3.4c2.1-1.4 3.4-3.6 3.4-6.3C21 5.6 17.1 2 12 2Zm-3.6 11.6a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2Zm7.2 0a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2ZM10 22v-2.4h1.2V22H10Zm2.8 0v-2.4H14V22h-1.2Z"/></svg> PISOTEADOS <b>0</b></div>`;
+  if (mode === "full" && W >= 600) c.innerHTML += `<div class="badge" style="font-size:${m * .06}px;${tall ? `left:6%;top:5%` : `right:3%;top:6%`}"><svg viewBox="0 0 24 24" style="width:1em;height:1em"><path fill="#111214" d="M12 2C6.9 2 3 5.6 3 10.3c0 2.7 1.3 4.9 3.4 6.3V20c0 1.1.9 2 2 2h7.2c1.1 0 2-.9 2-2v-3.4c2.1-1.4 3.4-3.6 3.4-6.3C21 5.6 17.1 2 12 2Zm-3.6 11.6a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2Zm7.2 0a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2ZM10 22v-2.4h1.2V22H10Zm2.8 0v-2.4H14V22h-1.2Z"/></svg> TRAMPLED <b>0</b></div>`;
 }
 if (mode === "card") {
-  // tarjeta de texto para el tráiler: fondo del juego oscurecido y una frase enorme
+  // trailer title card: darkened game background and one huge line
   const text = q.get("text") || "", sub = q.get("sub") || "";
   c.innerHTML = `<div class="bg" style="background-image:${img};filter:blur(${W * .006}px) brightness(.33) saturate(1.3)"></div>
     <div class="lock" style="font-size:${H * .14}px"><h1 class="logo" style="max-width:${W * .9}px">${text}</h1>
@@ -42,11 +42,11 @@ if (mode === "card") {
 }
 if (mode === "icon") {
   c.innerHTML = `<div class="bg" style="background-image:${img};inset:0;transform:scale(1.6)"></div>
-    <div class="lock" style="font-size:${W * .27}px"><h1 class="logo" style="text-shadow:0 .09em 0 #ffd23a,0 .15em 0 #111214">MH</h1></div>`;
+    <div class="lock" style="font-size:${W * .27}px"><h1 class="logo" style="text-shadow:0 .09em 0 #ffd23a,0 .15em 0 #111214">HT</h1></div>`;
   c.style.borderRadius = "18%"; c.style.border = `${W * .04}px solid #111214`; c.style.boxSizing = "border-box";
 }
 document.fonts.ready.then(() => {
-  // ajusta el logo para que quepa: ancho máx. 84 % y alto máx. 62 % (vertical) / 66 %
+  // shrink-to-fit the logo inside the image
   const lock = c.querySelector(".lock"), logo = c.querySelector(".logo");
   if (lock && logo) for (let k = 0; k < 4; k++) {
     const r = logo.getBoundingClientRect(), fw = W * (mode === "icon" ? .7 : mode === "card" ? .86 : .84) / r.width, fh = H * (mode === "icon" ? .5 : mode === "card" ? .5 : W < 600 ? .86 : .56) / r.height, f = Math.min(fw, fh);

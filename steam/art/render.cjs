@@ -1,4 +1,4 @@
-// Genera el arte de la tienda de Steam a partir de capsule.html (requiere Playwright + Chromium).
+// Generates the Steam store art from capsule.html (needs Playwright + Chromium).
 //   node steam/art/render.cjs
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || "playwright");
 const path = require("path"), DIR = __dirname;

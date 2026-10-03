@@ -1,6 +1,6 @@
 "DepotBuild"
 {
-	"DepotID" "TU_DEPOT_LINUX"
+	"DepotID" "YOUR_DEPOT_LINUX"
 	"ContentRoot" "../dist/linux-unpacked/"
 	"FileMapping"
 	{

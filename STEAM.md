@@ -1,129 +1,133 @@
-# Cómo publicar Marea Humana en Steam
+# How to publish Human Tide on Steam
 
-Esta guía va desde el código hasta la página de la tienda. Los pasos de Steamworks cambian con el
-tiempo, así que confirma cada uno en la documentación oficial:
-<https://partner.steamgames.com/doc/home>
+*(Spanish version: `STEAM.es.md`.)*
 
-## 1. Probar el juego en tu computadora
+This guide goes from the code to the store page. Steamworks steps change over time, so confirm
+each one in the official documentation: <https://partner.steamgames.com/doc/home>
 
-Necesitas [Node.js](https://nodejs.org/) 20 o más reciente.
+## 1. Run the game on your computer
+
+You need [Node.js](https://nodejs.org/) 20 or newer.
 
 ```sh
 npm install
 npm start
 ```
 
-Se abre la ventana del juego. Con Steam abierto y `steam_appid.txt` en `480` (Spacewar, la app de
-prueba de Valve) también funcionan la superposición de Steam (Mayús+Tab) y la llamada de logros.
+The game window opens. With Steam running and `steam_appid.txt` set to `480` (Spacewar, Valve's
+test app), the Steam overlay (Shift+Tab) and achievement calls work too.
 
-Atajos: **F11** o **Alt+Enter** cambian a pantalla completa.
+Shortcuts: **F11** or **Alt+Enter** toggle fullscreen.
 
-## 2. Crear la app en Steamworks
+## 2. Create the app in Steamworks
 
-1. Crea una cuenta en <https://partner.steamgames.com/> como desarrollador. Pide datos fiscales y
-   bancarios.
-2. Paga la tarifa de Steam Direct para tener un App ID. Valve publica el monto y las condiciones
-   de reembolso en su documentación.
-3. Anota el **App ID** y los **Depot ID** que te asigna Steamworks (uno para Windows y otro para
+1. Create a developer account at <https://partner.steamgames.com/>. It asks for tax and banking
+   details.
+2. Pay the Steam Direct fee to get an App ID. Valve publishes the amount and refund conditions in
+   its documentation.
+3. Write down the **App ID** and the **Depot IDs** Steamworks gives you (one for Windows, one for
    Linux).
 
-## 3. Poner tu App ID en el juego
+## 3. Put your App ID in the game
 
-- En `desktop/main.js`, cambia `STEAM_APP_ID = 480` por tu App ID.
-- En `steam_appid.txt`, pon tu App ID (solo se usa al probar con `npm start`; no se incluye en el
-  juego empaquetado).
-- En `steam/app_build.vdf` y `steam/depot_*.vdf`, reemplaza `TU_APP_ID`, `TU_DEPOT_WINDOWS` y
-  `TU_DEPOT_LINUX`.
+- In `desktop/main.js`, change `STEAM_APP_ID = 480` to your App ID.
+- In `steam_appid.txt`, put your App ID (only used when testing with `npm start`; it is not
+  shipped in the packaged game).
+- In `steam/app_build.vdf` and `steam/depot_*.vdf`, replace `YOUR_APP_ID`, `YOUR_DEPOT_WINDOWS`
+  and `YOUR_DEPOT_LINUX`.
 
-## 4. Crear los logros en Steamworks
+## 4. Create the achievements in Steamworks
 
-El juego ya los activa. Créalos en *Stats & Achievements* con estos nombres de API exactos:
+The game already unlocks them. Create them under *Stats & Achievements* with these exact API names:
 
-| Nombre de API   | Nombre sugerido          | Cuándo se gana                                       |
-|-----------------|--------------------------|------------------------------------------------------|
-| `FIRST_SHOW`    | Primer evento            | Terminar cualquier evento                            |
-| `PERFECT_PLAZA` | Plaza sin heridos        | Terminar la plaza con cero pisoteados y nadie atrapado |
-| `PERFECT_CIRCO` | Circo sin heridos        | Terminar el circo con cero pisoteados y nadie atrapado |
-| `LION_TAMER`    | Domador de leones        | Que el león choque con una valla y se dé la vuelta   |
-| `TRAGEDY`       | Esto no salió bien       | 500 o más pisoteados en un solo evento               |
-| `PERFECT_ESTADIO`   | Estadio sin heridos  | Terminar el estadio con cero pisoteados y nadie atrapado |
-| `PERFECT_CRUCERO`   | Crucero sin heridos  | Terminar el crucero con cero pisoteados y nadie atrapado |
-| `PERFECT_HIPODROMO` | Hipódromo sin heridos | Terminar el hipódromo con cero pisoteados y nadie atrapado |
-| `PERFECT_CIUDAD`    | Ciudad sin heridos   | Terminar la ciudad con cero pisoteados y nadie atrapado |
-| `GUARDIAN`      | Alto ahí                 | Que un guardia detenga a un animal o un vehículo     |
-| `ALL_SCENES`    | Gira completa            | Ganar al menos una estrella en todos los escenarios  |
-| `ALL_STARS`     | Seguridad perfecta       | Tres estrellas en todos los escenarios               |
-| `PERFECT_VIERNES`    | Rebajas sin heridos       | Viernes Negro con cero pisoteados y nadie atrapado |
-| `PERFECT_BODA`       | Boda en paz               | La Boda del Año con cero pisoteados y nadie atrapado |
-| `PERFECT_TRONO`      | Baño impecable            | El Trono de Oro con cero pisoteados y nadie atrapado |
-| `PERFECT_MITIN`      | Campaña limpia            | El Mitin del Pato con cero pisoteados y nadie atrapado |
-| `PERFECT_TACO`       | Récord sin heridos        | El Taco Gigante con cero pisoteados y nadie atrapado |
-| `PERFECT_OVNI`       | Contacto pacífico         | Encuentro Cercano con cero pisoteados y nadie atrapado |
-| `PERFECT_AEROPUERTO` | Aterrizaje suave          | Llega la Estrella con cero pisoteados y nadie atrapado |
-| `PERFECT_ARENA`      | Dos de tres caídas        | La Arena con cero pisoteados y nadie atrapado          |
-| `SPACE_TOURISM`      | Turismo espacial          | 100 abducidos en un solo show |
-| `LOUD_AND_SAFE`      | A gritos pero a salvo     | Tres estrellas usando los tres megáfonos |
-| `MOD_COLLECTOR`      | Ya lo vi todo             | Terminar shows con seis condiciones del día distintas |
+| API name             | Suggested name           | How it is earned                                         |
+|----------------------|--------------------------|----------------------------------------------------------|
+| `FIRST_SHOW`         | Opening Night            | Finish any event                                         |
+| `PERFECT_PLAZA`      | Not a Scratch            | The Plaza with zero trampled and nobody stuck            |
+| `PERFECT_CIRCO`      | Greatest Show on Earth   | The Circus with zero trampled and nobody stuck           |
+| `LION_TAMER`         | Lion Tamer               | A lion hits one of your fences and turns around          |
+| `TRAGEDY`            | That Did Not Go Well     | 500 or more trampled in a single event                   |
+| `PERFECT_ESTADIO`    | Clean Sheet              | The Stadium with zero trampled and nobody stuck          |
+| `PERFECT_CRUCERO`    | Smooth Sailing           | The Cruise with zero trampled and nobody stuck           |
+| `PERFECT_HIPODROMO`  | Photo Finish             | The Racetrack with zero trampled and nobody stuck        |
+| `PERFECT_CIUDAD`     | City That Never Tramples | The City with zero trampled and nobody stuck             |
+| `GUARDIAN`           | Halt!                    | A guard stops an animal or a vehicle                     |
+| `ALL_SCENES`         | World Tour               | Earn at least one star in every venue                    |
+| `ALL_STARS`          | Flawless Security        | Three stars in every venue                               |
+| `PERFECT_VIERNES`    | Doorbuster Survivor      | Black Friday with zero trampled and nobody stuck         |
+| `PERFECT_BODA`       | Happily Ever After       | Wedding of the Year with zero trampled and nobody stuck  |
+| `PERFECT_TRONO`      | Spotless                 | The Golden Throne with zero trampled and nobody stuck    |
+| `PERFECT_MITIN`      | Clean Campaign           | The Duck Rally with zero trampled and nobody stuck       |
+| `PERFECT_TACO`       | World Record, No Injuries| The Giant Taco with zero trampled and nobody stuck       |
+| `PERFECT_OVNI`       | Peaceful Contact         | Close Encounter with zero trampled and nobody stuck      |
+| `PERFECT_AEROPUERTO` | Soft Landing             | The Star Arrives with zero trampled and nobody stuck     |
+| `PERFECT_ARENA`      | Two Out of Three Falls   | The Arena with zero trampled and nobody stuck            |
+| `SPACE_TOURISM`      | Space Tourism            | 100 abducted in a single show                            |
+| `LOUD_AND_SAFE`      | Loud but Safe            | Three stars using all three megaphones                   |
+| `MOD_COLLECTOR`      | Seen It All              | Finish shows under six different "today's twists"        |
 
-Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
+Each achievement needs a 64×64 icon (achieved and unachieved versions).
 
-## 5. Empaquetar
+## 5. Package
 
 ```sh
-npm run dist:win     # dist/win-unpacked/Marea Humana.exe
-npm run dist:linux   # dist/linux-unpacked/marea-humana
-npm run dist:mac     # solo en una Mac
+npm run dist:win     # dist/win-unpacked/Human Tide.exe
+npm run dist:linux   # dist/linux-unpacked/human-tide
+npm run dist:mac     # only on a Mac
 ```
 
-El empaquetado copia `steam_api64.dll` (Windows) y `libsteam_api.so` (Linux) junto al ejecutable.
-El ejecutable de Windows no lleva icono propio cuando se empaqueta desde Linux; para eso,
-empaqueta en Windows y agrega un icono en `package.json` (`build.win.icon`).
+Packaging copies `steam_api64.dll` (Windows) and `libsteam_api.so` (Linux) next to the executable.
+The Windows executable gets no custom icon when packaged from Linux; for that, package on Windows
+and set an icon in `package.json` (`build.win.icon`).
 
-## 6. Subir con SteamPipe
+## 6. Upload with SteamPipe
 
-1. Descarga el Steamworks SDK desde Steamworks y usa `tools/ContentBuilder/builder/steamcmd`.
-2. Desde la carpeta `steam/` de este repositorio:
+1. Download the Steamworks SDK from Steamworks and use `tools/ContentBuilder/builder/steamcmd`.
+2. From this repository's `steam/` folder:
 
    ```sh
-   steamcmd +login TU_USUARIO +run_app_build "$(pwd)/app_build.vdf" +quit
+   steamcmd +login YOUR_USER +run_app_build "$(pwd)/app_build.vdf" +quit
    ```
 
-3. En Steamworks, en *Installation > General*, crea las opciones de inicio:
-   - Windows: `Marea Humana.exe`
-   - Linux: `marea-humana`, con argumentos `--no-sandbox` (Electron no puede usar su sandbox dentro
-     del runtime de Steam en Linux).
-4. Publica la build en la rama `default` y pruébala desde tu biblioteca de Steam.
+3. In Steamworks, under *Installation > General*, create the launch options:
+   - Windows: `Human Tide.exe`
+   - Linux: `human-tide`, with arguments `--no-sandbox` (Electron cannot use its sandbox inside
+     the Steam runtime on Linux).
+4. Publish the build to the `default` branch and test it from your Steam library.
 
-## 7. Página de la tienda y precio
+## 7. Store page and price
 
-- Steam pide cápsulas en varios tamaños, al menos 5 capturas de pantalla y, de preferencia, un
-  tráiler. Ya hay material listo para subir:
-  - `steam/screenshots/`: 8 capturas a 1920×1080 de distintos escenarios.
-  - `steam/art/out/`: cápsula de encabezado (920×430), pequeña (462×174), principal (1232×706),
-    vertical (748×896), de biblioteca (600×900), héroe de biblioteca (3840×1240), logo de
-    biblioteca con fondo transparente (1280×720), fondo de página e íconos de 512 y 256 px.
-  - Para regenerarlas: `node steam/art/render.cjs` (usa Playwright con Chromium). El diseño está
-    en `steam/art/capsule.html` y los fondos en `steam/art/bg/`.
-  - El héroe de biblioteca se amplía desde una captura de 1824 px de ancho, así que se ve algo
-    suave. Si quieres más nitidez, toma una captura a 4K y reemplaza `steam/art/bg/circo.jpg`.
-  - Revisa en Steamworks los tamaños vigentes antes de subir: Valve los cambia de vez en cuando.
-- Llena el cuestionario de contenido. El juego muestra muertes por aplastamiento sin sangre ni
-  violencia explícita; respóndelo con honestidad.
-- El precio se elige en *Pricing* entre los niveles que ofrece Steam. Revisa ahí el precio mínimo
-  vigente para tu región antes de anunciar el precio.
-- Valve revisa la página y la build antes del lanzamiento, y exige que la página esté visible como
-  "Próximamente" un tiempo antes de vender. Considera ese plazo al planear la fecha.
+- Steam asks for capsules in several sizes, at least 5 screenshots and, ideally, a trailer.
+  Ready-to-upload material:
+  - `steam/screenshots/`: 1920×1080 screenshots of different venues.
+  - `steam/art/out/`: header capsule (920×430), small (462×174), main (1232×706), vertical
+    (748×896), library capsule (600×900), library hero (3840×1240), library logo with transparent
+    background (1280×720), page background, and 512 and 256 px icons.
+  - To regenerate them: `node steam/art/render.cjs` (uses Playwright with Chromium). The design is
+    in `steam/art/capsule.html` and the backgrounds in `steam/art/bg/`.
+  - The library hero is upscaled from a 1824 px wide capture, so it is a bit soft. For more
+    sharpness, take a 4K capture and replace `steam/art/bg/circo.jpg`.
+  - `steam/trailer/human_tide_trailer.mp4`: a trailer recorded from the real game, with the game's
+    own music and sound effects. To regenerate it:
+    `xvfb-run -a -s "-screen 0 1920x1080x24" node steam/trailer/trailer.cjs`.
+  - Check the current sizes in Steamworks before uploading: Valve changes them from time to time.
+- Fill in the content survey. The game shows crush deaths with no blood or explicit violence;
+  answer it honestly.
+- Pick the price under *Pricing* from Steam's price tiers. Check the current minimum price for
+  your region there before announcing a price.
+- Valve reviews the store page and the build before launch, and requires the page to be visible as
+  "Coming Soon" for a while before you can sell. Plan the date with that in mind.
 
-## 8. Antes de vender: el origen de la idea
+## 8. Before selling: where the idea came from
 
-El concepto viene de un video de @bonkbureau en TikTok ("making trailers for games i wish
-existed"). Las ideas de juego no tienen derechos de autor, y el código, los modelos y el arte de
-este repositorio son propios. Aun así, no uses su nombre, su video ni capturas suyas en la tienda,
-y considera escribirle antes de lanzar.
+The concept comes from a TikTok video by @bonkbureau ("making trailers for games i wish
+existed"). Game ideas are not copyrightable, and the code, models and art in this repository are
+original. Still, do not use their name, video or footage on the store page, and consider reaching
+out to them before launch.
 
-## Licencias incluidas
+## Included licenses
 
 - three.js (MIT): `game/vendor/three.LICENSE`
-- Fuente Rubik (SIL Open Font License): `game/fonts/OFL.txt`
-- Electron (MIT) y steamworks.js (MIT) se instalan con `npm install`. El Steamworks SDK de Valve
-  se rige por su propio acuerdo de Steamworks.
+- Rubik font (SIL Open Font License): `game/fonts/OFL.txt`
+- Electron (MIT) and steamworks.js (MIT) are installed with `npm install`. Valve's Steamworks SDK
+  is governed by its own Steamworks agreement.

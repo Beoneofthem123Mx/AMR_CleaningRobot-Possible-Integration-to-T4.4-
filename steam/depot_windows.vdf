@@ -1,6 +1,6 @@
 "DepotBuild"
 {
-	"DepotID" "TU_DEPOT_WINDOWS"
+	"DepotID" "YOUR_DEPOT_WINDOWS"
 	"ContentRoot" "../dist/win-unpacked/"
 	"FileMapping"
 	{
