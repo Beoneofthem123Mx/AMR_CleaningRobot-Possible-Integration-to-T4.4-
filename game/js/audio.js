@@ -81,6 +81,29 @@ const STYLES = {
     if (fan[i]) { osc("sawtooth", note(fan[i]), t, s * 1.4, .1, d); osc("sawtooth", note(fan[i] - 12), t, s * 1.4, .08, d); }
   } },
 };
+Object.assign(STYLES, {
+  lounge: { bpm: 96, steps: 16, play(i, t, s, hot) {
+    const d = AU.musicFilter, bar = Math.floor(AU.step / 16) % 4, chords = [[62, 65, 69, 72], [60, 64, 67, 71], [59, 62, 65, 69], [57, 60, 64, 67]];
+    if (i === 0 || i === 10) osc("sine", 70, t, .3, .5, AU.music, 45);
+    if (i % 4 === 3) noise(t, .04, .1, "bandpass", 3500, 2, d);
+    if (i === 0 || i === 6 || i === 12) chords[bar].forEach(n => osc("sine", note(n), t, s * 4, .05, d));
+    if (i % 4 === 0) osc("triangle", note(chords[bar][0] - 24), t, s * 2, .2, d);
+    if (hot && i % 2 === 1) osc("sine", note(chords[bar][(i >> 1) % 4] + 12), t, .2, .06, d);
+  } },
+  mariachi: { bpm: 180, steps: 12, play(i, t, s, hot) {
+    const d = AU.musicFilter, bar = Math.floor(AU.step / 12) % 4, roots = [62, 57, 62, 69], beat = i % 3;
+    if (beat === 0) osc("triangle", note(roots[bar] - 24), t, s * 2, .4, d);
+    else { osc("sawtooth", note(roots[bar] + 4), t, s * .5, .05, d); osc("sawtooth", note(roots[bar] + 7), t, s * .5, .05, d); }
+    const mel = [74, 76, 78, 81, 78, 76, 74, 73, 74, 78, 81, 86];
+    if (i % 3 !== 2 && (hot || i % 2 === 0)) { osc("sawtooth", note(mel[AU.step % 12]), t, s * 1.2, .07, d); osc("sawtooth", note(mel[AU.step % 12] - 3), t, s * 1.2, .05, d); }
+  } },
+  space: { bpm: 84, steps: 16, play(i, t, s, hot) {
+    const d = AU.musicFilter, bar = Math.floor(AU.step / 16) % 4, roots = [57, 53, 55, 52];
+    if (i === 0) [0, 3, 7, 10].forEach(n => osc("sine", note(roots[bar] + n), t, s * 15, .05, d));
+    if (i % 8 === 0) osc("sine", 60, t, .5, .5, AU.music, 35);
+    if (i % 2 === 0) { const c = AU.ctx, o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.type = "sine"; o.frequency.value = note(roots[bar] + 24 + [0, 7, 12, 15, 19, 15, 12, 7][(i >> 1) % 8]); l.frequency.value = 6; lg.gain.value = 9; l.connect(lg); lg.connect(o.frequency); env(g, t, .05, hot ? .09 : .05, s * 2); o.connect(g); g.connect(d); o.start(t); l.start(t); o.stop(t + s * 2.2); l.stop(t + s * 2.2); }
+  } },
+});
 function audioTick() {
   const c = AU.ctx; if (!c || !AU.on) return;
   const live = phase === "show" || phase === "evac", st = STYLES[(scene && scene.music) || (sceneKey === "circo" ? "circus" : "edm")] || STYLES.edm;
@@ -113,6 +136,11 @@ const SFX = {
   jingle(t) { [72, 76, 79, 84].forEach((n, i) => osc("sine", note(n), t + i * .12, .2, .12)); },
   cheer(t) { noise(t, 1.2, .35, "bandpass", 1100, .5); for (let k = 0; k < 8; k++) noise(t + Math.random() * .8, .08, .2, "bandpass", 1500 + Math.random() * 1500, 2); },
   scream(t) { const c = AU.ctx, o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(700 + Math.random() * 300, t); o.frequency.exponentialRampToValueAtTime(380, t + .6); f.type = "bandpass"; f.frequency.value = 1200; f.Q.value = 2; env(g, t, .02, .12, .6); o.connect(f); f.connect(g); g.connect(AU.master); o.start(t); o.stop(t + .7); },
+  tick(t) { osc("square", 1200, t, .02, .05); },
+  moo(t) { const c = AU.ctx, o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(140, t); o.frequency.linearRampToValueAtTime(110, t + .9); f.type = "lowpass"; f.frequency.value = 700; env(g, t, .1, .3, .9); o.connect(f); f.connect(g); g.connect(AU.master); o.start(t); o.stop(t + 1.1); },
+  ufo(t) { const c = AU.ctx, o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.type = "sine"; o.frequency.value = 500; l.frequency.value = 7; lg.gain.value = 260; l.connect(lg); lg.connect(o.frequency); env(g, t, .2, .14, 1.4); o.connect(g); g.connect(AU.master); o.start(t); l.start(t); o.stop(t + 1.6); l.stop(t + 1.6); },
+  beep(t) { [0, .18, .36].forEach(d => osc("square", 1000, t + d, .08, .1)); },
+  flash(t) { noise(t, .25, .4, "highpass", 4000, .7); osc("sine", 3000, t, .3, .1, null, 600); },
   siren(t) { const c = AU.ctx, o = c.createOscillator(), g = c.createGain(); o.type = "triangle"; o.frequency.setValueAtTime(600, t); o.frequency.linearRampToValueAtTime(1100, t + .5); o.frequency.linearRampToValueAtTime(600, t + 1); o.frequency.linearRampToValueAtTime(1100, t + 1.5); env(g, t, .05, .12, 1.6); o.connect(g); g.connect(AU.master); o.start(t); o.stop(t + 1.8); },
 };
 function sfx(name) {
@@ -123,5 +151,10 @@ function sfx(name) {
 // cada onomatopeya del juego suena
 const SFX_BY_TEXT = { "¡ROAR!": "roar", "¡GRRR!": "roar", "¡MEC MEC!": "honk", "¡PIIIP!": "honk", "¡HONK!": "honk", "¡GUAU!": "bark", "¡AUU!": "bark",
   "¡PAWOO!": "trumpet", "¡BUM!": "boom", "¡CRASH!": "crash", "¡ALTO!": "whistle", "¡FIUUU!": "fiu", "¡SPLASH!": "splash", "¡TUUUUU!": "horn",
-  "¡CUAC!": "quack", "¡IIIIH!": "neigh", "¡ARRANCAN!": "horn", "♪ ♫ ♪": "jingle", "¡OLEEE!": "cheer", "¡VAMOS!": "cheer", "¡CALMA!": "whistle", "¡PASO!": "honk" };
+  "¡CUAC!": "quack", "¡IIIIH!": "neigh", "¡ARRANCAN!": "horn", "♪ ♫ ♪": "jingle", "¡OLEEE!": "cheer", "¡VAMOS!": "cheer", "¡CALMA!": "whistle", "¡PASO!": "honk",
+  "¡OFERTA!": "jingle", "♪ ¡AY, AY, AY! ♪": "trumpet", "¡ESA NO ES MI NUERA!": "scream", "¡SE TAPÓ!": "splash", "¡FOTO CON EL ALCALDE!": "cheer",
+  "¡CUAC!": "quack", "¡CUAC CUAC!": "quack", "¡TORTAS GRATIS!": "honk", "¡LLEGAMOS!": "horn", "¡SPLAT!": "crash", "¡SE REGÓ LA SALSA!": "splash",
+  "¡TACOS GRATIS!": "jingle", "¡FUUUM!": "ufo", "¡MUUU!": "moo", "¡FLASH!": "flash", "¡HOLA, FANS!": "cheer", "¡PI-PI-PI!": "beep", "¡SNIF, SNIF!": "bark",
+  "¡NOOO!": "scream", "¡WIFI GRATIS!": "jingle", "¡HOLA MIS AMORES!": "cheer", "¡ZAS!": "crash", "¡CURRUCÚ!": "quack", "¡AHÍ VA EL RAMO!": "cheer", "¡ES MÍO!": "cheer",
+  "¡VAMOS!": "cheer", "¡PERMISO, JOVEN!": "honk", "¡PISO MOJADO!": "beep" };
 function sfxFor(text) { const n = SFX_BY_TEXT[text]; if (n) sfx(n); }

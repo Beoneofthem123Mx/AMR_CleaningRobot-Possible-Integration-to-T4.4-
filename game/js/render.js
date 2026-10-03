@@ -117,7 +117,9 @@ function init3D() {
 const HEIGHTS = { stage: 1.8, speaker: 3.2, catwalk: 1.3, platform: 1.35, barrier: 1.1, booth: 2.4, aid: 2.4,
   canvas: 3.4, curtain: 5.5, wall: 1.3, curb: .7, pole: 4.5, popcorn: 2.5, candy: 2.5, cannon: 1.1, fence: 1.1, closed: 1.1, player: .95,
   stands: 2.6, bench: 1, hull: 1.2, pool: .15, jacuzzi: .45, lounger: .45, bar: 1.2, outerrail: .9, rail: 1, startgate: 2.2,
-  grandstand: 2.2, tote: 4, winner: .3, fountain: .7 };
+  grandstand: 2.2, tote: 4, winner: .3, fountain: .7,
+  shop: 3.2, megastore: 3.4, escalator: 1.2, kiosk: 1.6, gazebo: .4, bench: .5, caketable: .9, pavilion: .5, portapotty: 2.4, post: 1,
+  riser: 1.2, foodtruck: 2.6, tacotable: 1, taqueria: 2.6, salsabar: 1, barn: 4, farmhouse: 3, haybale: 1, arrivals: 4, carousel: .6, info: 1.1, counter: 1.1 };
 // fachadas de edificios: ventanas que se repiten (de noche se encienden)
 function windowTex() {
   const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), r = rng(12);
@@ -172,6 +174,7 @@ function buildStatic3D() {
     const bar = part(grp, "box", red, SLOT_W + .3, .32, .3, cx, 2.5, FENCE_Y); bar.userData.shared = true;
     const sign = part(grp, "box", mat("#ffffff"), 1.2, .5, .08, cx, 2.5, FENCE_Y - .2); sign.userData.shared = true;
   }
+  G3.trompo = null;
   if (scene.extra3D) scene.extra3D(grp);
   grp.traverse(o => { if (o.isMesh && GEO && Object.values(GEO).includes(o.geometry)) o.userData.shared = true; });
   // focos y haces de luz del escenario
@@ -271,6 +274,8 @@ function renderPeople(tt, dtR, vb) {
         bob = olaD < 2.6 ? .4 * (1 - olaD / 2.6) : .18 * Math.abs(Math.sin(ph));
       }
       if (a.ps > PCRIT * .55) { const ph = tt * 15 + a.ph; armL = 2.3 + Math.sin(ph) * .55; armR = 2.3 + Math.cos(ph) * .55; }
+      if (MOD && MOD.bounce && a.dance) bob *= MOD.bounce;
+      if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
       setBase(a.x, bob, a.y, a.h, a.sc, false);
     }
     // ropa: se funde con el color de presión; en peligro, roja
@@ -354,9 +359,9 @@ function buildModel(m) {
       u.tail = pivot(g, -.42, .55, 0); part(u.tail, "cyl", c, .035, .35, .035, 0, -.17, 0); u.tail.rotation.z = 2.3;
       break;
     }
-    case "juggler": case "unicycle": case "flyer": case "dj": case "guard": {
+    case "juggler": case "unicycle": case "flyer": case "dj": case "guard": case "influencer": {
       const clown = m.kind === "juggler" || m.kind === "unicycle";
-      const body = m.kind === "flyer" ? "#d8322b" : m.kind === "dj" ? "#1c1c1c" : m.kind === "guard" ? "#d7f53a" : m.col || "#2f6fc4";
+      const body = m.kind === "flyer" ? "#d8322b" : m.kind === "dj" ? "#1c1c1c" : m.kind === "guard" ? "#d7f53a" : m.kind === "influencer" ? "#ff6fb1" : m.col || "#2f6fc4";
       const base = m.kind === "unicycle" ? .65 : 0;
       if (m.kind === "unicycle") { const w = part(g, "cyl", "#1c1c1c", .32, .08, .32, 0, .32, 0); w.rotation.x = Math.PI / 2; part(g, "cyl", "#9aa0a6", .03, .45, .03, 0, .65, 0); u.wheel = w; }
       const bodyG = pivot(g, 0, base, 0); u.body = bodyG;
@@ -365,6 +370,11 @@ function buildModel(m) {
       if (clown) { part(bodyG, "sph", "#ff3b2f", .055, .055, .055, .17, 1.65, 0); for (const s of [-1, 1]) part(bodyG, "sph", "#ff5a3c", .1, .1, .1, -.02, 1.7, s * .14); }
       if (m.kind === "flyer") part(bodyG, "sph", "#c9ced6", .17, .12, .17, 0, 1.72, 0);
       if (m.kind === "dj") { for (const s of [-1, 1]) part(bodyG, "sph", "#e53229", .06, .08, .06, .02, 1.66, s * .15); part(g, "box", "#2b2d33", .6, .95, 1.6, .6, .48, 0); part(g, "box", basic("#22d3ee"), .62, .08, 1.62, .6, .9, 0); }
+      if (m.kind === "influencer") {
+        part(bodyG, "sph", "#f5d36b", .17, .2, .17, -.05, 1.72, 0);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(.32, .04, 6, 20), basic("#ffffff")); ring.position.set(.75, 2, 0); ring.rotation.y = Math.PI / 2; g.add(ring);
+        part(g, "cyl", "#222", .02, 2, .02, .75, 1, 0); part(g, "box", "#151617", .03, .16, .09, .45, 1.75, .2);
+      }
       if (m.kind === "guard") { part(bodyG, "cyl", "#151617", .15, .09, .15, .01, 1.76, 0); part(bodyG, "box", "#151617", .16, .02, .22, .13, 1.73, 0); part(bodyG, "box", "#ff9a3c", .21, .04, .27, 0, 1.2, 0); }
       if (m.kind !== "flyer") for (const s of [-1, 1]) u.legs.push(leg(bodyG, 0, .8, s * .1, .06, .8, clown ? "#e8b631" : "#22252b"));
       u.arms = [-1, 1].map(s => { const p = pivot(bodyG, 0, 1.4, s * .25); part(p, "cyl", body, .05, .6, .05, 0, -.3, 0); return p; });
@@ -382,6 +392,17 @@ function buildModel(m) {
       for (const s of [-1, 1]) u.legs.push(leg(g, 0, .55, s * .3, .16, .55, m.col));
       break;
     }
+    case "router": {
+      part(g, "cyl", "#4a4d55", .06, 1.3, .06, 0, .65, 0);
+      part(g, "box", "#f4f4f2", .6, .14, .4, 0, 1.36, 0);
+      for (const s of [-1, 1]) part(g, "cyl", "#1c1c1c", .025, .45, .025, -.1, 1.62, s * .15);
+      u.waves = [1, 2, 3].map(i => { const w = new THREE.Mesh(new THREE.TorusGeometry(.4 * i, .04, 6, 24, Math.PI), basic("#4fd8ff", { transparent: true, opacity: .8 })); w.position.set(0, 1.9, 0); w.rotation.y = Math.PI / 2; g.add(w); return w; });
+      break;
+    }
+    case "chancla": {
+      part(g, "box", "#2f7fd6", .5, .05, .2, 0, 0, 0); part(g, "box", "#ffd23a", .08, .1, .18, .1, .05, 0);
+      u.spin = true; break;
+    }
     case "flare": {
       part(g, "cyl", "#2b2d33", .05, .9, .05, 0, 1.2, 0);
       part(g, "sph", basic(m.col), .18, .18, .18, 0, 1.7, 0);
@@ -397,7 +418,8 @@ function buildModel(m) {
       break;
     }
     case "gull": {
-      part(g, "sph", "#f4f4f2", .35, .13, .14, 0, 0, 0); part(g, "sph", "#f4f4f2", .1, .1, .1, .3, .06, 0);
+      const gc = m.grey ? "#8b8f99" : "#f4f4f2";
+      part(g, "sph", gc, .35, .13, .14, 0, 0, 0); part(g, "sph", m.grey ? "#5d6470" : "#f4f4f2", .1, .1, .1, .3, .06, 0);
       const bk = part(g, "cone", "#ff9a3c", .04, .14, .04, .43, .05, 0); bk.rotation.z = -Math.PI / 2;
       u.wings = [-1, 1].map(s => { const p = pivot(g, 0, .05, s * .08); part(p, "box", "#b9bec6", .26, .03, .62, 0, 0, s * .31); return p; });
       break;
@@ -455,6 +477,10 @@ function buildModel(m) {
       }
       break;
     }
+    default:
+      if (PERSONS[m.kind]) personModel(g, u, PERSONS[m.kind], m);
+      else if (EXTRA_MODELS[m.kind]) EXTRA_MODELS[m.kind](g, u, m);
+      break;
     case "beach": case "cball": {
       const ball = new THREE.Mesh(GEO.sph, new THREE.MeshStandardMaterial({ map: G3.ballTex[m.kind], roughness: .35 }));
       ball.scale.setScalar(m.r); ball.position.y = m.r; ball.castShadow = true; g.add(ball); u.ball = ball;
@@ -474,6 +500,9 @@ function animateModel(m, tt) {
   if (u.body && m.kind === "unicycle") { u.body.rotation.x = Math.sin(tt * 4 + m.x) * .12; u.wheel.rotation.y = tt * 6; }
   if (u.ball) u.ball.rotation.z = -m.spin;
   if (u.flower) u.flower.scale.setScalar(.14 + Math.abs(Math.sin(tt * 6)) * .08);
+  if (u.anim) u.anim(tt, m);
+  if (u.waves) u.waves.forEach((w, i) => { w.material.opacity = .25 + .75 * Math.max(0, Math.sin(tt * 4 - i)); });
+  if (u.spin) g.rotation.z = tt * 14;
   if (u.wings) u.wings.forEach((p, i) => { p.rotation.x = (i ? 1 : -1) * Math.sin(tt * 12 + m.x) * .6; });
   if (u.head) u.head.rotation.x = Math.sin(tt * 5) * .15;
   if (u.siren) { const on = Math.sin(tt * 12) > 0; u.siren[0].visible = on; u.siren[1].visible = !on; }
@@ -546,7 +575,13 @@ function updateFxLayer(live) {
   }
   if (drag) drawFence(g, drag, true);
   g.lineWidth = .14;
-  for (const r of rings) { g.strokeStyle = `rgba(229,50,41,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .3 + r.t * 1.8, 0, 7); g.stroke(); }
+  for (const r of rings) {
+    if (r.mega) { g.lineWidth = .3; g.strokeStyle = `rgba(255,210,58,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .5 + r.t * 4.5, 0, 7); g.stroke(); g.lineWidth = .14; continue; }
+    g.strokeStyle = `rgba(229,50,41,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .3 + r.t * 1.8, 0, 7); g.stroke();
+  }
+  // zona del megáfono y meta que se movió
+  for (const mg of mega.active) { g.fillStyle = "rgba(255,210,58,.12)"; g.beginPath(); g.arc(mg.x, mg.y, 5.5, 0, 7); g.fill(); }
+  if (attr && phase !== "plan") { g.strokeStyle = "rgba(255,80,160,.8)"; g.lineWidth = .25; g.setLineDash([.6, .4]); g.beginPath(); g.arc(attr.x, attr.y, attr.r + .4 + Math.sin(performance.now() / 150) * .2, 0, 7); g.stroke(); g.setLineDash([]); }
   G3.fxTex.needsUpdate = true;
 }
 const Vproj = new THREE.Vector3();
@@ -579,6 +614,22 @@ function renderConfetti() {
 }
 const LINC = {};
 const linArr = hex => LINC[hex] || (LINC[hex] = (c => [c.r, c.g, c.b])(lin(hex)));
+// lluvia: gotas que caen alrededor de la cámara
+function renderRain(tt) {
+  if (!G3.rain) {
+    G3.rain = new THREE.InstancedMesh(new THREE.BoxGeometry(.03, .9, .03), new THREE.MeshBasicMaterial({ color: 0xbcd4ff, transparent: true, opacity: .45, depthWrite: false }), 900);
+    G3.rain.frustumCulled = false; G3.rain.instanceMatrix.setUsage(THREE.DynamicDrawUsage); G3.scene.add(G3.rain);
+    G3.drops = Array.from({ length: 900 }, () => [Math.random(), Math.random(), Math.random() * 30]);
+  }
+  const on = MOD && MOD.rain && (phase === "show" || phase === "evac");
+  G3.rain.visible = !!on; if (!on) return;
+  const a = G3.rain.instanceMatrix.array;
+  G3.drops.forEach((d, i) => {
+    d[2] -= .9; if (d[2] < 0) { d[2] = 30; d[0] = Math.random(); d[1] = Math.random(); }
+    const o = i * 16; a.fill(0, o, o + 16); a[o] = a[o + 5] = a[o + 10] = 1; a[o + 12] = d[0] * WW; a[o + 13] = d[2]; a[o + 14] = d[1] * WH; a[o + 15] = 1;
+  });
+  G3.rain.instanceMatrix.needsUpdate = true;
+}
 function renderParticles() {
   const sm = G3.spark; let n = 0;
   for (const p of sparks) {
@@ -628,11 +679,15 @@ function render3D(now, dtR) {
     animateModel(m, tt);
   }
   for (const o of G3.moverGrp.children.slice()) if (!alive.has(o)) G3.moverGrp.remove(o);
+  if (G3.trompo) G3.trompo.rotation.y = tt * 1.5;
   renderPeople(tt, dtR, vb);
   renderConfetti();
   renderParticles();
   updateFxLayer(live);
+  renderRain(tt);
   G3.renderer.render(G3.scene, G3.camera);
+  // foto para el periódico: a mitad del show o en el primer pisoteado
+  if (live && (G3.wantPhoto || (fullAt && !G3.photo && t > fullAt + 12))) { try { G3.photo = cv.toDataURL("image/jpeg", .62); } catch (e) { /* sin foto */ } G3.wantPhoto = false; }
   drawOverlay();
 }
 

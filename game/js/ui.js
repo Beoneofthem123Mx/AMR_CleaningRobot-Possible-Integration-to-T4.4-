@@ -4,6 +4,13 @@ let tool = "fence", drag = null;
 const fenceUsed = () => fences.reduce((s, f) => s + f.len, 0);
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
+  // durante el show, cada clic usa el megáfono (tres veces por show)
+  if (phase === "show" || phase === "evac") {
+    const [x, y] = toWorld(ev);
+    if (mega.n <= 0) { caption("Ya no queda batería en el megáfono.", true, 1400); return; }
+    mega.n--; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true });
+    pop(x, y, "¡CALMA, POR FAVOR!"); sfx("whistle"); return;
+  }
   if (phase !== "plan") return;
   const [x, y] = toWorld(ev);
   if (tool === "gate") {
@@ -80,7 +87,10 @@ function setDead(n, quiet) {
   if (!quiet) { const b = $("#badge"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   if (first && !quiet) caption("Y eso no nos gusta.", true, 2600);
 }
-function showCard(html) { $("#card").innerHTML = html; $("#overlay").hidden = false; const b = $("#card .go"); if (b) b.focus(); }
+function showCard(html, kind) {
+  const c = $("#card"); c.innerHTML = html; c.className = "card" + (kind ? " " + kind : ""); c.onclick = null;
+  $("#overlay").hidden = false; const b = $("#card .go"); if (b) b.focus();
+}
 function hideCard() { $("#overlay").hidden = true; }
 function ui() {
   const plan = phase === "plan";
@@ -98,7 +108,7 @@ document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click"
   if (tool === "gate") toast("Toca la reja de abajo para abrir o cerrar puertas.");
   if (tool === "guard") toast("Toca la plaza para poner un guardia: calma a la gente y detiene animales y coches.");
 }));
-$("#bGo").addEventListener("click", () => phase === "plan" ? start() : backToPlan());
+$("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : backToPlan());
 let heat = false, speed = 1;
 $("#bHeat").addEventListener("click", () => { heat = !heat; $("#bHeat").classList.toggle("on", heat); });
 $("#bCam").addEventListener("click", () => { camMode = (camMode + 1) % 3; $("#bCam").textContent = "Cámara: " + ["auto", "cerca", "lejos"][camMode]; });

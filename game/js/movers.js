@@ -13,6 +13,10 @@ function addMover(m) { movers.push(Object.assign({ t: 0, ang: 0, i: 0, push: 30,
 function crowdPoint() { return [rnd(4, 36), rnd(22, 60)]; }
 function spawnEvent(kind) {
   const side = Math.random() < .5;
+  eventLog.add(kind);
+  // eventos propios de cada escenario o de la condición del día
+  const own = (scene.ev && scene.ev[kind]) || (MOD && MOD.ev && MOD.ev[kind]);
+  if (own) { own(side); return; }
   switch (kind) {
     case "car": {
       const y = rnd(46, 60), col = ["#d8322b", "#2f6fc4", "#f2f2ef", "#2b2f35", "#e8b631"][(Math.random() * 5) | 0];
@@ -144,11 +148,28 @@ function blast(x, y) {
   }
   pop(x, y - 1, "¡BUM!"); burstAt(x, y, 90); shake = Math.min(1.2, shake + .8);
 }
+// meta temporal: todos corren a un punto unos segundos (una oferta, el ramo, tacos gratis)
+let attrT = 0, timers = [];
+// acciones con retraso medido en tiempo de simulación (respeta la velocidad 2× y 4×)
+function later(secs, fn) { timers.push({ t: secs, fn }); }
+function tempAttract(x, y, r, secs, share) { if (setAttractor(x, y, r, share ?? .5)) attrT = secs; }
+// la meta sigue a un personaje mientras camina (una estrella, un alien, el alcalde)
+function followTick(secs, r, share) {
+  return m => { m.ft = (m.ft || 0) + DT; m.nt = (m.nt || 0) - DT;
+    if (m.ft < secs && m.nt <= 0 && phase === "show") { m.nt = 1.2; if (setAttractor(m.x, m.y, r || 2.4, share ?? .4)) attrT = 1.6; } };
+}
+function smallHit(x, y) {
+  for (const a of ag) { const dx = a.x - x, dy = a.y - y, d = Math.hypot(dx, dy); if (d < 1.4 && d > .01) { a.vx += dx / d * 2.5; a.vy += dy / d * 2.5; } }
+  pop(x, y, "¡ZAS!"); burstAt(x, y, 8);
+}
 const turnTo = (a, b, m) => { let d = ((b - a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; return a + clamp(d, -m, m); };
 function stepMovers() {
   if (phase === "show" || phase === "evac") {
     eventT -= DT;
-    if (eventT <= 0 && movers.length < 14) { spawnEvent(scene.events[(Math.random() * scene.events.length) | 0]); eventT = phase === "show" ? rnd(6, 9) : rnd(9, 13); }
+    if (eventT <= 0 && movers.length < 16) {
+      const pool = scene.events.concat(MOD && MOD.events || []);
+      spawnEvent(pool[(Math.random() * pool.length) | 0]); eventT = phase === "show" ? rnd(5.5, 8.5) : rnd(9, 13);
+    }
   }
   for (const m of movers) {
     m.t += DT;
@@ -170,10 +191,17 @@ function stepMovers() {
       m.ang = Math.atan2(m.vy, m.vx);
     } else if (m.beh === "static") {
       m.life -= DT; if (m.life <= 0) m.dead = true;
+    } else if (m.beh === "hover") {
+      // vuela despacio de punto en punto a cierta altura
+      const [tx, ty] = m.pts[m.i], dx = tx - m.x, dy = ty - m.y, d = Math.hypot(dx, dy);
+      if (d < .4) { m.wait = (m.wait || 0) + DT; if (m.wait > (m.pause || 0)) { m.wait = 0; m.i++; if (m.i >= m.pts.length) m.dead = true; } }
+      else { m.x += dx / d * m.speed * DT; m.y += dy / d * m.speed * DT; }
+      m.ang += DT * (m.spinRate || 0);
+      if (m.tick) m.tick(m);
     } else if (m.beh === "fly") {
       const q = Math.min(1, m.t / m.dur);
       m.x = m.sx + (m.tx - m.sx) * q; m.y = m.sy + (m.ty - m.sy) * q; m.h = Math.sin(q * Math.PI) * 9; m.ang = Math.atan2(m.ty - m.sy, m.tx - m.sx);
-      if (q >= 1) { blast(m.x, m.y); m.dead = true; }
+      if (q >= 1) { if (m.small) smallHit(m.x, m.y); else blast(m.x, m.y); m.dead = true; }
     } else {
       const [tx, ty] = m.pts[m.i], dx = tx - m.x, dy = ty - m.y, d = Math.hypot(dx, dy);
       if (d < .5) { m.i++; if (m.i >= m.pts.length) m.dead = true; }
@@ -199,6 +227,7 @@ function stepMovers() {
         }
       }
     }
+    if (m.tick && m.beh !== "hover") m.tick(m);
     if (m.say && m.t >= (m.nextSay || 0) && m.y < WH) { pop(m.x, m.y - 1.6, m.say); m.nextSay = m.t + m.sayEvery; }
   }
   movers = movers.filter(m => !m.dead);
@@ -206,14 +235,15 @@ function stepMovers() {
 // empujones y miedo: la gente se aparta (o sale volando) cuando algo le pasa encima
 function moverForces() {
   for (const m of movers) {
-    if (m.air && !m.push) continue;
+    if (m.air && !m.push && !m.abduct) continue;
     m.lastHits = m.hits || 0; m.hits = 0;
-    const rad = Math.max(m.r + R, m.scare);
+    const rad = Math.max(m.r + R, m.scare, m.abduct && m.beamOn ? m.abduct : 0);
     const gx0 = clamp(Math.floor((m.x - rad) / CS), 0, GW - 1), gx1 = clamp(Math.floor((m.x + rad) / CS), 0, GW - 1);
     const gy0 = clamp(Math.floor((m.y - rad) / CS), 0, GH - 1), gy1 = clamp(Math.floor((m.y + rad) / CS), 0, GH - 1);
     for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++)
       for (let j = hashHead[gy * GW + gx]; j !== -1; j = hashNext[j]) {
         const a = ag[j], ex = a.x - m.x, ey = a.y - m.y, d = Math.hypot(ex, ey) || .01, nx = ex / d, ny = ey / d;
+        if (m.abduct && m.beamOn && d < m.abduct) a.beam = true;
         if (d < m.r + R) { const ov = m.r + R - d, k = m.push * MPUSH / (1 + (m.lastHits || 0) * .12); a.fx += nx * ov * k; a.fy += ny * ov * k; a.p += ov / R * MPRES; m.hits++; }
         if (m.scare && d < m.scare) { const s = (1 - d / m.scare) * MSCARE; a.fx += nx * s; a.fy += ny * s; }
       }
@@ -223,18 +253,25 @@ function moverForces() {
 function calmForces() {
   const sources = guards.map(g => [g.x, g.y, GUARD_CALM]);
   for (const m of movers) if (m.calm) sources.push([m.x, m.y, m.calm]);
-  for (const [x, y, rad] of sources) {
+  for (const mg of mega.active) sources.push([mg.x, mg.y, 5.5, true]);
+  for (const [x, y, rad, push] of sources) {
     const gx0 = clamp(Math.floor((x - rad) / CS), 0, GW - 1), gx1 = clamp(Math.floor((x + rad) / CS), 0, GW - 1);
     const gy0 = clamp(Math.floor((y - rad) / CS), 0, GH - 1), gy1 = clamp(Math.floor((y + rad) / CS), 0, GH - 1);
     for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++)
       for (let j = hashHead[gy * GW + gx]; j !== -1; j = hashNext[j]) {
-        const a = ag[j]; if ((a.x - x) ** 2 + (a.y - y) ** 2 < rad * rad) a.p *= .55;
+        const a = ag[j], ex = a.x - x, ey = a.y - y, d2 = ex * ex + ey * ey;
+        if (d2 < rad * rad) { a.p *= push ? .35 : .55; if (push) { const d = Math.sqrt(d2) || 1; a.fx += ex / d * 2.6; a.fy += ey / d * 2.6; } }
       }
   }
 }
 // fuerzas que afectan a todos: el barco se inclina, la ola, los fuegos
 function stepGlobal() {
   if (windF.t > 0) windF.t -= DT;
+  if (slipT > 0) slipT -= DT;
+  if (attrT > 0) { attrT -= DT; if (attrT <= 0) clearAttractor(); }
+  for (const tm of timers) { tm.t -= DT; if (tm.t <= 0 && !tm.done) { tm.done = true; tm.fn(); } }
+  timers = timers.filter(tm => !tm.done);
+  for (const mg of mega.active) mg.t -= DT; mega.active = mega.active.filter(mg => mg.t > 0);
   if (cheerT > 0) cheerT -= DT;
   if (ola) { ola.x += ola.dir * ola.speed * DT; if (ola.x > WW + 4) ola = null; }
   for (const r of rockets) {

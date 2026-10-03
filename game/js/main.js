@@ -17,7 +17,7 @@ function onDrop(first) {
   flash = 1; burst(260); sfx("cheer");
   caption(first ? "Física de multitudes real" : scene.acts[(Math.random() * scene.acts.length) | 0], false, 1900);
 }
-function onFall(x, y) { rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream"); }
+function onFall(x, y) { rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream"); if (dead === 0) G3.wantPhoto = true; }
 function updateFx(dt) {
   let tz = 1, ty = WH / 2;
   if (phase === "show" || phase === "evac") {
@@ -64,8 +64,8 @@ function frame(now) {
     const n = Math.min(10, Math.round(real / DT * speed));
     for (let i = 0; i < n && (phase === "show" || phase === "evac"); i++) step();
     $("#status").textContent = phase === "show"
-      ? (spawned < CROWD ? `Entrando ${spawned} / ${CROWD}` : `En el show · termina en ${Math.max(0, Math.ceil(fullAt + SHOW_TIME - t))} s`)
-      : `Evacuando · quedan ${ag.length}`;
+      ? (spawned < CROWD ? `Entrando ${spawned} / ${CROWD}` : `En el show · termina en ${Math.max(0, Math.ceil(fullAt + SHOW_TIME - t))} s`) + ` · Megáfono ${mega.n}`
+      : `Evacuando · quedan ${ag.length} · Megáfono ${mega.n}`;
   } else if (phase === "plan") stepPreview(real);
   updateFx(real * (phase === "show" || phase === "evac" ? speed : 1));
   audioTick();
@@ -85,30 +85,13 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-window.__game = { bestGates: () => { const ok = [...Array(SLOTS).keys()].filter(i => !(scene.noSlots || []).includes(i)); const pick = ok.length <= MAX_GATES ? ok : [0, 1, 2, 3, 4].map(k => ok[Math.round(k * (ok.length - 1) / 4)]); gates = gates.map((_, i) => pick.includes(i)); buildWorld(); }, unlockAll: () => { window.__unlockAll = true; }, event: k => spawnEvent(k), mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene: k => loadScene(k), setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
+window.__game = { forceMod: id => { window.__forceMod = id; }, bestGates: () => { const ok = [...Array(SLOTS).keys()].filter(i => !(scene.noSlots || []).includes(i)); const pick = ok.length <= MAX_GATES ? ok : [0, 1, 2, 3, 4].map(k => ok[Math.round(k * (ok.length - 1) / 4)]); gates = gates.map((_, i) => pick.includes(i)); buildWorld(); }, unlockAll: () => { window.__unlockAll = true; }, event: k => spawnEvent(k), mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene: k => loadScene(k), setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
   get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; backToPlan(); } };
 
 function loadScene(key) {
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = scene.maxGates;
   gates = scene.gates.slice(); fences = []; guards = []; performers = scene.performers();
   buildWorld(); backToPlan();
-}
-function chooser() {
-  if (phase === "show" || phase === "evac") return;
-  showCard(`<h2>Marea Humana</h2>
-    <p>Tú eres responsable de la seguridad. Traza vallas y abre puertas antes de que entre la gente. Si alguien aguanta demasiada presión, cae y lo pisotean.</p>
-    <ul>
-      <li><b>Valla:</b> arrastra para trazar una valla.</li>
-      <li><b>Puertas:</b> toca la reja de abajo para abrir o cerrar entradas.</li>
-      <li><b>Seguridad:</b> pon guardias que calman a la gente y detienen animales y coches.</li>
-      <li><b>Presión:</b> pinta a la multitud de azul a rojo.</li>
-    </ul>
-    <p><b>Elige escenario.</b> Llevas <b>${totalStars()} de ${Object.keys(SCENES).length * 3}</b> estrellas; gana más para abrir nuevos escenarios.</p>
-    <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => {
-      const b = loadBest()[key], open = isUnlocked(key);
-      return `<button class="scene" data-scene="${key}" ${open ? "" : "disabled"}><b>${sc.name}${b !== undefined ? ` <em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : ""}</b><span>${sc.tag} · ${sc.crowd.toLocaleString("es")} personas</span>${open ? `<small>${sc.intro}</small>` : `<span class="lock">Bloqueado: necesitas ${sc.unlock} estrellas</span>`}</button>`; }).join("")}</div>
-    ${window.steam ? '<div class="row"><button id="fs">Pantalla completa (F11)</button><button id="quit">Salir del juego</button></div>' : ""}`);
-  const b = $("#card .scene"); if (b) b.focus();
 }
 $("#bScene").addEventListener("click", chooser);
 $("#bSound").textContent = "Sonido: " + (AU.on ? "sí" : "no");
