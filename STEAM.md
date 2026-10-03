@@ -96,7 +96,16 @@ empaqueta en Windows y agrega un icono en `package.json` (`build.win.icon`).
 ## 7. Página de la tienda y precio
 
 - Steam pide cápsulas en varios tamaños, al menos 5 capturas de pantalla y, de preferencia, un
-  tráiler. Las capturas pueden salir del propio juego con el botón **Cámara: cerca**.
+  tráiler. Ya hay material listo para subir:
+  - `steam/screenshots/`: 8 capturas a 1920×1080 de distintos escenarios.
+  - `steam/art/out/`: cápsula de encabezado (920×430), pequeña (462×174), principal (1232×706),
+    vertical (748×896), de biblioteca (600×900), héroe de biblioteca (3840×1240), logo de
+    biblioteca con fondo transparente (1280×720), fondo de página e íconos de 512 y 256 px.
+  - Para regenerarlas: `node steam/art/render.cjs` (usa Playwright con Chromium). El diseño está
+    en `steam/art/capsule.html` y los fondos en `steam/art/bg/`.
+  - El héroe de biblioteca se amplía desde una captura de 1824 px de ancho, así que se ve algo
+    suave. Si quieres más nitidez, toma una captura a 4K y reemplaza `steam/art/bg/circo.jpg`.
+  - Revisa en Steamworks los tamaños vigentes antes de subir: Valve los cambia de vez en cuando.
 - Llena el cuestionario de contenido. El juego muestra muertes por aplastamiento sin sangre ni
   violencia explícita; respóndelo con honestidad.
 - El precio se elige en *Pricing* entre los niveles que ofrece Steam. Revisa ahí el precio mínimo

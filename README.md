@@ -66,7 +66,8 @@ abren escenarios nuevos.
 - `game/`: el juego. `game/js/scenes/` tiene un archivo por escenario; `movers.js` los eventos;
   `render.js` el 3D; `audio.js` el sonido.
 - `desktop/`: la app de Electron y el puente con Steam.
-- `steam/`: scripts de SteamPipe para subir las builds.
+- `steam/`: scripts de SteamPipe, capturas (`steam/screenshots/`) y arte de tienda (`steam/art/`).
+- `build/icon.png`: ícono que usa electron-builder para el ejecutable.
 - `STEAM.md`: guía para publicar en Steam.
 
 ## Escenarios
