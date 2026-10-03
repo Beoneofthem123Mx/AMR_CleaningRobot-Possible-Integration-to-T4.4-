@@ -33,12 +33,38 @@ function buildStatic() {
   const g = c.getContext("2d"); g.scale(TEXS, TEXS);
   g.fillStyle = scene.outside; g.fillRect(0, 0, WW, SH);
   scene.ground(g, 1 / TEXS);
+  groundFinish(g, true);
   scene.decor(g);
+  groundFinish(g, false);
   for (const o of obs) if (o.kind === "fence" || o.kind === "closed") {
     g.lineCap = "butt"; g.lineWidth = .3; g.strokeStyle = "#7d7f7c";
     g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke();
   }
   return c;
+}
+// shared polish on every painted floor: soft contact shadows under tall things, fine grain, light vignette
+let NOISE_PAT = null;
+function groundFinish(g, before) {
+  if (before) {
+    g.save(); g.filter = `blur(${Math.max(2, TEXS * .45)}px)`; g.fillStyle = "rgba(0,0,0,.32)"; g.strokeStyle = "rgba(0,0,0,.32)";
+    for (const o of obs) {
+      const h = HEIGHTS[o.kind] || (scene.heights && scene.heights[o.kind]); if (!h || h < .5) continue;
+      if (o.t === "r") g.fillRect(o.x0 - .25, o.y0 - .25, o.x1 - o.x0 + .5, o.y1 - o.y0 + .5);
+      else if (o.t === "c") { g.beginPath(); g.arc(o.x, o.y, o.r + .3, 0, 7); g.fill(); }
+      else { g.lineWidth = o.th + .6; g.lineCap = "round"; g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke(); }
+    }
+    g.restore(); return;
+  }
+  if (!NOISE_PAT) {
+    const n = document.createElement("canvas"); n.width = n.height = 128; const ng = n.getContext("2d"), id = ng.createImageData(128, 128), r = rng(31);
+    for (let i = 0; i < id.data.length; i += 4) { const v = r() < .5 ? 0 : 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = r() * 38; }
+    ng.putImageData(id, 0, 0); NOISE_PAT = n;
+  }
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = g.createPattern(NOISE_PAT, "repeat"); g.fillRect(0, 0, g.canvas.width, g.canvas.height);
+  const vg = g.createRadialGradient(g.canvas.width / 2, g.canvas.height * .45, g.canvas.width * .35, g.canvas.width / 2, g.canvas.height * .45, g.canvas.height * .75);
+  vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.18)"); g.fillStyle = vg; g.fillRect(0, 0, g.canvas.width, g.canvas.height);
+  g.restore();
 }
 function drawFence(g, f, ghost) {
   g.lineCap = "round"; g.lineWidth = .35; g.strokeStyle = ghost ? "rgba(255,210,58,.75)" : "#f2c230";
@@ -302,7 +328,11 @@ function renderPeople(tt, dtR, vb) {
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0;
     if (down) { setBase(a.x, .17, a.y, a.h, a.sc, true); armL = 2.9; armR = 2.2; legL = .25; legR = -.2; }
-    else {
+    else if (surging && a.dance && ((a.ph * 997) | 0) % 70 === 0) {
+      // crowd surfing: carried overhead during the drop, waving
+      setBase(a.x, 1.72 + Math.sin(tt * 5 + a.ph) * .07, a.y, a.h + Math.sin(tt * .8 + a.ph) * .6, a.sc, true);
+      armL = 2.7 + Math.sin(tt * 9 + a.ph) * .3; armR = 2.7 - Math.sin(tt * 9 + a.ph) * .3; legL = Math.sin(tt * 7) * .3; legR = -legL;
+    } else {
       const sp = Math.hypot(a.vx, a.vy);
       a.wp += sp * dtR * 5.2;
       const sw = Math.sin(a.wp) * Math.min(.75, sp * .55);
