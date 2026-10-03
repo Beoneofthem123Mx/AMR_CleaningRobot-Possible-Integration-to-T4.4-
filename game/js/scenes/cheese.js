@@ -17,13 +17,12 @@ SCENE_MODELS.cheese_wheel = (g, u, m) => {
   body.scale.set(r, w, r); body.castShadow = true; wheel.add(body);
   // the two faces of the cut (paler inside) and the label on the rind
   for (const a of [G.cut / 2, -G.cut / 2]) {
-    const f = pivot(wheel, 0, 0, 0); f.rotation.y = a + Math.PI / 2;
+    const f = pivot(wheel, 0, 0, 0); f.rotation.y = a - Math.PI / 2;
     part(f, "box", inner, r, w * .98, .02, r / 2, 0, 0);
   }
-  for (const s of [-1, 1]) part(wheel, "cyl", inner, r * .97, .02, r * .97, 0, s * w * .5, 0).visible = false;
-  for (const s of [-1, 1]) { const lab = part(u.ball, "cyl", blue ? "#2f5f8f" : "#d8322b", r * .38, .03, r * .38, 0, 0, s * w * .51); lab.rotation.x = Math.PI / 2; }
-  // holes (swiss style) or blue veins
-  for (let i = 0; i < 7; i++) { const a = i * 2.3, rr = r * (.3 + (i % 3) * .2); for (const s of [-1, 1]) { const h = part(u.ball, "cyl", blue ? "#2f5f8f" : "#c98a1a", r * .08, .03, r * .08, Math.cos(a) * rr, Math.sin(a) * rr, s * w * .5); h.rotation.x = Math.PI / 2; } }
+  for (const s of [-1, 1]) { const lab = part(u.ball, "cyl", blue ? "#2f5f8f" : "#d8322b", r * .22, .03, r * .22, 0, r * .5, s * w * .51); lab.rotation.x = Math.PI / 2; }
+  // holes (swiss style) or blue veins, never inside the missing wedge
+  for (let i = 0; i < 9; i++) { const a = i * 2.3, rr = r * (.3 + (i % 3) * .2); if (Math.abs(((a + Math.PI / 2) % 6.283 + 6.283) % 6.283 - 0) < .7 || Math.abs(((a + Math.PI / 2) % 6.283) - 6.283) < .7) continue; for (const s of [-1, 1]) { const h = part(u.ball, "cyl", blue ? "#2f5f8f" : "#c98a1a", r * .08, .03, r * .08, Math.cos(a) * rr, Math.sin(a) * rr, s * w * .5); h.rotation.x = Math.PI / 2; } }
   if (blue) u.anim = (tt, mm) => { if (Math.random() < .5) puff(mm.x + (Math.random() - .5) * 2, mm.y + (Math.random() - .5) * 2, .6, "#9bd84a", .5, 1.6, .8); };
   else if (m.beh !== "bounce") u.anim = (tt, mm) => { mm.spin = (mm.spin || 0) + .016 * (mm.speed || 3) / r; };
 };
@@ -90,14 +89,14 @@ SCENE_MODELS.cheese_fondue = (g, u) => {
 
 SCENES.cheese = {
   name: "The Cheese Chase", tag: "Annual downhill cheese rolling championship", place: "CHEESE HILL", outside: "#5f8f3a", bulbH: 2.2, music: "brass",
-  light: { sky: 0xeaf6ff, ground: 0x4f7a2a, hemi: .62, sun: 0xfff1d0, sunI: 1.3 }, crowd: 3000, fenceBudget: 64, maxGates: 5, guards: 4,
-  gates: [F, F, T, T, T, F, F], unlock: 24,
-  heights: { cheese_podium: 1.3, cheese_hay: .9, cheese_rope: .8, cheese_amb: 2.4, cheese_stall: 2.2, cheese_hedge: 1.6, cheese_ramp: 1.1 },
+  light: { sky: 0xeaf6ff, ground: 0x4f7a2a, hemi: .62, sun: 0xfff1d0, sunI: 1.3 }, crowd: 3400, fenceBudget: 64, maxGates: 5, guards: 4,
+  gates: [F, F, T, F, F, F, F], unlock: 24,
+  heights: { cheese_podium: 1.3, cheese_hay: .9, cheese_rope: .8, cheese_line: .9, cheese_amb: 2.4, cheese_stall: 2.2, cheese_hedge: 1.6, cheese_ramp: 1.1 },
   sfx: { "CHEESE!": "cheer", "MEEEH!": "moo", "WHEEE!": "scream", "PUTT PUTT!": "honk", "AHEM!": "trumpet", "FREE FONDUE!": "jingle", "PEE-YOO!": "scream", "MY CHEESE!": "crash", "MY SPLEEN!": "crash", "NEE-NAW!": "siren" },
   intro: "Six hundred years of tradition: the village throws a wheel of cheese down a cliff-steep hill and grown adults chase it. The ambulance is already parked and the crowd insists on standing exactly where the cheese lands.",
   acts: ["Chase the cheese!", "Long live the Queen!", "Roll! Roll! Roll!", "Mind the goat!"],
   events: ["wheel", "goat", "tumble", "tractor", "mayor", "fondue", "bluecheese", "wheel"],
-  goal: o => o.kind === "cheese_rope", goalMaxY: 44,
+  goal: o => o.kind === "cheese_line", goalMaxY: 18,
   lines: {
     wheel: "Three wheels of aged cheddar left the course at 70 km/h and plowed through the spectators, as tradition demands.",
     goat: "A goat ate the finish tape, two rosettes and the mayor's notes, then fled downhill.",
@@ -114,13 +113,15 @@ SCENES.cheese = {
     rect(0, 0, WW, 1.6, "cheese_hedge");
     rect(15, 1.6, 25, 6, "cheese_podium");
     seg(CHILL.x0, 7, CHILL.x0, CHILL.y1, .3, "cheese_rope"); seg(CHILL.x1, 7, CHILL.x1, CHILL.y1, .3, "cheese_rope");
-    seg(CHILL.x0, CHILL.y1, CHILL.x1, CHILL.y1, .3, "cheese_rope");
+    // the spectator lines across the hillsides: nobody is allowed higher up (VIP lawn of the Cheese Guild)
+    seg(0, 16, CHILL.x0, 16, .3, "cheese_line"); seg(CHILL.x1, 16, WW, 16, .3, "cheese_line");
+    rect(CHILL.x0 - .3, CHILL.y1, CHILL.x1 + .3, CHILL.y1 + 1.3, "cheese_hay");   // hay bales stop the cheese (and nothing else)
     seg(15, 6.8, CHILL.x0, 7, .3, "cheese_rope"); seg(25, 6.8, CHILL.x1, 7, .3, "cheese_rope");
     rect(1.5, 3, 6.5, 8, "tent"); rect(33.5, 3, 38.5, 8, "tent"); rect(8, 2.5, 12, 6.5, "tent");
     rect(2, 29, 7, 33, "cheese_stall");
     rect(33, 27, 38.5, 30, "cheese_amb");
     // hay bale terraces across the hill: the gaps are the bottlenecks
-    for (const [x0, x1] of [[1.5, 6], [9, 15.5], [24.5, 31], [34, 38.5]]) rect(x0, 47.5, x1, 48.7, "cheese_hay");
+    for (const [x0, x1] of [[1.5, 6.5], [9, 17.5], [22.5, 31], [33.5, 38.5]]) rect(x0, 47.5, x1, 48.7, "cheese_hay");
     for (const [x0, x1] of [[4, 11], [14, 18], [22, 26], [29, 36]]) rect(x0, 53.5, x1, 54.7, "cheese_hay");
   },
   ground(g) {
@@ -173,6 +174,8 @@ SCENES.cheese = {
     g.translate(31, 22); g.rotate(Math.PI / 2); g.fillText("CHASE", 0, 0); g.restore();
     g.font = "900 .7px Rubik, sans-serif"; g.fillStyle = "rgba(255,255,255,.7)"; g.fillText("EST. 1420 · NO REFUNDS", 20, 45.4);
     // ropes on stakes
+    for (const o of obs) if (o.kind === "cheese_line") { hazardLine(g, o.ax, o.ay, o.bx, o.by, .3); }
+    g.font = "900 .55px Rubik, sans-serif"; g.fillStyle = "rgba(255,255,255,.8)"; g.fillText("CHEESE GUILD ONLY", 8, 14.6); g.fillText("CHEESE GUILD ONLY", 32, 14.6);
     for (const o of obs) if (o.kind === "cheese_rope") {
       g.lineWidth = .14; g.strokeStyle = "#f4ecd8"; g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke();
       const len = Math.hypot(o.bx - o.ax, o.by - o.ay); for (let s = 0; s <= len; s += 2) { g.fillStyle = "#6b4a2b"; g.beginPath(); g.arc(o.ax + (o.bx - o.ax) * s / len, o.ay + (o.by - o.ay) * s / len, .18, 0, 7); g.fill(); }
@@ -200,7 +203,6 @@ SCENES.cheese = {
     g.fillStyle = "#2f6fc4"; g.fillRect(37.6, 27.1, .3, .8); g.fillRect(37.6, 29.1, .3, .8);
     // bunting across the hill
     for (const y of [12, 33]) for (let x = .5, i = 0; x < WW; x += 1.1, i++) {
-      if (x > CHILL.x0 - .5 && x < CHILL.x1 + .2 && y > 10) { /* above the course too */ }
       g.fillStyle = CH_COLS[i % 5]; g.beginPath(); g.moveTo(x, y); g.lineTo(x + .9, y); g.lineTo(x + .45, y + .7); g.fill();
     }
     g.strokeStyle = "rgba(255,255,255,.6)"; g.lineWidth = .05; for (const y of [12, 33]) { g.beginPath(); g.moveTo(0, y); g.lineTo(WW, y); g.stroke(); }
@@ -213,8 +215,7 @@ SCENES.cheese = {
   extra3D(grp) {
     // start ramp at the summit and a giant cheese on a plinth
     const rp = pivot(grp, 20, 1.3, 6.3); const ramp = part(rp, "box", "#8a5a34", 3, .15, 2.4, 0, .3, 0); ramp.rotation.x = -.35;
-    part(grp, "cyl", "#e8d3a2", 1.3, .6, 1.3, 20, 1.6, 3.6);
-    const big = pivot(grp, 20, 1.9, 3.4); big.rotation.y = .7; SCENE_MODELS.cheese_wheel(big, {}, { r: 1.3, beh: "static" });
+    const big = pivot(grp, 20, .55, 7.6); big.rotation.y = .3; SCENE_MODELS.cheese_wheel(big, {}, { r: 1.3, beh: "static" });
     // bunting poles and strings across the hill
     for (const y of [12, 33]) {
       for (const x of [.6, WW - .6]) part(grp, "cyl", "#e8e2d0", .08, 3.4, .08, x, 1.7, y);
@@ -280,7 +281,7 @@ SCENES.cheese = {
     },
   },
   performers: () => [
-    { kind: "cheese_queen", orbit: [20, 3.6, 1.6, .5, 0], h: 1.3, x: 0, y: 0, ang: 0, t: 0 },
+    { kind: "cheese_queen", orbit: [20, 3.6, .7, .45, 0], h: 1.3, x: 0, y: 0, ang: 0, t: 0 },
     { kind: "cheese_runner", col: "#2f6fc4", orbit: [16.4, 4.6, .01, 0, 0], h: 1.9, x: 0, y: 0, ang: 0, t: 0 },
     { kind: "cheese_runner", col: "#3d9a5b", orbit: [23.6, 4.6, .01, 0, 0], h: 1.6, x: 0, y: 0, ang: 0, t: 0 },
     { kind: "cheese_goat", orbit: [36, 15, 1.5, .6, 0], x: 0, y: 0, ang: 0, t: 0 },
