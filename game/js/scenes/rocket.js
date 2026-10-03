@@ -122,7 +122,7 @@ SCENE_MODELS.rocket_box = (g, u) => {
 SCENES.rocket = {
   name: "Launch Day", tag: "A billionaire goes to space (again)", place: "THE LAUNCH PAD", outside: "#c9a46e", bulbH: 1.2, night: false, music: "space",
   light: { sky: 0xcfe8ff, ground: 0xc8a070, hemi: .55, sun: 0xfff0d8, sunI: 1.25 }, crowd: 3200, fenceBudget: 70, maxGates: 5, guards: 4,
-  gates: [F, F, F, T, F, F, F], unlock: 20,
+  gates: [F, F, T, T, F, F, F], unlock: 20,
   intro: "YeetX founder Rex Gigabuck is launching himself into space for the fourth time this year, and the public is invited \"for the vibes\". Expect countdowns, robot dogs, merch cannons and boosters landing slightly too close.",
   acts: ["T-minus vibes!", "To the moon!", "Disrupt gravity!", "Like and subscribe!", "Wen launch?"],
   events: ["countdown", "ceo", "robodog", "merch", "booster", "robotaxi", "nft", "countdown"],

@@ -27,7 +27,7 @@ const SEG = [
   { clip: "zoo", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "ZOO_EV"]], hot: true },
   { clip: "rocket", warm: 26, secs: B * 4, cam: 0, ev: [[-1.2, "ROCKET_EV"]], hot: true },
   { clip: "cheese", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "CHEESE_EV"]], hot: true },
-  { clip: "zombie", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "ZOMBIE_EV"]], hot: true },
+  { clip: "zombie", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "horde"]], hot: true },
   { clip: "mitin", warm: 26, secs: B * 4, cam: 1, ev: [[-1.5, "botargas"], [-.2, "promesas"]], hot: true },
   { clip: "boda", warm: 26, secs: B * 4, cam: 1, ev: [[-1, "ramo"], [.3, "suegra"]], hot: true },
   { card: "18 VENUES", dur: B * 2, bg: "circo" },
