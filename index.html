@@ -52,7 +52,7 @@ canvas { display: block; touch-action: none; }
 }
 .caption.yellow { color: var(--caution); }
 .status {
-  position: absolute; left: 50%; bottom: 2.4%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+  position: absolute; left: 50%; top: 10.5%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; font-size: .78em;
   background: rgba(17,18,20,.72); color: var(--text); border-radius: 99px; padding: .3em .9em; font-weight: 700; font-variant-numeric: tabular-nums;
 }
 .overlay { position: absolute; inset: 0; display: flex; overflow: auto; padding: 14px; background: rgba(10,10,12,.42); }
@@ -114,17 +114,17 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 const $ = s => document.querySelector(s);
 const cv = $("#cv"), ctx = cv.getContext("2d");
 // ===== Mundo (metros) =====
-const WW = 40, WH = 72, CS = .5, GW = WW / CS, GH = WH / CS;
+const WW = 40, WH = 72, SH = 78, CS = .5, GW = WW / CS, GH = SH / CS;  // SH: la calle sigue fuera de cuadro
 const R = .24, DT = 1 / 60;
-let PCRIT = 7;
-const CROWD = 2200, FENCE_BUDGET = 60, MAX_GATES = 5, SHOW_TIME = 40;
+let PCRIT = 8.5;
+const CROWD = 3200, FENCE_BUDGET = 60, MAX_GATES = 5, SHOW_TIME = 40;
 const FENCE_Y = 66, SLOTS = 7, SLOT_W = 2.6;
 const slotX = i => WW * (i + .5) / SLOTS;
 let gates = [false, false, true, false, true, false, false];
 let fences = [];           // vallas del jugador {ax,ay,bx,by,len}
 
 // ===== Obstáculos =====
-let obs = [], buckets, BKS = 2, BW = Math.ceil(WW / BKS), BH = Math.ceil(WH / BKS);
+let obs = [], buckets, BKS = 2, BW = Math.ceil(WW / BKS), BH = Math.ceil(SH / BKS);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 function seg(ax, ay, bx, by, th, kind) { obs.push({ t: "s", ax, ay, bx, by, th, kind }); }
 function rect(x0, y0, x1, y1, kind) { obs.push({ t: "r", x0, y0, x1, y1, kind }); }
@@ -134,7 +134,7 @@ const RING = { x: 20, y: 21.5, r: 4.8 };
 function buildWorld() {
   obs = [];
   // bordes de la plaza
-  seg(0, 0, 0, WH, .2, "edge"); seg(WW, 0, WW, WH, .2, "edge"); seg(0, 0, WW, 0, .2, "edge");
+  seg(0, 0, 0, SH, .2, "edge"); seg(WW, 0, WW, SH, .2, "edge"); seg(0, 0, WW, 0, .2, "edge");
   // escenario, bocinas, pasarela y plataforma
   rect(6, 0, 34, 11, "stage");
   rect(2.6, 7.4, 4.8, 9.6, "speaker"); rect(35.2, 7.4, 37.4, 9.6, "speaker");
@@ -264,16 +264,17 @@ const cellOf = (x, y) => clamp(Math.floor(y / CS), 0, GH - 1) * GW + clamp(Math.
 
 // ===== Multitud =====
 const SHIRTS = ["#d8433b","#2f6fc4","#e8b631","#3d9a5b","#8a4fbf","#e07a2e","#f4f4f0","#2b2f35","#3fb3c4","#d0679b","#7a8c3a","#9b5a3c"];
-const HEAT = ["#3b6fd8","#2fb4c9","#3fbf5a","#d9d23a","#f08a24","#e0322b"];
+const HEAT = ["#2c4fd6","#2f86e0","#2fb8d0","#33c08a","#5cc63c","#b8d230","#f2c530","#f39424","#ec5a22","#e0322b"];
+let surgeT = 0, nextDrop = 0, drops = 0, SURGE = [.55, 1.1];
 let ag = [], fallen = [], phase = "plan", spawned = 0, fullAt = 0, t = 0, evacT = 0, dead = 0, evacuated = 0;
 let hashHead = new Int32Array(GW * GH), hashNext = new Int32Array(0);
 
 function spawn() {
-  const x = .6 + Math.random() * (WW - 1.2), y = FENCE_Y + 1.2 + Math.random() * (WH - FENCE_Y - 1.6);
-  for (let i = Math.max(0, ag.length - 400); i < ag.length; i++) { const a = ag[i]; if ((a.x - x) ** 2 + (a.y - y) ** 2 < .3) return; }
+  const x = .6 + Math.random() * (WW - 1.2), y = WH + .6 + Math.random() * (SH - WH - 1.2);
+  for (let i = Math.max(0, ag.length - 400); i < ag.length; i++) { const a = ag[i]; if ((a.x - x) ** 2 + (a.y - y) ** 2 < .4) return; }
   const e = Math.random();
   ag.push({ x, y, vx: 0, vy: -.5, h: -Math.PI / 2, v0: 1.35 + Math.random() * .5, tol: .8 + e * e * 26,
-    leave: Math.random() * 16, p: 0, ps: 0, dmg: 0, c: (Math.random() * SHIRTS.length) | 0, fx: 0, fy: 0 });
+    leave: Math.random() * 16, ph: Math.random() * 6.28, dance: false, p: 0, ps: 0, dmg: 0, c: (Math.random() * SHIRTS.length) | 0, fx: 0, fy: 0 });
   spawned++;
 }
 
@@ -281,9 +282,14 @@ function step() {
   t += DT;
   const evac = phase === "evac"; if (evac) evacT += DT;
   if (phase === "show") {
-    for (let k = 0; k < 10 && spawned < CROWD; k++) spawn();
-    if (spawned >= CROWD) { if (!fullAt) { fullAt = t; caption("Empieza el show", false, 2200); } if (t > fullAt + SHOW_TIME) startEvac(); }
+    for (let k = 0; k < 30 && spawned < CROWD; k++) spawn();
+    if (spawned >= CROWD) {
+      if (!fullAt) { fullAt = t; nextDrop = t + 6; drops = 0; caption("Empieza el show", false, 2200); burst(140); }
+      if (t > nextDrop && t < fullAt + SHOW_TIME - 5) { surgeT = 3.5; nextDrop = t + 10 + Math.random() * 5; onDrop(drops++ === 0); }
+      if (t > fullAt + SHOW_TIME) startEvac();
+    }
   }
+  if (surgeT > 0) surgeT -= DT;
   hashHead.fill(-1); if (hashNext.length < ag.length) hashNext = new Int32Array(ag.length * 2);
   for (let i = 0; i < ag.length; i++) { const a = ag[i], id = cellOf(a.x, a.y); hashNext[i] = hashHead[id]; hashHead[id] = i; a.p = 0; a.fx = 0; a.fy = 0; }
   for (let i = 0; i < ag.length; i++) {
@@ -304,7 +310,11 @@ function step() {
   for (const a of ag) {
     const leaving = evac && evacT > a.leave;
     const id = cellOf(a.x, a.y), f = leaving ? fExit : fStage, dir = leaving ? dirE : dirS;
-    let want = leaving ? a.v0 * 1.25 : (f[id] > a.tol ? a.v0 : 0);
+    const surging = surgeT > 0 && !evac;
+    let want = leaving ? a.v0 * 1.25 : surging ? (f[id] > a.tol * SURGE[0] ? a.v0 * SURGE[1] : 0) : (f[id] > a.tol ? a.v0 : 0);
+    // la gente que ya llegó baila y se mueve sin parar
+    a.dance = phase === "show" && !leaving && fullAt > 0 && f[id] <= a.tol + 1;
+    if (a.dance) { a.fx += Math.cos(t * 5.5 + a.ph) * .9; a.fy += Math.sin(t * 4.3 + a.ph * 1.7) * .9; a.h += Math.sin(t * 2.7 + a.ph) * .04; }
     let dx = dir[id * 2], dy = dir[id * 2 + 1];
     if (!isFinite(f[id])) {
       // atrapado en una celda bloqueada: buscar la celda libre más cercana
@@ -332,11 +342,11 @@ function step() {
       a.p += ov / R * 1.5;
     }
     a.x = clamp(a.x, R, WW - R);
-    if (!evac) a.y = Math.min(a.y, WH - R);
+    if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1;
     if (a.p > PCRIT) a.dmg += (a.p - PCRIT) * DT * 1.6; else a.dmg = Math.max(0, a.dmg - DT * .4);
-    if (a.dmg >= 1) { fallen.push([a.x, a.y, a.h]); setDead(dead + 1); continue; }
-    if (evac && a.y > WH - .3) { evacuated++; continue; }
+    if (a.dmg >= 1) { fallen.push([a.x, a.y, a.h]); onFall(a.x, a.y); setDead(dead + 1); continue; }
+    if (evac && a.y > SH - .6) { evacuated++; continue; }
     out.push(a);
   }
   ag = out;
@@ -348,10 +358,10 @@ function start() {
   for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {
     toast("Una valla deja una puerta sin camino al escenario. Ábrele paso."); return;
   }
-  phase = "show"; t = 0; spawned = 0; fullAt = 0; ag = []; fallen = []; evacuated = 0; evacT = 0; setDead(0, true);
+  phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
   caption("¡Abren las puertas!", false, 2200); ui();
 }
-function startEvac() { phase = "evac"; evacT = 0; caption("Se acabó el show. ¡Todos a la salida!", false, 2600); ui(); }
+function startEvac() { phase = "evac"; evacT = 0; surgeT = 0; caption("Se acabó el show. ¡Todos a la salida!", false, 2600); ui(); }
 function finish() {
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
@@ -370,7 +380,7 @@ function finish() {
   ui();
 }
 function backToPlan() {
-  phase = "plan"; ag = []; fallen = []; spawned = 0; t = 0; evacT = 0; setDead(0, true);
+  phase = "plan"; ag = []; fallen = []; spawned = 0; t = 0; evacT = 0; surgeT = 0; setDead(0, true); resetFx();
   hideCard(); caption("Tú lo planeas", false, 0); resetPreview(); ui();
 }
 
@@ -480,7 +490,7 @@ function resize() {
   cv.style.width = w + "px"; cv.style.height = h + "px";
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   $("#frame").style.fontSize = Math.max(11, w * .042) + "px";
-  staticLayer = null; atlas = null;
+  staticLayer = null; atlas = null; trailCv = null;
 }
 new ResizeObserver(resize).observe($("#wrap"));
 
@@ -600,29 +610,80 @@ function buildAtlas() {
   return a;
 }
 
+// ===== Efectos: cámara, estelas, luces, confeti =====
+const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", "#7dff9e"];
+const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
+let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [], trailCv = null, tctx = null;
+function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; shake = 0; flash = 0; rings = []; confetti = []; trailCv = null; }
+function burst(n) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.PI / 2 + (Math.random() - .5) * 2.4, v = 4 + Math.random() * 12;
+    confetti.push({ x: 8 + Math.random() * 24, y: 11.5, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6, vr: (Math.random() - .5) * 14, c: CONF[i % CONF.length], life: 2 + Math.random() * 2.5 });
+  }
+}
+function onDrop(first) {
+  flash = 1; burst(260);
+  caption(first ? "Física de multitudes real" : ["¡Suena su éxito!", "¡Todos al frente!", "¡Que suene el bajo!", "¡Empujones!"][(Math.random() * 4) | 0], false, 1900);
+}
+function onFall(x, y) { rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); }
+function updateFx(dt) {
+  let tz = 1, ty = WH / 2;
+  if (phase === "show" || phase === "evac") {
+    let sy = 0, n = 0;
+    for (let i = 0; i < ag.length; i += 5) { const a = ag[i]; if (a.y < FENCE_Y) { sy += a.y; n++; } }
+    tz = phase === "show" ? (surgeT > 0 ? 1.34 : 1.18) : 1.06;
+    if (n > 40) ty = sy / n;
+  }
+  const kz = 1 - Math.pow(.3, dt);
+  cam.z += (tz - cam.z) * kz; cam.y += (ty - cam.y) * kz * .6;
+  const hw = WW / (2 * cam.z), hh = WH / (2 * cam.z);
+  cam.x = clamp(WW / 2, hw, WW - hw); cam.y = clamp(cam.y, hh, WH - hh);
+  shake *= Math.pow(.03, dt); flash *= Math.pow(.04, dt);
+  heatMix += ((heat || surgeT > 0 ? 1 : 0) - heatMix) * (1 - Math.pow(.015, dt));
+  for (const r of rings) r.t += dt; rings = rings.filter(r => r.t < 1.3);
+  const drag = Math.pow(.25, dt);
+  for (const c of confetti) { c.vx *= drag; c.vy *= drag; c.x += c.vx * dt; c.y += c.vy * dt; c.r += c.vr * dt; c.life -= dt; }
+  confetti = confetti.filter(c => c.life > 0);
+}
+function updateTrails() {
+  if (!trailCv) { trailCv = document.createElement("canvas"); trailCv.width = cv.width; trailCv.height = cv.height; tctx = trailCv.getContext("2d"); }
+  tctx.globalCompositeOperation = "destination-out"; tctx.fillStyle = "rgba(0,0,0,.06)"; tctx.fillRect(0, 0, trailCv.width, trailCv.height);
+  tctx.globalCompositeOperation = "source-over";
+  const k = S * dpr, s = Math.max(1, .16 * k);
+  for (const a of ag) {
+    if (a.vx * a.vx + a.vy * a.vy < .3 || a.y > WH) continue;
+    const f = fStage[cellOf(a.x, a.y)];
+    tctx.fillStyle = TRAIL[isFinite(f) ? clamp(Math.floor(f / 50 * 11), 0, 11) : 11];
+    tctx.fillRect(a.x * k - s / 2, a.y * k - s / 2, s, s);
+  }
+}
+
 function draw(now) {
   if (!staticLayer) staticLayer = buildStatic();
   if (!atlas) atlas = buildAtlas();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const k = S * dpr, z = cam.z;
+  const ox = cv.width / 2 - cam.x * k * z + (Math.random() - .5) * shake * k, oy = cv.height / 2 - cam.y * k * z + (Math.random() - .5) * shake * k;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#bdbdb8"; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(z, 0, 0, z, ox, oy);
   ctx.drawImage(staticLayer, 0, 0);
-  const k = S * dpr;
-  // luces del escenario
-  const bulbs = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"];
+  // focos del escenario
+  const live = phase === "show" || phase === "evac";
   for (let i = 0; i < 14; i++) {
-    const x = 7 + i * 2, on = phase === "show" || phase === "evac" ? .45 + .55 * Math.max(0, Math.sin(now / 220 + i * .9)) : .8;
-    ctx.globalAlpha = on; ctx.fillStyle = bulbs[i % bulbs.length];
+    const x = 7 + i * 2, on = live ? .4 + .6 * Math.max(0, Math.sin(now / (surgeT > 0 ? 90 : 220) + i * .9)) : .8;
+    ctx.globalAlpha = on; ctx.fillStyle = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"][i % 5];
     ctx.beginPath(); ctx.arc(x * k, 11.25 * k, .22 * k, 0, 7); ctx.fill();
   }
   ctx.globalAlpha = 1;
+  // estelas de la gente que camina
+  if (live) { updateTrails(); ctx.globalAlpha = .9; ctx.drawImage(trailCv, 0, 0); ctx.globalAlpha = 1; }
   // estelas de flujo previsto
   if (phase === "plan") {
     ctx.lineCap = "round"; ctx.lineWidth = Math.max(1, .22 * k);
-    const maxF = 60;
     for (const p of preview) {
       const tr = p.trail; if (tr.length < 6) continue;
       const fade = Math.min(1, p.age / .6, (p.life - p.age) / .8);
       for (let i = 3; i < tr.length; i += 3) {
-        const q = clamp(tr[i + 2] / maxF, 0, 1), a = (i / tr.length) * .55 * fade;
+        const q = clamp(tr[i + 2] / 60, 0, 1), a = (i / tr.length) * .55 * fade;
         ctx.strokeStyle = `rgba(${Math.round(255 - q * 50)},${Math.round(140 + q * 95)},${Math.round(60 + q * 195)},${a.toFixed(3)})`;
         ctx.beginPath(); ctx.moveTo(tr[i - 3] * k, tr[i - 2] * k); ctx.lineTo(tr[i] * k, tr[i + 1] * k); ctx.stroke();
       }
@@ -633,15 +694,46 @@ function draw(now) {
   ctx.strokeStyle = "#e53229"; ctx.lineWidth = Math.max(1.5, .1 * k); ctx.beginPath();
   for (const [x, y] of fallen) { const s = .22 * k; ctx.moveTo(x * k - s, y * k - s); ctx.lineTo(x * k + s, y * k + s); ctx.moveTo(x * k + s, y * k - s); ctx.lineTo(x * k - s, y * k + s); }
   ctx.stroke();
-  // personas
-  const half = SP / 2;
+  // personas: ropa de colores que se funde con el color de presión
+  const hm = heatMix, red = SHIRTS.length + HEAT.length - 1;
   for (const a of ag) {
-    let ci = a.c;
-    if (heat) ci = SHIRTS.length + clamp(Math.floor(a.ps / PCRIT * HEAT.length), 0, HEAT.length - 1);
-    else if (a.dmg > .4) ci = SHIRTS.length + HEAT.length - 1;
+    if (a.y > WH + .5) continue;
     const ai = ((Math.round(a.h / (Math.PI * 2) * ANG) % ANG) + ANG) % ANG;
-    ctx.drawImage(atlas, ai * SP, ci * SP, SP, SP, a.x * k - half, a.y * k - half, SP, SP);
+    const sz = a.dance ? SP * (1 + .09 * Math.sin(now / 85 + a.ph * 3)) : SP;
+    const x = a.x * k - sz / 2, y = a.y * k - sz / 2;
+    if (hm < .97) { ctx.globalAlpha = 1; ctx.drawImage(atlas, ai * SP, (a.dmg > .45 ? red : a.c) * SP, SP, SP, x, y, sz, sz); }
+    if (hm > .03) {
+      const hi = SHIRTS.length + clamp(Math.floor(a.ps / PCRIT * HEAT.length), 0, HEAT.length - 1);
+      ctx.globalAlpha = hm; ctx.drawImage(atlas, ai * SP, hi * SP, SP, SP, x, y, sz, sz);
+    }
   }
+  ctx.globalAlpha = 1;
+  // anillos de caída
+  ctx.lineWidth = Math.max(1.5, .14 * k);
+  for (const r of rings) { ctx.strokeStyle = `rgba(229,50,41,${(1 - r.t / 1.3).toFixed(3)})`; ctx.beginPath(); ctx.arc(r.x * k, r.y * k, (.3 + r.t * 1.8) * k, 0, 7); ctx.stroke(); }
+  // confeti
+  for (const c of confetti) {
+    ctx.globalAlpha = Math.min(1, c.life); ctx.fillStyle = c.c;
+    const w = Math.max(1, .3 * k * Math.abs(Math.cos(c.r))), h = Math.max(1, .16 * k);
+    ctx.fillRect(c.x * k - w / 2, c.y * k - h / 2, w, h);
+  }
+  ctx.globalAlpha = 1;
+  // haces de luz del escenario
+  const inten = phase === "show" ? (fullAt ? 1 : .45) + (surgeT > 0 ? .9 : 0) : phase === "evac" ? .3 : 0;
+  if (inten > 0) {
+    ctx.globalCompositeOperation = "screen";
+    for (let i = 0; i < 6; i++) {
+      const bx = (8 + i * 4.8) * k, by = 11 * k, ang = Math.PI / 2 + Math.sin(now / (surgeT > 0 ? 380 : 1000 + i * 130) + i * 1.7) * .65, len = 36 * k, wd = .15;
+      const hue = (now / 22 + i * 60) % 360;
+      const g = ctx.createLinearGradient(bx, by, bx + Math.cos(ang) * len, by + Math.sin(ang) * len);
+      g.addColorStop(0, `hsla(${hue},100%,62%,${Math.min(.6, .28 * inten).toFixed(3)})`); g.addColorStop(1, `hsla(${hue},100%,62%,0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(bx, by);
+      ctx.lineTo(bx + Math.cos(ang - wd) * len, by + Math.sin(ang - wd) * len);
+      ctx.lineTo(bx + Math.cos(ang + wd) * len, by + Math.sin(ang + wd) * len); ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+  }
+  if (flash > .01) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(255,255,255,${(flash * .22).toFixed(3)})`; ctx.fillRect(0, 0, cv.width, cv.height); }
 }
 
 // ===== Bucle =====
@@ -655,11 +747,12 @@ function frame(now) {
       ? (spawned < CROWD ? `Entrando ${spawned} / ${CROWD}` : `En el show · termina en ${Math.max(0, Math.ceil(fullAt + SHOW_TIME - t))} s`)
       : `Evacuando · quedan ${ag.length}`;
   } else if (phase === "plan") stepPreview(real);
+  updateFx(real * (phase === "show" || phase === "evac" ? speed : 1));
   draw(now);
   requestAnimationFrame(frame);
 }
 
-window.__game = { setP: v => PCRIT = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
+window.__game = { setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
   get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; backToPlan(); } };
 
 resize(); buildWorld(); ui();
