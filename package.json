@@ -1,0 +1,65 @@
+{
+  "name": "marea-humana",
+  "productName": "Marea Humana",
+  "version": "0.1.0",
+  "description": "Juego de gestión de multitudes: planea vallas y puertas para que nadie salga pisoteado.",
+  "main": "desktop/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win dir",
+    "dist:linux": "electron-builder --linux dir",
+    "dist:mac": "electron-builder --mac dir"
+  },
+  "dependencies": {
+    "steamworks.js": "0.4.0"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.mareahumana.game",
+    "productName": "Marea Humana",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**",
+      "game/**",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/steamworks.js/**"
+    ],
+    "win": {
+      "target": "dir",
+      "extraFiles": [
+        {
+          "from": "node_modules/steamworks.js/dist/win64/steam_api64.dll",
+          "to": "steam_api64.dll"
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "linux": {
+      "target": "dir",
+      "extraFiles": [
+        {
+          "from": "node_modules/steamworks.js/dist/linux64/libsteam_api.so",
+          "to": "libsteam_api.so"
+        }
+      ]
+    },
+    "mac": {
+      "target": "dir",
+      "extraFiles": [
+        {
+          "from": "node_modules/steamworks.js/dist/osx/libsteam_api.dylib",
+          "to": "MacOS/libsteam_api.dylib"
+        }
+      ]
+    },
+    "publish": null
+  }
+}

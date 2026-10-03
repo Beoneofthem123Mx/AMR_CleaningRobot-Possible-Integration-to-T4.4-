@@ -1,0 +1,11 @@
+"DepotBuild"
+{
+	"DepotID" "TU_DEPOT_WINDOWS"
+	"ContentRoot" "../dist/win-unpacked/"
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"Recursive" "1"
+	}
+}

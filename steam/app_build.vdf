@@ -1,0 +1,13 @@
+"AppBuild"
+{
+	"AppID" "TU_APP_ID"
+	"Desc" "Marea Humana 0.1.0"
+	"BuildOutput" "output/"
+	"ContentRoot" "../dist/"
+	"SetLive" ""
+	"Depots"
+	{
+		"TU_DEPOT_WINDOWS" "depot_windows.vdf"
+		"TU_DEPOT_LINUX" "depot_linux.vdf"
+	}
+}

@@ -1,0 +1,102 @@
+# Cómo publicar Marea Humana en Steam
+
+Esta guía va desde el código hasta la página de la tienda. Los pasos de Steamworks cambian con el
+tiempo, así que confirma cada uno en la documentación oficial:
+<https://partner.steamgames.com/doc/home>
+
+## 1. Probar el juego en tu computadora
+
+Necesitas [Node.js](https://nodejs.org/) 20 o más reciente.
+
+```sh
+npm install
+npm start
+```
+
+Se abre la ventana del juego. Con Steam abierto y `steam_appid.txt` en `480` (Spacewar, la app de
+prueba de Valve) también funcionan la superposición de Steam (Mayús+Tab) y la llamada de logros.
+
+Atajos: **F11** o **Alt+Enter** cambian a pantalla completa.
+
+## 2. Crear la app en Steamworks
+
+1. Crea una cuenta en <https://partner.steamgames.com/> como desarrollador. Pide datos fiscales y
+   bancarios.
+2. Paga la tarifa de Steam Direct para tener un App ID. Valve publica el monto y las condiciones
+   de reembolso en su documentación.
+3. Anota el **App ID** y los **Depot ID** que te asigna Steamworks (uno para Windows y otro para
+   Linux).
+
+## 3. Poner tu App ID en el juego
+
+- En `desktop/main.js`, cambia `STEAM_APP_ID = 480` por tu App ID.
+- En `steam_appid.txt`, pon tu App ID (solo se usa al probar con `npm start`; no se incluye en el
+  juego empaquetado).
+- En `steam/app_build.vdf` y `steam/depot_*.vdf`, reemplaza `TU_APP_ID`, `TU_DEPOT_WINDOWS` y
+  `TU_DEPOT_LINUX`.
+
+## 4. Crear los logros en Steamworks
+
+El juego ya los activa. Créalos en *Stats & Achievements* con estos nombres de API exactos:
+
+| Nombre de API   | Nombre sugerido          | Cuándo se gana                                       |
+|-----------------|--------------------------|------------------------------------------------------|
+| `FIRST_SHOW`    | Primer evento            | Terminar cualquier evento                            |
+| `PERFECT_PLAZA` | Plaza sin heridos        | Terminar la plaza con cero pisoteados y nadie atrapado |
+| `PERFECT_CIRCO` | Circo sin heridos        | Terminar el circo con cero pisoteados y nadie atrapado |
+| `LION_TAMER`    | Domador de leones        | Que el león choque con una valla y se dé la vuelta   |
+| `TRAGEDY`       | Esto no salió bien       | 500 o más pisoteados en un solo evento               |
+
+Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
+
+## 5. Empaquetar
+
+```sh
+npm run dist:win     # dist/win-unpacked/Marea Humana.exe
+npm run dist:linux   # dist/linux-unpacked/marea-humana
+npm run dist:mac     # solo en una Mac
+```
+
+El empaquetado copia `steam_api64.dll` (Windows) y `libsteam_api.so` (Linux) junto al ejecutable.
+El ejecutable de Windows no lleva icono propio cuando se empaqueta desde Linux; para eso,
+empaqueta en Windows y agrega un icono en `package.json` (`build.win.icon`).
+
+## 6. Subir con SteamPipe
+
+1. Descarga el Steamworks SDK desde Steamworks y usa `tools/ContentBuilder/builder/steamcmd`.
+2. Desde la carpeta `steam/` de este repositorio:
+
+   ```sh
+   steamcmd +login TU_USUARIO +run_app_build "$(pwd)/app_build.vdf" +quit
+   ```
+
+3. En Steamworks, en *Installation > General*, crea las opciones de inicio:
+   - Windows: `Marea Humana.exe`
+   - Linux: `marea-humana`, con argumentos `--no-sandbox` (Electron no puede usar su sandbox dentro
+     del runtime de Steam en Linux).
+4. Publica la build en la rama `default` y pruébala desde tu biblioteca de Steam.
+
+## 7. Página de la tienda y precio
+
+- Steam pide cápsulas en varios tamaños, al menos 5 capturas de pantalla y, de preferencia, un
+  tráiler. Las capturas pueden salir del propio juego con el botón **Cámara: cerca**.
+- Llena el cuestionario de contenido. El juego muestra muertes por aplastamiento sin sangre ni
+  violencia explícita; respóndelo con honestidad.
+- El precio se elige en *Pricing* entre los niveles que ofrece Steam. Revisa ahí el precio mínimo
+  vigente para tu región antes de anunciar el precio.
+- Valve revisa la página y la build antes del lanzamiento, y exige que la página esté visible como
+  "Próximamente" un tiempo antes de vender. Considera ese plazo al planear la fecha.
+
+## 8. Antes de vender: el origen de la idea
+
+El concepto viene de un video de @bonkbureau en TikTok ("making trailers for games i wish
+existed"). Las ideas de juego no tienen derechos de autor, y el código, los modelos y el arte de
+este repositorio son propios. Aun así, no uses su nombre, su video ni capturas suyas en la tienda,
+y considera escribirle antes de lanzar.
+
+## Licencias incluidas
+
+- three.js (MIT): `game/vendor/three.LICENSE`
+- Fuente Rubik (SIL Open Font License): `game/fonts/OFL.txt`
+- Electron (MIT) y steamworks.js (MIT) se instalan con `npm install`. El Steamworks SDK de Valve
+  se rige por su propio acuerdo de Steamworks.

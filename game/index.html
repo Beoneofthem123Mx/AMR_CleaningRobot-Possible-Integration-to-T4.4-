@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Marea Humana</title>
 <meta name="description" content="Planea el recinto de un concierto en la plaza para que miles de personas entren, disfruten y salgan sin que nadie salga pisoteado.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&display=swap">
 <style>
+@font-face { font-family: "Rubik"; font-weight: 500; src: url("fonts/rubik-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Rubik"; font-weight: 700; src: url("fonts/rubik-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Rubik"; font-weight: 900; src: url("fonts/rubik-latin-900-normal.woff2") format("woff2"); }
 /* Layout: a vertical "phone video" frame showing the plaza from above, tool bar under it. One committed look: dark surround, daylight concrete inside. */
 :root {
   color-scheme: dark;
@@ -53,7 +53,7 @@ canvas.ov { position: absolute; left: 0; top: 0; pointer-events: none; }
 }
 .caption.yellow { color: var(--caution); }
 .status {
-  position: absolute; left: 50%; top: 10.5%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; font-size: .78em;
+  position: absolute; left: 50%; top: calc(3.2% + 2.9em); transform: translateX(-50%); white-space: nowrap; pointer-events: none; font-size: .78em;
   background: rgba(17,18,20,.72); color: var(--text); border-radius: 99px; padding: .3em .9em; font-weight: 700; font-variant-numeric: tabular-nums;
 }
 .overlay { position: absolute; inset: 0; display: flex; overflow: auto; padding: 14px; background: rgba(10,10,12,.42); }
@@ -86,6 +86,7 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .card button.scene span { font-weight: 700; color: #45494c; font-size: .82rem; }
 .card button.scene small { font-weight: 500; color: #5d6266; font-size: .8rem; line-height: 1.35; }
 .card button.scene:hover { background: #fff6cf; }
+.card .best { font-style: normal; color: #d9a400; letter-spacing: .05em; font-size: .95rem; }
 .bar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 100%; }
 .bar .sep { width: 1px; background: var(--bar-line); margin: 4px 2px; }
 .cnt { font-variant-numeric: tabular-nums; opacity: .8; font-weight: 500; }
@@ -120,8 +121,7 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-<script>window.THREE || document.write('<script src="vendor/three.min.js"><\/script>');</script>
+<script src="vendor/three.min.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const cv = $("#cv"), ov = $("#ov"), octx = ov.getContext("2d");
@@ -446,6 +446,7 @@ function stepMovers() {
         if (dd < m.r) {
           m.x += nx * (m.r - dd); m.y += ny * (m.r - dd);
           pop(m.x, m.y - 1.4, m.kind === "lion" ? "¡GRRR!" : m.kind === "dog" ? "¡AUU!" : "¡CRASH!"); shake = Math.min(1, shake + .3);
+          if (m.kind === "lion") achieve("LION_TAMER");
           m.bounced = true; m.ang += Math.PI; m.pts = [m.home || [m.x + nx * 30, m.y + ny * 30]]; m.i = 0; m.speed *= 1.2; break;
         }
       }
@@ -687,6 +688,16 @@ function step() {
   if (evac && (ag.length === 0 || evacT > 100)) finish();
 }
 
+// ===== Steam: logros y récords =====
+// window.steam lo pone la app de escritorio (desktop/preload.js); sin Steam, no hace nada
+const achieve = id => { try { window.steam && window.steam.achieve(id); } catch (e) { /* sin Steam */ } };
+let sceneKey = "plaza";
+function loadBest() { try { return JSON.parse(localStorage.getItem("mh.best") || "{}"); } catch (e) { return {}; } }
+function saveBest(key, stars) {
+  const best = loadBest(); if ((best[key] ?? -1) >= stars) return;
+  best[key] = stars; try { localStorage.setItem("mh.best", JSON.stringify(best)); } catch (e) { /* sin almacenamiento */ }
+}
+
 // ===== Fases =====
 function start() {
   for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {
@@ -700,6 +711,10 @@ function finish() {
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
   const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;
+  saveBest(sceneKey, stars);
+  achieve("FIRST_SHOW");
+  if (stars === 3) achieve(sceneKey === "plaza" ? "PERFECT_PLAZA" : "PERFECT_CIRCO");
+  if (dead >= 500) achieve("TRAGEDY");
   showCard(`<h2>${stars === 3 ? "Nadie salió herido" : stars ? "Recinto evacuado" : "Fue una tragedia"}</h2>
     <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("")}</div>
     <div class="stats">
@@ -817,11 +832,13 @@ $("#card").addEventListener("click", e => {
   if (sk) { loadScene(sk.dataset.scene); hideCard(); caption("Tú lo planeas", false, 0); }
   if (e.target.id === "retry") backToPlan();
   if (e.target.id === "pick") chooser();
+  if (e.target.id === "quit" && window.steam) window.steam.quit();
+  if (e.target.id === "fs" && window.steam) window.steam.toggleFullscreen();
 });
 
 // ===== Dibujo 3D (three.js) =====
 const TEXS = 16, FXS = 10;                 // píxeles por metro: textura del suelo y capa de efectos
-let S = 10, dpr = 1, staticLayer = null, staticDirty = true, camMode = 0;
+let S = 10, dpr = 1, staticLayer = null, staticDirty = true, camMode = 0, LAND = false;  // LAND: monitor horizontal
 const G3 = {};
 const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
 const SKIN = ["#f1c9a5", "#e0ac84", "#c68a5e", "#8d5a3b", "#5e3a24"];
@@ -833,11 +850,15 @@ let SHIRT_L, HEAT_L, SKIN_L, PANTS_L, HAIR_L, GLOW_L;
 
 function resize() {
   const r = $("#wrap").getBoundingClientRect();
-  const w = Math.min(r.width, r.height * WW / WH), h = w * WH / WW;
+  // en pantallas horizontales (PC) el recinto se gira: el escenario queda a la izquierda
+  LAND = r.width > r.height;
+  const ar = LAND ? WH / WW : WW / WH;
+  const w = Math.min(r.width, r.height * ar), h = w / ar;
   dpr = Math.min(1.75, window.devicePixelRatio || 1); S = w / WW;
+  if (G3.camera) { G3.camera.aspect = ar; G3.camera.updateProjectionMatrix(); }
   for (const c of [cv, ov]) { c.style.width = w + "px"; c.style.height = h + "px"; }
   ov.width = Math.round(w * dpr); ov.height = Math.round(h * dpr);
-  $("#frame").style.fontSize = Math.max(11, w * .042) + "px";
+  $("#frame").style.fontSize = Math.max(11, Math.min(w, h) * .042) + "px";
   if (G3.renderer) { G3.renderer.setPixelRatio(dpr); G3.renderer.setSize(w, h, false); }
 }
 new ResizeObserver(resize).observe($("#wrap"));
@@ -1203,11 +1224,13 @@ function toWorld(ev) {
   return [HIT.x, HIT.z];
 }
 function updateCamera() {
-  const base = (WH / 2) / Math.tan(15 * Math.PI / 180), z = cam.z, h = base / z;
+  const base = ((LAND ? WW : WH) / 2) / Math.tan(15 * Math.PI / 180), z = cam.z, h = base / z;
   const tilt = clamp((z - 1) * .5, 0, .42);
+  const dx = LAND ? -1 : 0, dz = LAND ? 0 : 1;   // dirección "hacia abajo" de la pantalla en el mundo
   const sx = (Math.random() - .5) * shake, sy = (Math.random() - .5) * shake;
-  const tx = cam.x + sx, tz = cam.y + sy + h * Math.sin(tilt) * .12;
-  G3.camera.position.set(tx, h * Math.cos(tilt), tz + h * Math.sin(tilt));
+  const lift = h * Math.sin(tilt) * .12, tx = cam.x + sx + dx * lift, tz = cam.y + sy + dz * lift;
+  G3.camera.up.set(LAND ? 1 : 0, 0, LAND ? 0 : -1);
+  G3.camera.position.set(tx + dx * h * Math.sin(tilt), h * Math.cos(tilt), tz + dz * h * Math.sin(tilt));
   G3.camera.lookAt(tx, 0, tz);
   const sun = G3.sun, ext = WW / z * .9 + 8;
   sun.target.position.set(tx, 0, tz); sun.position.set(tx - 22, 60, tz - 28);
@@ -1254,7 +1277,7 @@ function updateFxLayer(live) {
 const Vproj = new THREE.Vector3();
 function drawOverlay() {
   const g = octx; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, ov.width, ov.height);
-  const ppm = ov.height / (WH / cam.z);
+  const ppm = ov.height / ((LAND ? WW : WH) / cam.z);
   g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
   for (const q of pops) {
     Vproj.set(q.x, 2.5 + q.t * 1.4, q.y).project(G3.camera);
@@ -1394,7 +1417,7 @@ window.__game = { mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene:
   get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; backToPlan(); } };
 
 function loadScene(key) {
-  scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = scene.maxGates;
+  sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = scene.maxGates;
   gates = scene.gates.slice(); fences = []; performers = scene.performers();
   buildWorld(); backToPlan();
 }
@@ -1408,7 +1431,8 @@ function chooser() {
       <li><b>Presión:</b> pinta a la multitud de azul a rojo.</li>
     </ul>
     <p><b>Elige escenario:</b></p>
-    <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => `<button class="scene" data-scene="${key}"><b>${sc.name}</b><span>${sc.tag} · ${sc.crowd.toLocaleString("es")} personas</span><small>${sc.intro}</small></button>`).join("")}</div>`);
+    <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => { const b = loadBest()[key]; return `<button class="scene" data-scene="${key}"><b>${sc.name}${b !== undefined ? ` <em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : ""}</b><span>${sc.tag} · ${sc.crowd.toLocaleString("es")} personas</span><small>${sc.intro}</small></button>`; }).join("")}</div>
+    ${window.steam ? '<div class="row"><button id="fs">Pantalla completa (F11)</button><button id="quit">Salir del juego</button></div>' : ""}`);
   const b = $("#card .scene"); if (b) b.focus();
 }
 $("#bScene").addEventListener("click", chooser);
