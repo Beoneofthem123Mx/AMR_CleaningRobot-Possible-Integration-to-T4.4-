@@ -1,4 +1,4 @@
-// Human Tide · scene: Black Friday (mall-wide sales)
+// Human Tsunami · scene: Black Friday (mall-wide sales)
 const SHOPS = [
   { y: 10, side: 0, name: "SOCK-O-RAMA", col: "#ff6fb1" }, { y: 22, side: 0, name: "EVERYTHING $10", col: "#ffd23a" },
   { y: 34, side: 0, name: "BATTERIES GALORE", col: "#7dff6a" }, { y: 46, side: 0, name: "PHONE CASES", col: "#4fd8ff" },

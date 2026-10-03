@@ -1,6 +1,6 @@
-// Records the Human Tide trailer from the real game.
+// Records the Human Tsunami trailer from the real game.
 //   xvfb-run -a -s "-screen 0 1920x1080x24" node steam/trailer/trailer.cjs
-// Needs Playwright (with Chromium) and ffmpeg with libx264. Writes steam/trailer/human_tide_trailer.mp4.
+// Needs Playwright (with Chromium) and ffmpeg with libx264. Writes steam/trailer/human_tsunami_trailer.mp4.
 // Frames are generated one by one (the game's manual mode), so the result is smooth even on a slow PC.
 const { _electron, chromium } = require(process.env.PLAYWRIGHT_PATH || "playwright");
 const fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
@@ -34,7 +34,7 @@ const SEG = [
   { card: "14 VENUES<br>ZERO PERMITS", dur: 1.8, bg: "circo" },
   { clip: "plaza", warm: 0, secs: 6, cam: 0, crush: true, hot: true },
   { card: "HOW MANY TRAMPLED<br>CAN YOUR CONSCIENCE TAKE?", dur: 2.2, bg: "plaza" },
-  { card: "HUMAN<br>TIDE", sub: "Coming soon to Steam · ridiculously cheap", dur: 3.4, bg: "circo", end: true },
+  { card: "HUMAN<br>TSUNAMI", sub: "Coming soon to Steam · ridiculously cheap", dur: 3.4, bg: "circo", end: true },
 ];
 
 const sh = (cmd, args) => execFileSync(cmd, args, { stdio: ["ignore", "ignore", "inherit"] });
@@ -144,7 +144,7 @@ function assemble() {
     }
   });
   fs.writeFileSync(path.join(WORK, "list.txt"), parts.map(p => `file '${p}'`).join("\n"));
-  const final = path.join(__dirname, "human_tide_trailer.mp4");
+  const final = path.join(__dirname, "human_tsunami_trailer.mp4");
   sh("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", path.join(WORK, "list.txt"), "-i", path.join(WORK, "audio.wav"),
     "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-maxrate", "7M", "-bufsize", "14M", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
     "-af", "afade=t=out:st=" + (SEG.reduce((s, g) => s + (g.card ? g.dur : g.secs), 0) - 1) + ":d=1", "-shortest", "-movflags", "+faststart", final]);

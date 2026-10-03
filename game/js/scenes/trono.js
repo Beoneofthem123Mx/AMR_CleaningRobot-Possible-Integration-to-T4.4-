@@ -1,4 +1,4 @@
-// Human Tide · scene: The Golden Throne (grand opening of the world's most luxurious public toilet)
+// Human Tsunami · scene: The Golden Throne (grand opening of the world's most luxurious public toilet)
 SCENES.trono = {
   name: "The Golden Throne", tag: "Grand opening of the world's fanciest toilet", outside: "#b9b4a8", bulbH: 2.4, music: "brass",
   light: { sky: 0xfff6e0, ground: 0x8f8670, hemi: .6, sun: 0xfff0d0, sunI: 1.3 }, crowd: 2800, fenceBudget: 60, maxGates: 5, guards: 4,

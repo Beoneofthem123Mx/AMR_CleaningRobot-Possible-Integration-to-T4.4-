@@ -1,4 +1,4 @@
-// Human Tide · scene: The City (night festival; the whole city is the stage)
+// Human Tsunami · scene: The City (night festival; the whole city is the stage)
 const BLOCKS_X = [[0, 7], [12, 17.5], [22.5, 28], [33, WW]], BLOCKS_Y = [[20, 30], [35, 45], [50, 60]];
 SCENES.ciudad = {
   name: "The City", tag: "Night festival", outside: "#2a2d33", bulbH: 2.2, night: true, music: "edm",

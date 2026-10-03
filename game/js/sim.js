@@ -1,4 +1,4 @@
-// Human Tide · venue, flow fields, crowd and phases
+// Human Tsunami · venue, flow fields, crowd and phases
 function buildWorld() {
   obs = [];
   // venue edges

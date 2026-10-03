@@ -1,4 +1,4 @@
-// Human Tide · scene: Wedding of the Year (influencers who invited the entire internet)
+// Human Tsunami · scene: Wedding of the Year (influencers who invited the entire internet)
 SCENES.boda = {
   name: "Wedding of the Year", tag: "Influencer wedding", outside: "#6f9a4f", bulbH: 2.6, music: "mariachi",
   light: { sky: 0xfff3e0, ground: 0x5f7a45, hemi: .6, sun: 0xffe9cc, sunI: 1.25 }, crowd: 2600, fenceBudget: 60, maxGates: 5, guards: 4,

@@ -1,4 +1,4 @@
-// Human Tide · plan editing and interface
+// Human Tsunami · plan editing and interface
 // ===== Plan editing =====
 let tool = "fence", drag = null;
 const fenceUsed = () => fences.reduce((s, f) => s + f.len, 0);

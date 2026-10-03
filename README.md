@@ -1,4 +1,4 @@
-# Human Tide
+# Human Tsunami
 
 A crowd-management desktop game for Steam (Windows and Linux), inspired by the concept trailer by
 @bonkbureau ("making trailers for games i wish existed").
@@ -16,8 +16,8 @@ You need [Node.js](https://nodejs.org/) 20 or newer.
 ```sh
 npm install
 npm start            # opens the game in a window
-npm run dist:win     # packages dist/win-unpacked/Human Tide.exe
-npm run dist:linux   # packages dist/linux-unpacked/human-tide
+npm run dist:win     # packages dist/win-unpacked/Human Tsunami.exe
+npm run dist:linux   # packages dist/linux-unpacked/human-tsunami
 ```
 
 Everything works offline: three.js and the fonts ship inside `game/`. To publish on Steam, follow

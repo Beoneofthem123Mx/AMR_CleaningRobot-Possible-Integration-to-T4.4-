@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="icon.png">
-<title>Human Tide</title>
+<title>Human Tsunami</title>
 <meta name="description" content="Plan the venue for a concert in the plaza so thousands of people can get in, have fun and get out without anyone getting trampled.">
 <style>
 @font-face { font-family: "Rubik"; font-weight: 500; src: url("fonts/rubik-latin-500-normal.woff2") format("woff2"); }
@@ -133,6 +133,36 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .paper .quote { font-style: italic; border-left: 3px solid #1a1a1a; padding-left: 8px; }
 .paper .box { border: 2px solid #1a1a1a; padding: 8px; font-family: var(--font); font-size: .85rem; background: #fffdf6; }
 @media (max-width: 560px) { .paper .cols { grid-template-columns: 1fr; } }
+/* title screen, game-style: dark glass panel over the live demo */
+.card.menu { max-width: 1120px; width: 100%; background: rgba(18,19,26,.82); color: #f4f4f2; border: 3px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(10px); box-shadow: 0 24px 60px rgba(0,0,0,.55); padding: 22px 24px 16px; gap: 14px; }
+.card.menu .menuhead { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
+.card.menu .title { flex: none; padding: 6px 10px 10px; }
+.card.menu .logo { font-size: clamp(2.8rem, 7vw, 5.2rem); animation: logobob 3.2s ease-in-out infinite; }
+@keyframes logobob { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(-1deg) translateY(-4px); } }
+.card.menu .menuintro { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 9px; }
+.card.menu .tag { color: var(--caution); font-weight: 900; font-size: 1.1rem; margin: 0; text-transform: uppercase; letter-spacing: .02em; }
+.card.menu p { color: #d6d8dc; }
+.card.menu .chaosrow small, .card.menu .keys { color: #9ea3ab; }
+.card.menu .starline { color: #d6d8dc; } .card.menu .starbig { color: var(--caution); font-weight: 900; font-size: 1.25rem; }
+.card.menu .scenes { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.card.menu button.scene { flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden; border-radius: 14px; border: 3px solid #2c2e36;
+  background: #23252d; color: #f4f4f2; transition: transform .12s, border-color .12s, box-shadow .12s; }
+.card.menu button.scene:hover:not(:disabled), .card.menu button.scene:focus-visible { transform: translateY(-4px) rotate(-.6deg); border-color: var(--caution); box-shadow: 0 10px 0 rgba(0,0,0,.35); background: #2b2d36; }
+.card.menu button.scene .thumb { position: relative; display: block; aspect-ratio: 9 / 5; background: #111; }
+.card.menu button.scene img { width: 100%; height: 100%; border: 0; border-radius: 0; object-fit: cover; display: block; }
+.card.menu button.scene .txt { padding: 8px 10px 10px; gap: 2px; }
+.card.menu button.scene b { font-size: 1rem; color: #fff; }
+.card.menu button.scene span { color: #c4c7cc; font-size: .78rem; }
+.card.menu button.scene small { color: #8f949c; font-size: .74rem; }
+.card.menu .best { position: absolute; right: 6px; bottom: 6px; background: rgba(17,18,20,.85); color: var(--caution); border-radius: 99px; padding: 1px 8px; font-size: .85rem; }
+.card.menu .best.new { background: var(--caution); color: var(--ink); font-weight: 900; font-size: .7rem; padding: 2px 8px; }
+.card.menu .lockbadge { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 900; color: #fff;
+  background: rgba(10,10,14,.55); font-size: 1.05rem; }
+.card.menu button.scene.locked img { filter: grayscale(1) brightness(.6); }
+.card.menu button.scene:disabled { opacity: .8; }
+.card.menu button:not(.scene) { background: #2b2d36; color: #f4f4f2; border-color: #464955; }
+.card.menu button.go { background: var(--caution); color: var(--ink); border-color: var(--caution); }
 </style>
 </head>
 <body>

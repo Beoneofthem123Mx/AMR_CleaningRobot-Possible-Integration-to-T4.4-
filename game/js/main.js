@@ -1,4 +1,4 @@
-// Human Tide · effects, main loop and startup
+// Human Tsunami · effects, main loop and startup
 // ===== Effects: camera, trails, lights, confetti =====
 const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", "#7dff9e"];
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
@@ -72,7 +72,7 @@ function frame(now, fixed) {
   // recording mode (tests/trailer only): frames advance by hand with __game.tick
   if (window.__manual && fixed === undefined) { requestAnimationFrame(frame); return; }
   const real = fixed ?? Math.max(0, Math.min(.1, (now - last) / 1000)); last = now;
-  const sp = paused ? 0 : speed * (slowT > 0 ? .22 : 1);
+  const sp = paused ? 0 : (demo && !fullAt ? 3 : speed) * (slowT > 0 ? .22 : 1);  // the demo behind the menu fills up fast
   if (slowT > 0) slowT -= real;
   if (phase === "show" || phase === "evac") {
     acc += real / DT * sp; const n = Math.min(10, Math.floor(acc)); acc -= n; if (acc > 10) acc = 0;

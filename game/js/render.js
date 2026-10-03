@@ -1,4 +1,4 @@
-// Human Tide · 3D rendering
+// Human Tsunami · 3D rendering
 // ===== 3D rendering (three.js) =====
 const TEXS = 16, FXS = 10;                 // pixels per meter: ground texture and effects layer
 let S = 10, dpr = 1, staticLayer = null, staticDirty = true, camMode = 0, LAND = false;  // LAND: landscape monitor

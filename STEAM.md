@@ -1,4 +1,4 @@
-# How to publish Human Tide on Steam
+# How to publish Human Tsunami on Steam
 
 *(Spanish version: `STEAM.es.md`.)*
 
@@ -71,8 +71,8 @@ Each achievement needs a 64×64 icon (achieved and unachieved versions).
 ## 5. Package
 
 ```sh
-npm run dist:win     # dist/win-unpacked/Human Tide.exe
-npm run dist:linux   # dist/linux-unpacked/human-tide
+npm run dist:win     # dist/win-unpacked/Human Tsunami.exe
+npm run dist:linux   # dist/linux-unpacked/human-tsunami
 npm run dist:mac     # only on a Mac
 ```
 
@@ -90,8 +90,8 @@ and set an icon in `package.json` (`build.win.icon`).
    ```
 
 3. In Steamworks, under *Installation > General*, create the launch options:
-   - Windows: `Human Tide.exe`
-   - Linux: `human-tide`, with arguments `--no-sandbox` (Electron cannot use its sandbox inside
+   - Windows: `Human Tsunami.exe`
+   - Linux: `human-tsunami`, with arguments `--no-sandbox` (Electron cannot use its sandbox inside
      the Steam runtime on Linux).
 4. Publish the build to the `default` branch and test it from your Steam library.
 
@@ -107,14 +107,22 @@ and set an icon in `package.json` (`build.win.icon`).
     in `steam/art/capsule.html` and the backgrounds in `steam/art/bg/`.
   - The library hero is upscaled from a 1824 px wide capture, so it is a bit soft. For more
     sharpness, take a 4K capture and replace `steam/art/bg/circo.jpg`.
-  - `steam/trailer/human_tide_trailer.mp4`: a trailer recorded from the real game, with the game's
+  - `steam/trailer/human_tsunami_trailer.mp4`: a trailer recorded from the real game, with the game's
     own music and sound effects. To regenerate it:
     `xvfb-run -a -s "-screen 0 1920x1080x24" node steam/trailer/trailer.cjs`.
   - Check the current sizes in Steamworks before uploading: Valve changes them from time to time.
 - Fill in the content survey. The game shows crush deaths with no blood or explicit violence;
   answer it honestly.
-- Pick the price under *Pricing* from Steam's price tiers. Check the current minimum price for
-  your region there before announcing a price.
+- Pick the price under *Pricing* from Steam's price tiers. The plan is an impulse-buy price of
+  about €1–2 (for example the €1.99 / $1.99 tier). Things to keep in mind:
+  - Check the current minimum price for each region in *Pricing* before announcing the price;
+    Steam suggests regional prices automatically and you can adjust them.
+  - Valve keeps a revenue share (30% by default), and prices in the EU and many other regions
+    include VAT, so at €1.99 you receive well under €1.40 per copy. Plan your expectations on volume.
+  - Very cheap games sell on the trailer and the first screenshot: put the trailer first on the page
+    and use the crowd-heavy screenshots (circus, city fireworks, arena) at the top.
+  - A launch discount (e.g. −20% in launch week) and joining Steam seasonal sales help a lot at this
+    price; bundles with your future games too.
 - Valve reviews the store page and the build before launch, and requires the page to be visible as
   "Coming Soon" for a while before you can sell. Plan the date with that in mind.
 

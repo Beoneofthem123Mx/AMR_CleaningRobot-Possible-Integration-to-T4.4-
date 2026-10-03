@@ -1,4 +1,4 @@
-// Human Tide · scene: Close Encounter (a UFO landed in a cornfield and the whole town showed up)
+// Human Tsunami · scene: Close Encounter (a UFO landed in a cornfield and the whole town showed up)
 const RANCH = { x: 20, y: 14, r: 6.5 };
 SCENES.ovni = {
   name: "Close Encounter", tag: "Landing confirmed (more or less)", outside: "#3a4a2a", bulbH: .9, night: true, music: "space",

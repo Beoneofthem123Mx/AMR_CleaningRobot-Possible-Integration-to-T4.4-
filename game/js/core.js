@@ -1,4 +1,4 @@
-// Human Tide · world, obstacles and utilities
+// Human Tsunami · world, obstacles and utilities
 const $ = s => document.querySelector(s);
 const cv = $("#cv"), ov = $("#ov"), octx = ov.getContext("2d");
 // ===== World (meters) =====

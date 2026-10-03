@@ -1,4 +1,4 @@
-// Human Tide · scene: The Star Arrives (airport packed with fans waiting for their idol)
+// Human Tsunami · scene: The Star Arrives (airport packed with fans waiting for their idol)
 SCENES.aeropuerto = {
   name: "The Star Arrives", tag: "International arrivals hall", outside: "#8a8f99", bulbH: 2.4, music: "lounge",
   light: { sky: 0xf4f8ff, ground: 0x7a808a, hemi: .7, sun: 0xf8fbff, sunI: 1.05 }, crowd: 3800, fenceBudget: 70, maxGates: 5, guards: 5,

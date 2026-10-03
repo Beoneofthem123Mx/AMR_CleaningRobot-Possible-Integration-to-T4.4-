@@ -1,4 +1,4 @@
-// Human Tide · post-processing: HDR bloom, tilt-shift "miniature" focus, vignette and color grade.
+// Human Tsunami · post-processing: HDR bloom, tilt-shift "miniature" focus, vignette and color grade.
 // Everything is drawn into an HDR target first, then composited with ACES tone mapping.
 const POST = { on: true, ready: false, w: 0, h: 0, rt: {}, mat: {}, quad: null, cam: null, scn: null, dof: .4, bloom: .6 };
 

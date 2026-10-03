@@ -1,4 +1,4 @@
-// Human Tide · title screen, venue picker and the next morning's newspaper
+// Human Tsunami · title screen, venue picker and the next morning's newspaper
 const pick = arr => arr[(Math.random() * arr.length) | 0];
 const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
 
@@ -12,10 +12,10 @@ function sceneThumb(key) {
     seg(0, 0, 0, SH, .2, "edge"); seg(WW, 0, WW, SH, .2, "edge"); seg(0, 0, WW, 0, .2, "edge");
     scene.build();
     const big = buildStatic(), c = document.createElement("canvas");
-    c.width = 108; c.height = 60; const g = c.getContext("2d");
+    c.width = 288; c.height = 160; const g = c.getContext("2d");
     // the venue is rotated so the thumbnail is landscape, like on PC
-    g.translate(108, 0); g.rotate(Math.PI / 2);
-    g.drawImage(big, 0, 0, big.width, WH * TEXS, 0, 0, 60, 108);
+    g.translate(288, 0); g.rotate(Math.PI / 2);
+    g.drawImage(big, 0, 0, big.width, WH * TEXS, 0, 0, 160, 288);
     THUMBS[key] = c.toDataURL("image/jpeg", .8);
   } catch (e) { THUMBS[key] = ""; }
   ({ obs, scene, gates, fences, guards } = save);
@@ -26,21 +26,21 @@ function sceneThumb(key) {
 function chooser() {
   if ((phase === "show" || phase === "evac") && !demo) return;
   const best = loadBest(), total = totalStars(), max = Object.keys(SCENES).length * 3;
-  showCard(`<div class="title">
-      <h1 class="logo">HUMAN<br>TIDE</h1>
-      <p class="tag">A safety simulator for events that go horribly wrong</p>
+  showCard(`<div class="menuhead">
+      <div class="title"><h1 class="logo">HUMAN<br>TSUNAMI</h1></div>
+      <div class="menuintro">
+        <p class="tag">A safety simulator for events that go horribly wrong</p>
+        <p>Place the fences, the gates and the guards. Then the people pour in and absolutely everything happens. During the show, <b>click</b> to use the megaphone. Too much pressure and people go down — and get trampled.</p>
+        <div class="row chaosrow"><button id="chaos" class="${chaosMode ? "go" : ""}">Total Chaos: ${chaosMode ? "ON" : "off"}</button><small>Events from every venue anywhere, plus two of today's twists at once.</small></div>
+        <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · stars unlock new venues</p>
+      </div>
     </div>
-    <p>You place the fences, the gates and the guards. Then the people pour in and absolutely everything happens. During the show, <b>click</b> to use the megaphone. If someone takes too much pressure, they go down and get trampled.</p>
-    <div class="row chaosrow"><button id="chaos" class="${chaosMode ? "go" : ""}">Total Chaos mode: ${chaosMode ? "on" : "off"}</button><small>Events from every venue can happen anywhere, plus two of today's twists at once.</small></div>
-    <p class="keys">Shortcuts: <b>1–4</b> tools · <b>Space</b> opens gates · <b>H</b> pressure · <b>C</b> camera · <b>V</b> speed · <b>M</b> sound · <b>Esc</b> pause</p>
-    <p class="starline">You have <b>${total} of ${max}</b> stars. Stars unlock new venues.</p>
     <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => {
       const b = best[key], open = isUnlocked(key);
-      return `<button class="scene" data-scene="${key}" ${open ? "" : "disabled"}>
-        <img src="${sceneThumb(key)}" alt="">
-        <span class="txt"><b>${sc.name}${b !== undefined ? ` <em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : ""}</b>
-        <span>${sc.tag} · ${sc.crowd.toLocaleString("en")} people</span>
-        ${open ? `<small>${sc.intro}</small>` : `<span class="lock">Unlocks at ${sc.unlock} stars</span>`}</span></button>`; }).join("")}</div>
+      return `<button class="scene ${open ? "" : "locked"}" data-scene="${key}" ${open ? "" : "disabled"} title="${open ? sc.intro.replace(/"/g, "&quot;") : ""}">
+        <span class="thumb"><img src="${sceneThumb(key)}" alt="">${open ? (b !== undefined ? `<em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : `<em class="best new">NEW</em>`) : `<em class="lockbadge">LOCKED · ${sc.unlock} ★</em>`}</span>
+        <span class="txt"><b>${sc.name}</b><span>${sc.tag}</span><small>${sc.crowd.toLocaleString("en")} people</small></span></button>`; }).join("")}</div>
+    <p class="keys">Shortcuts: <b>1–4</b> tools · <b>Space</b> opens gates · <b>H</b> pressure · <b>C</b> camera · <b>V</b> speed · <b>M</b> sound · <b>Esc</b> pause</p>
     ${window.steam ? '<div class="row"><button id="fs">Full screen (F11)</button><button id="quit">Quit game</button></div>' : ""}`, "menu");
   const b = $("#card .scene:not(:disabled)"); if (b) b.focus();
 }

@@ -1,4 +1,4 @@
-// Human Tide · sound generated on the fly (no audio files)
+// Human Tsunami · sound generated on the fly (no audio files)
 // Music per venue style, crowd murmur and an effect for every event.
 const AU = { ctx: null, master: null, music: null, crowd: null, crowdBand: null, noise: null, on: true, step: 0, nextT: 0, lastSfx: {} };
 try { AU.on = localStorage.getItem("mh.sound") !== "off"; } catch (e) { /* no storage */ }

@@ -1,4 +1,4 @@
-# Cómo publicar Human Tide en Steam
+# Cómo publicar Human Tsunami en Steam
 
 *(Versión en español de `STEAM.md`. El juego ahora está completamente en inglés.)*
 
@@ -72,8 +72,8 @@ Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
 ## 5. Empaquetar
 
 ```sh
-npm run dist:win     # dist/win-unpacked/Human Tide.exe
-npm run dist:linux   # dist/linux-unpacked/human-tide
+npm run dist:win     # dist/win-unpacked/Human Tsunami.exe
+npm run dist:linux   # dist/linux-unpacked/human-tsunami
 npm run dist:mac     # solo en una Mac
 ```
 
@@ -91,8 +91,8 @@ empaqueta en Windows y agrega un icono en `package.json` (`build.win.icon`).
    ```
 
 3. En Steamworks, en *Installation > General*, crea las opciones de inicio:
-   - Windows: `Human Tide.exe`
-   - Linux: `human-tide`, con argumentos `--no-sandbox` (Electron no puede usar su sandbox dentro
+   - Windows: `Human Tsunami.exe`
+   - Linux: `human-tsunami`, con argumentos `--no-sandbox` (Electron no puede usar su sandbox dentro
      del runtime de Steam en Linux).
 4. Publica la build en la rama `default` y pruébala desde tu biblioteca de Steam.
 
@@ -109,12 +109,20 @@ empaqueta en Windows y agrega un icono en `package.json` (`build.win.icon`).
   - El héroe de biblioteca se amplía desde una captura de 1824 px de ancho, así que se ve algo
     suave. Si quieres más nitidez, toma una captura a 4K y reemplaza `steam/art/bg/circo.jpg`.
   - Revisa en Steamworks los tamaños vigentes antes de subir: Valve los cambia de vez en cuando.
-  - `steam/trailer/human_tide_trailer.mp4`: tráiler grabado del juego real, con música y efectos
+  - `steam/trailer/human_tsunami_trailer.mp4`: tráiler grabado del juego real, con música y efectos
     del propio juego. Para regenerarlo: `xvfb-run -a -s "-screen 0 1920x1080x24" node steam/trailer/trailer.cjs`.
 - Llena el cuestionario de contenido. El juego muestra muertes por aplastamiento sin sangre ni
   violencia explícita; respóndelo con honestidad.
-- El precio se elige en *Pricing* entre los niveles que ofrece Steam. Revisa ahí el precio mínimo
-  vigente para tu región antes de anunciar el precio.
+- El precio se elige en *Pricing* entre los niveles que ofrece Steam. La idea es un precio de compra
+  impulsiva de 1 a 2 € (por ejemplo, el nivel de 1,99 € / 1,99 $). Ten en cuenta:
+  - Revisa en *Pricing* el precio mínimo vigente de cada región antes de anunciarlo; Steam sugiere
+    precios regionales automáticamente y puedes ajustarlos.
+  - Valve se queda con una parte (30 % por defecto) y en la UE y muchas regiones el precio incluye
+    IVA, así que a 1,99 € recibes bastante menos de 1,40 € por copia. Cuenta con vender volumen.
+  - Los juegos muy baratos se venden por el tráiler y la primera captura: pon el tráiler primero y
+    las capturas con más gente (circo, fuegos en la ciudad, la arena) arriba.
+  - Un descuento de lanzamiento (por ejemplo −20 % la primera semana) y entrar a las rebajas de
+    temporada de Steam ayudan mucho a este precio; también los paquetes con tus próximos juegos.
 - Valve revisa la página y la build antes del lanzamiento, y exige que la página esté visible como
   "Próximamente" un tiempo antes de vender. Considera ese plazo al planear la fecha.
 

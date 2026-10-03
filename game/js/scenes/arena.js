@@ -1,4 +1,4 @@
-// Human Tide · scene: The Arena (lucha libre grand final; the wrestlers don't respect the ropes)
+// Human Tsunami · scene: The Arena (lucha libre grand final; the wrestlers don't respect the ropes)
 const LRING = { x0: 15, y0: 6, x1: 25, y1: 16 }, MASKS = ["#d8322b", "#2f6fc4", "#e3b23c", "#3d9a5b", "#ff6fb1", "#a98bff"];
 SCENES.arena = {
   name: "The Arena", tag: "Lucha libre grand final", outside: "#1d1a22", bulbH: 2.3, night: true, music: "brass",

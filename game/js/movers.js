@@ -1,4 +1,4 @@
-// Human Tide · animals, cars and objects that cut through the crowd
+// Human Tsunami · animals, cars and objects that cut through the crowd
 // ===== Things that happen in the crowd: animals, cars and objects =====
 let blackT = 0, black = 0;  // blackout: seconds left and visible darkness (0..1)
 let movers = [], performers = [], pops = [], eventT = 0, MPUSH = 2, MPRES = .4, MSCARE = 4;

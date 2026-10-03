@@ -1,4 +1,4 @@
-// Human Tide · scene: The Plaza
+// Human Tsunami · scene: The Plaza
 SCENES.plaza = {
   name: "The Plaza", tag: "Free concert", outside: "#b3b4af", bulbH: 1.95,
   light: { sky: 0xdfe8f2, ground: 0x6f6a60, hemi: .55, sun: 0xfff1dc, sunI: 1.25 }, crowd: 3200, fenceBudget: 60, maxGates: 5, gates: [F, F, T, F, T, F, F],

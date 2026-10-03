@@ -1,4 +1,4 @@
-// Human Tide · scene: The Stadium (night, concert on the pitch)
+// Human Tsunami · scene: The Stadium (night, concert on the pitch)
 SCENES.estadio = {
   name: "The Stadium", tag: "Concert on the pitch", outside: "#3b3f45", bulbH: 2.0, night: true, music: "edm",
   light: { sky: 0x8aa2e0, ground: 0x1e2228, hemi: .34, sun: 0xdfe8ff, sunI: .8 }, crowd: 3600, fenceBudget: 70, maxGates: 5, guards: 4,
@@ -44,7 +44,7 @@ SCENES.estadio = {
     // card mosaic in the back stand
     g.font = "900 3.6px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "rgba(216,50,43,.92)"; g.fillRect(9, .4, 22, 4.2);
-    g.fillStyle = "#ffffff"; g.fillText("TIDE", 20, 2.6);
+    g.fillStyle = "#ffffff"; g.fillText("TSUNAMI", 20, 2.6);
     // stage with LED screen
     g.fillStyle = "#16171b"; g.fillRect(8, 5, 24, 6);
     const led = g.createLinearGradient(9, 0, 31, 0); led.addColorStop(0, "#7a2cff"); led.addColorStop(.5, "#ff3fa4"); led.addColorStop(1, "#22d3ee");

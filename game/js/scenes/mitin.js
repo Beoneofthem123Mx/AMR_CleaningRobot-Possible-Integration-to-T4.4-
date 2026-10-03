@@ -1,4 +1,4 @@
-// Human Tide · scene: The Duck Rally (fictional campaign, genuinely absurd promises)
+// Human Tsunami · scene: The Duck Rally (fictional campaign, genuinely absurd promises)
 const PROMISES = ["Optional Mondays!", "Wifi on the Moon!", "Tacos at 1998 prices!", "Zero traffic on Tuesdays!", "Mandatory naps!",
   "A duck in every home!", "Rain only at night!", "Traffic lights that wait for everyone!", "Double AND triple Christmas bonus!", "Birthdays twice a year!"];
 SCENES.mitin = {

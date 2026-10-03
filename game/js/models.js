@@ -1,4 +1,4 @@
-// Human Tide · 3D models of characters and objects for the comedy venues
+// Human Tsunami · 3D models of characters and objects for the comedy venues
 // They all face +x and are built from simple parts (spheres, cylinders and boxes).
 
 // ---------- people with style ----------

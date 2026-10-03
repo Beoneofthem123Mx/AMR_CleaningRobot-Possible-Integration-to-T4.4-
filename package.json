@@ -1,6 +1,6 @@
 {
-  "name": "human-tide",
-  "productName": "Human Tide",
+  "name": "human-tsunami",
+  "productName": "Human Tsunami",
   "version": "0.1.0",
   "description": "Crowd management game: plan fences and gates so nobody gets trampled.",
   "main": "desktop/main.js",
@@ -19,8 +19,8 @@
     "electron-builder": "25.1.8"
   },
   "build": {
-    "appId": "com.humantide.game",
-    "productName": "Human Tide",
+    "appId": "com.humantsunami.game",
+    "productName": "Human Tsunami",
     "directories": {
       "output": "dist"
     },

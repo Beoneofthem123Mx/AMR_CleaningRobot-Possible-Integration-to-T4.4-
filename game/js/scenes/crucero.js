@@ -1,4 +1,4 @@
-// Human Tide · scene: The Cruise (deck party)
+// Human Tsunami · scene: The Cruise (deck party)
 SCENES.crucero = {
   name: "The Cruise", tag: "Party on the high seas", outside: "#1d6fa5", bulbH: 1.6, music: "tropical",
   light: { sky: 0xeaf6ff, ground: 0x5b7286, hemi: .6, sun: 0xfff4e0, sunI: 1.3 }, crowd: 2600, fenceBudget: 60, maxGates: 5, guards: 3,

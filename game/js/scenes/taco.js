@@ -1,4 +1,4 @@
-// Human Tide · scene: The Giant Taco (world record; everyone wants a bite)
+// Human Tsunami · scene: The Giant Taco (world record; everyone wants a bite)
 SCENES.taco = {
   name: "The Giant Taco", tag: "World-record taco", outside: "#9a8f7a", bulbH: 2.2, music: "mariachi",
   light: { sky: 0xfff1d6, ground: 0x7a6a50, hemi: .6, sun: 0xffe2b0, sunI: 1.3 }, crowd: 3600, fenceBudget: 70, maxGates: 5, guards: 4,

@@ -1,4 +1,4 @@
-// Human Tide · scene: The Circus
+// Human Tsunami · scene: The Circus
 SCENES.circo = {
   name: "The Circus", tag: "Gala performance", outside: "#79a25a", bulbH: .95,
   light: { sky: 0xffd9a8, ground: 0x6a4a2a, hemi: .5, sun: 0xffd9a0, sunI: 1.1 }, crowd: 2800,

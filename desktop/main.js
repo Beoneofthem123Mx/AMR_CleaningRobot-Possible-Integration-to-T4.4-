@@ -1,4 +1,4 @@
-// Human Tide: desktop app for Steam (Electron + steamworks.js)
+// Human Tsunami: desktop app for Steam (Electron + steamworks.js)
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("path");
 
@@ -21,7 +21,7 @@ let win;
 function createWindow() {
   win = new BrowserWindow({
     width: 1280, height: 860, minWidth: 720, minHeight: 600,
-    backgroundColor: "#141516", title: "Human Tide", autoHideMenuBar: true, show: false, icon: path.join(__dirname, "..", "game", "icon.png"),
+    backgroundColor: "#141516", title: "Human Tsunami", autoHideMenuBar: true, show: false, icon: path.join(__dirname, "..", "game", "icon.png"),
     webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   Menu.setApplicationMenu(null);

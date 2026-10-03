@@ -1,4 +1,4 @@
-// Human Tide · scene: The Racetrack (Grand Prix)
+// Human Tsunami · scene: The Racetrack (Grand Prix)
 // The track crosses the venue from side to side; the crowd presses against the rail to watch the race.
 const TRACK_Y = 12.6;
 SCENES.hipodromo = {

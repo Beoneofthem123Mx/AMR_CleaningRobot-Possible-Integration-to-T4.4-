@@ -1,4 +1,4 @@
-// Human Tide · today's twist: a random surprise every show
+// Human Tsunami · today's twist: a random surprise every show
 const MODS = [
   { id: "normal", name: "A quiet day", desc: "No surprises. For now.", w: 3 },
   { id: "wifi", name: "Free wifi in one corner", desc: "A third of the crowd only cares about signal and piles up around the router.", w: 2, altShare: .33,
