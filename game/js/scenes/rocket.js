@@ -149,8 +149,8 @@ SCENES.rocket = {
     circ(5, 7, 2.2, "rocket_tank"); circ(35.5, 7, 2.2, "rocket_tank");
     rect(2, 11, 9.5, 15, "rocket_control");
     // the crowd area: VIP bleachers in the middle and merch/potties making bottlenecks
-    rect(12.5, 27, 27.5, 32, "rocket_vip");
-    rect(0, 36, 7, 42, "rocket_merch"); rect(33, 36, WW, 42, "rocket_merch");
+    rect(14, 27, 26, 32, "rocket_vip");
+    rect(0, 37, 6, 43, "rocket_merch"); rect(34, 37, WW, 43, "rocket_merch");
     rect(15, 45, 25, 47.5, "rocket_potty");
     circ(5.5, 52, 1.4, "rocket_dish"); circ(34.5, 52, 1.4, "rocket_dish");
   },
@@ -212,8 +212,8 @@ SCENES.rocket = {
     g.font = "900 .55px Rubik, sans-serif"; g.fillStyle = "#5fe0ff"; g.fillText("MISSION CONTROL", 5.75, 11.95);
     g.fillStyle = "#ff5a1f"; g.font = "900 .5px Rubik, sans-serif"; g.fillText("(INTERN)", 5.75, 13.6);
     // VIP bleachers
-    g.fillStyle = "#2b2f35"; g.fillRect(12.5, 27, 15, 5);
-    for (let y = 27.5; y < 32; y += .8) { g.fillStyle = "#3a4252"; g.fillRect(12.8, y, 14.4, .5); }
+    g.fillStyle = "#2b2f35"; g.fillRect(14, 27, 12, 5);
+    for (let y = 27.5; y < 32; y += .8) { g.fillStyle = "#3a4252"; g.fillRect(14.3, y, 11.4, .5); }
     g.fillStyle = "#ffd23a"; g.font = "900 .9px Rubik, sans-serif"; g.fillText("VIP · INVESTORS ONLY", 20, 29.5);
     g.fillStyle = "#c9ced6"; g.font = "700 .5px Rubik, sans-serif"; g.fillText("(SERIES Z AND ABOVE)", 20, 30.8);
     // merch tents
@@ -263,8 +263,8 @@ SCENES.rocket = {
     // dish tops over the crowd
     for (const x of [5.5, 34.5]) { const s = part(grp, "sph", "#e6e8ea", 1.4, .35, 1.4, x, 2.1, 52); s.rotation.x = .5; part(grp, "cyl", "#9aa0a8", .05, .8, .05, x, 2.6, 51.6); }
     // VIP bleacher awning
-    part(grp, "box", "#ff5a1f", 15.4, .15, 1.2, 20, 3.6, 31.6);
-    for (const x of [12.8, 27.2]) part(grp, "box", "#2b2f35", .15, 1.9, .15, x, 2.7, 31.6);
+    part(grp, "box", "#ff5a1f", 12.4, .15, 1.2, 20, 3.6, 31.6);
+    for (const x of [14.3, 25.7]) part(grp, "box", "#2b2f35", .15, 1.9, .15, x, 2.7, 31.6);
   },
   ev: {
     countdown() {

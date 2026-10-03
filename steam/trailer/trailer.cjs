@@ -24,7 +24,7 @@ const SEG = [
   { clip: "arena", warm: 26, secs: B * 4, cam: 1, ev: [[-1.3, "tope"], [-.4, "sillazo"]], hot: true },
   { clip: "ciudad", warm: 26, secs: B * 4, cam: 0, ev: [[-.8, "fuegos"]], hot: true },
   { clip: "plaza", warm: 26, secs: B * 4, cam: 1, mod: "rain", ev: [[-.6, "dogs"]], hot: true },
-  { clip: "zoo", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "ZOO_EV"]], hot: true },
+  { clip: "zoo", warm: 26, secs: B * 4, cam: 1, ev: [[-1.6, "giraffe"], [-1.2, "penguins"]], hot: true },
   { clip: "rocket", warm: 26, secs: B * 4, cam: 0, ev: [[-1.2, "ROCKET_EV"]], hot: true },
   { clip: "cheese", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "CHEESE_EV"]], hot: true },
   { clip: "zombie", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "horde"]], hot: true },

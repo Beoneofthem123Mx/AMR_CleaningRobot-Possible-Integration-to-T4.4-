@@ -4,7 +4,7 @@ const zooNow = () => (typeof performance !== "undefined" ? performance.now() : D
 
 // ---------- the animals (all face +x) ----------
 SCENE_MODELS.zoo_panda = (g, u, m) => {
-  const s = m.big ? 1.9 : 1, b = pivot(g, 0, 0, 0); b.scale.setScalar(s);
+  const s = m.big ? 2.6 : 1.5, b = pivot(g, 0, 0, 0); b.scale.setScalar(s);
   part(b, "sph", "#f7f5ef", .42, .4, .4, 0, .42, 0);                       // round white body
   for (const z of [-1, 1]) { part(b, "sph", "#1c1c1e", .16, .2, .14, .22, .2, z * .22); part(b, "sph", "#1c1c1e", .15, .15, .15, -.22, .18, z * .24); }
   part(b, "box", "#1c1c1e", .3, .14, .82, .05, .62, 0);                    // the black "shoulder band"
@@ -50,7 +50,7 @@ SCENE_MODELS.zoo_giraffe = (g, u, m) => {
   u.anim = (tt) => { n.rotation.z = -.55 + Math.sin(tt * .9 + m.x) * .18; n.rotation.x = Math.sin(tt * .6) * .2; };
 };
 SCENE_MODELS.zoo_gorilla = (g, u, m) => {
-  const fur = "#3a3638", skin = "#6b5e5a", b = pivot(g, 0, 0, 0); b.scale.setScalar(1.15);
+  const fur = "#3a3638", skin = "#6b5e5a", b = pivot(g, 0, 0, 0); b.scale.setScalar(1.45);
   part(b, "sph", fur, .55, .62, .62, -.05, .95, 0);                          // big hunched back
   part(b, "sph", "#57514f", .3, .38, .42, .26, .95, 0);                      // chest
   part(b, "sph", "#8f8a86", .4, .16, .42, -.25, 1.42, 0);                    // silver back stripe
@@ -70,7 +70,7 @@ SCENE_MODELS.zoo_gorilla = (g, u, m) => {
   };
 };
 SCENE_MODELS.zoo_alpaca = (g, u, m) => {
-  const wool = m.col || "#f3e9d4", b = pivot(g, 0, 0, 0);
+  const wool = m.col || "#f3e9d4", b = pivot(g, 0, 0, 0); b.scale.setScalar(1.35);
   for (const [x, y, z, r] of [[0, 1.05, 0, .42], [.3, 1.1, .12, .3], [-.3, 1.08, -.1, .32], [.15, 1.22, -.15, .3], [-.25, 1.2, .15, .28]]) part(b, "sph", wool, r * 1.1, r, r, x, y, z);
   for (const [x, z] of [[.3, .18], [.3, -.18], [-.3, .18], [-.3, -.18]]) u.legs.push(leg(b, x, .8, z, .07, .8, wool));
   const n = pivot(b, .45, 1.2, 0); n.rotation.z = -.25;
@@ -80,7 +80,7 @@ SCENE_MODELS.zoo_alpaca = (g, u, m) => {
   for (const z of [-1, 1]) { part(h, "cone", wool, .05, .22, .05, -.05, .22, z * .1); part(h, "sph", "#111", .045, .045, .045, .14, .05, z * .12); part(h, "sph", ["#ff6fb1", "#5fd8ff"][z > 0 ? 0 : 1], .08, .08, .08, -.04, .3, z * .14); }
   part(h, "sph", "#ff6fb1", .25, .07, .25, -.05, .14, 0);                   // pink fluffy fringe
   part(b, "box", "#d8322b", .5, .05, .62, 0, 1.38, 0); part(b, "box", "#ffd23a", .5, .05, .64, 0, 1.4, 0); // festive blanket
-  u.anim = (tt) => { b.position.y = Math.abs(Math.sin(tt * 9)) * .2; n.rotation.z = -.25 + Math.sin(tt * 9) * .1; };
+  u.anim = (tt) => { b.position.y = Math.abs(Math.sin(tt * 9)) * .25; n.rotation.z = -.25 + Math.sin(tt * 9) * .1; };
 };
 SCENE_MODELS.zoo_hippo = (g, u, m) => {
   const c = "#8c7c9c", b = pivot(g, 0, 0, 0);
@@ -144,8 +144,8 @@ SCENE_PERSONS.zoo_keeper = { body: "#7a8c3a", legs: "#c9b28a", hat: "none",
 // ---------- the venue ----------
 SCENES.zoo = {
   name: "Free Zoo Day", tag: "The zookeeper left the gates open", outside: "#6f9e4a", bulbH: 1.7, music: "tropical", place: "THE CITY ZOO",
-  light: { sky: 0xdff3ff, ground: 0x5a7a3a, hemi: .66, sun: 0xfff2d6, sunI: 1.15 }, crowd: 2800, fenceBudget: 65, maxGates: 5, guards: 4,
-  gates: [F, F, T, T, F, F, F], unlock: 22,
+  light: { sky: 0xdff3ff, ground: 0x5a7a3a, hemi: .66, sun: 0xfff2d6, sunI: 1.15 }, crowd: 2700, fenceBudget: 65, maxGates: 5, guards: 4,
+  gates: [F, T, T, F, F, F, F], unlock: 22,
   intro: "Free entry at the city zoo, and the baby panda is making her first public appearance. Every enclosure has a small leak, and so does the gorilla's.",
   acts: ["Awwww!", "She moved!", "Look at her little paws!", "Panda! Panda! Panda!"],
   events: ["penguins", "giraffe", "gorilla", "alpaca", "bananas", "hippo", "sneeze", "penguins"],
@@ -336,8 +336,8 @@ SCENES.zoo = {
   },
   performers: () => [
     { kind: "zoo_panda", orbit: [20, 9, 1.4, .35, 0], x: 0, y: 0, ang: 0, t: 0 },
-    { kind: "zoo_panda", big: true, orbit: [15.5, 5.5, .01, 0, 0], x: 0, y: 0, ang: 0, t: 0 },
-    { kind: "zoo_hippo", orbit: [ZPOND.x + .4, ZPOND.y, .01, 0, Math.PI], h: -.5, x: 0, y: 0, ang: 0, t: 0 },
+    { kind: "zoo_panda", big: true, orbit: [15.5, 4.5, .01, 0, 0], x: 0, y: 0, ang: 0, t: 0 },
+    { kind: "zoo_hippo", orbit: [ZPOND.x + .4, ZPOND.y, .01, 0, Math.PI], h: -.15, x: 0, y: 0, ang: 0, t: 0 },
     { kind: "zoo_flamingo", orbit: [ZPOND.x, ZPOND.y, ZPOND.r - .5, .15, 1], x: 0, y: 0, ang: 0, t: 0 },
     { kind: "zoo_flamingo", orbit: [ZPOND.x, ZPOND.y, ZPOND.r - .5, .15, 1.8], x: 0, y: 0, ang: 0, t: 0 },
     { kind: "zoo_penguin", orbit: [3.5, 22, 1.6, .5, 0], x: 0, y: 0, ang: 0, t: 0 },

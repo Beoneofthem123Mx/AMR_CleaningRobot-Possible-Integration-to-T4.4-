@@ -89,8 +89,8 @@ SCENE_MODELS.cheese_fondue = (g, u) => {
 
 SCENES.cheese = {
   name: "The Cheese Chase", tag: "Annual downhill cheese rolling championship", place: "CHEESE HILL", outside: "#5f8f3a", bulbH: 2.2, music: "brass",
-  light: { sky: 0xeaf6ff, ground: 0x4f7a2a, hemi: .62, sun: 0xfff1d0, sunI: 1.3 }, crowd: 3200, fenceBudget: 64, maxGates: 5, guards: 4,
-  gates: [F, F, T, F, T, F, F], unlock: 24,
+  light: { sky: 0xeaf6ff, ground: 0x4f7a2a, hemi: .62, sun: 0xfff1d0, sunI: 1.3 }, crowd: 2900, fenceBudget: 64, maxGates: 5, guards: 4,
+  gates: [F, T, F, F, F, F, F], unlock: 24,
   heights: { cheese_podium: 1.3, cheese_hay: .9, cheese_rope: .8, cheese_line: .9, cheese_amb: 2.4, cheese_stall: 2.2, cheese_hedge: 1.6, cheese_ramp: 1.1 },
   sfx: { "CHEESE!": "cheer", "MEEEH!": "moo", "WHEEE!": "scream", "PUTT PUTT!": "honk", "AHEM!": "trumpet", "FREE FONDUE!": "jingle", "PEE-YOO!": "scream", "MY CHEESE!": "crash", "MY SPLEEN!": "crash", "NEE-NAW!": "siren" },
   intro: "Six hundred years of tradition: the village throws a wheel of cheese down a cliff-steep hill and grown adults chase it. The ambulance is already parked and the crowd insists on standing exactly where the cheese lands.",
@@ -240,7 +240,7 @@ SCENES.cheese = {
     wheel() {
       for (let n = 0; n < 3; n++) later(n * .7, () => {
         if (phase !== "show" && phase !== "evac") return;
-        addMover({ kind: "cheese_wheel", beh: "bounce", air: true, x: rnd(18.5, 21.5), y: 13, vx: rnd(-2.5, 2.5), vy: rnd(6, 8), r: 1.05, push: 38, scare: 2.2, life: 7.5, say: "CHEESE!", sayEvery: 2.2 });
+        addMover({ kind: "cheese_wheel", beh: "bounce", air: true, x: rnd(18.5, 21.5), y: 13, vx: rnd(-2.5, 2.5), vy: rnd(6, 8), r: 1.05, push: 30, scare: 2, life: 7.5, say: "CHEESE!", sayEvery: 2.2 });
       });
       for (let n = 0; n < 3; n++) addMover({ kind: "cheese_runner", col: pick(CH_COLS), x: rnd(18, 22), y: 9, pts: [[rnd(18, 22), 40], [rnd(18, 22), 41.5]], speed: 4.5, r: .4, push: 0 });
       cheerT = 2; caption("The cheese is away! Straight into the crowd", true, 2000);
@@ -259,7 +259,7 @@ SCENES.cheese = {
     },
     tractor() {
       const y = rnd(36, 46), side = Math.random() < .5;
-      addMover({ kind: "cheese_tractor", x: side ? -5 : WW + 5, y, pts: [[side ? WW + 7 : -7, y + rnd(-3, 3)]], speed: 2.1, r: 1.6, push: 42, scare: 3, dust: true, say: "PUTT PUTT!", sayEvery: 1.8 });
+      addMover({ kind: "cheese_tractor", x: side ? -5 : WW + 5, y, pts: [[side ? WW + 7 : -7, y + rnd(-3, 3)]], speed: 2.1, r: 1.6, push: 36, scare: 2.6, dust: true, say: "PUTT PUTT!", sayEvery: 1.8 });
       caption("A tractor is towing a cheese the size of a car", false, 1900);
     },
     mayor() {
@@ -276,7 +276,7 @@ SCENES.cheese = {
     },
     bluecheese() {
       const side = Math.random() < .5, y = rnd(32, 46);
-      addMover({ kind: "cheese_wheel", blue: true, x: side ? -2 : WW + 2, y, pts: [crowdPoint(), [side ? WW + 4 : -4, y + rnd(-6, 6)]], speed: 2.6, r: 1, push: 25, scare: 4.5, say: "PEE-YOO!", sayEvery: 2 });
+      addMover({ kind: "cheese_wheel", blue: true, x: side ? -2 : WW + 2, y, pts: [crowdPoint(), [side ? WW + 4 : -4, y + rnd(-6, 6)]], speed: 2.6, r: 1, push: 22, scare: 4, say: "PEE-YOO!", sayEvery: 2 });
       caption("The rival village rolled in a blue cheese! The smell!", true, 2100);
     },
   },
