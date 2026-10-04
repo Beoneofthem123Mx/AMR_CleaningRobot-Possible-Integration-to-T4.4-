@@ -40,7 +40,7 @@ function chooser() {
       return `<button class="scene ${open ? "" : "locked"}" data-scene="${key}" ${open ? "" : "disabled"} title="${open ? sc.intro.replace(/"/g, "&quot;") : ""}">
         <span class="thumb"><img src="${sceneThumb(key)}" alt="">${open ? (b !== undefined ? `<em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : `<em class="best new">NEW</em>`) : `<em class="lockbadge">LOCKED · ${sc.unlock} ★</em>`}</span>
         <span class="txt"><b>${sc.name}</b><span>${sc.tag}</span><small>${sc.crowd.toLocaleString("en")} people</small></span></button>`; }).join("")}</div>
-    <p class="keys">Shortcuts: <b>1–4</b> tools · <b>Space</b> opens gates · <b>H</b> pressure · <b>C</b> camera · <b>V</b> speed · <b>M</b> sound · <b>G</b> effects · <b>Esc</b> pause</p>
+    <p class="keys">Shortcuts: <b>1–5</b> tools (press again to switch fence/prop type) · <b>Space</b> opens gates · <b>H</b> pressure · <b>C</b> camera · <b>V</b> speed · <b>M</b> sound · <b>G</b> effects · <b>Esc</b> pause</p>
     ${window.steam ? '<div class="row"><button id="fs">Full screen (F11)</button><button id="quit">Quit game</button></div>' : ""}`, "menu");
   const b = $("#card .scene:not(:disabled)"); if (b) b.focus();
 }

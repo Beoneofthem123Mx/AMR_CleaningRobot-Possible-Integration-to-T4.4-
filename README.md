@@ -37,6 +37,12 @@ Everything works offline: three.js and the fonts ship inside `game/`. To publish
   | **Foam wall** | $16/m | Soft padding that soaks up pressure: nobody gets crushed against it. Vehicles bounce off. |
 
   Fences that break during a show come back when you return to planning.
+- **Props** (key **5**, press again to cycle): spend the same budget on
+  - **Water station** ($60): people within 3 m calm down.
+  - **First aid tent** ($120): within 6 m, squeezes hurt half as much and people heal faster.
+    Put them where the pressure view turns red.
+  - **Big screen** ($150, one per venue): about a quarter of the crowd watches it instead of
+    crushing toward the stage.
 - **Gates**: tap the barrier at the bottom to open or close entrances.
 - **Security**: place guards. They calm the people around them and stop animals and vehicles.
 - **Erase**: tap a fence or a guard to remove it.
@@ -130,5 +136,5 @@ around.
 
 ## Keyboard shortcuts
 
-**1–4** tools · **Space** opens the gates · **H** pressure · **C** camera · **V** speed ·
+**1–5** tools · **Space** opens the gates · **H** pressure · **C** camera · **V** speed ·
 **M** sound · **G** glow and focus effects (turn off on slow PCs) · **Esc** or **P** pause · **F11** fullscreen

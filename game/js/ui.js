@@ -1,7 +1,7 @@
 // Human Tsunami · plan editing and interface
 // ===== Plan editing =====
 let tool = "fence", drag = null;
-const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0);   // dollars spent
+const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0);   // dollars spent
 const fenceLeft = () => FENCE_BUDGET * 10 - fenceUsed();
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
@@ -28,9 +28,18 @@ cv.addEventListener("pointerdown", ev => {
     if (gy >= FENCE_Y - .5 || blockedC[id] || !isFinite(fStage[id])) { toast("Put the guard somewhere the crowd will actually be."); return; }
     guards.push({ kind: "guard", x: gx, y: gy, ang: -Math.PI / 2, t: 0 }); buildWorld(); ui(); return;
   }
+  if (tool === "prop") {
+    const pt = PROP_TYPES[propType], px = snap(x), py = snap(y);
+    if (fenceLeft() < pt.cost) { toast(`Not enough budget for a ${pt.name.toLowerCase()} ($${pt.cost}).`); return; }
+    if (propType === "screen" && props.some(p => p.type === "screen")) { toast("One big screen per venue. The sponsor is cheap."); return; }
+    if (py >= FENCE_Y - 2.5 || py < 1 || px < 1 || px > WW - 1 || blockedC[cellOf(px, py)] || !isFinite(fStage[cellOf(px, py)])) { toast("Put it somewhere the crowd can actually reach (and not on top of the gates)."); return; }
+    props.push({ type: propType, x: px, y: py }); buildWorld(); ui(); return;
+  }
   if (tool === "erase") {
     const gi = guards.findIndex(gd => Math.hypot(gd.x - x, gd.y - y) < 1.2);
     if (gi >= 0) { guards.splice(gi, 1); buildWorld(); ui(); return; }
+    const pi = props.findIndex(p => Math.hypot(p.x - x, p.y - y) < PROP_TYPES[p.type].r + .8);
+    if (pi >= 0) { props.splice(pi, 1); buildWorld(); ui(); return; }
     let best = -1, bd = 1.2;
     fences.forEach((f, i) => { const d = contact({ t: "s", ...f, th: 0 }, x, y)[2]; if (d < bd) { bd = d; best = i; } });
     if (best >= 0) { fences.splice(best, 1); buildWorld(); ui(); }
@@ -99,8 +108,7 @@ function ui() {
   const plan = phase === "plan";
   $("#cFence").textContent = `$${Math.round(fenceLeft())}`;
   $("#tFence").firstChild.textContent = FENCE_TYPES[fenceType].name + " ";
-  $("#ftypes").hidden = !plan || tool !== "fence";
-  document.querySelectorAll("#ftypes button").forEach(b => b.classList.toggle("on", b.dataset.ftype === fenceType));
+  renderPicker(plan);
   $("#cGuard").textContent = `${(scene.guards || 3) - guards.length}`;
   $("#cGate").textContent = `${gates.filter(Boolean).length}/${MAX_GATES}`;
   document.querySelectorAll("[data-tool]").forEach(b => { b.disabled = !plan; b.classList.toggle("on", b.dataset.tool === tool); });
@@ -123,7 +131,8 @@ addEventListener("keydown", e => {
   if (k === "escape" || k === "p") { if (phase === "show" || phase === "evac") togglePause(); else if (phase === "plan" && !cardOpen) chooser(); return; }
   if (cardOpen) return;
   if (phase === "plan") {
-    const tools = { "1": "fence", "2": "gate", "3": "guard", "4": "erase" };
+    const tools = { "1": "fence", "2": "gate", "3": "guard", "4": "erase", "5": "prop" };
+    if (k === "5" && tool === "prop") { const ks = Object.keys(PROP_TYPES); pickProp(ks[(ks.indexOf(propType) + 1) % ks.length]); return; }
     if (k === "1" && tool === "fence") { const ks = Object.keys(FENCE_TYPES); pickFence(ks[(ks.indexOf(fenceType) + 1) % ks.length]); return; }
     if (tools[k]) { tool = tools[k]; ui(); return; }
     if (k === " " || k === "enter") { e.preventDefault(); startWithRoulette(); return; }
@@ -140,6 +149,7 @@ document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click"
   tool = b.dataset.tool; ui();
   if (tool === "gate") toast("Tap the fence at the bottom to open or close gates.");
   if (tool === "guard") toast("Tap the venue to place a guard: they calm people down and stop animals and cars.");
+  if (tool === "prop") toast("Tap the venue to place the selected prop. It's paid from the same budget as fences.");
 }));
 $("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : backToPlan());
 let heat = false, speed = 1;
@@ -156,8 +166,20 @@ $("#card").addEventListener("click", e => {
 });
 
 
-// fence material picker (shown above the toolbar while the fence tool is active)
+// picker row above the toolbar: fence materials or props, depending on the tool
 function pickFence(type) { fenceType = type; tool = "fence"; ui(); toast(`${FENCE_TYPES[type].name} · $${FENCE_TYPES[type].cost}/m — ${FENCE_TYPES[type].desc}`); }
-$("#ftypes").innerHTML = Object.entries(FENCE_TYPES).map(([k, f]) =>
-  `<button data-ftype="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">$${f.cost}/m</span></button>`).join("");
-document.querySelectorAll("#ftypes button").forEach(b => b.addEventListener("click", () => pickFence(b.dataset.ftype)));
+function pickProp(type) { propType = type; tool = "prop"; ui(); toast(`${PROP_TYPES[type].name} · $${PROP_TYPES[type].cost} — ${PROP_TYPES[type].desc}`); }
+let pickerFor = "";
+function renderPicker(plan) {
+  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop") ? tool : "";
+  el.hidden = !want;
+  if (want && want !== pickerFor) {
+    pickerFor = want;
+    const list = want === "fence" ? FENCE_TYPES : PROP_TYPES;
+    el.innerHTML = Object.entries(list).map(([k, f]) =>
+      `<button data-k="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">$${f.cost}${want === "fence" ? "/m" : ""}</span></button>`).join("");
+    el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => want === "fence" ? pickFence(b.dataset.k) : pickProp(b.dataset.k)));
+  }
+  const cur = want === "fence" ? fenceType : propType;
+  el.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.k === cur));
+}

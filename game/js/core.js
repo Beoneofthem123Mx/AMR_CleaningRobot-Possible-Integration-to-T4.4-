@@ -21,6 +21,13 @@ const FENCE_TYPES = {
 };
 let fenceType = "steel";
 const fenceCost = f => f.len * FENCE_TYPES[f.type || "steel"].cost;
+// props the player can place with the same budget
+const PROP_TYPES = {
+  water:  { name: "Water station", cost: 60, col: "#4fc3f7", r: .6, calm: 3, desc: "Free water: people within 3 m calm down." },
+  medic:  { name: "First aid tent", cost: 120, col: "#e53935", r: 1.1, heal: 6, desc: "People within 6 m get patched up: squeezes hurt half as much and heal faster." },
+  screen: { name: "Big screen", cost: 150, col: "#7e57c2", r: .9, desc: "Shows the show: about a quarter of the crowd watches it instead of crushing at the stage." },
+};
+let props = [], propType = "water";   // placed props {type, x, y}
 
 // ===== Obstacles =====
 let obs = [], buckets, BKS = 2, BW = Math.ceil(WW / BKS), BH = Math.ceil(SH / BKS);

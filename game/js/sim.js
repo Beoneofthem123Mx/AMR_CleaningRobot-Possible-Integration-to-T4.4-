@@ -18,6 +18,7 @@ function buildWorld() {
     o.ftype = type; o.fence = f; if (type === "cones") o.soft = true;
   }
   for (const gd of guards) circ(gd.x, gd.y, .35, "guard");
+  for (const pr of props) { const o = circ(pr.x, pr.y, PROP_TYPES[pr.type].r, "prop"); o.ptype = pr.type; }
   // spatial buckets
   buckets = Array.from({ length: BW * BH }, () => []);
   obs.forEach((o, i) => {
@@ -158,7 +159,7 @@ function spawn() {
   const x = .6 + Math.random() * (WW - 1.2), y = WH + .6 + Math.random() * (SH - WH - 1.2);
   for (let i = Math.max(0, ag.length - 400); i < ag.length; i++) { const a = ag[i]; if ((a.x - x) ** 2 + (a.y - y) ** 2 < .4) return; }
   const e = Math.random();
-  ag.push({ x, y, vx: 0, vy: -.5, h: -Math.PI / 2, v0: (1.35 + Math.random() * .5) * (MOD && MOD.speed || 1), alt: !!(MOD && MOD.altShare && Math.random() < MOD.altShare), fol: Math.random(), lift: 0, beam: false, tol: .8 + e * e * 26,
+  ag.push({ x, y, vx: 0, vy: -.5, h: -Math.PI / 2, v0: (1.35 + Math.random() * .5) * (MOD && MOD.speed || 1), alt: Math.random() < altShare(), fol: Math.random(), lift: 0, beam: false, tol: .8 + e * e * 26,
     leave: Math.random() * 16, ph: Math.random() * 6.28, dance: false, p: 0, ...looks(), ps: 0, dmg: 0, fx: 0, fy: 0 });
   spawned++;
 }
@@ -177,6 +178,7 @@ function spawnAt(x, y, n) {
 }
 function step() {
   t += DT;
+  const medics = props.filter(p => p.type === "medic");
   const evac = phase === "evac"; if (evac) evacT += DT;
   if (phase === "show") {
     for (let k = 0; k < 30 && spawned < CROWD; k++) spawn();
@@ -256,7 +258,9 @@ function step() {
     if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1;
     const pc = PCRIT * (MOD && MOD.pcritMul || 1);
-    if (a.p > pc) a.dmg += (a.p - pc) * DT * 1.6; else a.dmg = Math.max(0, a.dmg - DT * .4);
+    // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
+    let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
+    if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? .75 : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? 1.4 : .4));
     if (a.dmg >= 1) { fallen.push(a); onFall(a.x, a.y); setDead(dead + 1); continue; }
     if (evac && a.y > SH - .6) { evacuated++; continue; }
     out.push(a);
@@ -293,6 +297,8 @@ function canStart() {
   return true;
 }
 // the button goes through the today's-twist roulette; tests call start() directly
+// share of the crowd that heads for the alternative goal (a twist like free wifi, or the player's big screen)
+const altShare = () => (MOD && MOD.altShare) || (props.some(p => p.type === "screen") ? .25 : 0);
 let planFences = null;   // the plan as drawn, so fences broken during a show come back afterwards
 function start(mod) {
   planFences = fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type }));
@@ -303,6 +309,8 @@ function start(mod) {
   caption("The gates are open!", false, 2200); ui();
   if (MOD.uniform) MOD.uc = (Math.random() * SHIRTS.length) | 0;
   if (MOD.start) MOD.start();
+  const scr = props.find(p => p.type === "screen");
+  if (scr && !MOD.altShare) setAlt(scr.x, scr.y, PROP_TYPES.screen.r + 2.2);
   if (scene.onStart) scene.onStart();
   G3.photo = null;
 }

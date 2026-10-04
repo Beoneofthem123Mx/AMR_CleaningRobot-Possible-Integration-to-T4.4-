@@ -222,6 +222,7 @@ function buildStatic3D() {
       const mesh = new THREE.Mesh(geo, [side, side, m, m, side, side]); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh); continue;
     }
     if (o.kind === "player") { buildFence3D(grp, o); continue; }
+    if (o.kind === "prop") { buildProp3D(grp, o); continue; }
     const h = HEIGHTS[o.kind] || (scene.heights && scene.heights[o.kind]); if (!h && o.kind !== "tent") continue;
     let geo;
     if (o.kind === "tent") { geo = new THREE.ConeGeometry(Math.SQRT2 * 2.5, 3.4, 4, 1); geo.rotateY(Math.PI / 4); geo.translate((o.x0 + o.x1) / 2, 1.7, (o.y0 + o.y1) / 2); }
@@ -286,6 +287,38 @@ function buildFence3D(grp, o) {
     default:           // steel barrier, yellow and black
       slab(.95, o.th, G3.fenceMat);
   }
+}
+
+// ---------- the player's props ----------
+function buildProp3D(grp, o) {
+  const sh = m => { m.userData.shared = true; return m; }, x = o.x, y = o.y;
+  if (o.ptype === "water") {        // water cooler on a little table, with a stack of cups
+    sh(part(grp, "box", "#e9e4d8", 1.1, .75, .7, x, .375, y));
+    sh(part(grp, "cyl", mat("#4fc3f7", { roughness: .1, metalness: .1, transparent: true, opacity: .85 }), .22, .55, .22, x - .2, 1.05, y));
+    sh(part(grp, "cyl", "#f4f4f2", .2, .25, .2, x - .2, .82, y)); sh(part(grp, "cyl", "#ffffff", .06, .3, .06, x + .3, .9, y + .15));
+    sh(part(grp, "box", "#1e88e5", 1.12, .12, .72, x, .7, y));
+  } else if (o.ptype === "medic") { // white tent with a big red cross on the roof
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.45, 1.1, 4, 1), mat("#f7f7f5", { roughness: .8 })); roof.rotation.y = Math.PI / 4; roof.position.set(x, 1.95, y); roof.castShadow = true; grp.add(roof);
+    sh(part(grp, "box", "#f7f7f5", 2, 1.4, 2, x, .7, y));
+    sh(part(grp, "box", basic("#e53935"), 1.1, .06, .32, x, 2.42, y)); sh(part(grp, "box", basic("#e53935"), .32, .06, 1.1, x, 2.42, y));
+    sh(part(grp, "box", "#e53935", .05, .5, .5, x + 1.01, .9, y));
+  } else if (o.ptype === "screen") { // big screen on two legs, tilted so it reads from above
+    for (const s of [-1, 1]) sh(part(grp, "box", "#2b2f35", .14, 2.6, .14, x, 1.3, y + s * 1.5));
+    const scr = new THREE.Group(); scr.position.set(x, 2.9, y); scr.rotation.z = .9; grp.add(scr);
+    sh(part(scr, "box", "#151617", .16, 1.9, 3.4, 0, 0, 0));
+    const tex = screenTex(), face = new THREE.Mesh(new THREE.PlaneGeometry(3.15, 1.7), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+    face.rotation.y = Math.PI / 2; face.rotation.z = Math.PI / 2; face.position.x = .09; scr.add(face);
+  }
+}
+let SCREEN_TEX = null;
+function screenTex() {
+  if (SCREEN_TEX) return SCREEN_TEX;
+  const c = document.createElement("canvas"); c.width = 256; c.height = 140; const g = c.getContext("2d");
+  const gr = g.createLinearGradient(0, 0, 256, 140); gr.addColorStop(0, "#7e57c2"); gr.addColorStop(.5, "#ff3fa4"); gr.addColorStop(1, "#ffd23a");
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 140);
+  g.fillStyle = "rgba(255,255,255,.9)"; g.font = "900 34px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("LIVE", 128, 52);
+  g.font = "700 18px Rubik, sans-serif"; g.fillText("BEST SEAT IN THE HOUSE", 128, 96);
+  SCREEN_TEX = new THREE.CanvasTexture(c); SCREEN_TEX.encoding = THREE.sRGBEncoding; return SCREEN_TEX;
 }
 
 // ---------- people: 5 models built from instanced parts ----------
@@ -696,6 +729,12 @@ function updateFxLayer(live) {
         g.beginPath(); g.moveTo(tr[i - 3], tr[i - 2]); g.lineTo(tr[i], tr[i + 1]); g.stroke();
       }
     }
+  }
+  // range of water stations and first aid tents
+  for (const pr of props) {
+    const rad = pr.type === "water" ? PROP_TYPES.water.calm : pr.type === "medic" ? PROP_TYPES.medic.heal : 0; if (!rad) continue;
+    g.fillStyle = pr.type === "water" ? "rgba(79,195,247,.12)" : "rgba(229,57,53,.08)"; g.strokeStyle = pr.type === "water" ? "rgba(79,195,247,.6)" : "rgba(229,57,53,.5)"; g.lineWidth = .1;
+    g.beginPath(); g.arc(pr.x, pr.y, rad, 0, 7); g.fill(); g.stroke();
   }
   // area each guard calms
   for (const gd of guards) {

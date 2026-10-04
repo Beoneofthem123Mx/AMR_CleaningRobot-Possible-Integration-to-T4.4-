@@ -304,6 +304,7 @@ function moverForces() {
 // mounted police, the first-aid cart and guards calm down people nearby
 function calmForces() {
   const sources = guards.map(g => [g.x, g.y, GUARD_CALM]);
+  for (const pr of props) if (pr.type === "water") sources.push([pr.x, pr.y, PROP_TYPES.water.calm]);
   for (const m of movers) if (m.calm) sources.push([m.x, m.y, m.calm]);
   for (const mg of mega.active) sources.push([mg.x, mg.y, 5.5, true]);
   for (const [x, y, rad, push] of sources) {

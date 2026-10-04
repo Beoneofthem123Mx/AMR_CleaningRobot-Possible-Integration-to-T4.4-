@@ -102,19 +102,19 @@ function frame(now, fixed) {
 
 let vnow = 0;
 window.__game = { manual: on => { window.__manual = on; vnow = performance.now(); }, tick: dt => { vnow += dt * 1000; frame(vnow, dt); }, forceMod: id => { window.__forceMod = id; }, bestGates: () => { const ok = [...Array(SLOTS).keys()].filter(i => !(scene.noSlots || []).includes(i)); const pick = ok.length <= MAX_GATES ? ok : [0, 1, 2, 3, 4].map(k => ok[Math.round(k * (ok.length - 1) / 4)]); gates = gates.map((_, i) => pick.includes(i)); buildWorld(); }, unlockAll: () => { window.__unlockAll = true; }, event: k => spawnEvent(k), mp: (a, b, c) => { MPUSH = a; MPRES = b; MSCARE = c; }, scene: k => loadScene(k), setP: v => PCRIT = v, setSurge: v => SURGE = v, step, start, get s() { return { phase, dead, evacuated, left: ag.length, spawned, t, evacT }; },
-  get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; planFences = null; backToPlan(); } };
+  get ag() { return ag; }, setGates: g => { gates = g; buildWorld(); }, addFence: f => { fences.push({ ...f, len: Math.hypot(f.bx - f.ax, f.by - f.ay) }); buildWorld(); }, reset: () => { fences = []; props = []; planFences = null; backToPlan(); } };
 
 // demo behind the menu: a real show so the title screen feels alive
 let demo = false;
 function startDemo() {
   demo = true; const keys = ["plaza", "circo"], k = keys[(Math.random() * keys.length) | 0];
-  sceneKey = k; scene = SCENES[k]; CROWD = scene.crowd; gates = scene.gates.slice(); fences = []; planFences = null; guards = []; performers = scene.performers();
+  sceneKey = k; scene = SCENES[k]; CROWD = scene.crowd; gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   buildWorld(); phase = "plan"; start(MODS_BY_ID.normal); camMode = 0;
 }
 function loadScene(key) {
   demo = false;
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = scene.maxGates;
-  gates = scene.gates.slice(); fences = []; planFences = null; guards = []; performers = scene.performers();
+  gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   buildWorld(); backToPlan();
 }
 $("#bScene").addEventListener("click", chooser);
