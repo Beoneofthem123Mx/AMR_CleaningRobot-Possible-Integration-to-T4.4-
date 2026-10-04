@@ -67,9 +67,9 @@ function groundFinish(g, before) {
   g.restore();
 }
 function drawFence(g, f, ghost) {
-  g.lineCap = "round"; g.lineWidth = .35; g.strokeStyle = ghost ? "rgba(255,210,58,.75)" : "#f2c230";
+  g.lineCap = "round"; g.lineWidth = .35; g.strokeStyle = FENCE_TYPES[f.type || "steel"].col; g.globalAlpha = ghost ? .8 : 1;
   g.beginPath(); g.moveTo(f.ax, f.ay); g.lineTo(f.bx, f.by); g.stroke();
-  g.lineCap = "butt"; g.strokeStyle = "#1c1c1c"; g.setLineDash([.5, .5]); g.lineWidth = .35; g.stroke(); g.setLineDash([]);
+  g.lineCap = "butt"; g.strokeStyle = "#1c1c1c"; g.setLineDash([.5, .5]); g.lineWidth = .35; g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
 }
 
 // ---------- shared materials and parts ----------
@@ -221,6 +221,7 @@ function buildStatic3D() {
       const geo = new THREE.BoxGeometry(o.x1 - o.x0, o.hb, o.y1 - o.y0); geo.translate((o.x0 + o.x1) / 2, o.hb / 2, (o.y0 + o.y1) / 2); buildingUV(geo);
       const mesh = new THREE.Mesh(geo, [side, side, m, m, side, side]); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh); continue;
     }
+    if (o.kind === "player") { buildFence3D(grp, o); continue; }
     const h = HEIGHTS[o.kind] || (scene.heights && scene.heights[o.kind]); if (!h && o.kind !== "tent") continue;
     let geo;
     if (o.kind === "tent") { geo = new THREE.ConeGeometry(Math.SQRT2 * 2.5, 3.4, 4, 1); geo.rotateY(Math.PI / 4); geo.translate((o.x0 + o.x1) / 2, 1.7, (o.y0 + o.y1) / 2); }
@@ -257,6 +258,34 @@ function buildStatic3D() {
   // fixed performers
   G3.perfGrp.clear();
   for (const p of performers) { p.obj = buildModel(p); G3.perfGrp.add(p.obj); }
+}
+
+// ---------- the player's fences: one look per material ----------
+function buildFence3D(grp, o) {
+  const len = Math.hypot(o.bx - o.ax, o.by - o.ay), ang = -Math.atan2(o.by - o.ay, o.bx - o.ax), mx = (o.ax + o.bx) / 2, my = (o.ay + o.by) / 2;
+  const slab = (h, w, material, y0, extra) => {
+    const geo = new THREE.BoxGeometry(len + (extra ?? w * .5), h, w); geo.rotateY(ang); geo.translate(mx, (y0 || 0) + h / 2, my); worldUV(geo);
+    const mesh = new THREE.Mesh(geo, material); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh); return mesh;
+  };
+  const along = (step, fn) => { const n = Math.max(1, Math.round(len / step)); for (let i = 0; i <= n; i++) { const q = i / n; fn(o.ax + (o.bx - o.ax) * q, o.ay + (o.by - o.ay) * q, i); } };
+  const shared = m => { m.userData.shared = true; return m; };
+  switch (o.ftype) {
+    case "concrete":   // grey jersey barrier with a lighter cap
+      slab(.7, .55, mat("#a3a7ad", { roughness: .95 })); slab(.18, .32, mat("#c3c6cb", { roughness: .9 }), .7);
+      break;
+    case "foam":       // fat blue padding with white bands
+      slab(1.05, .55, mat("#3fa9e0", { roughness: .85 })); slab(.12, .58, mat("#ffffff", { roughness: .8 }), .5);
+      break;
+    case "rope":       // brass posts and a red velvet rope
+      along(1.4, (x, y) => { shared(part(grp, "cyl", mat("#d6a640", { metalness: .7, roughness: .3 }), .05, .95, .05, x, .475, y)); shared(part(grp, "sph", mat("#d6a640", { metalness: .7, roughness: .3 }), .09, .09, .09, x, .98, y)); shared(part(grp, "cyl", mat("#2b2b2b"), .16, .05, .16, x, .025, y)); });
+      slab(.07, .07, mat("#b3122a", { roughness: .6 }), .78, 0);
+      break;
+    case "cones":      // traffic cones
+      along(.8, (x, y) => { shared(part(grp, "cone", mat("#ff6a1a", { roughness: .6 }), .17, .5, .17, x, .25, y)); shared(part(grp, "cyl", mat("#ffffff"), .1, .06, .1, x, .3, y)); shared(part(grp, "box", mat("#ff6a1a"), .38, .04, .38, x, .02, y)); });
+      break;
+    default:           // steel barrier, yellow and black
+      slab(.95, o.th, G3.fenceMat);
+  }
 }
 
 // ---------- people: 5 models built from instanced parts ----------

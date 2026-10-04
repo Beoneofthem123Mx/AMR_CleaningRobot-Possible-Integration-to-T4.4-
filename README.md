@@ -25,7 +25,18 @@ Everything works offline: three.js and the fonts ship inside `game/`. To publish
 
 ## How to play
 
-- **Fence**: drag across the venue to draw a fence.
+- **Fence**: drag across the venue to draw a fence. You have a dollar budget per venue and five
+  materials to spend it on (pick them in the row above the toolbar, or press **1** again to cycle):
+
+  | Fence | Cost | What it does |
+  |-------|------|--------------|
+  | **Barrier** | $10/m | Stops people and small animals. Cars, trucks and elephants knock it flat. |
+  | **Concrete** | $20/m | Stops absolutely everything, but it's hard: people squeezed against it get hurt faster. |
+  | **Velvet rope** | $4/m | Cheap. Snaps if the crowd leans on it. Animals and vehicles go right through. |
+  | **Cones** | $2.5/m | People walk around them, until they're squeezed, then they step over. Nothing else cares. |
+  | **Foam wall** | $16/m | Soft padding that soaks up pressure: nobody gets crushed against it. Vehicles bounce off. |
+
+  Fences that break during a show come back when you return to planning.
 - **Gates**: tap the barrier at the bottom to open or close entrances.
 - **Security**: place guards. They calm the people around them and stop animals and vehicles.
 - **Erase**: tap a fence or a guard to remove it.

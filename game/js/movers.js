@@ -262,11 +262,16 @@ function stepMovers() {
       }
       // the player's fences stop animals and cars: they crash and turn around
       if (!m.bounced && !m.air && m.kind !== "racehorse" && m.kind !== "tractor") for (const o of obs) {
-        if (o.kind !== "player") continue;
+        if (o.kind !== "player" || o.ftype === "rope" || o.ftype === "cones") continue;   // ropes and cones don't stop anything
         const [nx, ny, dd] = contact(o, m.x, m.y);
         if (dd < m.r) {
+          if (o.ftype === "steel" && m.push >= 40 && !o.fence.broken) {   // heavy things flatten a plain barrier
+            o.fence.broken = true; knocked = true; pop(m.x, m.y - 1.4, "CRUNCH!"); shake = Math.min(1, shake + .4);
+            for (let k = 0; k < 10; k++) puff(m.x + rnd(-1, 1), m.y + rnd(-1, 1), .3, "#f2c230", .5, 1.4, .3);
+            eventLog.add("fencesmash"); break;
+          }
           m.x += nx * (m.r - dd); m.y += ny * (m.r - dd);
-          pop(m.x, m.y - 1.4, m.kind === "lion" ? "GRRR!" : m.kind === "dog" ? "YELP!" : "CRASH!"); shake = Math.min(1, shake + .3);
+          pop(m.x, m.y - 1.4, o.ftype === "foam" ? "BOING!" : m.kind === "lion" ? "GRRR!" : m.kind === "dog" ? "YELP!" : "CRASH!"); shake = Math.min(1, shake + .3);
           if (m.kind === "lion") achieve("LION_TAMER");
           m.bounced = true; m.ang += Math.PI; m.pts = [m.home || [m.x + nx * 30, m.y + ny * 30]]; m.i = 0; m.speed *= 1.2; break;
         }
@@ -276,7 +281,9 @@ function stepMovers() {
     if (m.say && m.t >= (m.nextSay || 0) && m.y < WH) { pop(m.x, m.y - 1.6, m.say); m.nextSay = m.t + m.sayEvery; }
   }
   movers = movers.filter(m => !m.dead);
+  if (knocked) { knocked = false; fences = fences.filter(f => !f.broken); buildWorld(); }
 }
+let knocked = false;
 // shoves and panic: people get out of the way (or go flying) when something runs them over
 function moverForces() {
   for (const m of movers) {

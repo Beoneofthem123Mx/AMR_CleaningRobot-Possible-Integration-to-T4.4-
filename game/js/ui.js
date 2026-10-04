@@ -1,7 +1,8 @@
 // Human Tsunami · plan editing and interface
 // ===== Plan editing =====
 let tool = "fence", drag = null;
-const fenceUsed = () => fences.reduce((s, f) => s + f.len, 0);
+const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0);   // dollars spent
+const fenceLeft = () => FENCE_BUDGET * 10 - fenceUsed();
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
   // during the show, each click uses the megaphone (three times per show)
@@ -35,20 +36,22 @@ cv.addEventListener("pointerdown", ev => {
     if (best >= 0) { fences.splice(best, 1); buildWorld(); ui(); }
     return;
   }
-  drag = { ax: snap(x), ay: snap(y), bx: snap(x), by: snap(y) }; cv.setPointerCapture(ev.pointerId);
+  drag = { ax: snap(x), ay: snap(y), bx: snap(x), by: snap(y), type: fenceType }; cv.setPointerCapture(ev.pointerId);
 });
 cv.addEventListener("pointermove", ev => {
   if (!drag) return;
   const [x, y] = toWorld(ev); let bx = snap(x), by = snap(y);
-  const left = FENCE_BUDGET - fenceUsed(), l = Math.hypot(bx - drag.ax, by - drag.ay);
+  const left = fenceLeft() / FENCE_TYPES[drag.type].cost, l = Math.hypot(bx - drag.ax, by - drag.ay);
   if (l > left) { bx = drag.ax + (bx - drag.ax) * left / l; by = drag.ay + (by - drag.ay) * left / l; }
   drag.bx = clamp(bx, 0, WW); drag.by = clamp(by, 0, WH);
+  const cost = Math.hypot(drag.bx - drag.ax, drag.by - drag.ay) * FENCE_TYPES[drag.type].cost;
+  $("#cFence").textContent = `$${Math.round(fenceLeft())} − ${Math.round(cost)}`;   // live price while drawing
 });
 const endDrag = () => {
   if (!drag) return;
   const len = Math.hypot(drag.bx - drag.ax, drag.by - drag.ay);
   if (len >= 1) { fences.push({ ...drag, len: Math.round(len * 10) / 10 }); buildWorld(); }
-  else if (FENCE_BUDGET - fenceUsed() < 1) toast("You're out of fence. Erase some.");
+  else if (fenceLeft() < FENCE_TYPES[fenceType].cost) toast("You're out of budget. Erase something or pick a cheaper fence.");
   drag = null; ui();
 };
 cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
@@ -94,7 +97,10 @@ function showCard(html, kind) {
 function hideCard() { $("#overlay").hidden = true; }
 function ui() {
   const plan = phase === "plan";
-  $("#cFence").textContent = `${Math.round(FENCE_BUDGET - fenceUsed())} m`;
+  $("#cFence").textContent = `$${Math.round(fenceLeft())}`;
+  $("#tFence").firstChild.textContent = FENCE_TYPES[fenceType].name + " ";
+  $("#ftypes").hidden = !plan || tool !== "fence";
+  document.querySelectorAll("#ftypes button").forEach(b => b.classList.toggle("on", b.dataset.ftype === fenceType));
   $("#cGuard").textContent = `${(scene.guards || 3) - guards.length}`;
   $("#cGate").textContent = `${gates.filter(Boolean).length}/${MAX_GATES}`;
   document.querySelectorAll("[data-tool]").forEach(b => { b.disabled = !plan; b.classList.toggle("on", b.dataset.tool === tool); });
@@ -118,6 +124,7 @@ addEventListener("keydown", e => {
   if (cardOpen) return;
   if (phase === "plan") {
     const tools = { "1": "fence", "2": "gate", "3": "guard", "4": "erase" };
+    if (k === "1" && tool === "fence") { const ks = Object.keys(FENCE_TYPES); pickFence(ks[(ks.indexOf(fenceType) + 1) % ks.length]); return; }
     if (tools[k]) { tool = tools[k]; ui(); return; }
     if (k === " " || k === "enter") { e.preventDefault(); startWithRoulette(); return; }
   }
@@ -148,3 +155,9 @@ $("#card").addEventListener("click", e => {
   if (e.target.id === "fs" && window.steam) window.steam.toggleFullscreen();
 });
 
+
+// fence material picker (shown above the toolbar while the fence tool is active)
+function pickFence(type) { fenceType = type; tool = "fence"; ui(); toast(`${FENCE_TYPES[type].name} · $${FENCE_TYPES[type].cost}/m — ${FENCE_TYPES[type].desc}`); }
+$("#ftypes").innerHTML = Object.entries(FENCE_TYPES).map(([k, f]) =>
+  `<button data-ftype="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">$${f.cost}/m</span></button>`).join("");
+document.querySelectorAll("#ftypes button").forEach(b => b.addEventListener("click", () => pickFence(b.dataset.ftype)));

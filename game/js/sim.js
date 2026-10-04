@@ -13,7 +13,10 @@ function buildWorld() {
     x = g1;
   }
   seg(x, FENCE_Y, WW, FENCE_Y, .3, "fence");
-  for (const f of fences) seg(f.ax, f.ay, f.bx, f.by, .35, "player");
+  for (const f of fences) {
+    const type = f.type || "steel", o = seg(f.ax, f.ay, f.bx, f.by, type === "concrete" || type === "foam" ? .5 : type === "cones" ? .3 : .35, "player");
+    o.ftype = type; o.fence = f; if (type === "cones") o.soft = true;
+  }
   for (const gd of guards) circ(gd.x, gd.y, .35, "guard");
   // spatial buckets
   buckets = Array.from({ length: BW * BH }, () => []);
@@ -236,13 +239,19 @@ function step() {
     if (sp > .15) a.h = Math.atan2(a.vy, a.vx);
     // collisions with the stage, fences and gate fence
     const bk = buckets[clamp(Math.floor(a.y / BKS), 0, BH - 1) * BW + clamp(Math.floor(a.x / BKS), 0, BW - 1)];
+    let soft = false;
     for (const oi of bk) {
-      const [nx, ny, d] = contact(obs[oi], a.x, a.y);
+      const o = obs[oi], [nx, ny, d] = contact(o, a.x, a.y);
       if (d >= R) continue;
+      if (o.soft && a.p > 2.2) continue;   // cones: squeezed people simply step over them
       const ov = R - d; a.x += nx * ov; a.y += ny * ov;
       const vn = a.vx * nx + a.vy * ny; if (vn < 0) { a.vx -= vn * nx; a.vy -= vn * ny; }
-      a.p += ov / R * 1.5;
+      const ft = o.ftype;
+      a.p += ov / R * (ft === "concrete" ? 2.2 : ft === "foam" ? .35 : ft === "cones" ? .5 : 1.5);
+      if (ft === "foam") soft = true;
+      if (ft === "rope" && a.p > PCRIT * .4) o.fence.strain = (o.fence.strain || 0) + (a.p - PCRIT * .4) * DT;
     }
+    if (soft) a.p *= .7;   // foam padding soaks up the squeeze
     a.x = clamp(a.x, R, WW - R);
     if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1;
@@ -253,6 +262,14 @@ function step() {
     out.push(a);
   }
   ag = out;
+  // velvet ropes snap when the crowd leans on them too hard
+  let snapped = false;
+  for (const f of fences) {
+    if (f.type !== "rope") continue;
+    f.strain = (f.strain || 0) * .985;
+    if (f.strain > 14) { f.broken = true; snapped = true; const mx = (f.ax + f.bx) / 2, my = (f.ay + f.by) / 2; pop(mx, my, "SNAP!"); burstAt(mx, my, 20); eventLog.add("ropesnap"); }
+  }
+  if (snapped) { fences = fences.filter(f => !f.broken); buildWorld(); }
   if (evac && (ag.length === 0 || evacT > 100)) finish();
 }
 
@@ -276,7 +293,9 @@ function canStart() {
   return true;
 }
 // the button goes through the today's-twist roulette; tests call start() directly
+let planFences = null;   // the plan as drawn, so fences broken during a show come back afterwards
 function start(mod) {
+  planFences = fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type }));
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.round(scene.crowd * (MOD.crowdMul || 1));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] };
@@ -318,6 +337,8 @@ function finish() {
   ui();
 }
 function backToPlan() {
+  if (planFences && fences.length !== planFences.length) { fences = planFences.map(f => ({ ...f })); buildWorld(); }
+  planFences = null;
   phase = "plan"; paused = false; slowT = 0; ag = []; fallen = []; movers = []; pops = []; MOD = null; $("#abd").hidden = true; showModChip(null); clearAttractor(); clearAlt(); spawned = 0; t = 0; evacT = 0; surgeT = 0; setDead(0, true); resetFx();
   hideCard(); caption("You plan it", false, 0); resetPreview(); ui();
 }

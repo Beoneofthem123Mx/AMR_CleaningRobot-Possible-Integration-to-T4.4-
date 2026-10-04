@@ -163,6 +163,10 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .card.menu button.scene:disabled { opacity: .8; }
 .card.menu button:not(.scene) { background: #2b2d36; color: #f4f4f2; border-color: #464955; }
 .card.menu button.go { background: var(--caution); color: var(--ink); border-color: var(--caution); }
+.ftypes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 6px; }
+.ftypes[hidden] { display: flex; visibility: hidden; }  /* keep its space so the game view never jumps */
+.ftypes button { display: flex; align-items: center; gap: 6px; font-size: .82rem; padding: 5px 10px; }
+.ftypes button i { width: 14px; height: 14px; border-radius: 4px; border: 2px solid rgba(0,0,0,.5); display: inline-block; }
 </style>
 </head>
 <body>
@@ -182,8 +186,9 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
       <div class="overlay" id="overlay"><div class="card" id="card"></div></div>
     </div>
   </div>
+  <div class="ftypes" id="ftypes"></div>
   <div class="bar" id="bar">
-    <button id="tFence" data-tool="fence" class="on">Fence <span class="cnt" id="cFence">60 m</span></button>
+    <button id="tFence" data-tool="fence" class="on">Barrier <span class="cnt" id="cFence">$600</span></button>
     <button id="tGate" data-tool="gate">Gates <span class="cnt" id="cGate">3/5</span></button>
     <button id="tGuard" data-tool="guard">Security <span class="cnt" id="cGuard">3</span></button>
     <button id="tErase" data-tool="erase">Erase</button>

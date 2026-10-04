@@ -10,7 +10,17 @@ const SHOW_TIME = 40;
 const FENCE_Y = 66, SLOTS = 7, SLOT_W = 2.6;
 const slotX = i => WW * (i + .5) / SLOTS;
 let gates = [false, false, true, false, true, false, false], scene;
-let fences = [];           // player fences {ax,ay,bx,by,len}
+let fences = [];           // player fences {ax,ay,bx,by,len,type}
+// fence materials the player can buy (cost per meter; the budget is FENCE_BUDGET * 10 dollars)
+const FENCE_TYPES = {
+  steel:    { name: "Barrier", cost: 10, col: "#f2c230", desc: "Stops people and small animals. Cars and elephants knock it over." },
+  concrete: { name: "Concrete", cost: 20, col: "#9aa0a8", desc: "Stops absolutely everything. But it's hard: people squeezed against it get hurt faster." },
+  rope:     { name: "Velvet rope", cost: 4, col: "#c8282a", desc: "Cheap and classy. Snaps if the crowd leans on it. Animals and cars go right through." },
+  cones:    { name: "Cones", cost: 2.5, col: "#ff7a1a", desc: "People walk around them... until they're squeezed, then they step over. Nothing else cares." },
+  foam:     { name: "Foam wall", cost: 16, col: "#3fa9e0", desc: "Soft padding that soaks up pressure: nobody gets crushed against it. Vehicles bounce off." },
+};
+let fenceType = "steel";
+const fenceCost = f => f.len * FENCE_TYPES[f.type || "steel"].cost;
 
 // ===== Obstacles =====
 let obs = [], buckets, BKS = 2, BW = Math.ceil(WW / BKS), BH = Math.ceil(SH / BKS);

@@ -68,6 +68,8 @@ const HEADLINES = {
   ],
 };
 const EVENT_LINES = {
+  ropesnap: "A velvet rope snapped under the pressure; organizers insist it was “mostly decorative”.",
+  fencesmash: "A vehicle flattened a barrier and kept going, as if barriers were a suggestion.",
   lion: "A lion toured the crowd and posed for selfies with several fans.",
   elephants: "Three elephants paraded in without a ticket.",
   cannon: "A human cannonball landed at the front of the popcorn line; he says that counts.",
