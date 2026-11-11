@@ -15,7 +15,7 @@ const SEG = [
   { card: "THIS IS YOUR FAULT.", dur: B * 2, style: "yellow" },
   { card: "HUMAN<br>TSUNAMI", logo: true, dur: B * 4, bg: "arena" },
   { card: "STEP 1:<br>PLAN THE EVENT", dur: B * 3, bg: "plaza" },
-  { clip: "plaza", plan: true, warm: 0, secs: B * 7, cam: 0, fences: [[.2, 10, 40, 18, 46], [.9, 30, 40, 22, 46], [1.6, 14, 58, 14, 50], [2.3, 26, 58, 26, 50]] },
+  { clip: "plaza", plan: true, warm: 0, secs: B * 7, cam: 0, fences: [[.2, 10, 40, 18, 46, "steel"], [.8, 30, 40, 22, 46, "concrete"], [1.4, 14, 58, 14, 50, "rope"], [2.0, 26, 58, 26, 50, "foam"], [2.6, 4, 34, 12, 34, "cones"]] },
   { card: "STEP 2:<br>OPEN THE GATES", dur: B * 3, bg: "plaza" },
   { clip: "plaza", warm: 2.5, secs: B * 7, cam: 2 },
   { card: "STEP 3:<br>EVERYTHING GOES WRONG", dur: B * 3, style: "yellow" },
@@ -31,7 +31,8 @@ const SEG = [
   { clip: "beach", warm: 26, secs: B * 4, cam: 1, ev: [[-1.6, "whale"], [-1.2, "shark"]], hot: true },
   { clip: "park", warm: 26, secs: B * 4, cam: 1, ev: [[-1.5, "dinos"], [-.6, "coaster"]], hot: true },
   { card: "20 VENUES", dur: B * 2, bg: "circo" },
-  { card: "13 RANDOM TWISTS", dur: B * 2, bg: "ciudad" },
+  { card: "5 KINDS OF FENCE", dur: B * 2, bg: "ciudad" },
+  { card: "SANDBOX MODE", dur: B * 2, bg: "arena" },
   { card: "1 MEGAPHONE", dur: B * 2, style: "yellow" },
   { clip: "estadio", warm: 28, secs: B * 6, cam: 1, ev: [[.3, "mega", 20, 34], [1.2, "mega", 14, 42]] },
   { card: "TOMORROW'S<br>HEADLINES", dur: B * 3, bg: "mitin" },
@@ -61,7 +62,7 @@ async function captureClips() {
       if (!g.crush && !g.plan && !g.report) __game.bestGates();
       camMode = g.cam; heat = !!g.heat;
       if (g.plan) {  // planning shot: fences appear one by one while the venue waits
-        window.__pending = (g.fences || []).map(([at, ax, ay, bx, by]) => [at, "fence", { ax, ay, bx, by }]);
+        window.__pending = (g.fences || []).map(([at, ax, ay, bx, by, type]) => [at, "fence", { ax, ay, bx, by, type }]);
         for (let k = 0; k < 20; k++) __game.tick(1 / 60);
         return vnow / 1000;
       }
