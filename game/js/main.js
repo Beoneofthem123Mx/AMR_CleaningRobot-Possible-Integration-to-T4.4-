@@ -123,7 +123,7 @@ function loadScene(key) {
   demo = false; if (camMode === 3) { camMode = 0; camFree = null; if (typeof camLabel === "function") camLabel(); }
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = sandbox ? SLOTS : scene.maxGates;
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
-  buildWorld(); backToPlan();
+  buildWorld(); if (typeof loadPlan === "function") loadPlan(); backToPlan();
 }
 $("#bScene").addEventListener("click", chooser);
 $("#card").addEventListener("click", e => {

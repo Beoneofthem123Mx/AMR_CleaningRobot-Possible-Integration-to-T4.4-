@@ -121,6 +121,42 @@ function ui() {
   $("#bGo").disabled = phase === "done";
   $("#status").hidden = plan || (typeof demo !== "undefined" && demo);
   $("#bScene").disabled = !plan;
+  trackPlan();
+}
+// ===== The plan: saved per venue, with undo =====
+const planKey = () => "mh.plan." + (sandbox ? "sb." : "") + sceneKey;
+const planState = () => JSON.stringify({ gates, fences: fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type || "steel" })), guards: guards.map(g => [g.x, g.y]), props });
+let lastPlan = null, planHistory = [], undoing = false;
+function applyPlan(json) {
+  try {
+    const o = JSON.parse(json);
+    if (!Array.isArray(o.gates) || o.gates.length !== SLOTS || !o.gates.some(Boolean)) return false;
+    gates = o.gates.map((g, i) => !!g && !(scene.noSlots || []).includes(i)); if (!gates.some(Boolean)) gates = scene.gates.slice();
+    fences = (o.fences || []).filter(f => FENCE_TYPES[f.type] && [f.ax, f.ay, f.bx, f.by, f.len].every(Number.isFinite)).map(f => ({ ...f }));
+    guards = (o.guards || []).filter(g => Number.isFinite(g[0]) && Number.isFinite(g[1])).map(([x, y]) => ({ kind: "guard", x, y, ang: -Math.PI / 2, t: 0 }));
+    props = (o.props || []).filter(p => PROP_TYPES[p.type] && Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => ({ type: p.type, x: p.x, y: p.y }));
+    buildWorld(); return true;
+  } catch (e) { return false; }
+}
+function trackPlan() {
+  if (phase !== "plan" || demo) return;
+  const cur = planState();
+  if (lastPlan !== null && cur !== lastPlan && !undoing) { planHistory.push(lastPlan); if (planHistory.length > 80) planHistory.shift(); }
+  if (cur !== lastPlan && !window.__manual) { try { localStorage.setItem(planKey(), cur); } catch (e) { /* no storage */ } }
+  lastPlan = cur;
+}
+function loadPlan() {
+  planHistory = []; lastPlan = null;
+  let saved = null; try { if (!window.__manual) saved = localStorage.getItem(planKey()); } catch (e) { /* no storage */ }   // recordings and tests start clean
+  return !!saved && applyPlan(saved);
+}
+function undoPlan() {
+  if (phase !== "plan" || !planHistory.length) { toast("Nothing to undo."); return; }
+  undoing = true; applyPlan(planHistory.pop()); ui(); undoing = false;
+}
+function clearPlan() {
+  if (phase !== "plan") return;
+  gates = scene.gates.slice(); fences = []; guards = []; props = []; buildWorld(); ui(); toast("Plan cleared. Ctrl+Z brings it back.");
 }
 // pause and keyboard shortcuts for playing on PC
 function togglePause() {
@@ -135,6 +171,9 @@ addEventListener("keydown", e => {
   const k = e.key.toLowerCase(), cardOpen = !$("#overlay").hidden;
   if (k === "escape" || k === "p") { if (phase === "show" || phase === "evac") togglePause(); else if (phase === "plan" && !cardOpen) chooser(); return; }
   if (cardOpen) return;
+  if (phase === "plan" && k === "z" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undoPlan(); return; }
+  if (phase === "plan" && (k === "delete" || k === "backspace")) { e.preventDefault(); clearPlan(); return; }
+  if (e.ctrlKey || e.metaKey) return;
   if (phase === "plan") {
     const tools = { "1": "fence", "2": "gate", "3": "guard", "4": "erase", "5": "prop" };
     if (k === "5" && tool === "prop") { const ks = Object.keys(PROP_TYPES); pickProp(ks[(ks.indexOf(propType) + 1) % ks.length]); return; }
