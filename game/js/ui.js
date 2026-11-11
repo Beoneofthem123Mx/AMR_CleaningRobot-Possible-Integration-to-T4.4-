@@ -2,7 +2,8 @@
 // ===== Plan editing =====
 let tool = "fence", drag = null;
 const maxGuards = () => sandbox ? 16 : (scene.guards || 3);
-const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0);   // dollars spent
+const nStewards = () => guards.filter(g => g.role === "slow").length, nGuards = () => guards.length - nStewards();
+const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0) + nStewards() * GUARD_ROLES.slow.cost;   // dollars spent
 const fenceLeft = () => sandbox ? 1e9 : FENCE_BUDGET * 10 - fenceUsed();
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
@@ -25,10 +26,13 @@ cv.addEventListener("pointerdown", ev => {
     gates[i] = !gates[i]; buildWorld(); ui(); return;
   }
   if (tool === "guard") {
-    if (guards.length >= maxGuards()) { toast("No guards left. Erase one to move it."); return; }
+    if (guardRole === "slow") {
+      if (nStewards() >= (sandbox ? 20 : GUARD_ROLES.slow.max)) { toast("That's every steward the agency had."); return; }
+      if (fenceLeft() < GUARD_ROLES.slow.cost) { toast(`A steward costs $${GUARD_ROLES.slow.cost}. Erase something first.`); return; }
+    } else if (nGuards() >= maxGuards()) { toast("No guards left. Erase one to move it, or hire stewards from the budget."); return; }
     const gx = snap(x), gy = snap(y), id = cellOf(gx, gy);
     if (gy >= FENCE_Y - .5 || blockedC[id] || !isFinite(fStage[id])) { toast("Put the guard somewhere the crowd will actually be."); return; }
-    guards.push({ kind: "guard", x: gx, y: gy, ang: -Math.PI / 2, t: 0 }); buildWorld(); ui(); return;
+    guards.push({ kind: "guard", role: guardRole, x: gx, y: gy, ang: -Math.PI / 2, t: 0 }); buildWorld(); ui(); return;
   }
   if (tool === "prop") {
     const pt = PROP_TYPES[propType], px = snap(x), py = snap(y);
@@ -44,25 +48,35 @@ cv.addEventListener("pointerdown", ev => {
     if (pi >= 0) { props.splice(pi, 1); buildWorld(); ui(); return; }
     let best = -1, bd = 1.2;
     fences.forEach((f, i) => { const d = contact({ t: "s", ...f, th: 0 }, x, y)[2]; if (d < bd) { bd = d; best = i; } });
-    if (best >= 0) { fences.splice(best, 1); buildWorld(); ui(); }
+    if (best >= 0) { const gid = fences[best].g; if (gid) fences = fences.filter(f => f.g !== gid); else fences.splice(best, 1); buildWorld(); ui(); }
     return;
   }
-  drag = { ax: snap(x), ay: snap(y), bx: snap(x), by: snap(y), type: fenceType }; cv.setPointerCapture(ev.pointerId);
+  drag = { ax: snap(x), ay: snap(y), bx: snap(x), by: snap(y), type: fenceType, shape: fenceShape, pts: [[x, y]] }; cv.setPointerCapture(ev.pointerId);
 });
 cv.addEventListener("pointermove", ev => {
   if (!drag) return;
   const [x, y] = toWorld(ev); let bx = snap(x), by = snap(y);
   const left = fenceLeft() / FENCE_TYPES[drag.type].cost, l = Math.hypot(bx - drag.ax, by - drag.ay);
-  if (l > left) { bx = drag.ax + (bx - drag.ax) * left / l; by = drag.ay + (by - drag.ay) * left / l; }
+  if (drag.shape === "line" && l > left) { bx = drag.ax + (bx - drag.ax) * left / l; by = drag.ay + (by - drag.ay) * left / l; }
   drag.bx = clamp(bx, 0, WW); drag.by = clamp(by, 0, WH);
-  const cost = Math.hypot(drag.bx - drag.ax, drag.by - drag.ay) * FENCE_TYPES[drag.type].cost;
+  if (drag.shape === "free") {   // freehand: drop a point every meter or so, while the budget lasts
+    const p = drag.pts[drag.pts.length - 1], cx = clamp(x, 0, WW), cy = clamp(y, 0, WH);
+    if (Math.hypot(cx - p[0], cy - p[1]) >= 1 && dragLen() + 1 <= left) drag.pts.push([Math.round(cx * 4) / 4, Math.round(cy * 4) / 4]);
+  }
+  const cost = dragLen() * FENCE_TYPES[drag.type].cost; drag.over = cost > fenceLeft() + .01;
   if (!sandbox) $("#cFence").textContent = `$${Math.round(fenceLeft())} − ${Math.round(cost)}`;   // live price while drawing
 });
+const dragSegs = () => drag ? shapeSegs(drag.shape, drag.ax, drag.ay, drag.bx, drag.by, drag.pts) : [];
+const dragLen = () => dragSegs().reduce((s, q) => s + Math.hypot(q[2] - q[0], q[3] - q[1]), 0);
 const endDrag = () => {
   if (!drag) return;
-  const len = Math.hypot(drag.bx - drag.ax, drag.by - drag.ay);
-  if (len >= 1) { fences.push({ ...drag, len: Math.round(len * 10) / 10 }); buildWorld(); }
-  else if (fenceLeft() < FENCE_TYPES[fenceType].cost) toast("You're out of budget. Erase something or pick a cheaper fence.");
+  const segs = dragSegs(), len = dragLen();
+  if (drag.over) toast(`That ${FENCE_SHAPES[drag.shape].name.toLowerCase()} costs $${Math.round(len * FENCE_TYPES[drag.type].cost)}. Make it smaller or pick a cheaper fence.`);
+  else if (len >= 1 && segs.length) {
+    const gid = segs.length > 1 ? "g" + Date.now().toString(36) + ((Math.random() * 1e4) | 0) : undefined;   // prefabs are erased as one piece
+    for (const [x0, y0, x1, y1] of segs) fences.push({ ax: x0, ay: y0, bx: x1, by: y1, len: Math.round(Math.hypot(x1 - x0, y1 - y0) * 10) / 10, type: drag.type, g: gid });
+    buildWorld();
+  } else if (fenceLeft() < FENCE_TYPES[fenceType].cost) toast("You're out of budget. Erase something or pick a cheaper fence.");
   drag = null; ui();
 };
 cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
@@ -114,7 +128,7 @@ function ui() {
   $("#cFence").textContent = sandbox ? "∞" : `$${Math.round(fenceLeft())}`;
   $("#tFence").firstChild.textContent = FENCE_TYPES[fenceType].name + " ";
   renderPicker(plan);
-  $("#cGuard").textContent = `${maxGuards() - guards.length}`;
+  $("#cGuard").textContent = `${maxGuards() - nGuards()}`;
   $("#cGate").textContent = `${gates.filter(Boolean).length}/${MAX_GATES}`;
   document.querySelectorAll("[data-tool]").forEach(b => { b.disabled = !plan; b.classList.toggle("on", b.dataset.tool === tool); });
   $("#bGo").textContent = plan ? "Open gates" : phase === "done" ? "Open gates" : "Stop";
@@ -125,7 +139,7 @@ function ui() {
 }
 // ===== The plan: saved per venue, with undo =====
 const planKey = () => "mh.plan." + (sandbox ? "sb." : "") + sceneKey;
-const planState = () => JSON.stringify({ gates, fences: fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type || "steel" })), guards: guards.map(g => [g.x, g.y]), props });
+const planState = () => JSON.stringify({ gates, fences: fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type || "steel", g: f.g })), guards: guards.map(g => [g.x, g.y, g.role || "calm"]), props });
 let lastPlan = null, planHistory = [], undoing = false;
 function applyPlan(json) {
   try {
@@ -133,7 +147,7 @@ function applyPlan(json) {
     if (!Array.isArray(o.gates) || o.gates.length !== SLOTS || !o.gates.some(Boolean)) return false;
     gates = o.gates.map((g, i) => !!g && !(scene.noSlots || []).includes(i)); if (!gates.some(Boolean)) gates = scene.gates.slice();
     fences = (o.fences || []).filter(f => FENCE_TYPES[f.type] && [f.ax, f.ay, f.bx, f.by, f.len].every(Number.isFinite)).map(f => ({ ...f }));
-    guards = (o.guards || []).filter(g => Number.isFinite(g[0]) && Number.isFinite(g[1])).map(([x, y]) => ({ kind: "guard", x, y, ang: -Math.PI / 2, t: 0 }));
+    guards = (o.guards || []).filter(g => Number.isFinite(g[0]) && Number.isFinite(g[1])).map(([x, y, role]) => ({ kind: "guard", role: GUARD_ROLES[role] ? role : "calm", x, y, ang: -Math.PI / 2, t: 0 }));
     props = (o.props || []).filter(p => PROP_TYPES[p.type] && Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => ({ type: p.type, x: p.x, y: p.y }));
     buildWorld(); return true;
   } catch (e) { return false; }
@@ -177,6 +191,8 @@ addEventListener("keydown", e => {
   if (phase === "plan") {
     const tools = { "1": "fence", "2": "gate", "3": "guard", "4": "erase", "5": "prop" };
     if (k === "5" && tool === "prop") { const ks = Object.keys(PROP_TYPES); pickProp(ks[(ks.indexOf(propType) + 1) % ks.length]); return; }
+    if (k === "3" && tool === "guard") { pickRole(guardRole === "calm" ? "slow" : "calm"); return; }
+    if (k === "f" && tool === "fence") { const ks = Object.keys(FENCE_SHAPES); pickShape(ks[(ks.indexOf(fenceShape) + 1) % ks.length]); return; }
     if (k === "1" && tool === "fence") { const ks = Object.keys(FENCE_TYPES); pickFence(ks[(ks.indexOf(fenceType) + 1) % ks.length]); return; }
     if (tools[k]) { tool = tools[k]; ui(); return; }
     if (k === " " || k === "enter") { e.preventDefault(); startWithRoulette(); return; }
@@ -192,7 +208,7 @@ addEventListener("keydown", e => {
 document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => {
   tool = b.dataset.tool; ui();
   if (tool === "gate") toast("Tap the fence at the bottom to open or close gates.");
-  if (tool === "guard") toast("Tap the venue to place a guard: they calm people down and stop animals and cars.");
+  if (tool === "guard") toast("Tap the venue to place security. Guards calm people; stewards slow them down before a bottleneck.");
   if (tool === "prop") toast("Tap the venue to place the selected prop. It's paid from the same budget as fences.");
 }));
 $("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : backToPlan());
@@ -252,10 +268,12 @@ $("#card").addEventListener("click", e => {
 // picker row above the toolbar: fence materials or props, depending on the tool
 function pickFence(type) { fenceType = type; tool = "fence"; ui(); toast(`${FENCE_TYPES[type].name} · $${FENCE_TYPES[type].cost}/m — ${FENCE_TYPES[type].desc}`); }
 function pickProp(type) { propType = type; tool = "prop"; ui(); toast(`${PROP_TYPES[type].name} · $${PROP_TYPES[type].cost} — ${PROP_TYPES[type].desc}`); }
+function pickShape(k) { fenceShape = k; tool = "fence"; ui(); toast(`${FENCE_SHAPES[k].name} — ${FENCE_SHAPES[k].desc}`); }
+function pickRole(k) { guardRole = k; tool = "guard"; ui(); toast(`${GUARD_ROLES[k].name} — ${GUARD_ROLES[k].desc}`); }
 let pickerFor = "";
 function renderPicker(plan) {
   const live = phase === "show" || phase === "evac";
-  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : sandbox && plan ? "sand" : "";
+  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : sandbox && plan ? "sand" : "";
   el.hidden = !want;
   if (want && want !== pickerFor) {
     pickerFor = want;
@@ -268,15 +286,21 @@ function renderPicker(plan) {
     } else if (want === "sand") {
       el.innerHTML = `<button data-sand="crowd"></button><span class="sandnote">Sandbox: no budget, no limits, nothing counts. Pick the fence or props tool to build.</span>`;
       el.querySelector("button").addEventListener("click", () => { sandCrowd = sandCrowd === 1 ? 1.5 : sandCrowd === 1.5 ? .5 : 1; ui(); });
+    } else if (want === "guard") {
+      el.innerHTML = Object.entries(GUARD_ROLES).map(([k, f]) => `<button data-k="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">${f.cost && !sandbox ? "$" + f.cost : f.cost ? "" : "free"}</span></button>`).join("");
+      el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => pickRole(b.dataset.k)));
     } else {
       const list = want === "fence" ? FENCE_TYPES : PROP_TYPES;
       el.innerHTML = Object.entries(list).map(([k, f]) =>
-        `<button data-k="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">${sandbox ? "" : "$" + f.cost + (want === "fence" ? "/m" : "")}</span></button>`).join("");
-      el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => want === "fence" ? pickFence(b.dataset.k) : pickProp(b.dataset.k)));
+        `<button data-k="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">${sandbox ? "" : "$" + f.cost + (want === "fence" ? "/m" : "")}</span></button>`).join("") +
+        (want === "fence" ? `<span class="sep"></span>` + Object.entries(FENCE_SHAPES).map(([k, f]) => `<button data-shape="${k}" title="${f.desc}">${f.name}</button>`).join("") : "");
+      el.querySelectorAll("button[data-k]").forEach(b => b.addEventListener("click", () => want === "fence" ? pickFence(b.dataset.k) : pickProp(b.dataset.k)));
+      el.querySelectorAll("button[data-shape]").forEach(b => b.addEventListener("click", () => pickShape(b.dataset.shape)));
     }
   }
   if (want === "sand") el.querySelector("button").textContent = `Crowd size: ×${sandCrowd} (${Math.min(5800, Math.round(scene.crowd * sandCrowd)).toLocaleString("en")})`;
-  const cur = want === "fence" ? fenceType : propType;
+  const cur = want === "fence" ? fenceType : want === "guard" ? guardRole : propType;
+  el.querySelectorAll("button[data-shape]").forEach(b => b.classList.toggle("on", b.dataset.shape === fenceShape));
   el.querySelectorAll("button[data-k]").forEach(b => b.classList.toggle("on", b.dataset.k === cur));
 }
 // sandbox buttons during the show

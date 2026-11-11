@@ -37,6 +37,14 @@ Everything works offline: three.js and the fonts ship inside `game/`. To publish
   | **Foam wall** | $16/m | Soft padding that soaks up pressure: nobody gets crushed against it. Vehicles bounce off. |
 
   Fences that break during a show come back when you return to planning.
+
+  Fences don't have to be straight. Pick a **shape** next to the materials (or press **F**):
+  **Straight**, **Freehand** (drag any curve), **Ring** (drag from the center; the opening faces
+  where you let go), **Funnel**, **Zigzag queue** (switchbacks that slow people down) and **Pen**
+  (a box with a door). Prefabs are erased as one piece.
+
+  Short barriers a few meters in front of a gate work as wave breakers: the crowd flows around
+  them instead of pushing straight into the bottleneck.
 - **Props** (key **5**, press again to cycle): spend the same budget on
   - **Water station** ($60): people within 3 m calm down.
   - **First aid tent** ($120): within 6 m, squeezes hurt half as much and people heal faster.
@@ -44,7 +52,9 @@ Everything works offline: three.js and the fonts ship inside `game/`. To publish
   - **Big screen** ($150, one per venue): about a quarter of the crowd watches it instead of
     crushing toward the stage.
 - **Gates**: tap the barrier at the bottom to open or close entrances.
-- **Security**: place guards. They calm the people around them and stop animals and vehicles.
+- **Security** (key **3**, press again to switch): **Guards** calm the people around them and stop
+  animals and vehicles. **Stewards** ($40 each, from the fence budget, up to 10) hold a SLOW sign:
+  everyone within 3 m walks at half speed. Put them just before a bottleneck to meter the crowd.
 - **Erase**: tap a fence or a guard to remove it.
 - **Venue**: choose where to play (there are 20).
 - **Pressure**: paints the crowd from blue to red depending on how hard they're being squeezed.
@@ -138,9 +148,10 @@ around.
 
 ## Modes, medals and saves
 
-- **Medals**: every venue has four optional challenges: *On a budget* (at most 5 trampled spending
+- **Medals**: every venue has five optional challenges: *On a budget* (at most 5 trampled spending
   $200 or less), *Hands off* (zero trampled without guards or the megaphone), *Chaos survivor*
-  (under 1% trampled in Total Chaos) and *Catastrophe* (500 or more trampled).
+  (under 1% trampled in Total Chaos) *Catastrophe* (500 or more trampled) and *Architect* (at most 5 trampled without opening
+  a single extra gate: fences and stewards only).
 - **Sandbox** (title screen): every venue open, no budget, up to 16 guards, all gates, crowd size
   ×0.5 / ×1 / ×1.5, an unlimited megaphone and one button per disaster during the show. Nothing
   is saved or earned.

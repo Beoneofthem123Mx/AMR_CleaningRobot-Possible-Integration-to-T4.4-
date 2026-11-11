@@ -179,7 +179,7 @@ function spawnAt(x, y, n) {
 }
 function step() {
   t += DT;
-  const medics = props.filter(p => p.type === "medic");
+  const medics = props.filter(p => p.type === "medic"), stewards = guards.filter(g => g.role === "slow");
   const evac = phase === "evac"; if (evac) evacT += DT;
   if (phase === "show") {
     for (let k = 0; k < 30 && spawned < CROWD; k++) spawn();
@@ -232,6 +232,7 @@ function step() {
     if (leaving && f[id] === 0) { dx = 0; dy = 1; }
     // a UFO beam lifts people up
     if (a.beam) a.lift += DT * .75; else if (a.lift > 0) a.lift = Math.max(0, a.lift - DT * 1.5);
+    for (const sw of stewards) if ((a.x - sw.x) ** 2 + (a.y - sw.y) ** 2 < STEWARD_R * STEWARD_R) { want *= .5; break; }
     if (a.lift > 0) { want = 0; a.fx *= .2; a.fy *= .2; }
     if (a.lift > 1.5) { abducted++; continue; }
     const tau = slipT > 0 ? 2.2 : .5;   // on the slippery floor nobody can stop
@@ -288,6 +289,7 @@ const MEDALS = {
   handsoff: { icon: "✋", name: "Hands off", desc: "Zero trampled without guards or the megaphone" },
   chaos:    { icon: "🌀", name: "Chaos survivor", desc: "Under 1% trampled in Total Chaos mode" },
   disaster: { icon: "☠", name: "Catastrophe", desc: "500 or more trampled. On purpose, we assume." },
+  architect: { icon: "▲", name: "Architect", desc: "At most 5 trampled without opening a single extra gate: fences and stewards only" },
 };
 function loadJSON(key, def) { try { return JSON.parse(localStorage.getItem(key) || "null") || def; } catch (e) { return def; } }
 function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* no storage */ } }
@@ -300,6 +302,7 @@ function awardMedals(stars, stuck, megaUsed) {
   if (stars === 3 && guards.length === 0 && !megaUsed) got.push("handsoff");
   if (chaosMode && pct < .01) got.push("chaos");
   if (dead >= 500) got.push("disaster");
+  if (dead + stuck <= 5 && gates.every((g, i) => g === scene.gates[i])) got.push("architect");
   const all = loadMedals(), mine = all[sceneKey] || [], fresh = got.filter(m => !mine.includes(m));
   if (fresh.length) { all[sceneKey] = mine.concat(fresh); saveJSON("mh.medals", all); }
   return fresh;

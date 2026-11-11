@@ -67,7 +67,7 @@ function groundFinish(g, before) {
   g.restore();
 }
 function drawFence(g, f, ghost) {
-  g.lineCap = "round"; g.lineWidth = .35; g.strokeStyle = FENCE_TYPES[f.type || "steel"].col; g.globalAlpha = ghost ? .8 : 1;
+  g.lineCap = "round"; g.lineWidth = .35; g.strokeStyle = ghost && drag && drag.over ? "#ff2d2d" : FENCE_TYPES[f.type || "steel"].col; g.globalAlpha = ghost ? .8 : 1;
   g.beginPath(); g.moveTo(f.ax, f.ay); g.lineTo(f.bx, f.by); g.stroke();
   g.lineCap = "butt"; g.strokeStyle = "#1c1c1c"; g.setLineDash([.5, .5]); g.lineWidth = .35; g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
 }
@@ -527,7 +527,7 @@ function buildModel(m) {
     }
     case "juggler": case "unicycle": case "flyer": case "dj": case "guard": case "influencer": {
       const clown = m.kind === "juggler" || m.kind === "unicycle";
-      const body = m.kind === "flyer" ? "#d8322b" : m.kind === "dj" ? "#1c1c1c" : m.kind === "guard" ? "#d7f53a" : m.kind === "influencer" ? "#ff6fb1" : m.col || "#2f6fc4";
+      const body = m.kind === "flyer" ? "#d8322b" : m.kind === "dj" ? "#1c1c1c" : m.kind === "guard" ? (m.role === "slow" ? "#4fc3f7" : "#d7f53a") : m.kind === "influencer" ? "#ff6fb1" : m.col || "#2f6fc4";
       const base = m.kind === "unicycle" ? .65 : 0;
       if (m.kind === "unicycle") { const w = part(g, "cyl", "#1c1c1c", .32, .08, .32, 0, .32, 0); w.rotation.x = Math.PI / 2; part(g, "cyl", "#9aa0a6", .03, .45, .03, 0, .65, 0); u.wheel = w; }
       const bodyG = pivot(g, 0, base, 0); u.body = bodyG;
@@ -540,6 +540,10 @@ function buildModel(m) {
         part(bodyG, "sph", "#f5d36b", .17, .2, .17, -.05, 1.72, 0);
         const ring = new THREE.Mesh(new THREE.TorusGeometry(.32, .04, 6, 20), basic("#ffffff")); ring.position.set(.75, 2, 0); ring.rotation.y = Math.PI / 2; g.add(ring);
         part(g, "cyl", "#222", .02, 2, .02, .75, 1, 0); part(g, "box", "#151617", .03, .16, .09, .45, 1.75, .2);
+      }
+      if (m.kind === "guard" && m.role === "slow") {   // steward: a round SLOW paddle held up high
+        part(g, "cyl", "#e9e4d8", .025, 1.5, .025, .1, 1.9, .34); const pad = part(g, "cyl", basic("#ff9a1a"), .34, .05, .34, .1, 2.75, .34); pad.rotation.z = Math.PI / 2 * 0;
+        part(g, "cyl", "#ffffff", .22, .06, .22, .1, 2.76, .34);
       }
       if (m.kind === "guard") { part(bodyG, "cyl", "#151617", .15, .09, .15, .01, 1.76, 0); part(bodyG, "box", "#151617", .16, .02, .22, .13, 1.73, 0); part(bodyG, "box", "#ff9a3c", .21, .04, .27, 0, 1.2, 0); }
       if (m.kind !== "flyer") for (const s of [-1, 1]) u.legs.push(leg(bodyG, 0, .8, s * .1, .06, .8, clown ? "#e8b631" : "#22252b"));
@@ -742,10 +746,12 @@ function updateFxLayer(live) {
   }
   // area each guard calms
   for (const gd of guards) {
-    g.fillStyle = "rgba(215,245,58,.14)"; g.strokeStyle = "rgba(215,245,58,.7)"; g.lineWidth = .12;
-    g.beginPath(); g.arc(gd.x, gd.y, GUARD_CALM, 0, 7); g.fill(); g.stroke();
+    const slow = gd.role === "slow";
+    g.fillStyle = slow ? "rgba(79,195,247,.14)" : "rgba(215,245,58,.14)"; g.strokeStyle = slow ? "rgba(79,195,247,.75)" : "rgba(215,245,58,.7)"; g.lineWidth = .12;
+    if (slow) g.setLineDash([.5, .35]);
+    g.beginPath(); g.arc(gd.x, gd.y, slow ? STEWARD_R : GUARD_CALM, 0, 7); g.fill(); g.stroke(); g.setLineDash([]);
   }
-  if (drag) drawFence(g, drag, true);
+  if (drag) for (const [x0, y0, x1, y1] of dragSegs()) drawFence(g, { ax: x0, ay: y0, bx: x1, by: y1, type: drag.type }, true);
   g.lineWidth = .14;
   for (const r of rings) {
     if (r.mega) { g.lineWidth = .3; g.strokeStyle = `rgba(255,210,58,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .5 + r.t * 4.5, 0, 7); g.stroke(); g.lineWidth = .14; continue; }

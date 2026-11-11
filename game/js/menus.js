@@ -72,13 +72,13 @@ function showOptions() {
 function showHowTo() {
   showCard(`<h2>How to play</h2>
     <ol class="howto">
-      <li><b>Plan.</b> Drag to draw fences, open or close gates at the bottom, place guards and props. The orange trails show where people will walk.</li>
+      <li><b>Plan.</b> Drag to draw fences (straight, freehand or prefab shapes), open or close gates at the bottom, place guards, stewards and props. The orange trails show where people will walk.</li>
       <li><b>Open the gates.</b> A random twist is drawn, the crowd pours in and heads for the show.</li>
       <li><b>Survive the show.</b> Animals, vehicles and worse will cross the crowd. Click to shout through the megaphone (3 uses): people calm down and step back.</li>
       <li><b>Everybody out.</b> When the show ends they all leave through the same gates. Most disasters happen here.</li>
     </ol>
     <p><b>Pressure</b> is what hurts people: watch the pressure view (H). Red means someone is about to go down. Narrow gaps, dead ends and too few gates are the usual suspects.</p>
-    <p><b>Zero trampled</b> earns three stars. Stars unlock venues. Each venue also has four optional medals.</p>
+    <p><b>Zero trampled</b> earns three stars. Stars unlock venues. Each venue also has five optional medals.</p>
     <div class="row"><button class="go" id="pick">Got it</button></div>`, "options");
 }
 // button labels for the sandbox's disaster buttons

@@ -19,7 +19,51 @@ const FENCE_TYPES = {
   cones:    { name: "Cones", cost: 2.5, col: "#ff7a1a", desc: "People walk around them... until they're squeezed, then they step over. Nothing else cares." },
   foam:     { name: "Foam wall", cost: 16, col: "#3fa9e0", desc: "Soft padding that soaks up pressure: nobody gets crushed against it. Vehicles bounce off." },
 };
-let fenceType = "steel";
+let fenceType = "steel", fenceShape = "line";
+// ways to lay a fence: a straight line, a freehand curve, or a prefab you drag out
+const FENCE_SHAPES = {
+  line:   { name: "Straight", desc: "Drag from one end to the other." },
+  free:   { name: "Freehand", desc: "Drag any curve you like." },
+  ring:   { name: "Ring", desc: "Drag from the center outwards. The opening faces where you let go." },
+  funnel: { name: "Funnel", desc: "Drag from the narrow end to the wide end. Feeds people in gently." },
+  zigzag: { name: "Zigzag queue", desc: "Drag along the way people walk. The switchbacks slow everyone down." },
+  pen:    { name: "Pen", desc: "Drag a box. The door is on the side where you let go." },
+};
+// builds the list of straight pieces [ax, ay, bx, by] for a shape dragged from a to b (pts: freehand points)
+function shapeSegs(shape, ax, ay, bx, by, pts) {
+  const out = [], add = (x0, y0, x1, y1) => { if (Math.hypot(x1 - x0, y1 - y0) >= .6) out.push([x0, y0, x1, y1]); };
+  const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy), ux = L ? dx / L : 1, uy = L ? dy / L : 0, nx = -uy, ny = ux;
+  if (shape === "free") { for (let i = 1; i < (pts || []).length; i++) add(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]); }
+  else if (shape === "ring") {
+    const r = Math.max(2, L), n = clamp(Math.round(6.283 * r / 2), 8, 30), a0 = Math.atan2(dy, dx), gap = Math.min(1.2, 1.5 / r);
+    for (let k = 0; k < n; k++) {
+      const t0 = a0 + gap + (6.283 - 2 * gap) * k / n, t1 = a0 + gap + (6.283 - 2 * gap) * (k + 1) / n;
+      add(ax + Math.cos(t0) * r, ay + Math.sin(t0) * r, ax + Math.cos(t1) * r, ay + Math.sin(t1) * r);
+    }
+  } else if (shape === "funnel") {
+    const w = Math.max(5, L * .9) / 2, neck = 1.5;
+    for (const s of [-1, 1]) add(ax + nx * neck * s, ay + ny * neck * s, bx + nx * w * s, by + ny * w * s);
+  } else if (shape === "zigzag") {
+    const n = Math.max(2, Math.floor(L / 3) + 1), half = 3.2;
+    for (let k = 0; k < n; k++) {
+      const q = n > 1 ? k / (n - 1) : 0, cx = ax + dx * q, cy = ay + dy * q, s = k % 2 ? 1 : -1;
+      add(cx + nx * half * s, cy + ny * half * s, cx - nx * 1.2 * s, cy - ny * 1.2 * s);
+    }
+    for (const s of [-1, 1]) add(ax + nx * half * s, ay + ny * half * s, bx + nx * half * s, by + ny * half * s);
+  } else if (shape === "pen") {
+    const x0 = Math.min(ax, bx), x1 = Math.max(ax, bx), y0 = Math.min(ay, by), y1 = Math.max(ay, by), mx = (x0 + x1) / 2, d = Math.min(1.5, (x1 - x0) / 2 - .5);
+    add(x0, ay, x1, ay); add(x0, y0, x0, y1); add(x1, y0, x1, y1);   // far side and the two walls
+    if (d > 0) { add(x0, by, mx - d, by); add(mx + d, by, x1, by); }  // near side with a door in the middle
+  } else add(ax, ay, bx, by);
+  return out.map(([x0, y0, x1, y1]) => [clamp(x0, 0, WW), clamp(y0, 0, WH), clamp(x1, 0, WW), clamp(y1, 0, WH)]);
+}
+// security staff: guards calm people and stop animals; stewards slow everyone who walks past (crowd metering)
+const GUARD_ROLES = {
+  calm: { name: "Guard", col: "#d7f53a", desc: "Calms people nearby and stops animals and vehicles." },
+  slow: { name: "Steward", col: "#4fc3f7", cost: 40, max: 10, desc: "Holds a SLOW sign: everyone within 3 m walks at half speed. Put them before a bottleneck. Hired from the fence budget." },
+};
+let guardRole = "calm";
+const STEWARD_R = 3;
 const fenceCost = f => f.len * FENCE_TYPES[f.type || "steel"].cost;
 // props the player can place with the same budget
 const PROP_TYPES = {
