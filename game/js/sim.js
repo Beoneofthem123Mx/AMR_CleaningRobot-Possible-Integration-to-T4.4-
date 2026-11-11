@@ -283,7 +283,7 @@ const achieve = id => { try { window.steam && window.steam.achieve(id); } catch 
 let sceneKey = "plaza";
 function loadBest() { try { return JSON.parse(localStorage.getItem("mh.best") || "{}"); } catch (e) { return {}; } }
 const totalStars = () => Object.values(loadBest()).reduce((s, v) => s + v, 0);
-const isUnlocked = key => !!window.__unlockAll || totalStars() >= (SCENES[key].unlock || 0);
+const isUnlocked = key => !!window.__unlockAll || sandbox || totalStars() >= (SCENES[key].unlock || 0);
 function saveBest(key, stars) {
   const best = loadBest(); if ((best[key] ?? -1) >= stars) return;
   best[key] = stars; try { localStorage.setItem("mh.best", JSON.stringify(best)); } catch (e) { /* no storage */ }
@@ -303,7 +303,7 @@ let planFences = null;   // the plan as drawn, so fences broken during a show co
 function start(mod) {
   planFences = fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type }));
   if (!canStart()) return;
-  MOD = mod || MODS_BY_ID.normal; CROWD = Math.round(scene.crowd * (MOD.crowdMul || 1));
+  MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] };
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();
@@ -320,6 +320,7 @@ function finish() {
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
   const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;
+  if (sandbox) { showReport(stars, stuck); ui(); return; }   // sandbox: nothing is saved, nothing is earned
   saveBest(sceneKey, stars);
   achieve("FIRST_SHOW");
   if (stars === 3) achieve("PERFECT_" + sceneKey.toUpperCase());

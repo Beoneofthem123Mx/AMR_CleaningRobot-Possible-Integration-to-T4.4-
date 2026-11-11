@@ -121,13 +121,14 @@ function startDemo() {
 }
 function loadScene(key) {
   demo = false; if (camMode === 3) { camMode = 0; camFree = null; if (typeof camLabel === "function") camLabel(); }
-  sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = scene.maxGates;
+  sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = sandbox ? SLOTS : scene.maxGates;
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   buildWorld(); backToPlan();
 }
 $("#bScene").addEventListener("click", chooser);
 $("#card").addEventListener("click", e => {
   if (e.target.id === "resume") togglePause();
+  if (e.target.id === "sandbox") { sandbox = !sandbox; try { localStorage.setItem("mh.sandbox", sandbox ? "1" : "0"); } catch (er) { /* no storage */ } MAX_GATES = sandbox ? SLOTS : scene.maxGates; chooser(); }
   if (e.target.id === "chaos") { chaosMode = !chaosMode; try { localStorage.setItem("mh.chaos", chaosMode ? "1" : "0"); } catch (er) { /* no storage */ } chooser(); }
 });
 $("#bSound").textContent = "Sound: " + (AU.on ? "on" : "off");

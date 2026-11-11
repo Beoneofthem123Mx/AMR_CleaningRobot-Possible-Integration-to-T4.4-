@@ -13,6 +13,9 @@ function pop(x, y, text, h) {
 // total chaos mode: any event from any venue can happen anywhere
 let chaosMode = false;
 try { chaosMode = localStorage.getItem("mh.chaos") === "1"; } catch (e) { /* no storage */ }
+// sandbox: everything unlocked, no budget, nothing counts, and buttons to cause any disaster on demand
+let sandbox = false, sandCrowd = 1;
+try { sandbox = localStorage.getItem("mh.sandbox") === "1"; } catch (e) { /* no storage */ }
 const GENERIC_EVENTS = ["car", "icecream", "dogs", "beachballs", "lion", "elephants", "clowncar", "balls", "cannon", "unicycles", "mascot", "flares", "ola",
   "ball", "medic", "oleaje", "gaviotas", "flamenco", "bocina", "carrera", "desbocado", "fuegos", "taxi", "carroza", "policia"];
 function chaosPool() {

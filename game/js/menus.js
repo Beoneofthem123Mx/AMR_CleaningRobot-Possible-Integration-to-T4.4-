@@ -32,6 +32,7 @@ function chooser() {
         <p class="tag">A safety simulator for events that go horribly wrong</p>
         <p>Place the fences, the gates and the guards. Then the people pour in and absolutely everything happens. During the show, <b>click</b> to use the megaphone. Too much pressure and people go down — and get trampled.</p>
         <div class="row chaosrow"><button id="chaos" class="${chaosMode ? "go" : ""}">Total Chaos: ${chaosMode ? "ON" : "off"}</button><small>Events from every venue anywhere, plus two of today's twists at once.</small></div>
+        <div class="row chaosrow"><button id="sandbox" class="${sandbox ? "go" : ""}">Sandbox: ${sandbox ? "ON" : "off"}</button><small>Every venue open, no budget, bigger crowds, and a button for every disaster. Nothing counts.</small></div>
         <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · stars unlock new venues</p>
       </div>
     </div>
@@ -45,6 +46,20 @@ function chooser() {
   const b = $("#card .scene:not(:disabled)"); if (b) b.focus();
 }
 
+// button labels for the sandbox's disaster buttons
+const EVENT_NAMES = { car: "Lost driver", dogs: "Loose dogs", beachballs: "Beach balls", icecream: "Ice cream truck", lion: "Lion", elephants: "Elephants", clowncar: "Clown car", balls: "Circus balls",
+  cannon: "Human cannonball", unicycles: "Unicycles", mascot: "Mascot", flares: "Flares", ola: "The wave", ball: "Giant ball", medic: "Medical cart", oferta: "Flash sale", carrito: "Runaway cart",
+  abuela: "Grandma", tubeman: "Tube man", limpieza: "Floor scrubber", oleaje: "Big swell", gaviotas: "Seagulls", flamenco: "Inflatable flamingo", bocina: "Ship's horn", ramo: "Bouquet toss",
+  pastel: "Rolling cake", dron: "Drone crash", mariachis: "Mariachis", suegra: "Mother-in-law", carrera: "Horse race", desbocado: "Runaway horse", tractor: "Tractor", inundacion: "Toilet flood",
+  rollos: "Golden rolls", plomero: "Plumber", alcalde: "Mayor selfies", perfume: "Perfume cloud", fuegos: "Fireworks", taxi: "Taxi", carroza: "Parade float", policia: "Mounted police",
+  promesas: "Campaign promise", tortas: "Free sandwiches", acarreados: "Bus of supporters", botargas: "Duck mascots", huevazo: "Egg throw", salsa: "Salsa spill", taquero: "Free tacos",
+  chile: "Exploding chili", abduccion: "Abduction", vacas: "Cows", agentes: "Men in black", alien: "Alien selfies", idolo: "Pop idol", maletas: "Loose luggage", k9: "Security dog",
+  retraso: "Flight delay", tope: "Suicide dive", sillazo: "Chair shots", mascara: "Mask toss", rudo: "The villain", chona: "Doña Chona", referi: "Referees", countdown: "Countdown",
+  ceo: "The CEO", robodog: "Robot dogs", merch: "Hoodie cannon", booster: "Booster landing", robotaxi: "Robotaxi", nft: "Free NFTs", penguins: "Penguin parade", giraffe: "Giraffe",
+  gorilla: "Gorilla", alpaca: "Kevin the alpaca", bananas: "Banana truck", hippo: "Hippo yawn", sneeze: "Panda sneeze", wheel: "Cheese wheels", goat: "Goat", tumble: "Tumblers",
+  mayor: "Mayor's speech", fondue: "Fondue fountain", bluecheese: "Blue cheese", horde: "Zombie horde", hearse: "Hearse", pumpkin: "Giant pumpkin", fog: "Fog machine", candy: "Candy spill",
+  vampire: "Vampire", werewolf: "Werewolf", shark: "Shark!", sunscreen: "Sunscreen spill", gulls: "Seagulls", whale: "Inflatable whale", lifeguard: "Lifeguard", jetski: "Jet ski",
+  jingle: "Second truck", hug: "Mascot hugs", dinos: "Dino parade", coaster: "Coaster derails", teacup: "Runaway teacup", churros: "Free churros", fireworks: "Sideways fireworks", line: "The line starts here" };
 // ---------- the next morning's newspaper ----------
 const PLACE = { plaza: "THE PLAZA", circo: "THE CIRCUS", estadio: "THE STADIUM", crucero: "THE CRUISE", hipodromo: "THE RACETRACK", ciudad: "THE CITY",
   viernes: "THE MALL", boda: "THE WEDDING OF THE YEAR", trono: "THE GOLDEN BATHROOM", mitin: "THE DUCK RALLY", taco: "THE TACO FESTIVAL", ovni: "DON CHUY'S CORNFIELD", aeropuerto: "THE AIRPORT", arena: "THE ARENA" };
@@ -122,6 +137,7 @@ function showReport(stars, stuck) {
   if (abducted) lines.unshift(`${abducted} attendees were abducted. Their families hope things go better for them up there.`);
   const date = new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" });
   showCard(`<div class="paper">
+      ${sandbox ? `<div class="sandtag">SANDBOX · this never happened</div>` : ""}
       <div class="mast"><span>THE DAILY GOSSIP</span><small>${date} · Special edition · $5</small></div>
       <h2 class="head">${head}</h2>
       ${G3.photo ? `<figure><img src="${G3.photo}" alt="Event photo"><figcaption>${scene.name}, yesterday. Photo: an attendee who never once put their phone down.</figcaption></figure>` : ""}

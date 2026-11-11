@@ -1,16 +1,17 @@
 // Human Tsunami · plan editing and interface
 // ===== Plan editing =====
 let tool = "fence", drag = null;
+const maxGuards = () => sandbox ? 16 : (scene.guards || 3);
 const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0);   // dollars spent
-const fenceLeft = () => FENCE_BUDGET * 10 - fenceUsed();
+const fenceLeft = () => sandbox ? 1e9 : FENCE_BUDGET * 10 - fenceUsed();
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
   if (ev.button !== 0) return;   // right/middle button pans the camera
   // during the show, each click uses the megaphone (three times per show)
   if (phase === "show" || phase === "evac") {
     const [x, y] = toWorld(ev);
-    if (mega.n <= 0) { caption("The megaphone is out of battery.", true, 1400); return; }
-    mega.n--; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true });
+    if (mega.n <= 0 && !sandbox) { caption("The megaphone is out of battery.", true, 1400); return; }
+    if (!sandbox) mega.n--; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true });
     pop(x, y, "CALM DOWN, PLEASE!"); sfx("whistle"); return;
   }
   if (phase !== "plan") return;
@@ -24,7 +25,7 @@ cv.addEventListener("pointerdown", ev => {
     gates[i] = !gates[i]; buildWorld(); ui(); return;
   }
   if (tool === "guard") {
-    if (guards.length >= (scene.guards || 3)) { toast("No guards left. Erase one to move it."); return; }
+    if (guards.length >= maxGuards()) { toast("No guards left. Erase one to move it."); return; }
     const gx = snap(x), gy = snap(y), id = cellOf(gx, gy);
     if (gy >= FENCE_Y - .5 || blockedC[id] || !isFinite(fStage[id])) { toast("Put the guard somewhere the crowd will actually be."); return; }
     guards.push({ kind: "guard", x: gx, y: gy, ang: -Math.PI / 2, t: 0 }); buildWorld(); ui(); return;
@@ -55,7 +56,7 @@ cv.addEventListener("pointermove", ev => {
   if (l > left) { bx = drag.ax + (bx - drag.ax) * left / l; by = drag.ay + (by - drag.ay) * left / l; }
   drag.bx = clamp(bx, 0, WW); drag.by = clamp(by, 0, WH);
   const cost = Math.hypot(drag.bx - drag.ax, drag.by - drag.ay) * FENCE_TYPES[drag.type].cost;
-  $("#cFence").textContent = `$${Math.round(fenceLeft())} − ${Math.round(cost)}`;   // live price while drawing
+  if (!sandbox) $("#cFence").textContent = `$${Math.round(fenceLeft())} − ${Math.round(cost)}`;   // live price while drawing
 });
 const endDrag = () => {
   if (!drag) return;
@@ -110,10 +111,10 @@ function showCard(html, kind) {
 function hideCard() { $("#overlay").hidden = true; }
 function ui() {
   const plan = phase === "plan";
-  $("#cFence").textContent = `$${Math.round(fenceLeft())}`;
+  $("#cFence").textContent = sandbox ? "∞" : `$${Math.round(fenceLeft())}`;
   $("#tFence").firstChild.textContent = FENCE_TYPES[fenceType].name + " ";
   renderPicker(plan);
-  $("#cGuard").textContent = `${(scene.guards || 3) - guards.length}`;
+  $("#cGuard").textContent = `${maxGuards() - guards.length}`;
   $("#cGate").textContent = `${gates.filter(Boolean).length}/${MAX_GATES}`;
   document.querySelectorAll("[data-tool]").forEach(b => { b.disabled = !plan; b.classList.toggle("on", b.dataset.tool === tool); });
   $("#bGo").textContent = plan ? "Open gates" : phase === "done" ? "Open gates" : "Stop";
@@ -211,15 +212,38 @@ function pickFence(type) { fenceType = type; tool = "fence"; ui(); toast(`${FENC
 function pickProp(type) { propType = type; tool = "prop"; ui(); toast(`${PROP_TYPES[type].name} · $${PROP_TYPES[type].cost} — ${PROP_TYPES[type].desc}`); }
 let pickerFor = "";
 function renderPicker(plan) {
-  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop") ? tool : "";
+  const live = phase === "show" || phase === "evac";
+  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : sandbox && plan ? "sand" : "";
   el.hidden = !want;
   if (want && want !== pickerFor) {
     pickerFor = want;
-    const list = want === "fence" ? FENCE_TYPES : PROP_TYPES;
-    el.innerHTML = Object.entries(list).map(([k, f]) =>
-      `<button data-k="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">$${f.cost}${want === "fence" ? "/m" : ""}</span></button>`).join("");
-    el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => want === "fence" ? pickFence(b.dataset.k) : pickProp(b.dataset.k)));
+    if (want.startsWith("mayhem")) {
+      // sandbox: one button per disaster
+      const evs = [...new Set(scene.events)];
+      el.innerHTML = evs.map(k => `<button data-ev="${k}">${EVENT_NAMES[k] || k}</button>`).join("") +
+        `<button data-ev="*" class="go">Anything!</button><button data-ev="!drop">Music drop</button><button data-ev="!more">+300 people</button><button data-ev="!dark">Blackout</button><button data-ev="!end">End show</button>`;
+      el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => mayhem(b.dataset.ev)));
+    } else if (want === "sand") {
+      el.innerHTML = `<button data-sand="crowd"></button><span class="sandnote">Sandbox: no budget, no limits, nothing counts. Pick the fence or props tool to build.</span>`;
+      el.querySelector("button").addEventListener("click", () => { sandCrowd = sandCrowd === 1 ? 1.5 : sandCrowd === 1.5 ? .5 : 1; ui(); });
+    } else {
+      const list = want === "fence" ? FENCE_TYPES : PROP_TYPES;
+      el.innerHTML = Object.entries(list).map(([k, f]) =>
+        `<button data-k="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">${sandbox ? "" : "$" + f.cost + (want === "fence" ? "/m" : "")}</span></button>`).join("");
+      el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => want === "fence" ? pickFence(b.dataset.k) : pickProp(b.dataset.k)));
+    }
   }
+  if (want === "sand") el.querySelector("button").textContent = `Crowd size: ×${sandCrowd} (${Math.min(5800, Math.round(scene.crowd * sandCrowd)).toLocaleString("en")})`;
   const cur = want === "fence" ? fenceType : propType;
-  el.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.k === cur));
+  el.querySelectorAll("button[data-k]").forEach(b => b.classList.toggle("on", b.dataset.k === cur));
+}
+// sandbox buttons during the show
+function mayhem(k) {
+  if (phase !== "show" && phase !== "evac") return;
+  if (k === "*") { const pool = chaosPool(); spawnEvent(pool[(Math.random() * pool.length) | 0]); }
+  else if (k === "!drop") { surgeT = 3.5; onDrop(false); }
+  else if (k === "!more") { const n = ag.length < 5600 ? spawnAt(openGateX(), 60, 300) : 0; pop(20, 58, n ? `+${n} PEOPLE!` : "FULL!"); }
+  else if (k === "!dark") { blackT = 6; sfx("boom"); caption("Lights out!", true, 1500); }
+  else if (k === "!end") { if (phase === "show") startEvac(); }
+  else spawnEvent(k);
 }
