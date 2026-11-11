@@ -1,4 +1,5 @@
 // Human Tsunami · venue, flow fields, crowd and phases
+let megaUsed = false;   // whether the megaphone was used this show (for the Hands off medal)
 function buildWorld() {
   obs = [];
   // venue edges
@@ -137,7 +138,7 @@ const cellOf = (x, y) => clamp(Math.floor(y / CS), 0, GH - 1) * GW + clamp(Math.
 const SHIRTS = ["#d8433b","#2f6fc4","#e8b631","#3d9a5b","#8a4fbf","#e07a2e","#f4f4f0","#2b2f35","#3fb3c4","#d0679b","#7a8c3a","#9b5a3c"];
 const HEAT = ["#2c4fd6","#2f86e0","#2fb8d0","#33c08a","#5cc63c","#b8d230","#f2c530","#f39424","#ec5a22","#e0322b"];
 let surgeT = 0, nextDrop = 0, drops = 0, SURGE = [.55, 1.1];
-let abducted = 0, slipT = 0, MOD = null, eventLog = new Set(), mega = { n: 3, active: [] };
+let abducted = 0, slipT = 0, MOD = null, eventLog = new Set(), mega = { n: 3, active: [] }; megaUsed = false;
 let ag = [], fallen = [], phase = "plan", spawned = 0, fullAt = 0, t = 0, evacT = 0, dead = 0, evacuated = 0;
 let hashHead = new Int32Array(GW * GH), hashNext = new Int32Array(0);
 
@@ -281,6 +282,28 @@ function step() {
 // window.steam is set by the desktop app (desktop/preload.js); without Steam, this does nothing
 const achieve = id => { try { window.steam && window.steam.achieve(id); } catch (e) { /* no Steam */ } };
 let sceneKey = "plaza";
+// medals: four optional challenges per venue
+const MEDALS = {
+  budget:   { icon: "$", name: "On a budget", desc: "At most 5 trampled spending $200 or less" },
+  handsoff: { icon: "✋", name: "Hands off", desc: "Zero trampled without guards or the megaphone" },
+  chaos:    { icon: "🌀", name: "Chaos survivor", desc: "Under 1% trampled in Total Chaos mode" },
+  disaster: { icon: "☠", name: "Catastrophe", desc: "500 or more trampled. On purpose, we assume." },
+};
+function loadJSON(key, def) { try { return JSON.parse(localStorage.getItem(key) || "null") || def; } catch (e) { return def; } }
+function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* no storage */ } }
+const loadMedals = () => loadJSON("mh.medals", {});
+const loadStats = () => loadJSON("mh.stats", { shows: 0, trampled: 0, abducted: 0, saved: 0, perfect: 0, worst: 0 });
+// returns the medals earned in this show that the player didn't have yet
+function awardMedals(stars, stuck, megaUsed) {
+  const got = [], spent = typeof fenceUsed === "function" ? fenceUsed() : 0, pct = (dead + stuck) / CROWD;
+  if (dead + stuck <= 5 && spent <= 200) got.push("budget");
+  if (stars === 3 && guards.length === 0 && !megaUsed) got.push("handsoff");
+  if (chaosMode && pct < .01) got.push("chaos");
+  if (dead >= 500) got.push("disaster");
+  const all = loadMedals(), mine = all[sceneKey] || [], fresh = got.filter(m => !mine.includes(m));
+  if (fresh.length) { all[sceneKey] = mine.concat(fresh); saveJSON("mh.medals", all); }
+  return fresh;
+}
 function loadBest() { try { return JSON.parse(localStorage.getItem("mh.best") || "{}"); } catch (e) { return {}; } }
 const totalStars = () => Object.values(loadBest()).reduce((s, v) => s + v, 0);
 const isUnlocked = key => !!window.__unlockAll || sandbox || totalStars() >= (SCENES[key].unlock || 0);
@@ -304,7 +327,7 @@ function start(mod) {
   planFences = fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type }));
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
-  clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] };
+  clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] }; megaUsed = false;
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();
   if (MOD.uniform) MOD.uc = (Math.random() * SHIRTS.length) | 0;
@@ -320,7 +343,10 @@ function finish() {
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
   const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;
-  if (sandbox) { showReport(stars, stuck); ui(); return; }   // sandbox: nothing is saved, nothing is earned
+  if (sandbox) { showReport(stars, stuck, []); ui(); return; }   // sandbox: nothing is saved, nothing is earned
+  const st = loadStats(); st.shows++; st.trampled += dead; st.abducted += abducted; st.saved += evacuated; if (stars === 3) st.perfect++; st.worst = Math.max(st.worst, dead); saveJSON("mh.stats", st);
+  const fresh = awardMedals(stars, stuck, megaUsed);
+  if (Object.values(loadMedals()).reduce((n, m) => n + m.length, 0) >= 20) achieve("MEDAL_COLLECTOR");
   saveBest(sceneKey, stars);
   achieve("FIRST_SHOW");
   if (stars === 3) achieve("PERFECT_" + sceneKey.toUpperCase());
@@ -331,7 +357,7 @@ function finish() {
   if (abducted >= 100) achieve("SPACE_TOURISM");
   if (stars === 3 && mega.n === 0) achieve("LOUD_AND_SAFE");
   try { const seen = new Set(JSON.parse(localStorage.getItem("mh.mods") || "[]")); seen.add(MOD.id); localStorage.setItem("mh.mods", JSON.stringify([...seen])); if (seen.size >= 6) achieve("MOD_COLLECTOR"); } catch (e) { /* no storage */ }
-  showReport(stars, stuck); ui(); return;
+  showReport(stars, stuck, fresh); ui(); return;
   showCard(`<h2>${stars === 3 ? "Nobody got hurt" : stars ? "Venue evacuated" : "It was a tragedy"}</h2>
     <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("")}</div>
     <div class="stats">

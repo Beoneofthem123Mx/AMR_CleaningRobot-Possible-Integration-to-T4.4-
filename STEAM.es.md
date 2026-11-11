@@ -72,6 +72,7 @@ El juego ya los activa. Créalos en *Stats & Achievements* con estos nombres de 
 | `SPACE_TOURISM`      | Turismo espacial          | 100 abducidos en un solo show |
 | `LOUD_AND_SAFE`      | A gritos pero a salvo     | Tres estrellas usando los tres megáfonos |
 | `MOD_COLLECTOR`      | Ya lo vi todo             | Terminar shows con seis condiciones del día distintas |
+| `MEDAL_COLLECTOR`    | Condecorado               | Ganar 20 medallas entre todos los escenarios            |
 
 Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
 

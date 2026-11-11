@@ -11,7 +11,7 @@ cv.addEventListener("pointerdown", ev => {
   if (phase === "show" || phase === "evac") {
     const [x, y] = toWorld(ev);
     if (mega.n <= 0 && !sandbox) { caption("The megaphone is out of battery.", true, 1400); return; }
-    if (!sandbox) mega.n--; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true });
+    if (!sandbox) mega.n--; megaUsed = true; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true });
     pop(x, y, "CALM DOWN, PLEASE!"); sfx("whistle"); return;
   }
   if (phase !== "plan") return;
@@ -241,6 +241,9 @@ $("#card").addEventListener("click", e => {
   if (sk) { loadScene(sk.dataset.scene); hideCard(); caption("You plan it", false, 0); }
   if (e.target.id === "retry") { paused = false; backToPlan(); }
   if (e.target.id === "pick") chooser();
+  if (e.target.id === "options") showOptions();
+  if (e.target.id === "howto") showHowTo();
+  if (e.target.id === "again") { paused = false; backToPlan(); startWithRoulette(); }
   if (e.target.id === "quit" && window.steam) window.steam.quit();
   if (e.target.id === "fs" && window.steam) window.steam.toggleFullscreen();
 });

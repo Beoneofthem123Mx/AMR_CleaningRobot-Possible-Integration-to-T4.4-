@@ -25,7 +25,8 @@ function sceneThumb(key) {
 // ---------- title screen and venue picker ----------
 function chooser() {
   if ((phase === "show" || phase === "evac") && !demo) return;
-  const best = loadBest(), total = totalStars(), max = Object.keys(SCENES).length * 3;
+  const best = loadBest(), total = totalStars(), max = Object.keys(SCENES).length * 3, medals = loadMedals(), st = loadStats();
+  const nMedals = Object.values(medals).reduce((n, m) => n + m.length, 0), maxMedals = Object.keys(SCENES).length * Object.keys(MEDALS).length;
   showCard(`<div class="menuhead">
       <div class="title"><h1 class="logo">HUMAN<br>TSUNAMI</h1></div>
       <div class="menuintro">
@@ -33,19 +34,53 @@ function chooser() {
         <p>Place the fences, the gates and the guards. Then the people pour in and absolutely everything happens. During the show, <b>click</b> to use the megaphone. Too much pressure and people go down — and get trampled.</p>
         <div class="row chaosrow"><button id="chaos" class="${chaosMode ? "go" : ""}">Total Chaos: ${chaosMode ? "ON" : "off"}</button><small>Events from every venue anywhere, plus two of today's twists at once.</small></div>
         <div class="row chaosrow"><button id="sandbox" class="${sandbox ? "go" : ""}">Sandbox: ${sandbox ? "ON" : "off"}</button><small>Every venue open, no budget, bigger crowds, and a button for every disaster. Nothing counts.</small></div>
-        <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · stars unlock new venues</p>
+        <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · <span class="starbig medalcount">◆ ${nMedals}</span> / ${maxMedals} medals · stars unlock new venues</p>
+        ${st.shows ? `<p class="career">Career: <b>${st.shows.toLocaleString("en")}</b> shows · <b>${st.trampled.toLocaleString("en")}</b> trampled · <b>${st.saved.toLocaleString("en")}</b> got home fine · <b>${st.perfect}</b> flawless${st.abducted ? ` · <b>${st.abducted}</b> abducted` : ""} · worst day: <b>${st.worst.toLocaleString("en")}</b></p>` : ""}
       </div>
     </div>
     <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => {
       const b = best[key], open = isUnlocked(key);
       return `<button class="scene ${open ? "" : "locked"}" data-scene="${key}" ${open ? "" : "disabled"} title="${open ? sc.intro.replace(/"/g, "&quot;") : ""}">
         <span class="thumb"><img src="${sceneThumb(key)}" alt="">${open ? (b !== undefined ? `<em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : `<em class="best new">NEW</em>`) : `<em class="lockbadge">LOCKED · ${sc.unlock} ★</em>`}</span>
-        <span class="txt"><b>${sc.name}</b><span>${sc.tag}</span><small>${sc.crowd.toLocaleString("en")} people</small></span></button>`; }).join("")}</div>
+        <span class="txt"><b>${sc.name}</b><span>${sc.tag}</span><small>${sc.crowd.toLocaleString("en")} people</small>
+        ${open ? `<span class="medals">${Object.entries(MEDALS).map(([m, d]) => `<i class="${(medals[key] || []).includes(m) ? "got" : ""}" title="${d.name}: ${d.desc}">${d.icon}</i>`).join("")}</span>` : ""}</span></button>`; }).join("")}</div>
     <p class="keys">Shortcuts: <b>1–5</b> tools (press again to switch fence/prop type) · <b>Space</b> opens gates · <b>H</b> pressure · <b>C</b> camera · <b>Wheel</b> zoom · <b>WASD</b>/right-drag pan · <b>V</b> speed · <b>M</b> sound · <b>G</b> effects · <b>Esc</b> pause</p>
-    ${window.steam ? '<div class="row"><button id="fs">Full screen (F11)</button><button id="quit">Quit game</button></div>' : ""}`, "menu");
+    <div class="row"><button id="options">Options</button><button id="howto">How to play</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
   const b = $("#card .scene:not(:disabled)"); if (b) b.focus();
 }
 
+// ---------- options ----------
+function showOptions() {
+  const pct = v => Math.round(v * 100);
+  showCard(`<h2>Options</h2>
+    <label class="opt">Music <input type="range" id="volM" min="0" max="100" value="${pct(AU.musicVol)}"><span id="volMv">${pct(AU.musicVol)}%</span></label>
+    <label class="opt">Sound effects <input type="range" id="volS" min="0" max="100" value="${pct(AU.sfxVol)}"><span id="volSv">${pct(AU.sfxVol)}%</span></label>
+    <div class="row"><button id="optFx">Fancy effects: ${POST.on ? "on" : "off"}</button>${window.steam ? '<button id="fs">Full screen (F11)</button>' : ""}</div>
+    <p class="keys">Glow, focus blur and contact shading. Turn them off if the game runs slowly (shortcut: G).</p>
+    <div class="row"><button id="optReset">Erase all progress</button></div>
+    <div class="row"><button class="go" id="pick">Back</button></div>`, "options");
+  $("#volM").oninput = e => { setVolume("m", e.target.value / 100); $("#volMv").textContent = e.target.value + "%"; };
+  $("#volS").oninput = e => { setVolume("s", e.target.value / 100); $("#volSv").textContent = e.target.value + "%"; sfx("tick"); };
+  $("#optFx").onclick = () => { POST.on = !POST.on; try { localStorage.setItem("mh.fx", POST.on ? "on" : "off"); } catch (er) { /* no storage */ } $("#optFx").textContent = "Fancy effects: " + (POST.on ? "on" : "off"); };
+  let armed = false;
+  $("#optReset").onclick = () => {
+    if (!armed) { armed = true; $("#optReset").textContent = "Really? Click again to erase stars, medals, stats and plans"; return; }
+    try { Object.keys(localStorage).filter(k => k.startsWith("mh.") && !["mh.vol", "mh.sound", "mh.fx"].includes(k)).forEach(k => localStorage.removeItem(k)); } catch (er) { /* no storage */ }
+    sandbox = false; chaosMode = false; loadScene("plaza"); startDemo(); chooser();
+  };
+}
+function showHowTo() {
+  showCard(`<h2>How to play</h2>
+    <ol class="howto">
+      <li><b>Plan.</b> Drag to draw fences, open or close gates at the bottom, place guards and props. The orange trails show where people will walk.</li>
+      <li><b>Open the gates.</b> A random twist is drawn, the crowd pours in and heads for the show.</li>
+      <li><b>Survive the show.</b> Animals, vehicles and worse will cross the crowd. Click to shout through the megaphone (3 uses): people calm down and step back.</li>
+      <li><b>Everybody out.</b> When the show ends they all leave through the same gates. Most disasters happen here.</li>
+    </ol>
+    <p><b>Pressure</b> is what hurts people: watch the pressure view (H). Red means someone is about to go down. Narrow gaps, dead ends and too few gates are the usual suspects.</p>
+    <p><b>Zero trampled</b> earns three stars. Stars unlock venues. Each venue also has four optional medals.</p>
+    <div class="row"><button class="go" id="pick">Got it</button></div>`, "options");
+}
 // button labels for the sandbox's disaster buttons
 const EVENT_NAMES = { car: "Lost driver", dogs: "Loose dogs", beachballs: "Beach balls", icecream: "Ice cream truck", lion: "Lion", elephants: "Elephants", clowncar: "Clown car", balls: "Circus balls",
   cannon: "Human cannonball", unicycles: "Unicycles", mascot: "Mascot", flares: "Flares", ola: "The wave", ball: "Giant ball", medic: "Medical cart", oferta: "Flash sale", carrito: "Runaway cart",
@@ -126,7 +161,7 @@ const QUOTES = [
   "“This never happened in my day,” said a lady who saw everything.",
   "“I'd organize it again,” insisted the man in charge, now missing both shoes.",
 ];
-function showReport(stars, stuck) {
+function showReport(stars, stuck, fresh) {
   const p = PLACE[sceneKey] || scene.place || scene.name.toUpperCase(), v = { P: p, N: CROWD.toLocaleString("en"), D: dead.toLocaleString("en") };
   const head = fill(pick(stars === 3 ? HEADLINES.perfect : stars ? HEADLINES.some : HEADLINES.bad), v);
   const lines = [...eventLog].map(k => (scene.lines && scene.lines[k]) || EVENT_LINES[k]).filter(Boolean).sort(() => Math.random() - .5).slice(0, 2);
@@ -155,6 +190,7 @@ function showReport(stars, stuck) {
           </div>
         </div>
       </div>
+      ${fresh && fresh.length ? `<div class="newmedals">${fresh.map(m => `<span class="medal got"><i>${MEDALS[m].icon}</i><b>New medal: ${MEDALS[m].name}</b><small>${MEDALS[m].desc}</small></span>`).join("")}</div>` : ""}
     </div>
-    <div class="row"><button class="go" id="retry">Adjust the plan</button><button id="pick">Change venue</button></div>`, "report");
+    <div class="row"><button class="go" id="retry">Adjust the plan</button><button id="again">Run it again</button><button id="pick">Change venue</button></div>`, "report");
 }

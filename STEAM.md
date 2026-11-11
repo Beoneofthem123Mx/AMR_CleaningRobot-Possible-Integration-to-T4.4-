@@ -71,6 +71,7 @@ The game already unlocks them. Create them under *Stats & Achievements* with the
 | `SPACE_TOURISM`      | Space Tourism            | 100 abducted in a single show                            |
 | `LOUD_AND_SAFE`      | Loud but Safe            | Three stars using all three megaphones                   |
 | `MOD_COLLECTOR`      | Seen It All              | Finish shows under six different "today's twists"        |
+| `MEDAL_COLLECTOR`    | Decorated                | Earn 20 medals across all venues                         |
 
 Each achievement needs a 64×64 icon (achieved and unachieved versions).
 

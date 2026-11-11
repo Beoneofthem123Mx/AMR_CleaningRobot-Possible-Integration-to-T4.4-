@@ -136,6 +136,19 @@ around.
 - **Director's camera**: in automatic mode, the camera peeks at each event for a few seconds (the
   elephant, the UFO, the taxi that didn't know the street was closed).
 
+## Modes, medals and saves
+
+- **Medals**: every venue has four optional challenges: *On a budget* (at most 5 trampled spending
+  $200 or less), *Hands off* (zero trampled without guards or the megaphone), *Chaos survivor*
+  (under 1% trampled in Total Chaos) and *Catastrophe* (500 or more trampled).
+- **Sandbox** (title screen): every venue open, no budget, up to 16 guards, all gates, crowd size
+  ×0.5 / ×1 / ×1.5, an unlimited megaphone and one button per disaster during the show. Nothing
+  is saved or earned.
+- **Your plan is saved** for each venue. **Ctrl+Z** undoes, **Delete** clears the plan.
+- **Career stats** on the title screen: shows, total trampled, your worst day.
+- **Options**: music and effects volume, fancy effects on/off, erase progress.
+- Ghosts with halos float up from the trampled, and the body count has milestones.
+
 ## Keyboard shortcuts
 
 **1–5** tools · **Space** opens the gates · **H** pressure · **C** camera · **V** speed ·
