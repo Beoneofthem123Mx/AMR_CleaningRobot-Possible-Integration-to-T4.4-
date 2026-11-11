@@ -15,7 +15,7 @@ function confettiAt(x, y, h, n, spread) {
 function burst(n) { for (let i = 0; i < n; i += 20) { const b = scene.beams[(Math.random() * scene.beams.length) | 0]; confettiAt(b.x + (Math.random() - .5) * 4, b.y + 1, b.h || 7, 20, 7); } }
 function burstAt(x, y, n) { confettiAt(x, y, 1, n, 6); }
 function onDrop(first) {
-  flash = 1; burst(260); sfx("cheer");
+  flash = 1; burst(260); sfx("cheer"); sfx("crowdroar");
   caption(first ? "Real crowd physics" : scene.acts[(Math.random() * scene.acts.length) | 0], false, 1900);
 }
 let ghosts = [];   // souls of the trampled, rising with a halo

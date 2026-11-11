@@ -171,6 +171,7 @@ function showReport(stars, stuck, fresh) {
   }
   if (abducted) lines.unshift(`${abducted} attendees were abducted. Their families hope things go better for them up there.`);
   const date = new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" });
+  sfx(stars >= 2 ? "win" : "lose"); if (fresh && fresh.length) setTimeout(() => sfx("confirm"), 900);
   showCard(`<div class="paper">
       ${sandbox ? `<div class="sandtag">SANDBOX · this never happened</div>` : ""}
       <div class="mast"><span>THE DAILY GOSSIP</span><small>${date} · Special edition · $5</small></div>

@@ -23,7 +23,7 @@ cv.addEventListener("pointerdown", ev => {
     if ((scene.noSlots || []).includes(i)) { toast(`${scene.slotWhy}: that gate can't be opened.`); return; }
     if (gates[i] && open <= 1) { toast("You need at least one open gate."); return; }
     if (!gates[i] && open >= MAX_GATES) { toast(`There's only enough staff for ${MAX_GATES} gates.`); return; }
-    gates[i] = !gates[i]; buildWorld(); ui(); return;
+    gates[i] = !gates[i]; buildWorld(); ui(); sfx("select"); return;
   }
   if (tool === "guard") {
     if (guardRole === "slow") {
@@ -32,23 +32,23 @@ cv.addEventListener("pointerdown", ev => {
     } else if (nGuards() >= maxGuards()) { toast("No guards left. Erase one to move it, or hire stewards from the budget."); return; }
     const gx = snap(x), gy = snap(y), id = cellOf(gx, gy);
     if (gy >= FENCE_Y - .5 || blockedC[id] || !isFinite(fStage[id])) { toast("Put the guard somewhere the crowd will actually be."); return; }
-    guards.push({ kind: "guard", role: guardRole, x: gx, y: gy, ang: -Math.PI / 2, t: 0 }); buildWorld(); ui(); return;
+    guards.push({ kind: "guard", role: guardRole, x: gx, y: gy, ang: -Math.PI / 2, t: 0 }); buildWorld(); ui(); sfx("drop"); return;
   }
   if (tool === "prop") {
     const pt = PROP_TYPES[propType], px = snap(x), py = snap(y);
     if (fenceLeft() < pt.cost) { toast(`Not enough budget for a ${pt.name.toLowerCase()} ($${pt.cost}).`); return; }
     if (propType === "screen" && props.some(p => p.type === "screen")) { toast("One big screen per venue. The sponsor is cheap."); return; }
     if (py >= FENCE_Y - 2.5 || py < 1 || px < 1 || px > WW - 1 || blockedC[cellOf(px, py)] || !isFinite(fStage[cellOf(px, py)])) { toast("Put it somewhere the crowd can actually reach (and not on top of the gates)."); return; }
-    props.push({ type: propType, x: px, y: py }); buildWorld(); ui(); return;
+    props.push({ type: propType, x: px, y: py }); buildWorld(); ui(); sfx("drop"); return;
   }
   if (tool === "erase") {
     const gi = guards.findIndex(gd => Math.hypot(gd.x - x, gd.y - y) < 1.2);
-    if (gi >= 0) { guards.splice(gi, 1); buildWorld(); ui(); return; }
+    if (gi >= 0) { guards.splice(gi, 1); buildWorld(); ui(); sfx("erase"); return; }
     const pi = props.findIndex(p => Math.hypot(p.x - x, p.y - y) < PROP_TYPES[p.type].r + .8);
-    if (pi >= 0) { props.splice(pi, 1); buildWorld(); ui(); return; }
+    if (pi >= 0) { props.splice(pi, 1); buildWorld(); ui(); sfx("erase"); return; }
     let best = -1, bd = 1.2;
     fences.forEach((f, i) => { const d = contact({ t: "s", ...f, th: 0 }, x, y)[2]; if (d < bd) { bd = d; best = i; } });
-    if (best >= 0) { const gid = fences[best].g; if (gid) fences = fences.filter(f => f.g !== gid); else fences.splice(best, 1); buildWorld(); ui(); }
+    if (best >= 0) { const gid = fences[best].g; if (gid) fences = fences.filter(f => f.g !== gid); else fences.splice(best, 1); buildWorld(); ui(); sfx("erase"); }
     return;
   }
   drag = { ax: snap(x), ay: snap(y), bx: snap(x), by: snap(y), type: fenceType, shape: fenceShape, pts: [[x, y]] }; cv.setPointerCapture(ev.pointerId);
@@ -71,11 +71,12 @@ const dragLen = () => dragSegs().reduce((s, q) => s + Math.hypot(q[2] - q[0], q[
 const endDrag = () => {
   if (!drag) return;
   const segs = dragSegs(), len = dragLen();
+  if (drag.over) sfx("error");
   if (drag.over) toast(`That ${FENCE_SHAPES[drag.shape].name.toLowerCase()} costs $${Math.round(len * FENCE_TYPES[drag.type].cost)}. Make it smaller or pick a cheaper fence.`);
   else if (len >= 1 && segs.length) {
     const gid = segs.length > 1 ? "g" + Date.now().toString(36) + ((Math.random() * 1e4) | 0) : undefined;   // prefabs are erased as one piece
     for (const [x0, y0, x1, y1] of segs) fences.push({ ax: x0, ay: y0, bx: x1, by: y1, len: Math.round(Math.hypot(x1 - x0, y1 - y0) * 10) / 10, type: drag.type, g: gid });
-    buildWorld();
+    buildWorld(); sfx("drop");
   } else if (fenceLeft() < FENCE_TYPES[fenceType].cost) toast("You're out of budget. Erase something or pick a cheaper fence.");
   drag = null; ui();
 };
@@ -313,3 +314,6 @@ function mayhem(k) {
   else if (k === "!end") { if (phase === "show") startEvac(); }
   else spawnEvent(k);
 }
+
+// every button clicks
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("button"); if (b && !b.disabled) sfx(b.id === "pick" || b.id === "retry" ? "back" : "click"); }, true);

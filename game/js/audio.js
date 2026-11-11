@@ -32,6 +32,7 @@ function audioInit() {
   AU.crowd = c.createGain(); AU.crowd.gain.value = 0;
   src.connect(AU.crowdBand); AU.crowdBand.connect(AU.crowd); AU.crowd.connect(AU.sfx); src.start();
   AU.nextT = c.currentTime + .1;
+  loadSamples();
 }
 function audioToggle() {
   AU.on = !AU.on;
@@ -127,6 +128,45 @@ function audioTick() {
   let pr = 0; for (let i = 0; i < ag.length; i += 25) pr += ag[i].ps; pr = ag.length ? pr / Math.ceil(ag.length / 25) : 0;
   AU.crowd.gain.setTargetAtTime(live ? Math.min(.5, .04 + ag.length / 9000 + pr * .03 + (hot ? .12 : 0)) : 0, c.currentTime, .3);
   AU.crowdBand.frequency.setTargetAtTime(600 + pr * 120, c.currentTime, .3);
+  // recorded loops: the crowd's murmur, panic when people are being crushed, and rain
+  const n = ag.length, crush = Math.min(1, Math.max(0, pr - 2.2) / 3 + (typeof shake !== "undefined" ? shake * .6 : 0));
+  loopGain("crowd_loop", live ? Math.min(.75, n / 3800 * (hot ? .9 : .55)) : 0);
+  loopGain("panic_loop", live ? crush * .8 : 0);
+  loopGain("rain_loop", live && MOD && MOD.rain ? .5 : 0);
+  if (SMP.crowd_loop && AU.loops.crowd_loop) AU.crowd.gain.setTargetAtTime(0, c.currentTime, .3);   // the recording replaces the synthetic murmur
+  // now and then the crowd starts a chant
+  if (phase === "show" && fullAt && !hot && c.currentTime > (AU.nextChant || 0)) { AU.nextChant = c.currentTime + 16 + Math.random() * 14; playSample(Math.random() < .5 ? "chant_1" : "chant_2", .35); }
+}
+
+// ---------- recorded sounds (CC0, see game/audio/CREDITS.md); every one has a synthesized fallback ----------
+const SMP = {};
+const SAMPLE_FILES = ["crowd_loop", "panic_loop", "rain_loop", "roar_1", "roar_2", "roar_3", "cheer_1", "cheer_2", "cheer_3", "scream_1", "scream_2", "scream_3", "scream_4", "ooh", "chant_1", "chant_2", "surge",
+  "moo", "baa", "trot", "oink", "cluck", "bark_1", "bark_2", "beast_1", "beast_2", "howl", "explosion", "bang_1", "bang_2", "crash_1", "crash_2", "glass", "hit_1", "hit_2", "splash_1", "splash_2", "spring", "gong", "bell",
+  "ui_click", "ui_select", "ui_drop", "ui_error", "ui_confirm", "ui_back", "ui_erase", "ui_toggle", "jingle_win", "jingle_lose"];
+// which recordings stand in for each synthesized effect: [names, volume, minimum seconds between plays]
+const SAMPLE_FOR = {
+  roar: [["beast_1", "beast_2"], .8, .4], bark: [["bark_1", "bark_2"], .6, .25], boom: [["explosion", "bang_1", "bang_2"], .8, .3], crash: [["crash_1", "crash_2", "hit_1", "hit_2"], .7, .2],
+  splash: [["splash_1", "splash_2"], .8, .3], cheer: [["cheer_1", "cheer_2", "cheer_3"], .6, 1.5], scream: [["scream_1", "scream_2", "scream_3", "scream_4"], .45, 1.1],
+  moo: [["moo"], .8, .5], bleat: [["baa"], .8, .5], neigh: [["trot"], .7, .8], crowdroar: [["roar_1", "roar_2", "roar_3"], .7, 2], ooh: [["ooh"], .5, 3], surge: [["surge"], .5, 4],
+  tick: [["ui_toggle"], .35, .03], click: [["ui_click"], .5, .03], select: [["ui_select"], .5, .05], drop: [["ui_drop"], .6, .05], error: [["ui_error"], .5, .2], confirm: [["ui_confirm"], .6, .2],
+  back: [["ui_back"], .5, .1], erase: [["ui_erase"], .5, .05], win: [["jingle_win"], .7, 1], lose: [["jingle_lose"], .7, 1], gong: [["gong"], .6, 1], bell: [["bell"], .5, .5], spring: [["spring"], .6, .3], glass: [["glass"], .6, .3],
+  howl: [["howl"], .7, 1], oink: [["oink"], .7, .5], cluck: [["cluck"], .7, .3],
+};
+function loadSamples() {
+  const c = AU.ctx; if (!c || AU.loading || typeof fetch !== "function" || c.constructor.name === "OfflineAudioContext") return;
+  AU.loading = true; AU.loops = {};
+  for (const n of SAMPLE_FILES) fetch("audio/" + n + ".ogg").then(r => r.arrayBuffer()).then(b => c.decodeAudioData(b)).then(buf => { SMP[n] = buf; }).catch(() => { /* no file: the synth version plays instead */ });
+}
+function playSample(name, vol, rate) {
+  const c = AU.ctx, b = SMP[name]; if (!c || !b || !AU.on) return false;
+  const s = c.createBufferSource(), g = c.createGain(); s.buffer = b; s.playbackRate.value = rate || 1; g.gain.value = vol ?? .6; s.connect(g); g.connect(AU.sfx); s.start(); return true;
+}
+// looping beds that fade in and out
+function loopGain(name, target) {
+  const c = AU.ctx; if (!c || !SMP[name] || !AU.loops) return;
+  let L = AU.loops[name];
+  if (!L) { if (target <= 0) return; const s = c.createBufferSource(), g = c.createGain(); s.buffer = SMP[name]; s.loop = true; g.gain.value = 0; s.connect(g); g.connect(AU.sfx); s.start(); L = AU.loops[name] = { g }; }
+  L.g.gain.setTargetAtTime(target, c.currentTime, .5);
 }
 
 // ---------- effects ----------
@@ -159,8 +199,14 @@ const SFX = {
 function sfx(name) {
   // when recording the trailer, effects are logged so they can be mixed later
   if (window.__sfxLog) { const tt = vnow / 1000, L = window.__sfxLog, prev = L.findLast(e => e[0] === name); if (!prev || tt - prev[1] > .12) L.push([name, tt]); }
-  const c = AU.ctx; if (!c || !AU.on || !SFX[name]) return;
-  const now = c.currentTime; if (now - (AU.lastSfx[name] || 0) < .12) return;
+  const c = AU.ctx; if (!c || !AU.on) return;
+  const now = c.currentTime, sm = SAMPLE_FOR[name];
+  if (sm) {   // a recording exists for this effect
+    const ready = sm[0].filter(n => SMP[n]);
+    if (ready.length) { if (now - (AU.lastSfx[name] || 0) < sm[2]) return; AU.lastSfx[name] = now; playSample(ready[(Math.random() * ready.length) | 0], sm[1], .94 + Math.random() * .12); return; }
+  }
+  if (!SFX[name]) return;
+  if (now - (AU.lastSfx[name] || 0) < .12) return;
   AU.lastSfx[name] = now; SFX[name](now + .01);
 }
 // every onomatopoeia in the game makes a sound

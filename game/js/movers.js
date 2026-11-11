@@ -38,6 +38,7 @@ function spawnEvent(kind) {
   let best = null;
   for (const m of movers) if (!before.has(m) && !m.small && m.kind !== "router" && (!best || m.r > best.r)) best = m;
   if (best) evCam = { m: best, t: 3.2 };
+  if (Math.random() < .5) sfx("ooh");   // the crowd reacts
 }
 function spawnEventRaw(kind) {
   const side = Math.random() < .5;
