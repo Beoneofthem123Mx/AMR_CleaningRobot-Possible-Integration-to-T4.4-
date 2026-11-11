@@ -124,6 +124,9 @@ function init3D() {
     sph: new THREE.SphereGeometry(1, 16, 12), cyl: new THREE.CylinderGeometry(1, 1, 1, 12), box: new THREE.BoxGeometry(1, 1, 1), cone: new THREE.ConeGeometry(1, 1, 14),
   };
   // ground and effects layer
+  // wide ground around the venue, only seen by the street-level camera
+  G3.skirt = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshStandardMaterial({ roughness: 1 }));
+  G3.skirt.rotation.x = -Math.PI / 2; G3.skirt.position.set(WW / 2, -.04, SH / 2); G3.skirt.receiveShadow = true; sc.add(G3.skirt);
   G3.ground = new THREE.Mesh(new THREE.PlaneGeometry(WW, SH), new THREE.MeshStandardMaterial({ roughness: .95 }));
   G3.ground.rotation.x = -Math.PI / 2; G3.ground.position.set(WW / 2, 0, SH / 2); G3.ground.receiveShadow = true; sc.add(G3.ground);
   G3.fxCv = document.createElement("canvas"); G3.fxCv.width = WW * FXS; G3.fxCv.height = SH * FXS; G3.fx = G3.fxCv.getContext("2d");
@@ -217,6 +220,7 @@ function buildStatic3D() {
   G3.ground.material.map = tex; G3.ground.material.needsUpdate = true;
   const m = new THREE.MeshStandardMaterial({ map: tex, roughness: .85 });
   G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
+  G3.skirt.material.color.set(scene.outside).multiplyScalar(.8);
   G3.fxPlane.material.color.setScalar(scene.night ? .5 : 1);  // keep floor markings under the bloom threshold at night
   if (!G3.winTex) G3.winTex = windowTex();
   const side = new THREE.MeshStandardMaterial({ map: G3.winTex, roughness: .7, emissiveMap: G3.winTex, emissive: new THREE.Color(scene.night ? 0xffffff : 0x000000), emissiveIntensity: scene.night ? .8 : 0 });
@@ -332,13 +336,15 @@ const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), Vp = new THREE.Vecto
 const Bm = new Float32Array(9), Bt = new Float32Array(3), LB = new Float32Array(12);
 const loc = (sx, sy, sz, x, y, z) => new Float32Array([sx, 0, 0, 0, sy, 0, 0, 0, sz, x, y, z]);
 const LOCAL = {
-  torso: loc(.82, 1, 1.32, 0, 1.17, 0), head: loc(1, 1, 1, .02, 1.62, 0), hair: loc(1, 1, 1, -.012, 1.635, 0),
-  cap: loc(1, 1, 1, -.005, 1.71, 0), brim: loc(1, 1, 1, .13, 1.68, 0), long: loc(1, 1, 1, -.1, 1.5, 0), pack: loc(1, 1, 1, -.2, 1.2, 0),
+  torso: loc(.86, 1, 1.22, 0, 1.17, 0), head: loc(1, 1, 1, .02, 1.66, 0), hair: loc(1.2, 1.2, 1.2, -.012, 1.675, 0),
+  afro: loc(1.55, 1.45, 1.55, -.02, 1.69, 0), bun: loc(.42, .42, .42, -.08, 1.86, 0), tail: loc(.5, .9, .35, -.19, 1.52, 0),
+  sign: loc(1, 1, 1, .08, 2.42, .27), signPole: loc(1.6, .55, 1.6, .08, 2.02, .27), flag: loc(1, .8, 1.25, .08, 2.5, -.2),
+  cap: loc(1.15, 1, 1.15, -.005, 1.775, 0), brim: loc(1.1, 1, 1.1, .15, 1.74, 0), long: loc(1.1, 1, 1.15, -.13, 1.54, 0), pack: loc(1, 1, 1, -.2, 1.2, 0),
   // accessories: party hat, wide sun hat, balloon string, umbrella pole and canopy, kid on the shoulders
-  phat: loc(1, 1, 1, 0, 1.86, 0), whatB: loc(1, 1, 1, 0, 1.72, 0), whatT: loc(1, 1, 1, 0, 1.8, 0), string: loc(1, 1, 1, -.05, 2.08, .26),
+  phat: loc(1, 1, 1, 0, 1.93, 0), whatB: loc(1, 1, 1, 0, 1.78, 0), whatT: loc(1.1, 1, 1.1, 0, 1.86, 0), string: loc(1, 1, 1, -.05, 2.08, .26),
   pole: loc(1, 1, 1, .05, 1.85, .2), umb: loc(1, 1, 1, .05, 2.3, .1), kidT: loc(.5, .55, .78, -.05, 1.98, 0), kidH: loc(.82, .82, .82, -.03, 2.32, 0),
 };
-const LBAL = new Float32Array([1, 0, 0, 0, 1.15, 0, 0, 0, 1, 0, 0, 0]);
+const LBAL = new Float32Array([1, 0, 0, 0, 1.15, 0, 0, 0, 1, 0, 0, 0]), LT = new Float32Array(12);
 function initPeople() {
   const N = 6000, std = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {}));
   const mk = (geo, material, n) => {
@@ -346,10 +352,12 @@ function initPeople() {
     m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); m.instanceColor.setUsage(THREE.DynamicDrawUsage);
     m.castShadow = true; m.frustumCulled = false; m.count = 0; G3.scene.add(m); return m;
   };
-  P.torso = mk(new THREE.CapsuleGeometry(.17, .32, 2, 8), std(), N);
-  P.head = mk(new THREE.SphereGeometry(.125, 8, 6), std({ roughness: .6 }), N);
-  P.arm = mk(new THREE.BoxGeometry(.09, .6, .1), std(), N * 2);
-  P.leg = mk(new THREE.BoxGeometry(.12, .8, .14), std(), N * 2);
+  // soft clay-figure people: a pill body, a big round head and rounded limbs
+  P.torso = mk(new THREE.CapsuleGeometry(.2, .34, 4, 12), std({ roughness: .62 }), N);
+  P.head = mk(new THREE.SphereGeometry(.155, 12, 9), std({ roughness: .55 }), N);
+  P.arm = mk(new THREE.CapsuleGeometry(.055, .5, 3, 8), std({ roughness: .62 }), N * 2);
+  P.leg = mk(new THREE.CapsuleGeometry(.075, .66, 3, 8), std({ roughness: .7 }), N * 2);
+  P.sign = mk(new THREE.BoxGeometry(.035, .5, .72), std({ roughness: .8 }), N);
   P.hair = mk(new THREE.SphereGeometry(.138, 8, 4, 0, Math.PI * 2, 0, Math.PI * .56), std({ roughness: .9 }), N);
   P.cap = mk(new THREE.CylinderGeometry(.14, .145, .1, 10), std({ roughness: .5 }), N);
   P.brim = mk(new THREE.BoxGeometry(.18, .025, .22), std({ roughness: .5 }), N);
@@ -390,21 +398,25 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
-  const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3, cap = P.torso.instanceMatrix.count;
+  const C = { sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
+  const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
-    let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0;
+    let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
     if (down) { setBase(a.x, .17, a.y, a.h, a.sc, true); armL = 2.9; armR = 2.2; legL = .25; legR = -.2; }
     else if (surging && a.dance && ((a.ph * 997) | 0) % 70 === 0) {
       // crowd surfing: carried overhead during the drop, waving
       setBase(a.x, 1.72 + Math.sin(tt * 5 + a.ph) * .07, a.y, a.h + Math.sin(tt * .8 + a.ph) * .6, a.sc, true);
       armL = 2.7 + Math.sin(tt * 9 + a.ph) * .3; armR = 2.7 - Math.sin(tt * 9 + a.ph) * .3; legL = Math.sin(tt * 7) * .3; legR = -legL;
     } else {
-      const sp = Math.hypot(a.vx, a.vy);
-      a.wp += sp * dtR * 5.2;
-      const sw = Math.sin(a.wp) * Math.min(.75, sp * .55);
-      bob = Math.abs(Math.cos(a.wp)) * Math.min(.06, sp * .04);
-      armL = -sw * .9; armR = sw * .9; legL = sw; legR = -sw;
+      const sp = Math.hypot(a.vx, a.vy), ws = a.ws || 0;
+      // gaits: 0 normal, 1 bouncy, 2 quick little steps, 3 strut with big arms, 4 waddle, 5 tired shuffle
+      a.wp += sp * dtR * (ws === 2 ? 8 : ws === 5 ? 3.6 : ws === 3 ? 4.4 : 5.2);
+      const sw = Math.sin(a.wp) * Math.min(ws === 2 ? .45 : ws === 3 ? 1 : ws === 5 ? .4 : .75, sp * .55);
+      bob = Math.abs(Math.cos(a.wp)) * Math.min(ws === 1 ? .16 : .06, sp * (ws === 1 ? .11 : .04));
+      const as = ws === 3 ? 1.5 : ws === 5 ? .3 : ws === 4 ? .5 : .9;
+      armL = -sw * as; armR = sw * as; legL = sw; legR = -sw;
+      if (ws === 4) sway = Math.sin(a.wp) * .09 * Math.min(1, sp);   // waddlers rock from side to side
+      if (ws === 5) { armL += .25; armR += .25; }                     // arms hanging forward
       if (a.dance) {
         const ph = tt * (surging ? 9.5 : 6.5) + a.ph, j = Math.abs(Math.sin(ph));
         bob = j * (surging ? .3 : .13); legL = -j * .15; legR = j * .15;
@@ -421,8 +433,9 @@ function renderPeople(tt, dtR, vb) {
       if (a.ps > PCRIT * .55) { const ph = tt * 15 + a.ph; armL = 2.3 + Math.sin(ph) * .55; armR = 2.3 + Math.cos(ph) * .55; }
       if (MOD && MOD.bounce && a.dance) bob *= MOD.bounce;
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
-      if ((a.acc === 1 || a.acc === 3) && !surging && a.ps < PCRIT * .55) armR = 2.7;  // holding the balloon / umbrella up
-      setBase(a.x, bob, a.y, a.h, a.sc, false);
+      if ((a.acc === 1 || a.acc === 3 || a.acc === 6) && !surging && a.ps < PCRIT * .55) armR = 2.7;  // holding the balloon / umbrella / sign up
+      if (a.acc === 7) armL = 2.8 + Math.sin(tt * 7 + a.ph) * .25;   // waving a flag
+      setBase(a.x - Math.sin(a.h) * sway, bob, a.y + Math.cos(a.h) * sway, a.h, a.sc, false);
     }
     // clothes: blend into the pressure color; red when in danger
     const k = down ? .5 : 1, hq = HEAT_L[clamp(Math.floor(a.ps / PCRIT * HEAT_L.length), 0, HEAT_L.length - 1)];
@@ -431,14 +444,22 @@ function renderPeople(tt, dtR, vb) {
     if (!down && a.dmg > .45) { r = red[0]; g = red[1]; b = red[2]; }
     else { r = sh[0] + (hq[0] - sh[0]) * hm; g = sh[1] + (hq[1] - sh[1]) * hm; b = sh[2] + (hq[2] - sh[2]) * hm; }
     r *= k; g *= k; b *= k;
-    emit(P.torso, C.torso, LOCAL.torso); colW(P.torso, C.torso++, r, g, b);
+    const bw = a.bw || 1;   // build: slim to chunky
+    LT.set(LOCAL.torso); LT[0] *= bw; LT[8] *= bw;
+    emit(P.torso, C.torso, LT); colW(P.torso, C.torso++, r, g, b);
     const skn = SKIN_L[a.sk]; emit(P.head, C.head, LOCAL.head); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
-    const hc = HAIR_L[a.hc];
-    if (a.m === 1) {
+    const hc = HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
+    if (a.m !== 1 && hs === 4) { /* bald and proud */ }
+    else if (a.m !== 1 && hs === 1) { emit(P.hair, C.hair, LOCAL.afro); colW(P.hair, C.hair++, hc[0] * k, hc[1] * k, hc[2] * k); }
+    else if (a.m === 1) {
       const cc = SHIRT_L[a.ac];
       emit(P.cap, C.cap, LOCAL.cap); colW(P.cap, C.cap++, cc[0] * k, cc[1] * k, cc[2] * k);
       emit(P.brim, C.brim, LOCAL.brim); colW(P.brim, C.brim++, cc[0] * k, cc[1] * k, cc[2] * k);
-    } else { emit(P.hair, C.hair, LOCAL.hair); colW(P.hair, C.hair++, hc[0] * k, hc[1] * k, hc[2] * k); }
+    } else {
+      emit(P.hair, C.hair, LOCAL.hair); colW(P.hair, C.hair++, hc[0] * k, hc[1] * k, hc[2] * k);
+      if (hs === 2) { emit(P.head, C.head, LOCAL.bun); colW(P.head, C.head++, hc[0] * k, hc[1] * k, hc[2] * k); }
+      else if (hs === 3) { emit(P.head, C.head, LOCAL.tail); colW(P.head, C.head++, hc[0] * k, hc[1] * k, hc[2] * k); }
+    }
     if (a.acc && !down) {
       const ac = SHIRT_L[a.ac];
       if (a.acc === 1) {        // balloon on a string, swaying
@@ -453,17 +474,27 @@ function renderPeople(tt, dtR, vb) {
         const kc = SHIRT_L[(a.ac + 3) % SHIRT_L.length];
         emit(P.torso, C.torso, LOCAL.kidT); colW(P.torso, C.torso++, kc[0] * k, kc[1] * k, kc[2] * k);
         emit(P.head, C.head, LOCAL.kidH); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
+      } else if (a.acc === 6) { // protest-style sign on a stick
+        const bobS = Math.sin(tt * 6 + a.ph) * .05; LT.set(LOCAL.sign); LT[10] += bobS;
+        emit(P.sign, C.sign, LT); colW(P.sign, C.sign++, ac[0] * 1.1, ac[1] * 1.1, ac[2] * 1.1);
+        emit(P.string, C.string, LOCAL.signPole); colW(P.string, C.string++, .85, .8, .7);
+      } else if (a.acc === 7) { // little flag
+        LT.set(LOCAL.flag); LT[10] += Math.sin(tt * 7 + a.ph) * .08; LT[11] += Math.sin(tt * 7 + a.ph) * .12;
+        emit(P.sign, C.sign, LT); colW(P.sign, C.sign++, ac[0] * 1.1, ac[1] * 1.1, ac[2] * 1.1);
       } else if (a.acc === 5) { // wide sun hat
         emit(P.what, C.what, LOCAL.whatB); colW(P.what, C.what++, .78, .62, .32);
         emit(P.whatTop, C.whatTop, LOCAL.whatT); colW(P.whatTop, C.whatTop++, .74, .58, .3);
       }
     }
     if (!detail && !down) return;
-    emit(P.arm, C.arm, limb(0, 1.4, -.25, armL, .6)); colW(P.arm, C.arm++, r, g, b);
-    emit(P.arm, C.arm, limb(0, 1.4, .25, armR, .6)); colW(P.arm, C.arm++, r, g, b);
+    const az = .2 * bw + .06, bare = a.cl === 1 || a.cl === 3;   // short sleeves show skin
+    const ar = bare ? skn[0] * k : r, agc = bare ? skn[1] * k : g, ab = bare ? skn[2] * k : b;
+    emit(P.arm, C.arm, limb(0, 1.42, -az, armL, .6)); colW(P.arm, C.arm++, ar, agc, ab);
+    emit(P.arm, C.arm, limb(0, 1.42, az, armR, .6)); colW(P.arm, C.arm++, ar, agc, ab);
     if (a.phone && !down) { emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .3)); colW(P.glow, C.glow++, 2.4, 2.4, 2.2); }
     else if (a.m === 4) { const gc = GLOW_L[a.ac % GLOW_L.length]; emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .42)); colW(P.glow, C.glow++, gc[0] * 1.6, gc[1] * 1.6, gc[2] * 1.6); }
-    const pr = pa[0] + (hq[0] - pa[0]) * hm * .8, pg = pa[1] + (hq[1] - pa[1]) * hm * .8, pb = pa[2] + (hq[2] - pa[2]) * hm * .8;
+    const lg = a.cl >= 2 ? skn : pa;   // shorts show skin
+    const pr = lg[0] + (hq[0] - lg[0]) * hm * .8, pg = lg[1] + (hq[1] - lg[1]) * hm * .8, pb = lg[2] + (hq[2] - lg[2]) * hm * .8;
     emit(P.leg, C.leg, limb(0, .84, -.1, legL, .8)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
     emit(P.leg, C.leg, limb(0, .84, .1, legR, .8)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
     if (a.m === 2) { emit(P.long, C.long, LOCAL.long); colW(P.long, C.long++, hc[0] * k, hc[1] * k, hc[2] * k); }
@@ -691,7 +722,32 @@ function toWorld(ev) {
   RAY.setFromCamera(NDC, G3.camera); RAY.ray.intersectPlane(PLANE, HIT);
   return [HIT.x, HIT.z];
 }
-function updateCamera() {
+// street-level camera: a slow orbit among the crowd, looking across it instead of down at it
+let cine = 0, cineAng = 0, cineDist = 13;
+const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
+function cineCamera(dt) {
+  cineAng += dt * .11;
+  const night = !!scene.night, c = G3.camera, d = cineDist, h = 1.9 + d * .16;
+  const cx = cam.x + Math.sin(cineAng * .7) * 2, cy = cam.y;
+  c.fov = 52; c.near = .3; c.far = 600; c.updateProjectionMatrix();
+  c.up.set(0, 1, 0);
+  c.position.set(clamp(cx + Math.cos(cineAng) * d, 1.5, WW - 1.5), h + shake * .2, clamp(cy + Math.sin(cineAng) * d, 2, SH - 2));
+  c.lookAt(cx, 1.5, cy);
+  SKY_TMP.copy(night ? SKY_NIGHT : SKY_DAY).multiplyScalar(1 - .85 * black);
+  G3.scene.background.copy(SKY_TMP);
+  if (!G3.scene.fog) G3.scene.fog = new THREE.Fog(0xffffff, 30, 190);
+  G3.scene.fog.color.copy(SKY_TMP); G3.skirt.visible = true;
+  const sun = G3.sun; sun.target.position.set(cx, 0, cy); sun.position.set(cx - 22, 60, cy - 28);
+  const sc = sun.shadow.camera, ext = 34; sc.left = -ext; sc.right = ext; sc.top = ext * 1.4; sc.bottom = -ext * 1.4; sc.updateProjectionMatrix();
+  return [-1e9, 1e9, -1e9, 1e9];
+}
+function updateCamera(dt) {
+  if (camMode === 4 && !demo) { cine = 1; return cineCamera(dt || 0); }
+  if (cine) {   // back to the usual view from above
+    cine = 0; const c = G3.camera; c.fov = 30; c.near = 1; c.far = 500; c.updateProjectionMatrix();
+    G3.scene.fog = null; G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
+  }
+  G3.skirt.visible = false;
   const base = ((LAND ? WW : WH) / 2) / Math.tan(15 * Math.PI / 180), z = cam.z, h = base / z;
   const tilt = clamp((z - 1) * .5, 0, .42);
   const dx = LAND ? -1 : 0, dz = LAND ? 0 : 1;   // the screen's "down" direction in the world
@@ -848,7 +904,7 @@ function render3D(now, dtR) {
   // blackout: the light fades slowly and comes back all at once
   const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
   G3.hemi.intensity = scene.light.hemi * (1 - .8 * black); G3.sun.intensity = scene.light.sunI * (1 - .9 * black);
-  const vb = updateCamera();
+  const vb = updateCamera(dtR);
   // spotlights and beams
   const cols = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"].map(lin);
   scene.bulbs.forEach((_, i) => {

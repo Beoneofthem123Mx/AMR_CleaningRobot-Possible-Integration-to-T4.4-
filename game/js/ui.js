@@ -200,6 +200,7 @@ addEventListener("keydown", e => {
   }
   if (k === "h") $("#bHeat").click();
   if (k === "c") $("#bCam").click();
+  if (k === "x") { camMode = camMode === 4 ? 0 : 4; camFree = null; camLabel(); }   // street-level camera
   if (k === "v") $("#bSpeed").click();
   if (k === "g") {  // glow and focus effects on/off (for slower PCs)
     POST.on = !POST.on; try { localStorage.setItem("mh.fx", POST.on ? "on" : "off"); } catch (er) { /* no storage */ }
@@ -215,13 +216,14 @@ document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click"
 $("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : backToPlan());
 let heat = false, speed = 1;
 $("#bHeat").addEventListener("click", () => { heat = !heat; $("#bHeat").classList.toggle("on", heat); });
-const camLabel = () => { $("#bCam").textContent = "Camera: " + ["auto", "close", "far", "free"][camMode]; };
-$("#bCam").addEventListener("click", () => { camMode = camMode === 3 ? 0 : (camMode + 1) % 3; camFree = null; camLabel(); });
+const camLabel = () => { $("#bCam").textContent = "Camera: " + ["auto", "close", "far", "free", "street"][camMode]; };
+$("#bCam").addEventListener("click", () => { camMode = camMode === 3 ? 0 : camMode === 2 ? 4 : camMode === 4 ? 0 : camMode + 1; camFree = null; camLabel(); });
 // ===== Free camera: wheel zooms toward the cursor, right/middle drag or WASD/arrows pan =====
 function freeCam() { if (camMode !== 3 || !camFree) { camFree = { z: Math.max(1, cam.z), x: cam.x, y: cam.y }; camMode = 3; camLabel(); } return camFree; }
 function clampFree() { const f = camFree, hw = WW / (2 * f.z), hh = WH / (2 * f.z); f.x = clamp(f.x, hw, WW - hw); f.y = clamp(f.y, hh, WH - hh); }
 cv.addEventListener("wheel", ev => {
   ev.preventDefault(); if (demo) return;
+  if (camMode === 4) { cineDist = clamp(cineDist * Math.exp(ev.deltaY * .0012), 4, 34); return; }   // street camera: the wheel moves it closer or farther
   const [wx, wy] = toWorld(ev), f = freeCam(), z0 = f.z, z1 = clamp(z0 * Math.exp(-ev.deltaY * .0015), 1, 5);
   f.x = wx + (f.x - wx) * z0 / z1; f.y = wy + (f.y - wy) * z0 / z1; f.z = z1; clampFree();
   if (z1 <= 1.001 && phase === "plan") { camMode = 0; camFree = null; camLabel(); }   // fully zoomed out while planning: back to auto
@@ -247,6 +249,7 @@ function camKeys(dt) {
   const u = (keysDown.has("w") || keysDown.has("arrowup") ? 1 : 0) - (keysDown.has("s") || keysDown.has("arrowdown") ? 1 : 0);
   const zz = (keysDown.has("e") || keysDown.has("+") || keysDown.has("=") ? 1 : 0) - (keysDown.has("q") || keysDown.has("-") ? 1 : 0);
   if (!r && !u && !zz) return;
+  if (camMode === 4) { cineAng += r * dt * 1.2; cineDist = clamp(cineDist * Math.exp(-(u + zz) * 1.2 * dt), 4, 34); return; }
   const f = freeCam(), sp = 28 / f.z * dt;
   // screen right/up in world coordinates (the venue is rotated on wide screens)
   if (LAND) { f.y += r * sp; f.x += u * sp; } else { f.x += r * sp; f.y -= u * sp; }

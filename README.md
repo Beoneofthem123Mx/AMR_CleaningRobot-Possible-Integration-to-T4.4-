@@ -62,6 +62,8 @@ Everything works offline: three.js and the fonts ship inside `game/`. To publish
 - **Camera**: automatic (zooms in and tilts during the big moments), near or far.
   Or take over: the **mouse wheel** zooms toward the cursor, **right-drag** or **WASD / arrow keys**
   pan, **Q / E** zoom. Press **C** to hand the camera back.
+  **X** switches to the **street camera**: a slow orbit at eye level inside the crowd (wheel or
+  W/S to move closer, A/D to turn).
 - **Sound** or the **M** key: turns music and effects on or off.
 - **F11** or **Alt+Enter**: fullscreen.
 
@@ -159,6 +161,10 @@ around.
 - **Career stats** on the title screen: shows, total trampled, your worst day.
 - **Options**: music and effects volume, fancy effects on/off, erase progress.
 - Ghosts with halos float up from the trampled, and the body count has milestones.
+- **The crowd**: clay-figure people with different builds, hair, clothes and ways of walking
+  (bouncy, strutting, waddling, shuffling). Some carry signs, flags, balloons or umbrellas.
+- **Sound**: recorded crowd, animal, impact and interface sounds (all CC0, listed in
+  `game/audio/CREDITS.md`) on top of the synthesized music.
 
 ## Keyboard shortcuts
 
