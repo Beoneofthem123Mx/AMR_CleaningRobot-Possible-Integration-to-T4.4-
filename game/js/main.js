@@ -2,6 +2,7 @@
 // ===== Effects: camera, trails, lights, confetti =====
 const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", "#7dff9e"];
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
+let camFree = null;   // {z, x, y} while the player controls the camera (camMode 3)
 let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [];
 function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
 function confettiAt(x, y, h, n, spread) {
@@ -35,10 +36,13 @@ function updateFx(dt) {
     if (evCam.t <= 0 || phase !== "show" || camMode === 2 || !movers.includes(evCam.m)) evCam = null;
     else { const k = Math.min(1, evCam.t / .8) * .6, m = evCam.m; tx += (clamp(m.x, 0, WW) - tx) * k; ty += (clamp(m.y, 0, WH) - ty) * k; }
   }
+  // free camera: the player zoomed or panned by hand
+  const free = camMode === 3 && camFree && !demo;
+  if (free) { tz = camFree.z; tx = camFree.x; ty = camFree.y; }
   // slow motion, zoomed in on the first person trampled
   if (slowT > 0 && focus) { tz = 2.7; ty = focus.y; tx = focus.x; }
-  const kz = 1 - Math.pow(slowT > 0 ? .02 : .3, Math.max(dt, slowT > 0 ? .016 : 0));
-  cam.z += (tz - cam.z) * kz; cam.y += (ty - cam.y) * kz * (slowT > 0 ? 1 : .6); cam.x += (tx - cam.x) * kz;
+  const kz = free && slowT <= 0 ? 1 - Math.pow(.0005, Math.max(dt, .016)) : 1 - Math.pow(slowT > 0 ? .02 : .3, Math.max(dt, slowT > 0 ? .016 : 0));
+  cam.z += (tz - cam.z) * kz; cam.y += (ty - cam.y) * kz * (slowT > 0 || free ? 1 : .6); cam.x += (tx - cam.x) * kz;
   const hw = WW / (2 * cam.z), hh = WH / (2 * cam.z);
   cam.x = clamp(cam.x, hw, WW - hw); cam.y = clamp(cam.y, hh, WH - hh);
   shake *= Math.pow(.03, dt); flash *= Math.pow(.04, dt);
@@ -82,6 +86,7 @@ function frame(now, fixed) {
       ? (spawned < CROWD ? `Entering ${spawned} / ${CROWD}` : `Show on · ends in ${Math.max(0, Math.ceil(fullAt + SHOW_TIME - t))} s`) + ` · Megaphone ${mega.n}`
       : `Evacuating · ${ag.length} left · Megaphone ${mega.n}`;
   } else if (phase === "plan") stepPreview(real);
+  camKeys(real);
   updateFx(real * (phase === "show" || phase === "evac" ? sp : 1));
   audioTick();
   render3D(now, real);
@@ -112,7 +117,7 @@ function startDemo() {
   buildWorld(); phase = "plan"; start(MODS_BY_ID.normal); camMode = 0;
 }
 function loadScene(key) {
-  demo = false;
+  demo = false; if (camMode === 3) { camMode = 0; camFree = null; if (typeof camLabel === "function") camLabel(); }
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = scene.maxGates;
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   buildWorld(); backToPlan();

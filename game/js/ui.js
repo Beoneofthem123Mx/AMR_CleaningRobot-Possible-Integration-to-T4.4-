@@ -5,6 +5,7 @@ const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0) + props.red
 const fenceLeft = () => FENCE_BUDGET * 10 - fenceUsed();
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
+  if (ev.button !== 0) return;   // right/middle button pans the camera
   // during the show, each click uses the megaphone (three times per show)
   if (phase === "show" || phase === "evac") {
     const [x, y] = toWorld(ev);
@@ -154,7 +155,43 @@ document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click"
 $("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : backToPlan());
 let heat = false, speed = 1;
 $("#bHeat").addEventListener("click", () => { heat = !heat; $("#bHeat").classList.toggle("on", heat); });
-$("#bCam").addEventListener("click", () => { camMode = (camMode + 1) % 3; $("#bCam").textContent = "Camera: " + ["auto", "close", "far"][camMode]; });
+const camLabel = () => { $("#bCam").textContent = "Camera: " + ["auto", "close", "far", "free"][camMode]; };
+$("#bCam").addEventListener("click", () => { camMode = camMode === 3 ? 0 : (camMode + 1) % 3; camFree = null; camLabel(); });
+// ===== Free camera: wheel zooms toward the cursor, right/middle drag or WASD/arrows pan =====
+function freeCam() { if (camMode !== 3 || !camFree) { camFree = { z: Math.max(1, cam.z), x: cam.x, y: cam.y }; camMode = 3; camLabel(); } return camFree; }
+function clampFree() { const f = camFree, hw = WW / (2 * f.z), hh = WH / (2 * f.z); f.x = clamp(f.x, hw, WW - hw); f.y = clamp(f.y, hh, WH - hh); }
+cv.addEventListener("wheel", ev => {
+  ev.preventDefault(); if (demo) return;
+  const [wx, wy] = toWorld(ev), f = freeCam(), z0 = f.z, z1 = clamp(z0 * Math.exp(-ev.deltaY * .0015), 1, 5);
+  f.x = wx + (f.x - wx) * z0 / z1; f.y = wy + (f.y - wy) * z0 / z1; f.z = z1; clampFree();
+  if (z1 <= 1.001 && phase === "plan") { camMode = 0; camFree = null; camLabel(); }   // fully zoomed out while planning: back to auto
+}, { passive: false });
+let panDrag = null;
+cv.addEventListener("contextmenu", ev => ev.preventDefault());
+cv.addEventListener("pointerdown", ev => {
+  if ((ev.button !== 1 && ev.button !== 2) || demo) return;
+  ev.preventDefault(); const [x, y] = toWorld(ev); panDrag = { x, y }; freeCam(); cv.setPointerCapture(ev.pointerId);
+});
+cv.addEventListener("pointermove", ev => {
+  if (!panDrag || !camFree) return;
+  const [x, y] = toWorld(ev); camFree.x += (panDrag.x - x) * .9; camFree.y += (panDrag.y - y) * .9; clampFree();
+});
+addEventListener("pointerup", () => { panDrag = null; });
+const keysDown = new Set();
+addEventListener("keydown", e => { if (!e.ctrlKey && !e.metaKey) keysDown.add(e.key.toLowerCase()); });
+addEventListener("keyup", e => keysDown.delete(e.key.toLowerCase()));
+addEventListener("blur", () => keysDown.clear());
+function camKeys(dt) {
+  if (demo || !$("#overlay").hidden) return;
+  const r = (keysDown.has("d") || keysDown.has("arrowright") ? 1 : 0) - (keysDown.has("a") || keysDown.has("arrowleft") ? 1 : 0);
+  const u = (keysDown.has("w") || keysDown.has("arrowup") ? 1 : 0) - (keysDown.has("s") || keysDown.has("arrowdown") ? 1 : 0);
+  const zz = (keysDown.has("e") || keysDown.has("+") || keysDown.has("=") ? 1 : 0) - (keysDown.has("q") || keysDown.has("-") ? 1 : 0);
+  if (!r && !u && !zz) return;
+  const f = freeCam(), sp = 28 / f.z * dt;
+  // screen right/up in world coordinates (the venue is rotated on wide screens)
+  if (LAND) { f.y += r * sp; f.x += u * sp; } else { f.x += r * sp; f.y -= u * sp; }
+  f.z = clamp(f.z * Math.exp(zz * 1.6 * dt), 1, 5); clampFree();
+}
 $("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = speed + "×"; });
 $("#card").addEventListener("click", e => {
   const sk = e.target.closest("[data-scene]");

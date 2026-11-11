@@ -50,6 +50,8 @@ Everything works offline: three.js and the fonts ship inside `game/`. To publish
 - **Pressure**: paints the crowd from blue to red depending on how hard they're being squeezed.
 - **1× / 2× / 4×**: simulation speed.
 - **Camera**: automatic (zooms in and tilts during the big moments), near or far.
+  Or take over: the **mouse wheel** zooms toward the cursor, **right-drag** or **WASD / arrow keys**
+  pan, **Q / E** zoom. Press **C** to hand the camera back.
 - **Sound** or the **M** key: turns music and effects on or off.
 - **F11** or **Alt+Enter**: fullscreen.
 
