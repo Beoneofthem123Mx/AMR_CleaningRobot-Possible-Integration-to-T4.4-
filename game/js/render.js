@@ -168,6 +168,10 @@ function init3D() {
   CONF_L = toLin(CONF);
   const inst = (geo, material, n) => { const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.count = 0; m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); sc.add(m); return m; };
   G3.spark = inst(new THREE.SphereGeometry(.11, 6, 4), new THREE.MeshBasicMaterial({ toneMapped: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), 1500);
+  // little ghosts that float up from the trampled: a pale body, two eyes and a glowing halo
+  G3.ghostBody = inst(new THREE.CapsuleGeometry(.2, .3, 3, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: .78, depthWrite: false }), 260);
+  G3.ghostEye = inst(new THREE.SphereGeometry(.045, 6, 4), new THREE.MeshBasicMaterial({ color: 0x15171c }), 520);
+  G3.ghostHalo = inst(new THREE.TorusGeometry(.17, .03, 6, 16), new THREE.MeshBasicMaterial({ toneMapped: false }), 260);
   G3.puff = inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: .3, depthWrite: false }), 800);
   SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
   initPeople();
@@ -816,6 +820,21 @@ function renderParticles() {
   }
   pm.count = n; pm.instanceMatrix.needsUpdate = true; pm.instanceColor.needsUpdate = true;
 }
+function renderGhosts(tt) {
+  const b = G3.ghostBody, e = G3.ghostEye, h = G3.ghostHalo; let n = 0;
+  const up = LAND ? [1, 0] : [0, -1];   // screen-up in the world, so faces look at the camera
+  for (const g of ghosts) {
+    if (n >= 260) break;
+    const q = g.t / g.life, sc = (q < .12 ? q / .12 : q > .75 ? Math.max(0, (1 - q) / .25) : 1) * g.s;
+    const x = g.x + Math.sin(tt * 2.2 + g.ph) * .25 * q * 3, y = g.y + Math.cos(tt * 1.7 + g.ph) * .2 * q * 3, hh = .5 + g.t * 1.25;
+    M4.makeScale(sc, sc * (1 + Math.sin(tt * 5 + g.ph) * .06), sc); M4.setPosition(x, hh, y); b.setMatrixAt(n, M4); b.instanceColor.setXYZ(n, .7, .93, 1.1);
+    for (const s2 of [-1, 1]) { M4.makeScale(sc, sc, sc); M4.setPosition(x - up[0] * .1 * sc + s2 * up[1] * .08 * sc, hh + .3 * sc, y - up[1] * .1 * sc + s2 * up[0] * .08 * sc); e.setMatrixAt(n * 2 + (s2 > 0 ? 1 : 0), M4); }
+    M4.makeRotationX(Math.PI / 2); M4.scale(Vs.set(sc, sc, sc)); M4.setPosition(x, hh + .58 * sc, y); h.setMatrixAt(n, M4); h.instanceColor.setXYZ(n, 2.6, 2.1, .7);
+    n++;
+  }
+  b.count = n; e.count = n * 2; h.count = n;
+  b.instanceMatrix.needsUpdate = e.instanceMatrix.needsUpdate = h.instanceMatrix.needsUpdate = true; b.instanceColor.needsUpdate = h.instanceColor.needsUpdate = true;
+}
 function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
@@ -855,6 +874,7 @@ function render3D(now, dtR) {
   renderPeople(tt, dtR, vb);
   renderConfetti();
   renderParticles();
+  renderGhosts(tt);
   updateFxLayer(live);
   renderRain(tt);
   renderFrame();

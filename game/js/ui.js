@@ -89,6 +89,8 @@ function stepPreview(dt) {
 
 // ===== Interface =====
 let toastTimer, capTimer;
+const MILESTONES = { 10: "10 trampled. Thoughts and prayers.", 50: "50 trampled. HR would like a word.", 100: "100 TRAMPLED — a new personal worst!", 250: "250. The insurance company just hung up.",
+  500: "500 TRAMPLED. This is now a documentary.", 1000: "1,000. They will name the law after you.", 2000: "2,000. At this point it's just impressive." };
 function caption(text, yellow, ms) {
   const el = $("#caption"); el.textContent = text; el.classList.toggle("yellow", !!yellow); el.style.opacity = 1;
   clearTimeout(capTimer); if (ms) capTimer = setTimeout(() => el.style.opacity = 0, ms);
@@ -99,6 +101,7 @@ function setDead(n, quiet) {
   dead = n; $("#dead").textContent = n;
   if (!quiet) { const b = $("#badge"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   if (first && !quiet) caption("And we don't like that.", true, 2600);
+  const ms = MILESTONES[n]; if (ms && !quiet) { caption(ms, true, 2600); sfx("boom"); shake = Math.min(1, shake + .5); }
 }
 function showCard(html, kind) {
   const c = $("#card"); c.innerHTML = html; c.className = "card" + (kind ? " " + kind : ""); c.onclick = null;

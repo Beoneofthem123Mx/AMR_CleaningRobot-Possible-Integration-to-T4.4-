@@ -4,7 +4,7 @@ const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", 
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
 let camFree = null;   // {z, x, y} while the player controls the camera (camMode 3)
 let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [];
-function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
+function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
 function confettiAt(x, y, h, n, spread) {
   for (let i = 0; i < n && confetti.length < 1400; i++) {
     const a = Math.random() * 6.283, v = Math.random() * spread;
@@ -18,7 +18,9 @@ function onDrop(first) {
   flash = 1; burst(260); sfx("cheer");
   caption(first ? "Real crowd physics" : scene.acts[(Math.random() * scene.acts.length) | 0], false, 1900);
 }
+let ghosts = [];   // souls of the trampled, rising with a halo
 function onFall(x, y) {
+  if (ghosts.length < 260 && (dead < 40 || Math.random() < .45)) ghosts.push({ x, y, t: 0, life: 4.2 + Math.random() * 1.5, ph: Math.random() * 6.28, s: 1.15 + Math.random() * .35 });
   rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream");
   if (dead === 0) { G3.wantPhoto = true; slowT = 1.8; focus = { x, y }; caption("Ouch!", true, 1500); }
 }
@@ -48,6 +50,7 @@ function updateFx(dt) {
   shake *= Math.pow(.03, dt); flash *= Math.pow(.04, dt);
   heatMix += ((heat ? 1 : surgeT > 0 ? .45 : 0) - heatMix) * (1 - Math.pow(.015, dt));
   for (const r of rings) r.t += dt; rings = rings.filter(r => r.t < 1.3);
+  for (const g of ghosts) g.t += dt; ghosts = ghosts.filter(g => g.t < g.life);
   for (const q of pops) q.t += Math.max(dt, .016); pops = pops.filter(q => q.t < 1.6);
   stepPerformers(dt);
   const drag = Math.pow(.35, dt);
