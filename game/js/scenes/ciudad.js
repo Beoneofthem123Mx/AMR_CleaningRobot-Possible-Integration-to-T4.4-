@@ -264,6 +264,16 @@ SCENES.ciudad = {
       else { const x = l.x + l.nx * .38, y = l.y + l.ny * .38; arms.push([l.nx ? .4 : .05, .05, l.nx ? .05 : .4, l.x + l.nx * .2, 3.95, l.y + l.ny * .2]); heads.push([.16, .2, .16, x, 3.72, y]); caps.push([.2, .06, .2, x, 3.93, y]); }
     }
     cityInst(grp, "cyl", steel, posts); cityInst(grp, "box", steel, arms); cityInst(grp, "sph", glow, heads); cityInst(grp, "cyl", steel, caps);
+    // warm pools of light on the pavement under every lamp
+    if (!CITY_TEX.pool) {
+      const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, "rgba(255,210,140,.55)"); gr.addColorStop(.5, "rgba(255,190,110,.2)"); gr.addColorStop(1, "rgba(255,180,100,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+      CITY_TEX.pool = new THREE.CanvasTexture(c);
+    }
+    const poolM = new THREE.MeshBasicMaterial({ map: CITY_TEX.pool, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }), pools = [];
+    for (const h of heads) pools.push([3.6, 1, 3.6, h[3], .05, h[5]]);
+    if (pools.length) { const pg = new THREE.PlaneGeometry(1, 1); pg.rotateX(-Math.PI / 2); const im = new THREE.InstancedMesh(pg, poolM, pools.length), M = new THREE.Matrix4(), q = new THREE.Quaternion();
+      pools.forEach((a, i) => im.setMatrixAt(i, M.compose(new THREE.Vector3(a[3], a[4], a[5]), q, new THREE.Vector3(a[0], a[1], a[2])))); im.renderOrder = 2; im.frustumCulled = false; grp.add(im); }
     // shop fronts at street level: glowing windows, sign strips and awnings (all flat on the walls, awnings 3 m up)
     const WIN = ["#ffe2a0", "#ffd98a", "#9fe8ff", "#ffc0e0", "#fff1c8"], AWN = ["#d8322b", "#2f6fc4", "#3d9a5b", "#e8a020", "#8a4fbf"];
     const wins = WIN.map(() => []), signs = CITY_COLS.map(() => []), awns = AWN.map(() => []), doors = [];
@@ -289,12 +299,13 @@ SCENES.ciudad = {
       g.strokeStyle = "#2a2c31"; g.lineWidth = 4; g.strokeRect(2, 2, 124, 92); g.beginPath(); g.moveTo(64, 0); g.lineTo(64, 96); g.stroke();
       const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; CITY_TEX.shopWin = t;
     }
-    WIN.forEach((c, i) => cityInst(grp, "box", new THREE.MeshBasicMaterial({ map: CITY_TEX.shopWin, color: new THREE.Color(c).multiplyScalar(.82), toneMapped: false }), wins[i])); CITY_COLS.forEach((c, i) => {   // shop name boards, one name per color
-      const words = ["PIZZA", "24H", "SHOES", "PHONES", "NOODLES", "DONUTS", "TOYS", "VINYL"], cv2 = document.createElement("canvas"); cv2.width = 256; cv2.height = 40;
+    WIN.forEach((c, i) => cityInst(grp, "box", new THREE.MeshBasicMaterial({ map: CITY_TEX.shopWin, color: new THREE.Color(c).multiplyScalar(.82), toneMapped: false }), wins[i])); const SHOP_WORDS = ["PIZZA", "24H", "SHOES", "PHONES", "NOODLES", "DONUTS", "TOYS", "VINYL", "SUSHI", "KEBAB"];
+    CITY_COLS.forEach((c, i) => [0, 1].forEach(half => {   // shop name boards: two names per color
+      const cv2 = document.createElement("canvas"); cv2.width = 256; cv2.height = 40;
       const g = cv2.getContext("2d"); g.fillStyle = c; g.fillRect(0, 0, 256, 40); g.fillStyle = "rgba(0,0,0,.78)"; g.font = "900 30px Rubik, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
-      g.fillText(words[i % words.length], 128, 22); const t = new THREE.CanvasTexture(cv2); t.encoding = THREE.sRGBEncoding;
-      cityInst(grp, "box", new THREE.MeshBasicMaterial({ map: t, color: 0xdddddd, toneMapped: false }), signs[i]);
-    });
+      g.fillText(SHOP_WORDS[(i * 2 + half) % SHOP_WORDS.length], 128, 22); const t = new THREE.CanvasTexture(cv2); t.encoding = THREE.sRGBEncoding;
+      cityInst(grp, "box", new THREE.MeshBasicMaterial({ map: t, color: 0xdddddd, toneMapped: false }), signs[i].filter((_, k) => k % 2 === half));
+    }));
     AWN.forEach((c, i) => cityInst(grp, "box", mat(c), awns[i])); cityInst(grp, "box", mat("#1c1d22"), doors);
     // string lights high above the streets (4.3 m and up), from building to building
     const bulbs = CITY_COLS.map(() => []), wires = []; let bi = 0;
