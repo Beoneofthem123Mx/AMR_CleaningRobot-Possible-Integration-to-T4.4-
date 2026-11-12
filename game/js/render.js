@@ -770,13 +770,20 @@ function buildModel(m) {
       const L = m.kind === "car" ? 4.2 : m.kind === "icecream" ? 5 : 2.6, Wd = m.kind === "car" ? 1.9 : m.kind === "icecream" ? 2.2 : 1.5;
       const bodyC = m.kind === "car" ? m.col : m.kind === "icecream" ? "#fbf4ee" : "#ffd23a";
       const wr = m.kind === "clowncar" ? .5 : .38;
-      for (const [x, z] of [[L * .3, Wd / 2], [-L * .3, Wd / 2], [L * .3, -Wd / 2], [-L * .3, -Wd / 2]]) { const w = part(g, "cyl", "#151617", wr, .28, wr, x, wr, z); w.rotation.x = Math.PI / 2; }
+      for (const [x, z] of [[L * .3, Wd / 2], [-L * .3, Wd / 2], [L * .3, -Wd / 2], [-L * .3, -Wd / 2]]) { const w = part(g, "cyl", "#151617", wr, .3, wr, x, wr, z); w.rotation.x = Math.PI / 2; const hb = part(g, "cyl", "#e8e8ea", wr * .45, .32, wr * .45, x, wr, z); hb.rotation.x = Math.PI / 2; }
       if (m.kind === "car") {
-        part(g, "box", mat(bodyC, { metalness: .3, roughness: .35 }), L, .65, Wd, 0, .65, 0);
-        part(g, "box", mat("#1d2733", { roughness: .15, metalness: .5 }), 2.1, .55, Wd * .9, -.2, 1.22, 0);
-        part(g, "box", mat(bodyC, { metalness: .3, roughness: .35 }), 1.7, .07, Wd * .88, -.25, 1.52, 0);
-        for (const s of [-1, 1]) part(g, "box", basic("#fff6c8"), .06, .16, .35, L / 2, .75, s * .6);
-        if (m.taxi) { part(g, "box", "#ffd23a", .5, .25, .9, -.25, 1.68, 0); part(g, "box", "#151617", L * .9, .08, .04, 0, .7, Wd / 2 + .01); }
+        // a chubby toy convertible: rounded body, windshield, chrome bumpers and a driver you can see
+        const paint = mat(bodyC, { metalness: .25, roughness: .3 }), chrome = mat("#d9dde2", { metalness: .8, roughness: .2 });
+        part(g, "sph", paint, L / 2, .5, Wd / 2, 0, .8, 0);
+        part(g, "sph", mat("#3a2a24", { roughness: .8 }), 1.05, .2, Wd * .36, -.3, 1.18, 0);              // the open cockpit
+        const ws = part(g, "box", mat("#bfe3ff", { roughness: .05, metalness: .3, transparent: true, opacity: .5 }), .05, .42, Wd * .7, .55, 1.42, 0); ws.rotation.z = .45;
+        for (const x of [L / 2 - .02, -L / 2 + .02]) part(g, "box", chrome, .16, .16, Wd * .9, x, .52, 0);
+        for (const s of [-1, 1]) { part(g, "sph", basic("#fff6c8"), .1, .14, .17, L / 2 - .15, .88, s * .58); part(g, "sph", basic("#ff2a2a"), .07, .1, .14, -L / 2 + .12, .9, s * .62); }
+        part(g, "sph", m.taxi ? "#2f6fc4" : "#f2f2ef", .26, .3, .24, -.35, 1.35, .3);                       // driver: shirt
+        part(g, "sph", "#e0ac84", .21, .21, .21, -.3, 1.78, .3);                                               // head
+        for (const s of [-1, 1]) part(g, "sph", "#111214", .03, .04, .03, -.1, 1.82, .3 + s * .07);
+        const wheelArm = part(g, "cyl", "#151617", .2, .03, .2, .15, 1.45, .3); wheelArm.rotation.z = 1.1;     // steering wheel
+        if (m.taxi) { part(g, "box", "#ffd23a", .45, .22, .8, -1.1, 1.45, 0); part(g, "box", "#151617", L * .6, .07, .03, 0, .8, Wd / 2 + .01); }
       } else if (m.kind === "icecream") {
         part(g, "box", bodyC, L, 2.1, Wd, 0, 1.35, 0);
         part(g, "box", "#ff8fc6", L + .02, .35, Wd + .02, 0, .95, 0);
