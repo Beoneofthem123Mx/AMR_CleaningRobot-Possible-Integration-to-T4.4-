@@ -53,6 +53,11 @@ function updateFx(dt) {
   shake *= Math.pow(.03, dt); flash *= Math.pow(.04, dt);
   heatMix += ((heat ? 1 : surgeT > 0 ? .45 : 0) - heatMix) * (1 - Math.pow(.015, dt));
   for (const r of rings) r.t += dt; rings = rings.filter(r => r.t < 1.3);
+  // kicked-up dust behind people who run (a few samples per frame, never in the menu demo)
+  if (!demo && dt > 0 && ag.length && (phase === "show" || phase === "evac")) for (let k = 0; k < 4; k++) {
+    const a = ag[(Math.random() * ag.length) | 0], sp = Math.hypot(a.vx, a.vy);
+    if (sp > 1.7 && Math.random() < .5) puff(a.x - a.vx * .15, a.y - a.vy * .15, .12, scene.night ? "#55525a" : "#d9ccb0", .14, .7, .25);
+  }
   for (const g of ghosts) g.t += dt; ghosts = ghosts.filter(g => g.t < g.life);
   for (const q of pops) q.t += Math.max(dt, .016); pops = pops.filter(q => q.t < 1.6);
   stepPerformers(dt);
