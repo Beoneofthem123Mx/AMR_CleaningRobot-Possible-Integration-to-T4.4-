@@ -26,8 +26,18 @@ SCENES.aeropuerto = {
   ground(g) {
     g.fillStyle = "#e6e9ee"; g.fillRect(0, 0, WW, WH);
     for (let y = 0, i = 0; y < FENCE_Y; y += 1.2, i++) for (let x = 0, j = 0; x < WW; x += 1.2, j++) { g.fillStyle = (i + j) % 2 ? "#dfe3e9" : "#eceff3"; g.fillRect(x, y, 1.2, 1.2); }
+    // polished terrazzo: warm stone bands, a big compass rose, wayfinding lines in airport colors
+    for (let y = 2; y < FENCE_Y; y += 9.6) { g.fillStyle = "#c7cdd6"; g.fillRect(0, y, WW, .35); }
+    for (let x = 0; x < WW; x += 9.6) { g.fillStyle = "#c7cdd6"; g.fillRect(x, 0, .35, FENCE_Y); }
+    { const cx = 20, cy = 46; g.fillStyle = "#cfd5de"; g.beginPath(); g.arc(cx, cy, 6.5, 0, 7); g.fill(); g.strokeStyle = "#7f8aa0"; g.lineWidth = .18; for (const r of [6.5, 5.3]) { g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke(); }
+      for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, L = k % 2 ? 3.4 : 5.2; g.fillStyle = k % 2 ? "#9aa6bb" : "#3f6fb5"; g.beginPath(); g.moveTo(cx + Math.cos(a) * L, cy + Math.sin(a) * L); g.lineTo(cx + Math.cos(a + .25) * .9, cy + Math.sin(a + .25) * .9); g.lineTo(cx + Math.cos(a - .25) * .9, cy + Math.sin(a - .25) * .9); g.fill(); } }
+    g.lineWidth = .32; g.lineCap = "round";
+    for (const [col, off] of [["#ffd23a", -1.2], ["#2fa36b", 0], ["#e5484d", 1.2]]) { g.strokeStyle = col; g.beginPath(); g.moveTo(20 + off, 15); g.lineTo(20 + off, 38); g.quadraticCurveTo(20 + off, 40, 20 + off * 3.5, 41); g.stroke(); }
+    // painted queue bays in front of the counters
+    for (let x = 4; x < 36; x += 8) { g.fillStyle = "rgba(63,111,181,.16)"; g.fillRect(x - .5, 58, 5, 5); g.strokeStyle = "rgba(63,111,181,.55)"; g.lineWidth = .1; g.strokeRect(x - .5, 58, 5, 5); }
     // arrivals walkway
     g.fillStyle = "#3f6fb5"; g.fillRect(17, 4, 6, 10);
+    g.fillStyle = "#7da3dd"; for (let y = 5; y < 14; y += 1.5) g.fillRect(17.4, y, 5.2, .18);
     g.fillStyle = "#8a8f99"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
   },
   decor(g) {
