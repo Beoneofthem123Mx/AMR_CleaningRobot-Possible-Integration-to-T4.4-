@@ -1053,6 +1053,9 @@ function updateFxLayer(live) {
       g.strokeStyle = `rgba(235,245,255,${(.75 * (1 - ph)).toFixed(3)})`; g.lineWidth = .09; g.beginPath(); g.arc(rx, ry, .08 + ph * .35, 0, 7); g.stroke();
     }
   }
+  // confetti litter on the floor
+  for (const [x, y, ci, r] of litter) { g.fillStyle = CONF[ci % CONF.length]; g.globalAlpha = .9; g.save(); g.translate(x, y); g.rotate(r); g.fillRect(-.17, -.1, .34, .2); g.restore(); }
+  g.globalAlpha = 1;
   // footprints and tire marks of heavy visitors
   for (const [x, y, tr, an] of prints) {
     g.fillStyle = "rgba(60,45,30,.22)";

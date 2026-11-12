@@ -4,7 +4,7 @@ const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", 
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
 let camFree = null;   // {z, x, y} while the player controls the camera (camMode 3)
 let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [];
-function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; prints = []; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
+function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; prints = []; litter = []; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
 function confettiAt(x, y, h, n, spread) {
   for (let i = 0; i < n && confetti.length < 1400; i++) {
     const a = Math.random() * 6.283, v = Math.random() * spread;
@@ -18,7 +18,7 @@ function onDrop(first) {
   flash = 1; burst(260); sfx("cheer"); sfx("crowdroar");
   caption(first ? "Real crowd physics" : scene.acts[(Math.random() * scene.acts.length) | 0], false, 1900);
 }
-let ghosts = [];   // souls of the trampled, rising with a halo
+let ghosts = [], litter = [];   // souls of the trampled, rising with a halo
 function onFall(x, y) {
   voice(Math.random() < .04 ? "pig" : Math.random() < .25 ? "splat" : "ouch", .55 + Math.random() * .25, .18);
   if (dead === 0) announce("war_medic");
@@ -67,6 +67,8 @@ function updateFx(dt) {
     else { c.h = .03; c.rx = Math.PI / 2; c.life -= dt * .6; }
     c.life -= dt * .25;
   }
+  // confetti that lands stays on the floor as litter (kept on a small list drawn into the floor layer)
+  for (const c of confetti) if (c.life <= 0 && c.h <= .04 && !demo && c.x > 0 && c.x < WW && c.y > 0 && c.y < SH) { litter.push([c.x, c.y, c.c, c.rz]); if (litter.length > 1600) litter.splice(0, 200); }
   confetti = confetti.filter(c => c.life > 0);
   // firework sparks and smoke (flares, track dust)
   const sd = Math.pow(.5, dt);
