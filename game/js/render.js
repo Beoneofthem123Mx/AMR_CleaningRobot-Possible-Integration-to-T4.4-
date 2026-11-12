@@ -272,6 +272,20 @@ function buildStatic3D() {
     if (o.kind === "tent" && !G3.tentMat) G3.tentMat = new THREE.MeshStandardMaterial({ map: stripeTex(["#d8322b", "#f6f1e7"], 8, false), roughness: .7 });   // clean candy stripes
     const mesh = new THREE.Mesh(geo, o.kind === "tent" ? G3.tentMat : o.kind === "player" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
     mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
+    if ((o.kind === "stands" || o.kind === "grandstand") && o.t === "r" && !scene.noFans) {   // seated toy fans that bounce during the show
+      const spots = [], r = rng(Math.round(o.x0 * 31 + o.y0 * 17));
+      for (let y = o.y0 + .45; y < o.y1 - .3; y += .62) for (let x = o.x0 + .45; x < o.x1 - .3; x += .62) if (r() < .82) spots.push([x + (r() - .5) * .12, y + (r() - .5) * .12, r()]);
+      if (spots.length) {
+        const n = spots.length, body = new THREE.InstancedMesh(new THREE.SphereGeometry(.22, 7, 5), FAN_MAT, n), head = new THREE.InstancedMesh(new THREE.SphereGeometry(.17, 7, 5), FAN_MAT, n);
+        const M = new THREE.Matrix4(), cB = new THREE.Color(), cH = new THREE.Color();
+        spots.forEach(([x, y, q], i) => {
+          M.makeScale(1, 1.25, 1).setPosition(x, h + .28, y); body.setMatrixAt(i, M);
+          M.makeScale(1, 1, 1).setPosition(x, h + .68, y); head.setMatrixAt(i, M);
+          body.setColorAt(i, cB.set(SHIRTS[(q * 997 | 0) % SHIRTS.length])); head.setColorAt(i, cH.set(SKIN[(q * 331 | 0) % SKIN.length]));
+        });
+        for (const im of [body, head]) { im.castShadow = false; im.receiveShadow = true; im.frustumCulled = false; grp.add(im); }
+      }
+    }
     if (o.kind === "speaker" && o.t === "r") {   // woofers on the crowd side that pump with the beat
       const cx = (o.x0 + o.x1) / 2, w = Math.min(o.x1 - o.x0, 3), rim = mat("#2b2e36", { roughness: .5 }), cone = mat("#15161a", { roughness: .8 }), cap = mat("#3a3d47", { metalness: .4, roughness: .4 });
       for (const yy of [h * .32, h * .7]) {
@@ -930,6 +944,16 @@ function toWorld(ev) {
 let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a raised crane shot looking down
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
 // living water: rolling wave normals for sun glints and a sky-colored sheen at grazing angles
+// seated fans in the stands: instanced, and the vertex shader makes each one hop on its own beat
+const FAN = { time: { value: 0 }, amp: { value: 0 } };
+const FAN_MAT = new THREE.MeshStandardMaterial({ roughness: .6 });
+FAN_MAT.onBeforeCompile = sh => {
+  sh.uniforms.uT = FAN.time; sh.uniforms.uA = FAN.amp;
+  sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uT, uA;").replace("#include <begin_vertex>", `#include <begin_vertex>
+    { float id = float(gl_InstanceID); float ph = fract(sin(id * 12.9898) * 43758.5453) * 6.283;
+      transformed.y += abs(sin(uT * 7.0 + ph)) * uA * (.6 + .4 * fract(id * .37)) / 1.2; }`);
+};
+FAN_MAT.customProgramCacheKey = () => "fans";
 const RIM = { value: .42 }, DROP_SEEN = new Set(); let prints = [];
 let SHOE_L = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
@@ -1262,6 +1286,7 @@ function render3D(now, dtR) {
   }
   G3.landing = G3.landing.filter(d => !d.done);
   if (G3.exitMat) G3.exitMat.emissiveIntensity = (scene.night ? 1.1 : .35) + (phase === "evac" ? (scene.night ? .9 : 1.4) * (.5 + .5 * Math.sin(tt * 7)) : 0);   // exits pulse during the evacuation
+  FAN.time.value = tt; FAN.amp.value = live && fullAt ? (surgeT > 0 || cheerT > 0 ? .32 : .1) : .02;
   RIM.value = scene.night ? (cine > .01 ? .9 : .5) : .42; WATER.time.value = tt;   // from above the bloom already lifts the crowd at night
   // rain: the floor slowly gets wet (darker and shiny), and dries after the show
   const wetT = live && MOD && MOD.rain ? 1 : 0; G3.wet = (G3.wet || 0) + (wetT - (G3.wet || 0)) * Math.min(1, dtR * (wetT ? .25 : .5));
