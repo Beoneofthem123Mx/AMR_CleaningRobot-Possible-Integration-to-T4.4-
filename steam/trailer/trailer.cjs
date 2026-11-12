@@ -15,14 +15,17 @@ const SEG = [
   { card: "THIS IS YOUR FAULT.", dur: B * 2, style: "yellow" },
   { card: "HUMAN<br>TSUNAMI", logo: true, dur: B * 4, bg: "arena" },
   { card: "STEP 1:<br>PLAN THE EVENT", dur: B * 3, bg: "plaza" },
-  { clip: "plaza", plan: true, warm: 0, secs: B * 7, cam: 0, fences: [[.2, 10, 40, 18, 46, "steel"], [.8, 30, 40, 22, 46, "concrete"], [1.4, 14, 58, 14, 50, "rope"], [2.0, 26, 58, 26, 50, "foam"], [2.6, 4, 34, 12, 34, "cones"]] },
+  { clip: "plaza", plan: true, warm: 0, secs: B * 8, cam: 0, fences: [[.2, 10, 40, 18, 46, "steel"], [.7, 30, 40, 22, 46, "concrete"]],
+    shapes: [[1.2, "ring", 9, 30, 12, 32, "cones"], [1.8, "zigzag", 20, 47, 20, 58, "rope"], [2.4, "pen", 27, 50, 35, 56, "foam"]],
+    stewards: [[3.0, 14.3, 62], [3.3, 25.7, 62], [3.6, 11, 59], [3.9, 29, 59]] },
   { card: "STEP 2:<br>OPEN THE GATES", dur: B * 3, bg: "plaza" },
   { clip: "plaza", warm: 2.5, secs: B * 7, cam: 2 },
   { card: "STEP 3:<br>EVERYTHING GOES WRONG", dur: B * 3, style: "yellow" },
-  { clip: "circo", warm: 28, secs: B * 4, cam: 1, ev: [[-1.5, "elephants"], [-.4, "cannon"]], hot: true },
+  { clip: "circo", warm: 28, secs: B * 4, cam: 4, cine: [9, 1.2], ev: [[-1.5, "elephants"], [-.4, "cannon"]], hot: true },
   { clip: "ovni", warm: 26, secs: B * 4, cam: 0, ev: [[-2, "abduccion"]], hot: true },
   { clip: "arena", warm: 26, secs: B * 4, cam: 1, ev: [[-1.3, "tope"], [-.4, "sillazo"]], hot: true },
-  { clip: "ciudad", warm: 26, secs: B * 4, cam: 0, ev: [[-.8, "fuegos"]], hot: true },
+  { clip: "ciudad", warm: 26, secs: B * 4, cam: 4, cine: [11, 0], ev: [[-.8, "fuegos"]], hot: true },
+  { clip: "crucero", warm: 26, secs: B * 4, cam: 4, cine: [16, 1.2], ev: [[-.8, "flamenco"]], hot: true },
   { clip: "plaza", warm: 26, secs: B * 4, cam: 1, mod: "rain", ev: [[-.6, "dogs"]], hot: true },
   { clip: "zoo", warm: 26, secs: B * 4, cam: 1, ev: [[-1.6, "giraffe"], [-1.2, "penguins"]], hot: true },
   { clip: "rocket", warm: 26, secs: B * 4, cam: 0, ev: [[-2.2, "booster"], [-.3, "ceo"]], hot: true },
@@ -31,7 +34,7 @@ const SEG = [
   { clip: "beach", warm: 26, secs: B * 4, cam: 1, ev: [[-1.6, "whale"], [-1.2, "shark"]], hot: true },
   { clip: "park", warm: 26, secs: B * 4, cam: 1, ev: [[-1.5, "dinos"], [-.6, "coaster"]], hot: true },
   { card: "20 VENUES", dur: B * 2, bg: "circo" },
-  { card: "5 KINDS OF FENCE", dur: B * 2, bg: "ciudad" },
+  { card: "FENCES OF<br>ANY SHAPE", dur: B * 2, bg: "ciudad" },
   { card: "SANDBOX MODE", dur: B * 2, bg: "arena" },
   { card: "1 MEGAPHONE", dur: B * 2, style: "yellow" },
   { clip: "estadio", warm: 28, secs: B * 6, cam: 1, ev: [[.3, "mega", 20, 34], [1.2, "mega", 14, 42]] },
@@ -60,9 +63,11 @@ async function captureClips() {
     const t0 = await w.evaluate(g => {
       __game.reset(); __game.scene(g.clip); document.querySelector("#overlay").hidden = true;
       if (!g.crush && !g.plan && !g.report) __game.bestGates();
-      camMode = g.cam; heat = !!g.heat;
+      camMode = g.cam; heat = !!g.heat; if (g.cine) { cineDist = g.cine[0]; cineAng = g.cine[1]; }
       if (g.plan) {  // planning shot: fences appear one by one while the venue waits
-        window.__pending = (g.fences || []).map(([at, ax, ay, bx, by, type]) => [at, "fence", { ax, ay, bx, by, type }]);
+        window.__pending = (g.fences || []).map(([at, ax, ay, bx, by, type]) => [at, "fence", { ax, ay, bx, by, type }])
+          .concat((g.shapes || []).map(([at, shape, ax, ay, bx, by, type]) => [at, "shape", { shape, ax, ay, bx, by, type }]))
+          .concat((g.stewards || []).map(([at, x, y]) => [at, "steward", x, y]));
         for (let k = 0; k < 20; k++) __game.tick(1 / 60);
         return vnow / 1000;
       }
@@ -93,6 +98,8 @@ async function captureClips() {
         const tt = f / fps;
         for (const e of window.__pending.filter(e => e[0] <= tt)) {
           if (e[1] === "fence") __game.addFence(e[2]);
+          else if (e[1] === "shape") { for (const [x0, y0, x1, y1] of shapeSegs(e[2].shape, e[2].ax, e[2].ay, e[2].bx, e[2].by)) fences.push({ ax: x0, ay: y0, bx: x1, by: y1, len: Math.hypot(x1 - x0, y1 - y0), type: e[2].type }); buildWorld(); sfx("drop"); }
+          else if (e[1] === "steward") { guards.push({ kind: "guard", role: "slow", x: e[2], y: e[3], ang: -Math.PI / 2, t: 0 }); buildWorld(); sfx("drop"); }
           else if (e[1] === "mega") { mega.active.push({ x: e[2], y: e[3], t: 3.5 }); rings.push({ x: e[2], y: e[3], t: 0, mega: true }); sfx("whistle"); }
           else __game.event(e[1]);
         }
