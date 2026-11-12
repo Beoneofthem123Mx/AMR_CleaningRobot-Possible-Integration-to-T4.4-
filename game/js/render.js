@@ -1120,6 +1120,12 @@ function updateFxLayer(live) {
     let n = 0; for (const a of ag) { if (!a.phone) continue; if (++n > 700) break; const fx = a.x + Math.cos(a.h) * 1.1, fy = a.y + Math.sin(a.h) * 1.1; g.beginPath(); g.ellipse(fx, fy, 1.1, .7, a.h, 0, 7); g.fill(); }
     g.restore();
   }
+  // night: glow sticks spill a little colored light on the floor around their owners
+  if (scene.night && black < .25 && (phase === "show" || phase === "evac")) {
+    g.save(); g.globalCompositeOperation = "lighter"; let n = 0;
+    for (const a of ag) { if (a.m !== 4) continue; if (++n > 500) break; g.fillStyle = GLOW[a.ac % GLOW.length]; g.globalAlpha = .09; g.beginPath(); g.arc(a.x, a.y, .6, 0, 7); g.fill(); }
+    g.restore();
+  }
   // rain: little splash rings popping on the floor
   if (MOD && MOD.rain && (phase === "show" || phase === "evac")) {
     const now = performance.now() / 1000;
