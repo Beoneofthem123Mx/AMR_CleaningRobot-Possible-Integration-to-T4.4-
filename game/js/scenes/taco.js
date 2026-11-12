@@ -25,6 +25,10 @@ SCENES.taco = {
   ground(g) {
     g.fillStyle = "#d9c9a8"; g.fillRect(0, 0, WW, WH);
     for (let y = 0, i = 0; y < FENCE_Y; y += 1, i++) for (let x = 0; x < WW; x += 1) { g.fillStyle = (Math.floor(x) + i) % 2 ? "#d2c19e" : "#dccdab"; g.fillRect(x, y, 1, 1); }
+    // papel picado shadows, painted talavera tiles around the trompo and a long colorful sarape runner
+    { const cols = ["#e5484d", "#2fa36b", "#3f6fb5", "#e8b631", "#d65db1"]; for (let x = 0, k = 0; x < WW; x += 1.6, k++) { g.fillStyle = cols[k % 5]; g.globalAlpha = .5; g.fillRect(x, 30, 1.6, .5); g.fillRect(x, 62, 1.6, .5); } g.globalAlpha = 1; }
+    g.save(); g.translate(20, 40); for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { if (Math.abs(i) < 1 && Math.abs(j) < 1) continue; g.fillStyle = "#f4efe3"; g.fillRect(i * 1.2 - .58, j * 1.2 - .58, 1.16, 1.16); g.strokeStyle = "#2f5fa8"; g.lineWidth = .1; g.beginPath(); g.arc(i * 1.2, j * 1.2, .35, 0, 7); g.stroke(); g.fillStyle = "#e8b631"; g.beginPath(); g.arc(i * 1.2, j * 1.2, .12, 0, 7); g.fill(); } g.restore();
+    { const r2 = rng(61); for (let k = 0; k < 120; k++) { g.fillStyle = ["#e5484d", "#2fa36b", "#3f6fb5", "#e8b631", "#d65db1", "#ffffff"][k % 6]; g.save(); g.translate(r2() * WW, 10 + r2() * (FENCE_Y - 12)); g.rotate(r2() * 3); g.globalAlpha = .7; g.fillRect(-.12, -.12, .24, .24); g.restore(); } g.globalAlpha = 1; }
     g.fillStyle = "#9a8f7a"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
   },
   decor(g) {

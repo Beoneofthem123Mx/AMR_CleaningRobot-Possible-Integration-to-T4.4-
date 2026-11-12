@@ -25,6 +25,13 @@ SCENES.hipodromo = {
     for (let k = 0; k < 900; k++) { g.fillStyle = k % 3 ? "rgba(90,60,30,.25)" : "rgba(240,210,170,.25)"; g.fillRect(rand() * WW, .3 + rand() * (TRACK_Y - .6), .08, .14); }
     // checkered finish line
     for (let y = 0, i = 0; y < TRACK_Y; y += .5, i++) for (let c = 0; c < 2; c++) { g.fillStyle = (i + c) % 2 ? "#ffffff" : "#151617"; g.fillRect(30 + c * .5, y, .5, .5); }
+    // infield lawn: mowed stripes, a horseshoe in flowers, betting-slip litter
+    for (let y = TRACK_Y + 8, i = 0; y < FENCE_Y; y += 2.4, i++) { g.fillStyle = i % 2 ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.05)"; g.fillRect(5, y, WW - 10, 2.4); }
+    g.save(); g.translate(20, 38); g.strokeStyle = "#e8b631"; g.lineWidth = .8; g.lineCap = "round"; g.beginPath(); g.arc(0, 0, 3.4, Math.PI * .15, Math.PI * .85, true); g.stroke();
+    g.fillStyle = "#d8322b"; for (let k = 0; k < 14; k++) { const a = Math.PI * .15 - k * Math.PI * 1.3 / 13; g.beginPath(); g.arc(Math.cos(a) * 3.4, Math.sin(a) * 3.4, .22, 0, 7); g.fill(); } g.restore();
+    { const r2 = rng(88); for (let k = 0; k < 90; k++) { g.fillStyle = ["#fff6c8", "#ffffff", "#ffd8e6"][k % 3]; g.save(); g.translate(5 + r2() * (WW - 10), TRACK_Y + 9 + r2() * (FENCE_Y - TRACK_Y - 12)); g.rotate(r2() * 3); g.fillRect(-.18, -.1, .36, .2); g.restore(); } }
+    // distance poles painted along the rail
+    for (let x = 4; x < WW; x += 8) { g.fillStyle = "#ffffff"; g.fillRect(x, TRACK_Y - .6, .3, .3); g.fillStyle = "#d8322b"; g.fillRect(x + .3, TRACK_Y - .6, .3, .3); }
     // apron in front of the rail
     g.fillStyle = "#c8c2b0"; g.fillRect(5, TRACK_Y, WW - 10, 8);
     g.fillStyle = "#9a9c98"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
