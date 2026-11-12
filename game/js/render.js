@@ -442,6 +442,7 @@ function initPeople() {
   P.mouth = mk(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a1414, roughness: .5 }), N); P.mouth.castShadow = false;
   P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
   P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
+  P.hand = mk(new THREE.SphereGeometry(.062, 6, 4), std({ roughness: .55 }), N * 2); P.hand.castShadow = false;   // round mitten hands
   P.shoe = mk(new THREE.SphereGeometry(.075, 6, 4), std({ roughness: .45 }), N * 2); P.shoe.castShadow = false;   // chunky toy shoes
   P.sign = mk(new THREE.BoxGeometry(.035, .42, .58), std({ roughness: .8 }), N);
   P.hair = mk(new THREE.SphereGeometry(.138, 8, 4, 0, Math.PI * 2, 0, Math.PI * .56), std({ roughness: .9 }), N);
@@ -488,7 +489,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
+  const C = { hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -630,6 +631,11 @@ function renderPeople(tt, dtR, vb) {
     const ar = bare ? skn[0] * k : r, agc = bare ? skn[1] * k : g, ab = bare ? skn[2] * k : b;
     emit(P.arm, C.arm, limb(0, 1.28, -az, armL, .56)); colW(P.arm, C.arm++, ar, agc, ab);
     emit(P.arm, C.arm, limb(0, 1.28, az, armR, .56)); colW(P.arm, C.arm++, ar, agc, ab);
+    for (const [th, z] of [[armL, -az], [armR, az]]) {   // a hand at the end of each noodle arm
+      LE[0] = 1; LE[1] = 0; LE[2] = 0; LE[3] = 0; LE[4] = 1; LE[5] = 0; LE[6] = 0; LE[7] = 0; LE[8] = 1;
+      LE[9] = Math.sin(th) * .64; LE[10] = 1.28 - Math.cos(th) * .64; LE[11] = z;
+      emit(P.hand, C.hand, LE); colW(P.hand, C.hand++, skn[0] * k, skn[1] * k, skn[2] * k);
+    }
     if (a.phone && !down) { emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .3)); colW(P.glow, C.glow++, 2.4, 2.4, 2.2); }
     else if (a.m === 4) { const gc = GLOW_L[a.ac % GLOW_L.length]; emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .42)); colW(P.glow, C.glow++, gc[0] * 1.6, gc[1] * 1.6, gc[2] * 1.6); }
     const lg = a.cl >= 2 ? skn : pa;   // shorts show skin
