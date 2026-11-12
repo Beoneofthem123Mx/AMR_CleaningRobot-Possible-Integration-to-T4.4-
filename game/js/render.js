@@ -1211,7 +1211,7 @@ function render3D(now, dtR) {
     if (q >= 1 && !d.done) { d.done = true; for (let k = 0; k < 3; k++) puff(d.x + (Math.random() - .5) * 1.5, d.y + (Math.random() - .5) * 1.5, .2, "#e6dcc4", .25, .6, .3); }
   }
   G3.landing = G3.landing.filter(d => !d.done);
-  RIM.value = scene.night ? .9 : .42; WATER.time.value = tt;
+  RIM.value = scene.night ? (cine > .01 ? .9 : .5) : .42; WATER.time.value = tt;   // from above the bloom already lifts the crowd at night
   // rain: the floor slowly gets wet (darker and shiny), and dries after the show
   const wetT = live && MOD && MOD.rain ? 1 : 0; G3.wet = (G3.wet || 0) + (wetT - (G3.wet || 0)) * Math.min(1, dtR * (wetT ? .25 : .5));
   { const gm = G3.ground.material, w = G3.wet; gm.roughness = .95 - .7 * w; gm.metalness = .15 * w; gm.color.setScalar((scene.night ? 1 : .9) - .26 * w); /* light floors a touch darker so the crowd pops */ } WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
