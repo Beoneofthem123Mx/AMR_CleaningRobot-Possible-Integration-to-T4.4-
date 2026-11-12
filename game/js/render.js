@@ -214,7 +214,7 @@ function worldUV(geo) {
 function buildStatic3D() {
   staticDirty = false;
   if (G3.static) { G3.scene.remove(G3.static); G3.static.traverse(o => { if (o.geometry && !o.userData.shared) o.geometry.dispose(); }); }
-  const grp = G3.static = new THREE.Group(); G3.scene.add(grp);
+  const grp = G3.static = new THREE.Group(); G3.scene.add(grp); G3.woofers = [];
   staticLayer = buildStatic();
   if (G3.groundTex) G3.groundTex.dispose();
   const tex = G3.groundTex = new THREE.CanvasTexture(staticLayer); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
@@ -244,9 +244,20 @@ function buildStatic3D() {
     else if (o.t === "r") { geo = new THREE.BoxGeometry(o.x1 - o.x0, h, o.y1 - o.y0); geo.translate((o.x0 + o.x1) / 2, h / 2, (o.y0 + o.y1) / 2); }
     else if (o.t === "c") { geo = new THREE.CylinderGeometry(o.kind === "pole" ? o.r * .7 : o.r, o.r, h, 24); geo.translate(o.x, h / 2, o.y); }
     else { const len = Math.hypot(o.bx - o.ax, o.by - o.ay); geo = new THREE.BoxGeometry(len + o.th * .5, h, o.th); geo.rotateY(-Math.atan2(o.by - o.ay, o.bx - o.ax)); geo.translate((o.ax + o.bx) / 2, h / 2, (o.ay + o.by) / 2); }
-    worldUV(geo);
-    const mesh = new THREE.Mesh(geo, o.kind === "player" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
+    if (o.kind !== "tent") worldUV(geo);
+    if (o.kind === "tent" && !G3.tentMat) G3.tentMat = new THREE.MeshStandardMaterial({ map: stripeTex(["#d8322b", "#f6f1e7"], 8, false), roughness: .7 });   // clean candy stripes
+    const mesh = new THREE.Mesh(geo, o.kind === "tent" ? G3.tentMat : o.kind === "player" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
     mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
+    if (o.kind === "speaker" && o.t === "r") {   // woofers on the crowd side that pump with the beat
+      const cx = (o.x0 + o.x1) / 2, w = Math.min(o.x1 - o.x0, 3), rim = mat("#2b2e36", { roughness: .5 }), cone = mat("#15161a", { roughness: .8 }), cap = mat("#3a3d47", { metalness: .4, roughness: .4 });
+      for (const yy of [h * .32, h * .7]) {
+        const pv = pivot(grp, cx, yy, o.y1 + .02); G3.woofers.push(pv);
+        const r = Math.min(w * .32, h * .17);
+        const d = part(pv, "cyl", rim, r * 1.12, .05, r * 1.12, 0, 0, 0); d.rotation.x = Math.PI / 2;
+        const c = part(pv, "cone", cone, r, .22, r, 0, 0, .06); c.rotation.x = -Math.PI / 2;
+        part(pv, "sph", cap, r * .28, r * .28, r * .18, 0, 0, .05);
+      }
+    }
     if (o.kind === "pool" || o.kind === "jacuzzi" || o.kind === "fountain") {   // a moving water surface on top
       if (!G3.poolMat) G3.poolMat = waterify(new THREE.MeshStandardMaterial({ color: 0x0f7fc0, roughness: .06, metalness: .05, transparent: true, opacity: .82 }), 2.2);
       const wg = o.t === "r" ? new THREE.PlaneGeometry(o.x1 - o.x0 - .3, o.y1 - o.y0 - .3) : new THREE.CircleGeometry(Math.max(.2, o.r - .25), 28);
@@ -1158,6 +1169,8 @@ function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
   const tt = now / 1000, live = phase === "show" || phase === "evac";
+  { const beat = live && fullAt ? Math.pow(Math.max(0, Math.sin(tt * Math.PI * 124 / 60)), 10) * (surgeT > 0 ? .3 : .16) : 0;   // speakers thump
+    for (const pv of G3.woofers || []) { pv.scale.set(1 + beat * .5, 1 + beat * .5, 1 + beat * 2.2); } }
   for (const d of G3.landing) {   // fences and props landing
     const q = Math.min(1, (performance.now() - d.t0) / 420); d.g.position.y = (1 - bounceOut(q)) * 3;
     if (q >= 1 && !d.done) { d.done = true; for (let k = 0; k < 3; k++) puff(d.x + (Math.random() - .5) * 1.5, d.y + (Math.random() - .5) * 1.5, .2, "#e6dcc4", .25, .6, .3); }
