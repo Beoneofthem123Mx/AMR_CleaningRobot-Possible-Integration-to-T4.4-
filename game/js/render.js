@@ -622,6 +622,10 @@ function renderPeople(tt, dtR, vb) {
 }
 
 // ---------- 3D animals, cars and objects (facing +x) ----------
+// big googly toy eyes on both sides of a head (x forward, z sideways)
+function toyEyes(g, x, y, z, r) {
+  for (const s of [-1, 1]) { part(g, "sph", "#ffffff", r, r, r, x, y, s * z); part(g, "sph", "#111214", r * .55, r * .6, r * .55, x + r * .5, y + r * .05, s * (z + r * .35)); }
+}
 function buildModel(m) {
   const g = new THREE.Group(), u = g.userData; u.legs = []; u.kind = m.kind;
   switch (m.kind) {
@@ -629,6 +633,7 @@ function buildModel(m) {
       part(g, "sph", "#8d9095", 1.5, 1, .95, 0, 1.8, 0);
       part(g, "sph", "#969a9f", .72, .72, .72, 1.38, 2.2, 0);
       for (const s of [-1, 1]) part(g, "sph", "#7d8086", .12, .62, .55, 1.12, 2.25, s * .66);
+      toyEyes(g, 1.78, 2.45, .34, .14);
       u.trunk = pivot(g, 1.95, 2.0, 0); part(u.trunk, "cyl", "#8d9095", .16, 1.4, .16, 0, -.7, 0);
       for (const [x, z] of [[.8, .5], [.8, -.5], [-.8, .5], [-.8, -.5]]) u.legs.push(leg(g, x, 1.3, z, .3, 1.3, "#858990"));
       part(g, "box", "#b8232c", 1.35, .12, 1.95, 0, 2.75, 0);
@@ -641,8 +646,10 @@ function buildModel(m) {
       part(g, "sph", "#d9a04a", .95, .45, .42, 0, .9, 0);
       part(g, "sph", "#8a4b1e", .58, .58, .58, .8, 1.15, 0);
       part(g, "sph", "#e3b05e", .32, .32, .32, 1.05, 1.12, 0);
-      part(g, "sph", "#2a1a10", .07, .07, .07, 1.36, 1.12, 0);
-      for (const [x, z] of [[.55, .22], [.55, -.22], [-.55, .22], [-.55, -.22]]) u.legs.push(leg(g, x, .75, z, .1, .75, "#c98f3e"));
+      part(g, "sph", "#2a1a10", .09, .07, .09, 1.36, 1.14, 0);
+      toyEyes(g, 1.2, 1.32, .16, .09);
+      for (const s of [-1, 1]) part(g, "sph", "#8a4b1e", .12, .14, .08, .95, 1.62, s * .3);
+      for (const [x, z] of [[.55, .22], [.55, -.22], [-.55, .22], [-.55, -.22]]) u.legs.push(leg(g, x, .75, z, .14, .75, "#c98f3e"));
       u.tail = pivot(g, -.9, 1, 0); part(u.tail, "cyl", "#c58c3c", .04, .9, .04, 0, -.45, 0); part(u.tail, "sph", "#5a2e12", .12, .12, .12, 0, -.9, 0);
       break;
     }
@@ -650,9 +657,12 @@ function buildModel(m) {
       const c = m.col || (m.kind === "policehorse" ? "#3b2a20" : "#f2efe9");
       part(g, "sph", c, 1.1, .45, .4, 0, 1.4, 0);
       const nk = part(g, "cyl", c, .18, .9, .18, .95, 1.85, 0); nk.rotation.z = -.6;
-      part(g, "box", c, .55, .25, .22, 1.35, 2.15, 0);
+      part(g, "sph", c, .36, .2, .17, 1.38, 2.15, 0); part(g, "sph", c === "#f2efe9" ? "#e8c8b8" : "#5a3d2a", .16, .13, .14, 1.68, 2.1, 0);
+      for (const s of [-1, 1]) part(g, "cone", c, .05, .18, .05, 1.2, 2.38, s * .08);
+      toyEyes(g, 1.42, 2.25, .14, .07);
+      part(g, "box", c === "#f2efe9" ? "#bdb5a8" : "#1d140c", .7, .12, .05, .9, 2.0, 0);   // mane
       if (m.kind === "horse") { part(g, "cone", "#d8322b", .1, .4, .1, 1.15, 2.45, 0); part(g, "box", "#2f6fc4", .62, .1, .86, 0, 1.85, 0); }
-      for (const [x, z] of [[.75, .2], [.75, -.2], [-.75, .2], [-.75, -.2]]) u.legs.push(leg(g, x, 1.25, z, .08, 1.25, c));
+      for (const [x, z] of [[.75, .2], [.75, -.2], [-.75, .2], [-.75, -.2]]) { const lg = leg(g, x, 1.25, z, .11, 1.25, c); part(lg, "cyl", "#2a2220", .13, .14, .13, 0, -1.2, 0); u.legs.push(lg); }
       u.tail = pivot(g, -1.05, 1.5, 0); part(u.tail, "cyl", c === "#f2efe9" ? "#bdb5a8" : "#1d140c", .06, .8, .06, 0, -.4, 0);
       // rider: colored silks in the race, blue uniform for the police
       const silk = m.kind === "policehorse" ? "#1f2a44" : m.silk || "#d8322b";
@@ -667,8 +677,10 @@ function buildModel(m) {
     }
     case "dog": {
       const c = m.col;
-      part(g, "sph", c, .45, .2, .18, 0, .45, 0); part(g, "sph", c, .17, .17, .17, .45, .62, 0); part(g, "sph", "#1c1c1c", .05, .05, .05, .62, .62, 0);
-      for (const [x, z] of [[.28, .1], [.28, -.1], [-.28, .1], [-.28, -.1]]) u.legs.push(leg(g, x, .4, z, .05, .4, c));
+      part(g, "sph", c, .45, .22, .2, 0, .45, 0); part(g, "sph", c, .2, .19, .19, .45, .64, 0); part(g, "sph", "#1c1c1c", .06, .05, .06, .66, .63, 0);
+      toyEyes(g, .55, .71, .09, .05);
+      for (const s of [-1, 1]) { const ear = part(g, "sph", "#3b2a20", .05, .14, .08, .4, .74, s * .15); ear.rotation.x = s * .5; }
+      for (const [x, z] of [[.28, .1], [.28, -.1], [-.28, .1], [-.28, -.1]]) u.legs.push(leg(g, x, .4, z, .065, .4, c));
       u.tail = pivot(g, -.42, .55, 0); part(u.tail, "cyl", c, .035, .35, .035, 0, -.17, 0); u.tail.rotation.z = 2.3;
       break;
     }
