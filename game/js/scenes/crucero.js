@@ -1,4 +1,51 @@
 // Human Tsunami · scene: The Cruise (deck party)
+// ---- visual helpers (look only; nothing here touches the simulation) ----
+const CRU = {};
+function cruWaterTex() {   // tileable sea texture with wave crests, scrolled every frame
+  if (CRU.tex) return CRU.tex;
+  const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d"), r = rng(21);
+  const gr = g.createLinearGradient(0, 0, 256, 256); gr.addColorStop(0, "#1468a8"); gr.addColorStop(.5, "#1b7cc0"); gr.addColorStop(1, "#135f9c"); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  for (let k = 0; k < 90; k++) {
+    const x = r() * 256, y = r() * 256, w = 10 + r() * 26;
+    for (const [dx, dy] of [[0, 0], [256, 0], [-256, 0], [0, 256], [0, -256]]) {
+      g.strokeStyle = `rgba(255,255,255,${.12 + r() * .25})`; g.lineWidth = 1.5 + r() * 2;
+      g.beginPath(); g.moveTo(x + dx - w / 2, y + dy); g.quadraticCurveTo(x + dx, y + dy - 4, x + dx + w / 2, y + dy); g.stroke();
+    }
+  }
+  for (let k = 0; k < 400; k++) { g.fillStyle = `rgba(160,220,255,${r() * .18})`; g.fillRect(r() * 256, r() * 256, 2, 2); }
+  const t = CRU.tex = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(36, 36); return t;
+}
+function cruFoamTex() {
+  if (CRU.foam) return CRU.foam;
+  const c = document.createElement("canvas"); c.width = 64; c.height = 256; const g = c.getContext("2d"), r = rng(4);
+  for (let k = 0; k < 260; k++) { const x = r() * 64, y = r() * 256, rr = 2 + r() * 6; g.fillStyle = `rgba(255,255,255,${(1 - x / 64) * (.5 + r() * .5)})`; g.beginPath(); g.arc(x * .9, y, rr, 0, 7); g.fill(); }
+  const t = CRU.foam = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+// the open sea around the ship, with foam churning along the hull
+SCENE_MODELS.cru_sea = (g, u) => {
+  const tex = cruWaterTex(), sea = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshStandardMaterial({ map: tex, roughness: .25, metalness: .1 }));
+  sea.rotation.x = -Math.PI / 2; sea.position.set(0, -.02, 0); sea.receiveShadow = true; g.add(sea);
+  const ft = cruFoamTex(), foams = [];
+  for (const [x, flip] of [[-2.2, 1], [WW + 2.2, -1]]) {   // the group sits at the venue center: offsets are relative
+    const mtl = new THREE.MeshBasicMaterial({ map: ft.clone(), transparent: true, depthWrite: false, opacity: .9 }); mtl.map.needsUpdate = true; mtl.map.repeat.set(1, 6);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(4.4, SH + 30), mtl); f.rotation.x = -Math.PI / 2; f.rotation.z = flip > 0 ? 0 : Math.PI; f.position.set(x - WW / 2, .02, 0); g.add(f); foams.push(mtl);
+  }
+  const bow = new THREE.MeshBasicMaterial({ map: ft.clone(), transparent: true, depthWrite: false }); bow.map.needsUpdate = true; bow.map.repeat.set(5, 1);
+  const bw = new THREE.Mesh(new THREE.PlaneGeometry(WW + 16, 6), bow); bw.rotation.x = -Math.PI / 2; bw.rotation.z = Math.PI / 2; bw.scale.set(1, 1, 1); bw.position.set(0, .02, -SH / 2 - 9); bw.rotation.z = 0; g.add(bw);
+  u.anim = tt => {
+    tex.offset.set(tt * .006, tt * .025);
+    foams.forEach((m, i) => { m.map.offset.y = tt * .09 * (i ? -1 : 1); m.opacity = .75 + Math.sin(tt * 1.7 + i) * .15; });
+    bow.map.offset.x = tt * .05; bow.opacity = .6 + Math.sin(tt * 2.1) * .2;
+  };
+};
+// funnel smoke
+SCENE_MODELS.cru_smoke = (g, u, m) => { let next = 0; u.anim = tt => { if (tt > next) { next = tt + .35; puff(m.x + (Math.random() - .5) * .4, m.y, 15.5, "#e9edf2", .7, 4.5, 1.4); } }; };
+// floating pool toys that bob and drift in little circles
+SCENE_MODELS.cru_float = (g, u, m) => {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.55, .2, 8, 18), mat(m.col, { roughness: .35 })); ring.rotation.x = Math.PI / 2; ring.castShadow = true; g.add(ring);
+  if (m.duck) { part(g, "sph", "#ffd23a", .35, .3, .3, 0, .3, 0); part(g, "sph", "#ffd23a", .2, .2, .2, .25, .55, 0); part(g, "cone", "#ff8a1a", .07, .14, .07, .45, .55, 0).rotation.z = -Math.PI / 2; }
+  u.anim = tt => { g.position.y = .2 + Math.sin(tt * 2 + m.orbit[4]) * .06; ring.rotation.z = tt * .4; };
+};
 SCENES.crucero = {
   name: "The Cruise", tag: "Party on the high seas", outside: "#1d6fa5", bulbH: 1.6, music: "tropical",
   light: { sky: 0xeaf6ff, ground: 0x5b7286, hemi: .6, sun: 0xfff4e0, sunI: 1.3 }, crowd: 2600, fenceBudget: 60, maxGates: 5, guards: 3,
@@ -52,14 +99,56 @@ SCENES.crucero = {
     for (const o of obs) if (o.kind === "jacuzzi") { g.fillStyle = "#ffffff"; g.beginPath(); g.arc(o.x, o.y, o.r + .3, 0, 7); g.fill(); g.fillStyle = "#6fe0f5"; g.beginPath(); g.arc(o.x, o.y, o.r, 0, 7); g.fill(); }
     for (const o of obs) if (o.kind === "lounger") { g.fillStyle = "#ffffff"; g.fillRect(o.x0, o.y0, 1, 2); g.fillStyle = "#1f8fd6"; g.fillRect(o.x0 + .15, o.y0 + .2, .7, 1.2); }
     g.fillStyle = "#6b4a2b"; g.fillRect(16, 52, 8, 3); g.fillStyle = "#f2c230"; g.fillRect(16.3, 52.3, 7.4, .5);
+    // lido deck markings: shuffleboard courts, pool deck tiles, a big painted logo
+    g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = .1;
+    for (const x of [5.5, 32.5]) { g.strokeRect(x, 14, 2, 10); g.beginPath(); for (let k = 1; k < 4; k++) { g.moveTo(x, 14 + k * 2.5); g.lineTo(x + 2, 14 + k * 2.5); } g.stroke(); }
+    g.fillStyle = "#e8e2d4"; g.fillRect(12.6, 28.6, 14.8, 1); g.fillRect(12.6, 42.4, 14.8, 1); g.fillRect(12.6, 28.6, 1, 14.8); g.fillRect(26.4, 28.6, 1, 14.8);
+    g.fillStyle = "#1f8fd6"; for (let x = 12.6; x < 27.4; x += 1) { g.fillRect(x, 28.6, .5, .5); g.fillRect(x + .5, 42.9, .5, .5); }
+    g.save(); g.translate(20, 22); g.rotate(Math.PI / 2); g.font = "900 2.2px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillStyle = "rgba(255,255,255,.55)"; g.fillText("LIDO DECK", 0, 0); g.restore();
+    g.fillStyle = "rgba(0,0,0,.06)"; for (let k = 0; k < 40; k++) g.fillRect(3 + (k * 7.3) % 34, 12 + (k * 13.7) % 52, .4, .4);
     // life rings
     for (const [x, y] of [[4, 20], [36, 20], [4, 45], [36, 45]]) { g.strokeStyle = "#ff6a2c"; g.lineWidth = .3; g.beginPath(); g.arc(x, y, .55, 0, 7); g.stroke(); }
   },
   bulbs: [...Array.from({ length: 22 }, (_, i) => [3.5, 12 + i * 2.4]), ...Array.from({ length: 22 }, (_, i) => [WW - 3.5, 12 + i * 2.4])],
   beams: Array.from({ length: 4 }, (_, i) => ({ x: 15 + i * 3.4, y: 8, a: Math.PI / 2, sweep: .55, h: 6 })),
   extra3D(grp) {
-    // lifeboats on the hull
-    for (const y of [16, 28, 40, 52]) for (const x of [1.5, WW - 1.5]) part(grp, "sph", "#ff6a2c", .7, .55, 2.2, x, 1.6, y);
+    const white = mat("#f4f4f2", { roughness: .5 }), navy = mat("#1f4fa8"), steel = mat("#c9ced6", { metalness: .6, roughness: .35 });
+    // hull sides dropping into the sea, outside the deck
+    for (const x of [-.25, WW + .25]) { part(grp, "box", white, .5, 3.2, SH + 14, x, -1.4, SH / 2 - 7); part(grp, "box", navy, .52, .45, SH + 14, x, -.2, SH / 2 - 7); }
+    // railings on top of the hull walls
+    for (const x of [2.7, WW - 2.7]) {
+      part(grp, "box", steel, .06, .06, FENCE_Y - 12, x, 2.2, 12 + (FENCE_Y - 12) / 2); part(grp, "box", steel, .04, .04, FENCE_Y - 12, x, 1.75, 12 + (FENCE_Y - 12) / 2);
+      for (let y = 12; y < FENCE_Y; y += 1.6) part(grp, "cyl", steel, .03, 1, .03, x, 1.7, y);
+    }
+    // lifeboats hanging from davits outside the rail
+    for (const y of [16, 26, 36, 46, 56]) for (const [x, s] of [[-1.3, -1], [WW + 1.3, 1]]) {
+      part(grp, "sph", "#ff6a2c", .75, .55, 2.4, x, 2.6, y); part(grp, "box", "#ffffff", .9, .12, 3.8, x, 2.95, y);
+      for (const dy of [-1.6, 1.6]) { const d = part(grp, "box", steel, 1.8, .12, .12, x - s * .6, 3.9, y + dy); d.rotation.z = s * .4; part(grp, "cyl", "#2b2f35", .015, 1, .015, x, 3.4, y + dy); }
+    }
+    // bridge and funnel at the bow, beyond the deck
+    part(grp, "box", white, 26, 6, 9, 20, 3, -5.2); part(grp, "box", white, 18, 3, 7, 20, 7.5, -5.6);
+    part(grp, "box", basic("#7fd6f0"), 24, .9, .1, 20, 4.4, -.66); part(grp, "box", basic("#7fd6f0"), 16, .8, .1, 20, 7.8, -2.06);
+    for (let i = 0; i < 11; i++) part(grp, "box", "#2b5a8a", .12, .9, .12, 9 + i * 2.2, 4.4, -.6);
+    part(grp, "box", navy, 26.2, .35, 9.2, 20, 6.05, -5.2);
+    const fun = part(grp, "cyl", "#e53229", 1.6, 4.5, 2.3, 20, 11.2, -6.5); fun.scale.set(1.6, 4.5, 2.3);
+    part(grp, "cyl", "#151617", 1.62, .5, 2.32, 20, 13.3, -6.5);
+    part(grp, "cyl", steel, .05, 4, .05, 26, 11, -4); part(grp, "sph", basic("#ff3030"), .12, .12, .12, 26, 13.1, -4);
+    // flags and a string of pennants from the funnel to the stern
+    const pen = ["#ff4d6d", "#ffd23a", "#4fd8ff", "#7dff6a", "#ffffff"];
+    for (const x of [8, 32]) for (let i = 0; i < 18; i++) { const y = 2 + i * 3.6, f = part(grp, "cone", pen[i % 5], .28, .5, .05, x, 6.2 - Math.sin(i / 17 * Math.PI) * 1.4, y); f.rotation.x = Math.PI; }
+    // umbrellas over the loungers (high enough to walk under) and a bar canopy
+    for (const [x, y, c] of [[7.5, 49, "#ff6a2c"], [7.5, 55, "#1f8fd6"], [31, 49, "#1f8fd6"], [31, 55, "#ff6a2c"], [10.5, 52, "#ffd23a"], [34.5, 52, "#ffd23a"]]) {
+      part(grp, "cyl", "#e9e4d8", .04, 2.6, .04, x, 1.3, y); part(grp, "cone", c, 1.4, .45, 1.4, x, 2.75, y);
+    }
+    part(grp, "box", mat("#f2c230"), 9, .15, 4, 20, 3.1, 53.5); for (const [x, y] of [[16.2, 52.2], [23.8, 52.2], [16.2, 54.8], [23.8, 54.8]]) part(grp, "cyl", "#6b4a2b", .06, 1.9, .06, x, 2.1, y);
   },
-  performers: () => [{ kind: "dj", orbit: [20, 5, .01, 0, 0], h: 1.8, x: 0, y: 0, ang: Math.PI / 2, t: 0 }],
+  performers: () => [
+    { kind: "dj", orbit: [20, 5, .01, 0, 0], h: 1.8, x: 0, y: 0, ang: Math.PI / 2, t: 0 },
+    { kind: "cru_sea", orbit: [WW / 2, SH / 2, .001, 0, -Math.PI / 2], h: 0, x: 0, y: 0, ang: 0, t: 0 },
+    { kind: "cru_smoke", orbit: [20, -6.5, .001, 0, 0], h: 0, x: 0, y: 0, ang: 0, t: 0 },
+    { kind: "cru_float", col: "#ff4d6d", orbit: [18, 34, 1.2, .25, 0], h: .2, x: 0, y: 0, ang: 0, t: 0 },
+    { kind: "cru_float", col: "#ffd23a", duck: true, orbit: [22, 38, 1.4, -.2, 2], h: .2, x: 0, y: 0, ang: 0, t: 0 },
+    { kind: "cru_float", col: "#7dff6a", orbit: [20, 32.5, .9, .3, 4], h: .2, x: 0, y: 0, ang: 0, t: 0 },
+  ],
 };
