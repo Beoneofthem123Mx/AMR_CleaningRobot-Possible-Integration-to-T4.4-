@@ -786,16 +786,16 @@ function toWorld(ev) {
   return [HIT.x, HIT.z];
 }
 // street-level camera: a slow orbit among the crowd, looking across it instead of down at it
-let cine = 0, cineAng = 0, cineDist = 13;
+let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a raised crane shot looking down
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
 function cineCamera(dt) {
   cineAng += dt * .11;
-  const night = !!scene.night, c = G3.camera, d = cineDist, h = 1.9 + d * .16;
+  const night = !!scene.night, c = G3.camera, d = cineDist, h = cineH || 1.9 + d * .16;
   const cx = cam.x + Math.sin(cineAng * .7) * 2, cy = cam.y;
   c.fov = 52; c.near = .3; c.far = 600; c.updateProjectionMatrix();
   c.up.set(0, 1, 0);
   c.position.set(clamp(cx + Math.cos(cineAng) * d, 1.5, WW - 1.5), h + shake * .2, clamp(cy + Math.sin(cineAng) * d, 2, SH - 2));
-  c.lookAt(cx, 1.5, cy);
+  c.lookAt(cx, cineH ? .3 : 1.5, cy);
   SKY_TMP.copy(night ? SKY_NIGHT : SKY_DAY).multiplyScalar(1 - .85 * black);
   G3.scene.background.copy(SKY_TMP);
   if (!G3.scene.fog) G3.scene.fog = new THREE.Fog(0xffffff, 30, 190);

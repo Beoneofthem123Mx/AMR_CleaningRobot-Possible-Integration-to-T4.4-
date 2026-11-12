@@ -23,6 +23,9 @@ const SEG = [
   { card: "STEP 2:<br>OPEN THE GATES", dur: B * 3, bg: "plaza" },
   { clip: "plaza", warm: 2.5, secs: B * 7, cam: 2 },
   { card: "STEP 3:<br>EVERYTHING GOES WRONG", dur: B * 3, style: "yellow" },
+  // crane shot at the front of the crowd: people topple one by one (the game's own fall, just triggered on cue)
+  { clip: "plaza", warm: 26, secs: B * 4, cam: 4, cine: [5.2, -1.75, 4.2], look: [14, 35.5], hot: true,
+    ev: [[.1, "topple", 13, 35, 1], [.45, "topple", 15, 35.5, 2], [.8, "topple", 12, 36, 2], [1.1, "topple", 16, 36, 2], [1.4, "topple", 14, 36.5, 3]] },
   { clip: "circo", warm: 28, secs: B * 4, cam: 4, cine: [9, 1.2], ev: [[-1.5, "elephants"], [-.4, "cannon"]], hot: true },
   { clip: "ovni", warm: 26, secs: B * 4, cam: 0, ev: [[-2, "abduccion"]], hot: true },
   { clip: "arena", warm: 26, secs: B * 4, cam: 1, ev: [[-1.3, "tope"], [-.4, "sillazo"]], hot: true },
@@ -37,6 +40,7 @@ const SEG = [
   { clip: "park", warm: 26, secs: B * 4, cam: 1, ev: [[-1.5, "dinos"], [-.6, "coaster"]], hot: true },
   { card: "20 VENUES", dur: B * 2, bg: "circo" },
   { card: "FENCES OF<br>ANY SHAPE", dur: B * 2, bg: "ciudad" },
+  { card: "FLOPPY<br>RAG DOLLS", dur: B * 2, style: "yellow" },
   { card: "SANDBOX MODE", dur: B * 2, bg: "arena" },
   { card: "1 MEGAPHONE", dur: B * 2, style: "yellow" },
   { clip: "estadio", warm: 28, secs: B * 6, cam: 1, ev: [[.3, "mega", 20, 34], [1.2, "mega", 14, 42]] },
@@ -65,7 +69,7 @@ async function captureClips() {
     const t0 = await w.evaluate(g => {
       __game.reset(); __game.scene(g.clip); document.querySelector("#overlay").hidden = true;
       if (!g.crush && !g.plan && !g.report) __game.bestGates();
-      camMode = g.cam; heat = !!g.heat; if (g.cine) { cineDist = g.cine[0]; cineAng = g.cine[1]; }
+      camMode = g.cam; heat = !!g.heat; cineH = 0; if (g.cine) { cineDist = g.cine[0]; cineAng = g.cine[1]; cineH = g.cine[2] || 0; }
       if (g.plan) {  // planning shot: fences appear one by one while the venue waits
         window.__pending = (g.fences || []).map(([at, ax, ay, bx, by, type]) => [at, "fence", { ax, ay, bx, by, type }])
           .concat((g.shapes || []).map(([at, shape, ax, ay, bx, by, type]) => [at, "shape", { shape, ax, ay, bx, by, type }]))
@@ -78,10 +82,10 @@ async function captureClips() {
       const pre = evs.length ? Math.min(0, evs[0][0]) : 0;
       let steps = Math.round((g.warm + pre) * 60);
       if (g.crush) { // with the default gates the evacuation jams: record from the first trampled person
-        for (let k = 0; k < 60 * 140 && __game.s.dead < 4; k++) __game.step();
+        for (let k = 0; k < 60 * 140 && __game.s.dead < (g.close ? 14 : 4); k++) __game.step();
         // replay the slow-motion close-up on the latest fall, as the game does for the first one
         const f = fallen[fallen.length - 1];
-        if (f) { slowT = 1.8; focus = { x: f.x, y: f.y }; }
+        if (f) { slowT = 1.8; focus = { x: f.x, y: f.y }; if (g.close) { cam.x = f.x; cam.y = f.y - 1; } }
       } else if (g.report) { // run the whole show; the newspaper appears at the end
         for (let k = 0; k < 60 * 300 && !(fullAt && t > fullAt + 13); k++) __game.step();
         camMode = 1; for (let k = 0; k < 30; k++) __game.tick(1 / 60);  // render once so the paper gets its photo
@@ -92,6 +96,7 @@ async function captureClips() {
       const lead = -pre; for (let k = 0; k < lead * 60; k++) __game.step();
       for (let k = 0; k < 20; k++) __game.tick(1 / 60); // let the camera settle
       window.__pending = evs.filter(e => e[0] >= 0);
+      if (g.look) { cam.x = g.look[0]; cam.y = g.look[1]; for (let k = 0; k < 4; k++) __game.tick(1 / 60); }
       return vnow / 1000;
     }, g);
     const n = Math.round(g.secs * FPS);
@@ -102,6 +107,7 @@ async function captureClips() {
           if (e[1] === "fence") __game.addFence(e[2]);
           else if (e[1] === "shape") { for (const [x0, y0, x1, y1] of shapeSegs(e[2].shape, e[2].ax, e[2].ay, e[2].bx, e[2].by)) fences.push({ ax: x0, ay: y0, bx: x1, by: y1, len: Math.hypot(x1 - x0, y1 - y0), type: e[2].type }); buildWorld(); sfx("drop"); }
           else if (e[1] === "steward") { guards.push({ kind: "guard", role: "slow", x: e[2], y: e[3], ang: -Math.PI / 2, t: 0 }); buildWorld(); sfx("drop"); }
+          else if (e[1] === "topple") { ag.filter(a => !a.dmg || a.dmg < 1).sort((p, q) => Math.hypot(p.x - e[2], p.y - e[3]) - Math.hypot(q.x - e[2], q.y - e[3])).slice(0, e[4]).forEach(a => { a.dmg = 1.2; }); }
           else if (e[1] === "mega") { mega.active.push({ x: e[2], y: e[3], t: 3.5 }); rings.push({ x: e[2], y: e[3], t: 0, mega: true }); sfx("whistle"); }
           else __game.event(e[1]);
         }
