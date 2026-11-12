@@ -387,10 +387,15 @@ function buildFence3D(grp, o) {
 function buildProp3D(grp, o) {
   const sh = m => { m.userData.shared = true; return m; }, x = o.x, y = o.y;
   if (o.ptype === "water") {        // water cooler on a little table, with a stack of cups
-    sh(part(grp, "box", "#e9e4d8", 1.1, .75, .7, x, .375, y));
-    sh(part(grp, "cyl", mat("#4fc3f7", { roughness: .1, metalness: .1, transparent: true, opacity: .85 }), .22, .55, .22, x - .2, 1.05, y));
-    sh(part(grp, "cyl", "#f4f4f2", .2, .25, .2, x - .2, .82, y)); sh(part(grp, "cyl", "#ffffff", .06, .3, .06, x + .3, .9, y + .15));
-    sh(part(grp, "box", "#1e88e5", 1.12, .12, .72, x, .7, y));
+    sh(part(grp, "box", "#e9e4d8", 1.4, .75, .8, x, .375, y));                                   // table
+    sh(part(grp, "box", "#1e88e5", 1.42, .14, .82, x, .7, y));                                    // blue tablecloth band
+    for (const dx of [-.35, .3]) {                                                                // two big water jugs on stands
+      sh(part(grp, "cyl", "#f4f4f2", .24, .35, .24, x + dx, .95, y));
+      sh(part(grp, "sph", mat("#6fd0ff", { roughness: .05, metalness: .1, transparent: true, opacity: .8 }), .27, .4, .27, x + dx, 1.45, y));
+      sh(part(grp, "cyl", "#2f6fc4", .07, .08, .07, x + dx, 1.86, y));
+    }
+    for (let k = 0; k < 4; k++) sh(part(grp, "cyl", "#ffffff", .07, .14, .06, x - .55 + k * .12, .84, y + .3));   // paper cups
+    const sign = part(grp, "box", basic("#4fc3f7"), .9, .32, .04, x, 2.3, y); sh(sign); sh(part(grp, "cyl", "#d9dde2", .025, 1.4, .025, x, 1.55, y - .04));
   } else if (o.ptype === "medic") { // white tent with a big red cross on the roof
     const roof = new THREE.Mesh(new THREE.ConeGeometry(1.45, 1.1, 4, 1), mat("#f7f7f5", { roughness: .8 })); roof.rotation.y = Math.PI / 4; roof.position.set(x, 1.95, y); roof.castShadow = true; grp.add(roof);
     sh(part(grp, "box", "#f7f7f5", 2, 1.4, 2, x, .7, y));
