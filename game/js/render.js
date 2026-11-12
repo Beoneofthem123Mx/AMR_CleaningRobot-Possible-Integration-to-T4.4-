@@ -826,7 +826,7 @@ function buildModel(m) {
         // a chubby toy convertible: rounded body, windshield, chrome bumpers and a driver you can see
         const paint = mat(bodyC, { metalness: .25, roughness: .3 }), chrome = mat("#d9dde2", { metalness: .8, roughness: .2 });
         part(g, "sph", paint, L / 2, .5, Wd / 2, 0, .8, 0);
-        part(g, "sph", mat("#3a2a24", { roughness: .8 }), 1.05, .2, Wd * .36, -.3, 1.18, 0);              // the open cockpit
+        part(g, "sph", mat("#b8463a", { roughness: .7 }), 1.05, .2, Wd * .36, -.3, 1.18, 0);              // the open cockpit: red leather seats
         const ws = part(g, "box", mat("#bfe3ff", { roughness: .05, metalness: .3, transparent: true, opacity: .5 }), .05, .42, Wd * .7, .55, 1.42, 0); ws.rotation.z = .45;
         for (const x of [L / 2 - .02, -L / 2 + .02]) part(g, "box", chrome, .16, .16, Wd * .9, x, .52, 0);
         for (const s of [-1, 1]) { part(g, "sph", basic("#fff6c8"), .1, .14, .17, L / 2 - .15, .88, s * .58); part(g, "sph", basic("#ff2a2a"), .07, .1, .14, -L / 2 + .12, .9, s * .62); }
@@ -1026,6 +1026,12 @@ function updateFxLayer(live) {
   } else if (phase === "plan") G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height);
   g.scale(k, k);
   // red shadow under those who fell
+  // blackout: every phone flashlight throws a small pool of light ahead of its owner
+  if (black > .25 && (phase === "show" || phase === "evac")) {
+    g.save(); g.globalCompositeOperation = "lighter"; g.fillStyle = `rgba(255,250,225,${(.11 * black).toFixed(3)})`;
+    let n = 0; for (const a of ag) { if (!a.phone) continue; if (++n > 700) break; const fx = a.x + Math.cos(a.h) * 1.1, fy = a.y + Math.sin(a.h) * 1.1; g.beginPath(); g.ellipse(fx, fy, 1.1, .7, a.h, 0, 7); g.fill(); }
+    g.restore();
+  }
   // rain: little splash rings popping on the floor
   if (MOD && MOD.rain && (phase === "show" || phase === "evac")) {
     const now = performance.now() / 1000;
