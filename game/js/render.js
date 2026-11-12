@@ -438,6 +438,7 @@ function initPeople() {
   P.head = mk(new THREE.SphereGeometry(.2, 12, 8), std({ roughness: .5 }), N);
   P.eye = mk(new THREE.SphereGeometry(.034, 5, 4), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .25 }), N * 2); P.eye.castShadow = false;
   P.xbar = mk(new THREE.BoxGeometry(.02, .1, .022), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .4 }), N * 2); P.xbar.castShadow = false;   // X eyes of the trampled
+  P.brow = mk(new THREE.BoxGeometry(.022, .02, .075), new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: .6 }), N * 2); P.brow.castShadow = false;   // worried eyebrows
   P.mouth = mk(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a1414, roughness: .5 }), N); P.mouth.castShadow = false;
   P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
   P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
@@ -487,7 +488,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
+  const C = { brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -566,6 +567,11 @@ function renderPeople(tt, dtR, vb) {
       } else for (const e of [LOCAL.eyeL, LOCAL.eyeR]) {
         LE.set(e); const big = FACE.state === 1 ? 1.55 : 1, squint = FACE.state === 2 ? .35 : FACE.state === 0 && (tt * .35 + a.ph * .37) % 1 < .035 ? .12 : 1;   // calm people blink now and then
         LE[0] *= big; LE[4] *= big * squint; LE[8] *= big; emit(P.eye, C.eye, place(LE)); colW(P.eye, C.eye++, .07, .07, .08);
+      }
+      if (FACE.state === 1 && C.brow < cap * 2 - 2) for (const sd of [-1, 1]) {   // squeezed: brows shoot up and tilt into a worried tent
+        const r = -sd * .45, c0 = Math.cos(r), s0 = Math.sin(r);
+        XB[0] = 1; XB[1] = 0; XB[2] = 0; XB[3] = 0; XB[4] = c0; XB[5] = s0; XB[6] = 0; XB[7] = -s0; XB[8] = c0; XB[9] = .188; XB[10] = 1.745 + FACE.open * .02; XB[11] = sd * .075;
+        emit(P.brow, C.brow, place(XB)); colW(P.brow, C.brow++, .08, .06, .05);
       }
       if (FACE.open > .05 || FACE.state === 2) {   // mouth: an O when scared or flailing, a wide grin when cheering
         LE.set(LOCAL.mouth); const o = FACE.open;
