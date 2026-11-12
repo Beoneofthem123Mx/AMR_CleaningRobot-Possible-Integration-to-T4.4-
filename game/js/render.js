@@ -336,15 +336,24 @@ const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), Vp = new THREE.Vecto
 const Bm = new Float32Array(9), Bt = new Float32Array(3), LB = new Float32Array(12);
 const loc = (sx, sy, sz, x, y, z) => new Float32Array([sx, 0, 0, 0, sy, 0, 0, 0, sz, x, y, z]);
 const LOCAL = {
-  torso: loc(.86, 1, 1.22, 0, 1.17, 0), head: loc(1, 1, 1, .02, 1.66, 0), hair: loc(1.2, 1.2, 1.2, -.012, 1.675, 0),
-  afro: loc(1.55, 1.45, 1.55, -.02, 1.69, 0), bun: loc(.42, .42, .42, -.08, 1.86, 0), tail: loc(.5, .9, .35, -.19, 1.52, 0),
+  torso: loc(1, 1, 1.05, 0, .98, 0), head: loc(1, 1, 1, .02, 1.6, 0), hair: loc(1.5, 1.35, 1.5, -.045, 1.655, 0),
+  eyeL: loc(1, 1.25, 1, .19, 1.64, -.07), eyeR: loc(1, 1.25, 1, .19, 1.64, .07),
+  afro: loc(2.05, 1.9, 2.05, -.04, 1.69, 0), bun: loc(.5, .5, .5, -.1, 1.86, 0), tail: loc(.55, 1, .4, -.23, 1.5, 0),
   sign: loc(1, 1, 1, .08, 2.42, .27), signPole: loc(1.6, .55, 1.6, .08, 2.02, .27), flag: loc(1, .8, 1.25, .08, 2.5, -.2),
-  cap: loc(1.15, 1, 1.15, -.005, 1.775, 0), brim: loc(1.1, 1, 1.1, .15, 1.74, 0), long: loc(1.1, 1, 1.15, -.13, 1.54, 0), pack: loc(1, 1, 1, -.2, 1.2, 0),
+  cap: loc(1.45, 1.05, 1.45, -.02, 1.79, 0), brim: loc(1.25, 1, 1.15, .2, 1.765, 0), long: loc(1.3, 1, 1.4, -.17, 1.5, 0), pack: loc(1, 1, 1, -.2, 1.2, 0),
   // accessories: party hat, wide sun hat, balloon string, umbrella pole and canopy, kid on the shoulders
-  phat: loc(1, 1, 1, 0, 1.93, 0), whatB: loc(1, 1, 1, 0, 1.78, 0), whatT: loc(1.1, 1, 1.1, 0, 1.86, 0), string: loc(1, 1, 1, -.05, 2.08, .26),
+  phat: loc(1.2, 1.2, 1.2, 0, 1.95, 0), whatB: loc(1.25, 1, 1.25, 0, 1.76, 0), whatT: loc(1.4, 1, 1.4, 0, 1.84, 0), string: loc(1, 1, 1, -.05, 2.08, .26),
   pole: loc(1, 1, 1, .05, 1.85, .2), umb: loc(1, 1, 1, .05, 2.3, .1), kidT: loc(.5, .55, .78, -.05, 1.98, 0), kidH: loc(.82, .82, .82, -.03, 2.32, 0),
 };
-const LBAL = new Float32Array([1, 0, 0, 0, 1.15, 0, 0, 0, 1, 0, 0, 0]), LT = new Float32Array(12);
+const LBAL = new Float32Array([1, 0, 0, 0, 1.15, 0, 0, 0, 1, 0, 0, 0]), LT = new Float32Array(12), LW = new Float32Array(12), WOB = { lean: 0, rock: 0 };
+// tilt a local part matrix around the hips (lean: forward, rock: sideways); layout is 3 columns then the position
+function wob(L, lean, rock) {
+  const cl = Math.cos(lean), sl = Math.sin(lean), cr = Math.cos(rock), sr = Math.sin(rock), py = .55;
+  const m = [cl, sl * cr, sl * sr, -sl, cl * cr, cl * sr, 0, -sr, cr];   // rotation: lean around z, then rock around x
+  for (let c = 0; c < 3; c++) { const x = L[c * 3], y = L[c * 3 + 1], z = L[c * 3 + 2]; L[c * 3] = m[0] * x + m[3] * y + m[6] * z; L[c * 3 + 1] = m[1] * x + m[4] * y + m[7] * z; L[c * 3 + 2] = m[2] * x + m[5] * y + m[8] * z; }
+  const x = L[9], y = L[10] - py, z = L[11]; L[9] = m[0] * x + m[3] * y + m[6] * z; L[10] = m[1] * x + m[4] * y + m[7] * z + py; L[11] = m[2] * x + m[5] * y + m[8] * z;
+}
+function wobPt(src) { LW.set(src); wob(LW, WOB.lean, WOB.rock); return LW; }
 function initPeople() {
   const N = 6000, std = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {}));
   const mk = (geo, material, n) => {
@@ -353,10 +362,15 @@ function initPeople() {
     m.castShadow = true; m.frustumCulled = false; m.count = 0; G3.scene.add(m); return m;
   };
   // soft clay-figure people: a pill body, a big round head and rounded limbs
-  P.torso = mk(new THREE.CapsuleGeometry(.2, .34, 4, 12), std({ roughness: .62 }), N);
-  P.head = mk(new THREE.SphereGeometry(.155, 12, 9), std({ roughness: .55 }), N);
-  P.arm = mk(new THREE.CapsuleGeometry(.055, .5, 3, 8), std({ roughness: .62 }), N * 2);
-  P.leg = mk(new THREE.CapsuleGeometry(.075, .66, 3, 8), std({ roughness: .7 }), N * 2);
+  // wobbly toy people: a pear-shaped body, a big round head sitting right on it, dot eyes, noodle arms, stubby legs
+  const pear = [];
+  for (let i = 0; i <= 14; i++) { const q = i / 14, y = -.42 + q * .84, r = .05 + Math.sin(Math.PI * Math.pow(q, .82)) * (.27 - q * .1); pear.push(new THREE.Vector2(Math.max(.02, r), y)); }
+  const pearGeo = new THREE.LatheGeometry(pear, 14);
+  P.torso = mk(pearGeo, std({ roughness: .58 }), N);
+  P.head = mk(new THREE.SphereGeometry(.2, 14, 10), std({ roughness: .5 }), N);
+  P.eye = mk(new THREE.SphereGeometry(.034, 6, 5), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .25 }), N * 2); P.eye.castShadow = false;
+  P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
+  P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
   P.sign = mk(new THREE.BoxGeometry(.035, .5, .72), std({ roughness: .8 }), N);
   P.hair = mk(new THREE.SphereGeometry(.138, 8, 4, 0, Math.PI * 2, 0, Math.PI * .56), std({ roughness: .9 }), N);
   P.cap = mk(new THREE.CylinderGeometry(.14, .145, .1, 10), std({ roughness: .5 }), N);
@@ -398,7 +412,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
+  const C = { eye: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -446,8 +460,14 @@ function renderPeople(tt, dtR, vb) {
     r *= k; g *= k; b *= k;
     const bw = a.bw || 1;   // build: slim to chunky
     LT.set(LOCAL.torso); LT[0] *= bw; LT[8] *= bw;
+    if (!down) {   // wobble: lean forward with speed and rock from foot to foot, the head follows
+      const spd = Math.min(1.4, Math.hypot(a.vx, a.vy)), lean = spd * .16 + (a.ps > PCRIT * .55 ? .12 : 0), rock = Math.sin(a.wp) * .11 * Math.min(1, spd + .3);
+      wob(LT, lean, rock); WOB.lean = lean; WOB.rock = rock;
+    }
     emit(P.torso, C.torso, LT); colW(P.torso, C.torso++, r, g, b);
-    const skn = SKIN_L[a.sk]; emit(P.head, C.head, LOCAL.head); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
+    const skn = SKIN_L[a.sk];
+    const HD = down ? LOCAL.head : wobPt(LOCAL.head); emit(P.head, C.head, HD); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
+    if (detail || cine > .01) for (const e of [LOCAL.eyeL, LOCAL.eyeR]) { emit(P.eye, C.eye, down ? e : wobPt(e)); colW(P.eye, C.eye++, .07, .07, .08); }
     const hc = HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
     if (a.m !== 1 && hs === 4) { /* bald and proud */ }
     else if (a.m !== 1 && hs === 1) { emit(P.hair, C.hair, LOCAL.afro); colW(P.hair, C.hair++, hc[0] * k, hc[1] * k, hc[2] * k); }
@@ -487,16 +507,16 @@ function renderPeople(tt, dtR, vb) {
       }
     }
     if (!detail && !down) return;
-    const az = .2 * bw + .06, bare = a.cl === 1 || a.cl === 3;   // short sleeves show skin
+    const az = .22 * bw + .05, bare = a.cl === 1 || a.cl === 3;   // short sleeves show skin
     const ar = bare ? skn[0] * k : r, agc = bare ? skn[1] * k : g, ab = bare ? skn[2] * k : b;
-    emit(P.arm, C.arm, limb(0, 1.42, -az, armL, .6)); colW(P.arm, C.arm++, ar, agc, ab);
-    emit(P.arm, C.arm, limb(0, 1.42, az, armR, .6)); colW(P.arm, C.arm++, ar, agc, ab);
+    emit(P.arm, C.arm, limb(0, 1.28, -az, armL, .56)); colW(P.arm, C.arm++, ar, agc, ab);
+    emit(P.arm, C.arm, limb(0, 1.28, az, armR, .56)); colW(P.arm, C.arm++, ar, agc, ab);
     if (a.phone && !down) { emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .3)); colW(P.glow, C.glow++, 2.4, 2.4, 2.2); }
     else if (a.m === 4) { const gc = GLOW_L[a.ac % GLOW_L.length]; emit(P.glow, C.glow, limb(0, 1.4, .25, armR, .42, .42)); colW(P.glow, C.glow++, gc[0] * 1.6, gc[1] * 1.6, gc[2] * 1.6); }
     const lg = a.cl >= 2 ? skn : pa;   // shorts show skin
     const pr = lg[0] + (hq[0] - lg[0]) * hm * .8, pg = lg[1] + (hq[1] - lg[1]) * hm * .8, pb = lg[2] + (hq[2] - lg[2]) * hm * .8;
-    emit(P.leg, C.leg, limb(0, .84, -.1, legL, .8)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
-    emit(P.leg, C.leg, limb(0, .84, .1, legR, .8)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
+    emit(P.leg, C.leg, limb(0, .62, -.12, legL * .8, .56)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
+    emit(P.leg, C.leg, limb(0, .62, .12, legR * .8, .56)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
     if (a.m === 2) { emit(P.long, C.long, LOCAL.long); colW(P.long, C.long++, hc[0] * k, hc[1] * k, hc[2] * k); }
     if (a.m === 3) { const cc = SHIRT_L[a.ac]; emit(P.pack, C.pack, LOCAL.pack); colW(P.pack, C.pack++, cc[0] * k, cc[1] * k, cc[2] * k); }
   };
