@@ -289,7 +289,12 @@ SCENES.ciudad = {
       g.strokeStyle = "#2a2c31"; g.lineWidth = 4; g.strokeRect(2, 2, 124, 92); g.beginPath(); g.moveTo(64, 0); g.lineTo(64, 96); g.stroke();
       const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; CITY_TEX.shopWin = t;
     }
-    WIN.forEach((c, i) => cityInst(grp, "box", new THREE.MeshBasicMaterial({ map: CITY_TEX.shopWin, color: new THREE.Color(c).multiplyScalar(.82), toneMapped: false }), wins[i])); CITY_COLS.forEach((c, i) => cityInst(grp, "box", basic(c), signs[i]));
+    WIN.forEach((c, i) => cityInst(grp, "box", new THREE.MeshBasicMaterial({ map: CITY_TEX.shopWin, color: new THREE.Color(c).multiplyScalar(.82), toneMapped: false }), wins[i])); CITY_COLS.forEach((c, i) => {   // shop name boards, one name per color
+      const words = ["PIZZA", "24H", "SHOES", "PHONES", "NOODLES", "DONUTS", "TOYS", "VINYL"], cv2 = document.createElement("canvas"); cv2.width = 256; cv2.height = 40;
+      const g = cv2.getContext("2d"); g.fillStyle = c; g.fillRect(0, 0, 256, 40); g.fillStyle = "rgba(0,0,0,.78)"; g.font = "900 30px Rubik, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText(words[i % words.length], 128, 22); const t = new THREE.CanvasTexture(cv2); t.encoding = THREE.sRGBEncoding;
+      cityInst(grp, "box", new THREE.MeshBasicMaterial({ map: t, color: 0xdddddd, toneMapped: false }), signs[i]);
+    });
     AWN.forEach((c, i) => cityInst(grp, "box", mat(c), awns[i])); cityInst(grp, "box", mat("#1c1d22"), doors);
     // string lights high above the streets (4.3 m and up), from building to building
     const bulbs = CITY_COLS.map(() => []), wires = []; let bi = 0;
