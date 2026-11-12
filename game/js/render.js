@@ -387,9 +387,9 @@ function setTilt(x, y, z, h, sc, tip) {
 }
 
 function initPeople() {
-  const rimify = m => { m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+  const rimify = m => { m.onBeforeCompile = sh => { sh.uniforms.uRim = RIM; sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform float uRim;").replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
     float rimF = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
-    totalEmissiveRadiance += diffuseColor.rgb * pow(rimF, 2.6) * 0.42;`); }; m.customProgramCacheKey = () => "rim"; return m; };
+    totalEmissiveRadiance += diffuseColor.rgb * pow(rimF, 2.6) * uRim;`); }; m.customProgramCacheKey = () => "rim"; return m; };
   const N = 6000, std = o => rimify(new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {})));
   const mk = (geo, material, n) => {
     const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -834,6 +834,7 @@ function toWorld(ev) {
 let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a raised crane shot looking down
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
 // living water: rolling wave normals for sun glints and a sky-colored sheen at grazing angles
+const RIM = { value: .42 };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
   m.onBeforeCompile = sh => {
@@ -1096,7 +1097,7 @@ function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
   const tt = now / 1000, live = phase === "show" || phase === "evac";
-  WATER.time.value = tt; WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
+  RIM.value = scene.night ? .9 : .42; WATER.time.value = tt; WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
   // blackout: the light fades slowly and comes back all at once
   const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
   // golden hour: on day venues the light warms toward sunset as the show goes on, and stays warm for the way out
