@@ -23,7 +23,7 @@ function cruFoamTex() {
 }
 // the open sea around the ship, with foam churning along the hull
 SCENE_MODELS.cru_sea = (g, u) => {
-  const tex = cruWaterTex(), sea = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshStandardMaterial({ map: tex, roughness: .25, metalness: .1 }));
+  const tex = cruWaterTex(), sea = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), waterify(new THREE.MeshStandardMaterial({ map: tex, roughness: .14, metalness: .1 }), 1));
   sea.rotation.x = -Math.PI / 2; sea.position.set(0, -.02, 0); sea.receiveShadow = true; g.add(sea);
   const ft = cruFoamTex(), foams = [];
   for (const [x, flip] of [[-2.2, 1], [WW + 2.2, -1]]) {   // the group sits at the venue center: offsets are relative

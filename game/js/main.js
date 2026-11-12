@@ -24,6 +24,7 @@ function onFall(x, y) {
   if (dead === 0) announce("war_medic");
   if (ghosts.length < 260 && (dead < 40 || Math.random() < .45)) ghosts.push({ x, y, t: 0, life: 4.2 + Math.random() * 1.5, ph: Math.random() * 6.28, s: 1.15 + Math.random() * .35 });
   rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream");
+  for (let k = 0; k < 4; k++) puff(x + (Math.random() - .5) * .6, y + (Math.random() - .5) * .6, .15, scene.night ? "#6a6870" : "#e6dcc4", .18 + Math.random() * .1, .8, .35);   // dust where they hit the floor
   if (dead === 0) { G3.wantPhoto = true; slowT = 1.8; focus = { x, y }; caption("Ouch!", true, 1500); }
 }
 function updateFx(dt) {

@@ -367,7 +367,10 @@ function setTilt(x, y, z, h, sc, tip) {
 }
 
 function initPeople() {
-  const N = 6000, std = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {}));
+  const rimify = m => { m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+    float rimF = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+    totalEmissiveRadiance += diffuseColor.rgb * pow(rimF, 2.6) * 0.42;`); }; m.customProgramCacheKey = () => "rim"; return m; };
+  const N = 6000, std = o => rimify(new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {})));
   const mk = (geo, material, n) => {
     const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); m.instanceColor.setUsage(THREE.DynamicDrawUsage);
@@ -399,6 +402,10 @@ function initPeople() {
   P.balloon = mk(new THREE.SphereGeometry(.2, 10, 8), std({ roughness: .25, metalness: .1 }), N);
   P.string = mk(new THREE.BoxGeometry(.012, .9, .012), std(), N * 2);
   P.umb = mk(new THREE.ConeGeometry(.5, .2, 12), std({ roughness: .55, side: THREE.DoubleSide }), N);
+  // sweat drops on the squeezed, cartoon stars circling the heads of the trampled
+  P.drop = mk(new THREE.SphereGeometry(.035, 8, 6), new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: .05, metalness: .1, emissive: 0x1a4a6a }), N); P.drop.castShadow = false;
+  const starG = new THREE.OctahedronGeometry(.11, 0); starG.scale(1, 1, .4);
+  P.star = mk(starG, new THREE.MeshBasicMaterial({ toneMapped: false }), 1800); P.star.castShadow = false;
 }
 // body base: rotation, scale and position (optionally lying down)
 function setBase(x, y, z, h, sc, lying) {
@@ -426,7 +433,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
+  const C = { drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -509,6 +516,10 @@ function renderPeople(tt, dtR, vb) {
         if (FACE.state === 2) { LE[4] *= .45; LE[8] *= 1.7; } else { LE[4] *= .6 + o * 1.1; LE[8] *= .7 + o * .5; }
         emit(P.mouth, C.mouth, place(LE)); colW(P.mouth, C.mouth++, .23, .06, .06);
       }
+      if (FACE.state === 1 && C.drop < cap) {   // a sweat drop slides down the side of the head
+        const q = (tt * .9 + a.ph) % 1; LE.set(LOCAL.mouth); LE[0] = 1.5; LE[4] = 2.1; LE[8] = 1.5; LE[9] = .1; LE[10] = 1.8 - q * .3; LE[11] = (a.ph % 2 < 1 ? -1 : 1) * .2;
+        emit(P.drop, C.drop, place(LE)); colW(P.drop, C.drop++, .8, .95, 1.2);
+      }
     }
     FACE.state = 0; FACE.open = 0;
     const hc = HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
@@ -563,8 +574,22 @@ function renderPeople(tt, dtR, vb) {
     if (a.m === 2) { emit(P.long, C.long, LOCAL.long); colW(P.long, C.long++, hc[0] * k, hc[1] * k, hc[2] * k); }
     if (a.m === 3) { const cc = SHIRT_L[a.ac]; emit(P.pack, C.pack, LOCAL.pack); colW(P.pack, C.pack++, cc[0] * k, cc[1] * k, cc[2] * k); }
   };
-  for (const a of ag) { if (a.x < vb[0] || a.x > vb[1] || a.y < vb[2] || a.y > vb[3]) continue; draw(a, false); }
-  for (const a of fallen) { if (C.torso >= cap - 1) break; draw(a, true); }
+  // street camera: nobody stands in front of the lens
+  const ccx = G3.camera.position.x, ccz = G3.camera.position.z, near = cine > .01 ? 2.4 * 2.4 : -1;
+  for (const a of ag) { if (a.x < vb[0] || a.x > vb[1] || a.y < vb[2] || a.y > vb[3]) continue; if ((a.x - ccx) ** 2 + (a.y - ccz) ** 2 < near) continue; draw(a, false); }
+  for (const a of fallen) {
+    if (C.torso >= cap - 1) break; draw(a, true);
+    const age = t - (a.fallAt ?? -99);
+    if (age > .45 && age < 5 && C.star < 1797) {   // dizzy stars over the head for a few seconds
+      const hx = Bm[1] * 1.62 + Bt[0], hy = Bm[4] * 1.62 + Bt[1], hz = Bm[7] * 1.62 + Bt[2], fade = Math.min(1, (5 - age) / .8);
+      for (let k = 0; k < 3; k++) {
+        const an = tt * 4.5 + k * 2.094 + a.ph, o = C.star * 16, s = .9 * fade * a.sc, A = P.star.instanceMatrix.array, ca = Math.cos(tt * 6 + k), sa = Math.sin(tt * 6 + k);
+        A.fill(0, o, o + 16); A[o] = ca * s; A[o + 2] = -sa * s; A[o + 5] = s; A[o + 8] = sa * s; A[o + 10] = ca * s; A[o + 15] = 1;
+        A[o + 12] = hx + Math.cos(an) * .3; A[o + 13] = hy + .3 + Math.sin(an * 2) * .04; A[o + 14] = hz + Math.sin(an) * .3;
+        colW(P.star, C.star++, 2.2, 1.8, .35);
+      }
+    }
+  }
   for (const key in C) { const m = P[key]; m.count = C[key]; m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true; }
 }
 
@@ -788,6 +813,55 @@ function toWorld(ev) {
 // street-level camera: a slow orbit among the crowd, looking across it instead of down at it
 let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a raised crane shot looking down
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
+// living water: rolling wave normals for sun glints and a sky-colored sheen at grazing angles
+const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
+function waterify(m, scale) {
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uTime = WATER.time; sh.uniforms.uSky = WATER.sky;
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWP;").replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vWP; uniform float uTime; uniform vec3 uSky;")
+      .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
+      { vec2 p = vWP.xz * ${scale.toFixed(2)}; float a = uTime;
+        vec3 wn = vec3(sin(p.x * .9 + a * 1.3) * .5 + sin(p.x * 2.3 + p.y * 1.7 - a * 2.1) * .3 + sin(p.y * 5.1 + a * 2.9) * .18,
+                       6.0,
+                       cos(p.y * .8 - a * 1.1) * .5 + sin(p.x * 1.9 - p.y * 2.6 + a * 1.7) * .3 + cos(p.x * 4.7 - a * 3.3) * .18);
+        normal = normalize((viewMatrix * vec4(normalize(wn), 0.0)).xyz); }`)
+      .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+      totalEmissiveRadiance += uSky * pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 5.0) * .3;`);
+  };
+  m.customProgramCacheKey = () => "water" + scale; return m;
+}
+// sky dome for the street camera: gradient, sun glow, drifting clouds by day, stars and a moon by night
+function skyDome() {
+  if (G3.sky) return G3.sky;
+  const m = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false,
+    uniforms: { hor: { value: new THREE.Color() }, top: { value: new THREE.Color() }, night: { value: 0 }, dim: { value: 1 }, time: { value: 0 }, sunD: { value: new THREE.Vector3(-.45, .38, -.55).normalize() } },
+    vertexShader: `varying vec3 vD; void main() { vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position.z = gl_Position.w * .9999; }`,
+    fragmentShader: `uniform vec3 hor, top, sunD; uniform float night, dim, time; varying vec3 vD;
+      float h2(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n2(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }
+      void main() {
+        vec3 d = normalize(vD); float y = d.y;
+        vec3 c = mix(hor, top, pow(clamp(y, 0., 1.), .55));
+        c = mix(c, hor * .92, smoothstep(.0, -.08, y));
+        float sd = max(dot(d, sunD), 0.);
+        if (night < .5) {
+          c += vec3(1., .9, .7) * (pow(sd, 6.) * .22 + pow(sd, 60.) * .5) + vec3(1., .97, .9) * smoothstep(.9993, .9996, sd) * 3.;
+          vec2 uv = d.xz / (y + .18) * 2.2 + vec2(time * .012, time * .004);
+          float cl = n2(uv) * .55 + n2(uv * 2.1) * .3 + n2(uv * 4.3) * .15; cl = smoothstep(.55, .78, cl) * smoothstep(0., .25, y);
+          c = mix(c, vec3(1.) * (.92 + .08 * y) + vec3(.06, .03, 0.) * pow(sd, 4.), cl * .85);
+        } else {
+          vec2 g = floor(d.xz / (y + .35) * 160.); float st = step(.9965, h2(g)) * smoothstep(.02, .3, y) * (.6 + .4 * sin(time * 3. + h2(g + 7.) * 40.));
+          c += vec3(.9, .95, 1.) * st * 1.4;
+          vec3 md = normalize(vec3(.5, .42, -.6)); float mm = max(dot(d, md), 0.);
+          c += vec3(.95, .95, .85) * smoothstep(.9992, .9995, mm) * 1.6 + vec3(.2, .25, .45) * pow(mm, 30.) * .5;
+        }
+        gl_FragColor = vec4(c * dim, 1.);
+      }` });
+  G3.sky = new THREE.Mesh(new THREE.SphereGeometry(500, 32, 16), m); G3.sky.frustumCulled = false; G3.sky.renderOrder = -10; G3.scene.add(G3.sky);
+  return G3.sky;
+}
+const SKY_TOP_D = new THREE.Color(0x3f8fe0), SKY_TOP_N = new THREE.Color(0x02040c);
 function cineCamera(dt) {
   cineAng += dt * .11;
   const night = !!scene.night, c = G3.camera, d = cineDist, h = cineH || 1.9 + d * .16;
@@ -800,6 +874,8 @@ function cineCamera(dt) {
   G3.scene.background.copy(SKY_TMP);
   if (!G3.scene.fog) G3.scene.fog = new THREE.Fog(0xffffff, 30, 190);
   G3.scene.fog.color.copy(SKY_TMP); G3.skirt.visible = true;
+  const sky = skyDome(), su = sky.material.uniforms; sky.visible = true; sky.position.copy(c.position);
+  su.hor.value.copy(night ? SKY_NIGHT : SKY_DAY); su.top.value.copy(night ? SKY_TOP_N : SKY_TOP_D); su.night.value = night ? 1 : 0; su.dim.value = 1 - .85 * black; su.time.value = performance.now() / 1000;
   const sun = G3.sun; sun.target.position.set(cx, 0, cy); sun.position.set(cx - 22, 60, cy - 28);
   const sc = sun.shadow.camera, ext = 34; sc.left = -ext; sc.right = ext; sc.top = ext * 1.4; sc.bottom = -ext * 1.4; sc.updateProjectionMatrix();
   return [-1e9, 1e9, -1e9, 1e9];
@@ -810,7 +886,7 @@ function updateCamera(dt) {
     cine = 0; const c = G3.camera; c.fov = 30; c.near = 1; c.far = 500; c.updateProjectionMatrix();
     G3.scene.fog = null; G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
   }
-  G3.skirt.visible = false;
+  G3.skirt.visible = false; if (G3.sky) G3.sky.visible = false;
   const base = ((LAND ? WW : WH) / 2) / Math.tan(15 * Math.PI / 180), z = cam.z, h = base / z;
   const tilt = clamp((z - 1) * .5, 0, .42);
   const dx = LAND ? -1 : 0, dz = LAND ? 0 : 1;   // the screen's "down" direction in the world
@@ -997,6 +1073,7 @@ function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
   const tt = now / 1000, live = phase === "show" || phase === "evac";
+  WATER.time.value = tt; WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
   // blackout: the light fades slowly and comes back all at once
   const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
   G3.hemi.intensity = scene.light.hemi * (1 - .8 * black); G3.sun.intensity = scene.light.sunI * (1 - .9 * black);
