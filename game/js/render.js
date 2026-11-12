@@ -207,8 +207,14 @@ function buildingUV(geo) {
   geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); return geo;
 }
 function worldUV(geo) {
-  const p = geo.attributes.position, uv = new Float32Array(p.count * 2);
-  for (let i = 0; i < p.count; i++) { uv[i * 2] = p.getX(i) / WW; uv[i * 2 + 1] = 1 - p.getZ(i) / SH; }
+  // tops show the painted floor plan; side walls take one solid color from just inside the piece, instead of smeared streaks
+  const p = geo.attributes.position, n = geo.attributes.normal, uv = new Float32Array(p.count * 2);
+  geo.computeBoundingBox(); const bb = geo.boundingBox, cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), z = p.getZ(i);
+    if (n && Math.abs(n.getY(i)) < .5) { x = cx + (x - cx) * .2; z = cz + (z - cz) * .2; }
+    uv[i * 2] = x / WW; uv[i * 2 + 1] = 1 - z / SH;
+  }
   geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); return geo;
 }
 function buildStatic3D() {
