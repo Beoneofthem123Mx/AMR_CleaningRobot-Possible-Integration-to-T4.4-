@@ -900,7 +900,7 @@ function toWorld(ev) {
 let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a raised crane shot looking down
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
 // living water: rolling wave normals for sun glints and a sky-colored sheen at grazing angles
-const RIM = { value: .42 }, DROP_SEEN = new Set();
+const RIM = { value: .42 }, DROP_SEEN = new Set(); let prints = [];
 let SHOE_L = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
@@ -1026,6 +1026,12 @@ function updateFxLayer(live) {
   } else if (phase === "plan") G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height);
   g.scale(k, k);
   // red shadow under those who fell
+  // footprints and tire marks of heavy visitors
+  for (const [x, y, tr, an] of prints) {
+    g.fillStyle = "rgba(60,45,30,.22)";
+    if (tr) { g.save(); g.translate(x, y); g.rotate(an); g.fillRect(-.5, -.18, 1, .36); g.restore(); }
+    else { g.beginPath(); g.arc(x, y, .32, 0, 7); g.fill(); }
+  }
   // under each trampled person: a comic "impact" starburst that pops out as they land
   for (const a of fallen) {
     const age = t - (a.fallAt ?? -9), q = Math.min(1, age / .35), r = (.55 + .45 * (1 - Math.pow(1 - q, 3))) * (age < .35 ? 1.25 - .25 * q : 1), rot = (a.fallLimb || 0);
@@ -1241,6 +1247,10 @@ function render3D(now, dtR) {
   for (const m of movers.concat(performers, guards)) {
     if (!m.obj) { m.obj = buildModel(m); if (!m.obj.parent) G3.moverGrp.add(m.obj); if (phase === "plan" && m.kind === "guard") m.dropT = performance.now(); }
     if (m.kind === "flare" && Math.random() < .7) puff(m.x + (Math.random() - .5) * .3, m.y, 1.6, m.col, .25, 3.5, 1.4);
+    if ((m.kind === "elephant" || m.kind === "zoo_hippo" || m.kind === "tractor" || m.kind === "cheese_wheel") && live) {   // heavy things stamp marks into the floor
+      m.stepD = (m.stepD || 0) + Math.hypot(m.x - (m.px ?? m.x), m.y - (m.py ?? m.y)); m.px = m.x; m.py = m.y;
+      if (m.stepD > 1.1 && m.x > 0 && m.x < WW && m.y > 0 && m.y < SH) { m.stepD = 0; m.side = -(m.side || 1); const nx = -Math.sin(m.ang) * .45 * m.side, ny = Math.cos(m.ang) * .45 * m.side; prints.push([m.x + nx, m.y + ny, m.kind === "tractor" ? 1 : 0, m.ang]); if (prints.length > 400) prints.shift(); }
+    }
     if (m.dust && m.y > 0 && m.y < WH && Math.random() < .6) puff(m.x - Math.cos(m.ang) * .9, m.y - Math.sin(m.ang) * .9, .3, "#c9a77a", .3, 1.6, .5);
     alive.add(m.obj);
     const dq = m.dropT ? Math.min(1, (performance.now() - m.dropT) / 450) : 1; if (dq >= 1) m.dropT = 0;   // guards hop into place

@@ -4,7 +4,7 @@ const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", 
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
 let camFree = null;   // {z, x, y} while the player controls the camera (camMode 3)
 let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [];
-function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
+function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; prints = []; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
 function confettiAt(x, y, h, n, spread) {
   for (let i = 0; i < n && confetti.length < 1400; i++) {
     const a = Math.random() * 6.283, v = Math.random() * spread;
