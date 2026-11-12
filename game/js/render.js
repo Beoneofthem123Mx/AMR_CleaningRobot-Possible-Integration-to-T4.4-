@@ -750,9 +750,11 @@ function buildModel(m) {
       const silk = m.kind === "policehorse" ? "#1f2a44" : m.silk || "#d8322b";
       if (m.kind !== "horse") {
         part(g, "box", m.kind === "policehorse" ? "#2b2f35" : "#ffffff", .6, .08, .8, 0, 1.86, 0);
-        part(g, "sph", silk, .2, .3, .24, m.kind === "racehorse" ? .2 : 0, 2.2, 0);
-        part(g, "sph", "#e0ac84", .13, .13, .13, m.kind === "racehorse" ? .32 : .02, 2.6, 0);
-        part(g, "sph", silk, .14, .08, .14, m.kind === "racehorse" ? .32 : .02, 2.7, 0);
+        const rx = m.kind === "racehorse" ? .2 : 0;   // toy rider: pear body, big head, dot eyes
+        part(g, "sph", silk, .24, .32, .26, rx, 2.2, 0);
+        part(g, "sph", "#e0ac84", .19, .19, .19, rx + .12, 2.64, 0);
+        for (const sd of [-1, 1]) part(g, "sph", "#111214", .03, .04, .03, rx + .3, 2.68, sd * .07);
+        part(g, "sph", silk, .2, .1, .2, rx + .1, 2.78, 0); part(g, "box", silk, .14, .02, .22, rx + .28, 2.76, 0);
         if (m.kind === "policehorse") part(g, "box", "#ffd23a", .05, .12, .25, 0, 2.25, .2);
       }
       break;
