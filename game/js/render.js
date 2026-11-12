@@ -176,6 +176,7 @@ function init3D() {
   G3.ghostEye = inst(new THREE.SphereGeometry(.045, 6, 4), new THREE.MeshBasicMaterial({ color: 0x15171c }), 520);
   G3.ghostHalo = inst(new THREE.TorusGeometry(.17, .03, 6, 16), new THREE.MeshBasicMaterial({ toneMapped: false }), 260);
   G3.puff = inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: .3, depthWrite: false }), 800);
+  SHOE_L = toLin(["#1c1c20", "#f2f2f2", "#d8322b", "#2f6fc4", "#6b4a2b", "#1c1c20", "#e8b631"]);
   SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
   initPeople();
   initPost();
@@ -408,6 +409,7 @@ function initPeople() {
   P.mouth = mk(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a1414, roughness: .5 }), N); P.mouth.castShadow = false;
   P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
   P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
+  P.shoe = mk(new THREE.SphereGeometry(.075, 8, 6), std({ roughness: .45 }), N * 2);   // chunky toy shoes
   P.sign = mk(new THREE.BoxGeometry(.035, .42, .58), std({ roughness: .8 }), N);
   P.hair = mk(new THREE.SphereGeometry(.138, 8, 4, 0, Math.PI * 2, 0, Math.PI * .56), std({ roughness: .9 }), N);
   P.cap = mk(new THREE.CylinderGeometry(.14, .145, .1, 10), std({ roughness: .5 }), N);
@@ -453,7 +455,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
+  const C = { shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -591,6 +593,12 @@ function renderPeople(tt, dtR, vb) {
     const pr = lg[0] + (hq[0] - lg[0]) * hm * .8, pg = lg[1] + (hq[1] - lg[1]) * hm * .8, pb = lg[2] + (hq[2] - lg[2]) * hm * .8;
     emit(P.leg, C.leg, limb(0, .62, -.12, legL * .8, .56)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
     emit(P.leg, C.leg, limb(0, .62, .12, legR * .8, .56)); colW(P.leg, C.leg++, pr * k, pg * k, pb * k);
+    const shc = SHOE_L[(a.pc + a.c) % SHOE_L.length];
+    for (const [th, z] of [[legL * .8, -.12], [legR * .8, .12]]) {
+      LE[0] = 1.55; LE[1] = 0; LE[2] = 0; LE[3] = 0; LE[4] = .7; LE[5] = 0; LE[6] = 0; LE[7] = 0; LE[8] = 1.1;
+      LE[9] = Math.sin(th) * .6 + .05; LE[10] = .62 - Math.cos(th) * .6 + .02; LE[11] = z;
+      emit(P.shoe, C.shoe, LE); colW(P.shoe, C.shoe++, shc[0] * k, shc[1] * k, shc[2] * k);
+    }
     if (a.m === 2) { emit(P.long, C.long, LOCAL.long); colW(P.long, C.long++, hc[0] * k, hc[1] * k, hc[2] * k); }
     if (a.m === 3) { const cc = SHIRT_L[a.ac]; emit(P.pack, C.pack, LOCAL.pack); colW(P.pack, C.pack++, cc[0] * k, cc[1] * k, cc[2] * k); }
   };
@@ -834,7 +842,8 @@ function toWorld(ev) {
 let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a raised crane shot looking down
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
 // living water: rolling wave normals for sun glints and a sky-colored sheen at grazing angles
-const RIM = { value: .42 };   // rim light strength on people (stronger at night so the crowd reads in the dark)
+const RIM = { value: .42 };
+let SHOE_L = null;   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
   m.onBeforeCompile = sh => {
@@ -1097,7 +1106,10 @@ function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
   const tt = now / 1000, live = phase === "show" || phase === "evac";
-  RIM.value = scene.night ? .9 : .42; WATER.time.value = tt; WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
+  RIM.value = scene.night ? .9 : .42; WATER.time.value = tt;
+  // rain: the floor slowly gets wet (darker and shiny), and dries after the show
+  const wetT = live && MOD && MOD.rain ? 1 : 0; G3.wet = (G3.wet || 0) + (wetT - (G3.wet || 0)) * Math.min(1, dtR * (wetT ? .25 : .5));
+  { const gm = G3.ground.material, w = G3.wet; gm.roughness = .95 - .7 * w; gm.metalness = .15 * w; gm.color.setScalar(1 - .28 * w); } WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
   // blackout: the light fades slowly and comes back all at once
   const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
   // golden hour: on day venues the light warms toward sunset as the show goes on, and stays warm for the way out
