@@ -93,8 +93,26 @@ function inst0(geo, material, n, sc) {
   const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false;
   m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); sc.add(m); return m;
 }
+// a small flock of birds circling high over day venues (their shadows cross the crowd)
+function birds(tt, on) {
+  if (!G3.birds) {
+    G3.birds = []; const m = mat("#2b2d33", { roughness: .8 });
+    for (let i = 0; i < 7; i++) {
+      const b = new THREE.Group(); part(b, "sph", m, .16, .1, .1, 0, 0, 0);
+      const wl = pivot(b, 0, 0, -.06), wr = pivot(b, 0, 0, .06); part(wl, "box", m, .2, .02, .55, 0, 0, -.27); part(wr, "box", m, .2, .02, .55, 0, 0, .27);
+      b.userData = { wl, wr, ph: i * .9, r: 9 + (i % 3) * 3, off: [(i % 4) * 1.3, (i % 3) * 1.1] }; b.traverse(o => { o.castShadow = true; }); G3.scene.add(b); G3.birds.push(b);
+    }
+  }
+  for (const b of G3.birds) {
+    b.visible = on; if (!on) continue;
+    const u = b.userData, a = tt * .16 + u.ph * .12;
+    b.position.set(WW / 2 + Math.cos(a) * u.r + u.off[0], 13 + Math.sin(tt * .7 + u.ph) * .6, SH * .45 + Math.sin(a) * u.r * 1.3 + u.off[1]);
+    b.rotation.y = -a - Math.PI / 2; const f = Math.sin(tt * 9 + u.ph * 4) * .7; u.wl.rotation.x = f; u.wr.rotation.x = -f;
+  }
+}
 function updateAmbient(tt, dtR) {
   const night = !!scene.night;
+  birds(tt, !night && !(MOD && MOD.rain));
   G3.clouds.visible = !night;
   if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
   G3.motes.visible = night;
