@@ -135,6 +135,7 @@ function loadScene(key) {
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = sandbox ? SLOTS : scene.maxGates;
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   buildWorld(); if (typeof loadPlan === "function") loadPlan(); backToPlan();
+  if (!window.__manual) { cam.z = 1.35; cam.y = WH * .6; }   // arriving at a venue: start close to the gates and pull back to the whole plan
 }
 $("#bScene").addEventListener("click", chooser);
 $("#card").addEventListener("click", e => {
