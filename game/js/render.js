@@ -1030,11 +1030,19 @@ function drawOverlay() {
   const g = octx; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, ov.width, ov.height);
   const ppm = ov.height / ((LAND ? WW : WH) / cam.z);
   g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
-  for (const q of pops) {
-    Vproj.set(q.x, 2.5 + q.t * 1.4, q.y).project(G3.camera);
-    const x = (Vproj.x + 1) / 2 * ov.width, y = (1 - Vproj.y) / 2 * ov.height, sc = 1 + Math.max(0, .25 - q.t) * 2;
+  const placed = [[ov.width / 2, ov.height * .1, ov.width * .38, ov.height * .2]], fsz = Math.round(Math.max(12, .95 * ppm));   // the counter at the top stays clear
+  g.font = `900 ${fsz}px Rubik, system-ui, sans-serif`;
+  for (const q of pops.slice().sort((a, b) => a.t - b.t)) {   // newest first: they get the free spots
+    Vproj.set(q.x, 2.5 + q.t * 1.4, q.y).project(G3.camera); if (Vproj.z > 1) continue;
+    let x = (Vproj.x + 1) / 2 * ov.width, y = (1 - Vproj.y) / 2 * ov.height; const sc = 1 + Math.max(0, .25 - q.t) * 2;
+    // keep bubbles from piling on top of each other: nudge up, or drop it if the area is crowded
+    const w = g.measureText(q.text).width * sc + 8, hgt = fsz * 1.15 * sc; let ok = false;
+    for (let tries = 0; tries < 4 && !ok; tries++) {
+      ok = !placed.some(r => Math.abs(r[0] - x) * 2 < r[2] + w && Math.abs(r[1] - y) * 2 < r[3] + hgt);
+      if (!ok) y -= hgt;
+    }
+    if (!ok) continue; placed.push([x, y, w, hgt]);
     g.save(); g.translate(x, y); g.scale(sc, sc); g.globalAlpha = Math.min(1, (1.6 - q.t) / .5);
-    g.font = `900 ${Math.round(Math.max(12, .95 * ppm))}px Rubik, system-ui, sans-serif`;
     g.lineWidth = Math.max(3, .22 * ppm); g.strokeStyle = "#111214"; g.strokeText(q.text, 0, 0); g.fillStyle = "#ffd23a"; g.fillText(q.text, 0, 0);
     g.restore();
   }
