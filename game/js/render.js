@@ -564,7 +564,7 @@ function renderPeople(tt, dtR, vb) {
       if (FACE.state === 3) {
         for (const [ex, ez] of [[.19, -.07], [.19, .07]]) for (const r of [.8, -.8]) { XB[0] = 1; XB[1] = 0; XB[2] = 0; XB[3] = 0; XB[4] = Math.cos(r); XB[5] = Math.sin(r); XB[6] = 0; XB[7] = -Math.sin(r); XB[8] = Math.cos(r); XB[9] = ex + .01; XB[10] = 1.65; XB[11] = ez; emit(P.xbar, C.xbar, XB); colW(P.xbar, C.xbar++, .07, .07, .08); }
       } else for (const e of [LOCAL.eyeL, LOCAL.eyeR]) {
-        LE.set(e); const big = FACE.state === 1 ? 1.55 : 1, squint = FACE.state === 2 ? .35 : 1;
+        LE.set(e); const big = FACE.state === 1 ? 1.55 : 1, squint = FACE.state === 2 ? .35 : FACE.state === 0 && (tt * .35 + a.ph * .37) % 1 < .035 ? .12 : 1;   // calm people blink now and then
         LE[0] *= big; LE[4] *= big * squint; LE[8] *= big; emit(P.eye, C.eye, place(LE)); colW(P.eye, C.eye++, .07, .07, .08);
       }
       if (FACE.open > .05 || FACE.state === 2) {   // mouth: an O when scared or flailing, a wide grin when cheering
