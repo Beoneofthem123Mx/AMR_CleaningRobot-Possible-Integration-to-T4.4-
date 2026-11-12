@@ -240,6 +240,12 @@ function buildStatic3D() {
     worldUV(geo);
     const mesh = new THREE.Mesh(geo, o.kind === "player" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
     mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
+    if (o.kind === "pool" || o.kind === "jacuzzi" || o.kind === "fountain") {   // a moving water surface on top
+      if (!G3.poolMat) G3.poolMat = waterify(new THREE.MeshStandardMaterial({ color: 0x0f7fc0, roughness: .06, metalness: .05, transparent: true, opacity: .82 }), 2.2);
+      const wg = o.t === "r" ? new THREE.PlaneGeometry(o.x1 - o.x0 - .3, o.y1 - o.y0 - .3) : new THREE.CircleGeometry(Math.max(.2, o.r - .25), 28);
+      const wm = new THREE.Mesh(wg, G3.poolMat); wm.rotation.x = -Math.PI / 2;
+      wm.position.set(o.t === "r" ? (o.x0 + o.x1) / 2 : o.x, h + .012, o.t === "r" ? (o.y0 + o.y1) / 2 : o.y); grp.add(wm);
+    }
   }
   // open gates: red arches
   for (let i = 0; i < SLOTS; i++) if (gates[i]) {
@@ -827,7 +833,10 @@ function waterify(m, scale) {
                        cos(p.y * .8 - a * 1.1) * .5 + sin(p.x * 1.9 - p.y * 2.6 + a * 1.7) * .3 + cos(p.x * 4.7 - a * 3.3) * .18);
         normal = normalize((viewMatrix * vec4(normalize(wn), 0.0)).xyz); }`)
       .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
-      totalEmissiveRadiance += uSky * pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 5.0) * .3;`);
+      totalEmissiveRadiance += uSky * pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 5.0) * .3;
+      { vec2 q = vWP.xz * ${(scale * .6).toFixed(2)}; float a = uTime;   // dancing light ripples, readable from above
+        float w = sin(q.x * 3.1 + sin(q.y * 2.3 + a * 1.4) * 1.6) + sin(q.y * 2.7 + sin(q.x * 1.9 - a * 1.1) * 1.6);
+        totalEmissiveRadiance += vec3(.55, .85, 1.0) * smoothstep(1.25, 1.85, w) * .28; }`);
   };
   m.customProgramCacheKey = () => "water" + scale; return m;
 }

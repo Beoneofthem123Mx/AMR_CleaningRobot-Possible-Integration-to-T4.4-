@@ -283,6 +283,13 @@ SCENES.beach = {
   bulbs: Array.from({ length: 16 }, (_, i) => [11.5 + i * 1.85, 11]),
   beams: [{ x: 24, y: 9, a: -Math.PI / 2, sweep: .5, h: 6, white: true }, { x: 16, y: 9, a: -1.2, sweep: .35, h: 5, white: true }, { x: 32, y: 9, a: -1.9, sweep: .35, h: 5, white: true }],
   extra3D(grp) {
+    // the sea: a living water surface out to the horizon, its edge following the painted shoreline
+    const sh = new THREE.Shape(); sh.moveTo(-300, -200); sh.lineTo(BEACH_WATER(0) - .15, -200);
+    for (let y = 0; y <= 56; y += .5) sh.lineTo(BEACH_WATER(y) - .15, y);
+    sh.lineTo(BEACH_WATER(56) - .15, 300); sh.lineTo(-300, 300); sh.lineTo(-300, -200);
+    const sg = new THREE.ShapeGeometry(sh); sg.rotateX(Math.PI / 2);
+    const sea = new THREE.Mesh(sg, waterify(new THREE.MeshStandardMaterial({ color: 0x1f8fd0, roughness: .1, metalness: .05, transparent: true, opacity: .72, side: THREE.DoubleSide }), 1.3));
+    sea.position.y = .03; sea.receiveShadow = true; grp.add(sea);
     // parasol canopies over every base
     for (const [x, y, col] of BEACH_PARASOLS) SCENE_MODELS.beach_parasol(pivot(grp, x, 0, y), {}, { col, x });
     // lifeguard tower: four legs, a deck, a hut with a red roof and a flag
