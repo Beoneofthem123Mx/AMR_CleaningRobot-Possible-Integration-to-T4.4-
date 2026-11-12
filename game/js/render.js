@@ -546,11 +546,13 @@ function renderPeople(tt, dtR, vb) {
       }
     }
     FACE.state = 0; FACE.open = 0;
-    const hc = HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
+    const hc0 = HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
+    // pressure view: hair and caps take the pressure color too, so the map reads from above
+    const hc = hm > .01 ? HC.set(hc0[0] + (hq[0] - hc0[0]) * hm, hc0[1] + (hq[1] - hc0[1]) * hm, hc0[2] + (hq[2] - hc0[2]) * hm) : hc0;
     if (a.m !== 1 && hs === 4) { /* bald and proud */ }
     else if (a.m !== 1 && hs === 1) { emit(P.hair, C.hair, LOCAL.afro); colW(P.hair, C.hair++, hc[0] * k, hc[1] * k, hc[2] * k); }
     else if (a.m === 1) {
-      const cc = SHIRT_L[a.ac];
+      const cc = hm > .01 ? hc : SHIRT_L[a.ac];
       emit(P.cap, C.cap, LOCAL.cap); colW(P.cap, C.cap++, cc[0] * k, cc[1] * k, cc[2] * k);
       emit(P.brim, C.brim, LOCAL.brim); colW(P.brim, C.brim++, cc[0] * k, cc[1] * k, cc[2] * k);
     } else {
@@ -558,7 +560,7 @@ function renderPeople(tt, dtR, vb) {
       if (hs === 2) { emit(P.head, C.head, LOCAL.bun); colW(P.head, C.head++, hc[0] * k, hc[1] * k, hc[2] * k); }
       else if (hs === 3) { emit(P.head, C.head, LOCAL.tail); colW(P.head, C.head++, hc[0] * k, hc[1] * k, hc[2] * k); }
     }
-    if (a.acc && !down) {
+    if (a.acc && !down && hm < .3) {   // accessories hide during the pressure view
       const ac = SHIRT_L[a.ac];
       if (a.acc === 1) {        // balloon on a string, swaying
         LBAL[9] = -.12 + Math.sin(tt * 1.7 + a.ph) * .1; LBAL[10] = 2.72 + Math.sin(tt * 2.3 + a.ph) * .07; LBAL[11] = .3;
@@ -864,7 +866,7 @@ let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
 // living water: rolling wave normals for sun glints and a sky-colored sheen at grazing angles
 const RIM = { value: .42 };
-let SHOE_L = null;   // rim light strength on people (stronger at night so the crowd reads in the dark)
+let SHOE_L = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
   m.onBeforeCompile = sh => {
