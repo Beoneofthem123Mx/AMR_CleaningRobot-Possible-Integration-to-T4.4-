@@ -1253,6 +1253,11 @@ function render3D(now, dtR) {
     if (bm.white) mesh.material.color.setRGB(1, .97, .9); else mesh.material.color.setHSL(((now / 22 + i * 60) % 360) / 360, 1, .6);
     mesh.lookAt(bm.x + Math.cos(ang) * 20, 0, bm.y + Math.sin(ang) * 20);
   });
+  // stage smoke machines puff during the drop at night venues
+  if (scene.night && live && surgeT > 0 && scene.beams.length && Math.random() < .5) {
+    const bm = scene.beams[(Math.random() * scene.beams.length) | 0];
+    puff(bm.x + (Math.random() - .5) * 3, bm.y + 1 + Math.random() * 2, .4, "#b9c2d6", .5 + Math.random() * .4, 3.2, .25);
+  }
   for (const lm of G3.lasers || []) {   // lasers sweep with the music, wild during the drop
     const on = live && fullAt ? (surgeT > 0 ? 1 : .35) : 0, ph = lm.userData.ph, sp = surgeT > 0 ? 1.6 : .5;
     lm.visible = on > 0; lm.material.opacity = on * (.55 + .45 * Math.sin(tt * 9 + ph * 3));
