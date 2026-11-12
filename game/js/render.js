@@ -337,7 +337,7 @@ const Bm = new Float32Array(9), Bt = new Float32Array(3), LB = new Float32Array(
 const loc = (sx, sy, sz, x, y, z) => new Float32Array([sx, 0, 0, 0, sy, 0, 0, 0, sz, x, y, z]);
 const LOCAL = {
   torso: loc(1, 1, 1.05, 0, .98, 0), head: loc(1, 1, 1, .02, 1.6, 0), hair: loc(1.5, 1.35, 1.5, -.045, 1.655, 0),
-  eyeL: loc(1, 1.25, 1, .19, 1.64, -.07), eyeR: loc(1, 1.25, 1, .19, 1.64, .07),
+  eyeL: loc(1, 1.25, 1, .19, 1.64, -.07), eyeR: loc(1, 1.25, 1, .19, 1.64, .07), mouth: loc(.5, 1, 1, .205, 1.53, 0),
   afro: loc(2.05, 1.9, 2.05, -.04, 1.69, 0), bun: loc(.5, .5, .5, -.1, 1.86, 0), tail: loc(.55, 1, .4, -.23, 1.5, 0),
   sign: loc(1, 1, 1, .08, 2.42, .27), signPole: loc(1.6, .55, 1.6, .08, 2.02, .27), flag: loc(1, .8, 1.25, .08, 2.5, -.2),
   cap: loc(1.45, 1.05, 1.45, -.02, 1.79, 0), brim: loc(1.25, 1, 1.15, .2, 1.765, 0), long: loc(1.3, 1, 1.4, -.17, 1.5, 0), pack: loc(1, 1, 1, -.2, 1.2, 0),
@@ -354,6 +354,18 @@ function wob(L, lean, rock) {
   const x = L[9], y = L[10] - py, z = L[11]; L[9] = m[0] * x + m[3] * y + m[6] * z; L[10] = m[1] * x + m[4] * y + m[7] * z + py; L[11] = m[2] * x + m[5] * y + m[8] * z;
 }
 function wobPt(src) { LW.set(src); wob(LW, WOB.lean, WOB.rock); return LW; }
+const LE = new Float32Array(12), LH = new Float32Array(12), XB = new Float32Array(12), FACE = { state: 0, open: 0, lift: 0 };
+function lifted(src) { LH.set(src); LH[10] += FACE.lift; return LH; }
+const bounceOut = q => { const n = 7.5625, d = 2.75; return q < 1 / d ? n * q * q : q < 2 / d ? n * (q -= 1.5 / d) * q + .75 : q < 2.5 / d ? n * (q -= 2.25 / d) * q + .9375 : n * (q -= 2.625 / d) * q + .984375; };
+// like setBase, but tipped backwards by "tip" radians around the body's side axis (0 = standing, PI/2 = flat on the back)
+function setTilt(x, y, z, h, sc, tip) {
+  // Bm is row-major; its columns are the body's forward, up and side axes in the world (same as setBase)
+  const c = Math.cos(h), s = Math.sin(h), ct = Math.cos(tip), st = Math.sin(tip);
+  const F = [c * ct, st, s * ct], U = [-c * st, ct, -s * st], S = [-s, 0, c];   // forward tips up, up tips backwards
+  for (let i = 0; i < 3; i++) { Bm[i * 3] = F[i] * sc; Bm[i * 3 + 1] = U[i] * sc; Bm[i * 3 + 2] = S[i] * sc; }
+  Bt[0] = x; Bt[1] = y; Bt[2] = z;
+}
+
 function initPeople() {
   const N = 6000, std = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {}));
   const mk = (geo, material, n) => {
@@ -369,6 +381,8 @@ function initPeople() {
   P.torso = mk(pearGeo, std({ roughness: .58 }), N);
   P.head = mk(new THREE.SphereGeometry(.2, 14, 10), std({ roughness: .5 }), N);
   P.eye = mk(new THREE.SphereGeometry(.034, 6, 5), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .25 }), N * 2); P.eye.castShadow = false;
+  P.xbar = mk(new THREE.BoxGeometry(.02, .1, .022), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .4 }), N * 2); P.xbar.castShadow = false;   // X eyes of the trampled
+  P.mouth = mk(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a1414, roughness: .5 }), N); P.mouth.castShadow = false;
   P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
   P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
   P.sign = mk(new THREE.BoxGeometry(.035, .5, .72), std({ roughness: .8 }), N);
@@ -412,14 +426,22 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { eye: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
+  const C = { eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
-    if (down) { setBase(a.x, .17, a.y, a.h, a.sc, true); armL = 2.9; armR = 2.2; legL = .25; legR = -.2; }
+    if (down) {
+      // rag-doll fall: topple backwards with a bounce, limbs flailing, then lie spread-eagled
+      const q = clamp((t - (a.fallAt ?? -9)) / .7, 0, 1), e = q < 1 ? bounceOut(q) : 1, fl = (1 - q) * (1 - q);
+      setTilt(a.x, .04 + .2 * e + Math.sin(q * Math.PI) * .35, a.y, a.h + (a.fallSpin || 0) * e, a.sc, e * Math.PI / 2);
+      const ph = tt * 22 + (a.fallLimb || 0);
+      armL = 2.4 + .5 * Math.sin(a.fallLimb || 0) + Math.sin(ph) * 1.4 * fl; armR = 2.1 + .6 * Math.cos(a.fallLimb || 0) + Math.cos(ph * 1.3) * 1.4 * fl;
+      legL = .55 + Math.sin(ph * .9) * .8 * fl; legR = -.5 + Math.cos(ph * 1.1) * .8 * fl;
+      FACE.state = 3; FACE.open = fl;
+    }
     else if (surging && a.dance && ((a.ph * 997) | 0) % 70 === 0) {
       // crowd surfing: carried overhead during the drop, waving
-      setBase(a.x, 1.72 + Math.sin(tt * 5 + a.ph) * .07, a.y, a.h + Math.sin(tt * .8 + a.ph) * .6, a.sc, true);
+      setBase(a.x, 1.72 + Math.sin(tt * 5 + a.ph) * .07, a.y, a.h + Math.sin(tt * .8 + a.ph) * .6, a.sc, true); FACE.state = 2; FACE.open = .8;
       armL = 2.7 + Math.sin(tt * 9 + a.ph) * .3; armR = 2.7 - Math.sin(tt * 9 + a.ph) * .3; legL = Math.sin(tt * 7) * .3; legR = -legL;
     } else {
       const sp = Math.hypot(a.vx, a.vy), ws = a.ws || 0;
@@ -460,14 +482,35 @@ function renderPeople(tt, dtR, vb) {
     r *= k; g *= k; b *= k;
     const bw = a.bw || 1;   // build: slim to chunky
     LT.set(LOCAL.torso); LT[0] *= bw; LT[8] *= bw;
+    if (!down) {   // soft body: stretch on the way up, squash on landing
+      const st = 1 + clamp(bob, 0, .4) * .9 - (bob < .02 && (a.dance || a.ws === 1) ? .07 : 0), sq = 1 / Math.sqrt(st);
+      LT[0] *= sq; LT[1] *= sq; LT[2] *= sq; LT[3] *= st; LT[4] *= st; LT[5] *= st; LT[6] *= sq; LT[7] *= sq; LT[8] *= sq; LT[10] = LOCAL.torso[10] * (1 + (st - 1) * .4);
+      FACE.lift = (st - 1) * .45;
+    } else FACE.lift = 0;
     if (!down) {   // wobble: lean forward with speed and rock from foot to foot, the head follows
       const spd = Math.min(1.4, Math.hypot(a.vx, a.vy)), lean = spd * .16 + (a.ps > PCRIT * .55 ? .12 : 0), rock = Math.sin(a.wp) * .11 * Math.min(1, spd + .3);
       wob(LT, lean, rock); WOB.lean = lean; WOB.rock = rock;
     }
     emit(P.torso, C.torso, LT); colW(P.torso, C.torso++, r, g, b);
     const skn = SKIN_L[a.sk];
-    const HD = down ? LOCAL.head : wobPt(LOCAL.head); emit(P.head, C.head, HD); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
-    if (detail || cine > .01) for (const e of [LOCAL.eyeL, LOCAL.eyeR]) { emit(P.eye, C.eye, down ? e : wobPt(e)); colW(P.eye, C.eye++, .07, .07, .08); }
+    const HD = down ? LOCAL.head : wobPt(lifted(LOCAL.head)); emit(P.head, C.head, HD); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
+    if (detail) {
+      // expressions: 0 calm, 1 squeezed (wide eyes, O mouth), 2 cheering (squint, big grin), 3 trampled (X eyes)
+      if (!down && FACE.state !== 2) { const sq = a.ps / PCRIT; FACE.state = sq > .55 ? 1 : (surging || cheerT > 0) && a.dance ? 2 : 0; FACE.open = sq > .55 ? Math.min(1, (sq - .4) * 1.6) : FACE.state === 2 ? .6 : 0; }
+      const place = L => down ? L : wobPt(lifted(L));
+      if (FACE.state === 3) {
+        for (const [ex, ez] of [[.19, -.07], [.19, .07]]) for (const r of [.8, -.8]) { XB[0] = 1; XB[1] = 0; XB[2] = 0; XB[3] = 0; XB[4] = Math.cos(r); XB[5] = Math.sin(r); XB[6] = 0; XB[7] = -Math.sin(r); XB[8] = Math.cos(r); XB[9] = ex + .01; XB[10] = 1.65; XB[11] = ez; emit(P.xbar, C.xbar, XB); colW(P.xbar, C.xbar++, .07, .07, .08); }
+      } else for (const e of [LOCAL.eyeL, LOCAL.eyeR]) {
+        LE.set(e); const big = FACE.state === 1 ? 1.55 : 1, squint = FACE.state === 2 ? .35 : 1;
+        LE[0] *= big; LE[4] *= big * squint; LE[8] *= big; emit(P.eye, C.eye, place(LE)); colW(P.eye, C.eye++, .07, .07, .08);
+      }
+      if (FACE.open > .05 || FACE.state === 2) {   // mouth: an O when scared or flailing, a wide grin when cheering
+        LE.set(LOCAL.mouth); const o = FACE.open;
+        if (FACE.state === 2) { LE[4] *= .45; LE[8] *= 1.7; } else { LE[4] *= .6 + o * 1.1; LE[8] *= .7 + o * .5; }
+        emit(P.mouth, C.mouth, place(LE)); colW(P.mouth, C.mouth++, .23, .06, .06);
+      }
+    }
+    FACE.state = 0; FACE.open = 0;
     const hc = HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
     if (a.m !== 1 && hs === 4) { /* bald and proud */ }
     else if (a.m !== 1 && hs === 1) { emit(P.hair, C.hair, LOCAL.afro); colW(P.hair, C.hair++, hc[0] * k, hc[1] * k, hc[2] * k); }

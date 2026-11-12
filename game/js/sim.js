@@ -267,7 +267,7 @@ function step() {
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
     if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? .75 : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? 1.4 : .4));
-    if (a.dmg >= 1) { fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
+    if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
     if (evac && a.y > SH - .6) { evacuated++; continue; }
     out.push(a);
   }

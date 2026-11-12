@@ -81,8 +81,9 @@ function personModel(g, u, P, m) {
   const b = pivot(root, 0, 0, 0); u.body = b;
   if (P.dress) { part(b, "cone", P.body, .55, 1.3, .55, 0, .65, 0); }
   else for (const s of [-1, 1]) u.legs.push(leg(b, 0, .8, s * .1, .06, .8, P.legs));
-  part(b, "sph", P.body, .2, .38, .26, 0, 1.15, 0);
-  part(b, "sph", P.skin || "#e0ac84", .15, .15, .15, .02, 1.65, 0);
+  part(b, "sph", P.body, .27, .44, .3, 0, 1.0, 0); part(b, "sph", P.body, .2, .22, .22, 0, 1.34, 0);   // pear body
+  part(b, "sph", P.skin || "#e0ac84", .2, .2, .2, .02, 1.62, 0);                                            // big round head
+  if (!P.noEyes) for (const s of [-1, 1]) part(b, "sph", "#111214", .034, .042, .034, .21, 1.66, s * .07);
   const hc = P.hatCol || "#2b1d14";
   if (P.hat === "sombrero") { part(b, "cyl", hc, .55, .04, .55, 0, 1.76, 0); part(b, "cyl", hc, .17, .25, .17, 0, 1.88, 0); part(b, "cyl", "#e3b23c", .56, .02, .56, 0, 1.79, 0); }
   else if (P.hat === "cap") { part(b, "cyl", hc, .15, .09, .15, .01, 1.76, 0); part(b, "box", hc, .16, .02, .22, .13, 1.73, 0); }
@@ -93,6 +94,8 @@ function personModel(g, u, P, m) {
   else part(b, "sph", "#2b1d14", .15, .1, .15, -.02, 1.71, 0);
   u.arms = [-1, 1].map(s => { const p = pivot(b, 0, 1.4, s * .25); part(p, "cyl", P.body, .05, .6, .05, 0, -.3, 0); return p; });
   if (P.extra) P.extra(g, u, b, m);
+  // accessories drawn for the old smaller head (glasses, masks) sit a bit further out on the new one
+  for (const ch of b.children) if (ch.position.y > 1.55 && ch.position.y < 1.8 && ch.position.x > .08 && ch.position.x < .2) ch.position.x += .07;
 }
 
 // ---------- animals and objects ----------
