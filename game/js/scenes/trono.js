@@ -28,6 +28,9 @@ SCENES.trono = {
     // red carpet up to the throne
     g.fillStyle = "#b2232c"; g.fillRect(17.5, 7, 5, 59);
     g.fillStyle = "#e3b23c"; g.fillRect(17.5, 7, .2, 59); g.fillRect(22.3, 7, .2, 59);
+    g.fillStyle = "rgba(255,215,90,.55)"; for (let y = 10; y < 64; y += 3.4) { g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? .28 : .65; g.lineTo(20 + Math.cos(a) * r, y + Math.sin(a) * r); } g.fill(); }
+    { const r2 = rng(17); g.strokeStyle = "rgba(140,128,110,.35)"; g.lineWidth = .06; for (let k = 0; k < 26; k++) { let x = r2() * WW, y = r2() * FENCE_Y; if (x > 16.5 && x < 23.5) continue; g.beginPath(); g.moveTo(x, y); for (let s = 0; s < 6; s++) { x += (r2() - .4) * 2.2; y += (r2() - .5) * 1.6; g.lineTo(x, y); } g.stroke(); } }
+    g.save(); g.globalAlpha = .18; g.fillStyle = "#b2232c"; for (const [x, y] of [[8, 30], [32, 30], [8, 52], [32, 52]]) { g.beginPath(); g.ellipse(x, y, 4.5, 3, 0, 0, 7); g.fill(); } g.restore();
     g.fillStyle = "#b9b4a8"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
   },
   decor(g) {

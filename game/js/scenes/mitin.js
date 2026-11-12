@@ -25,7 +25,11 @@ SCENES.mitin = {
     rect(1, 40, 4, 48, "foodtruck"); rect(WW - 4, 40, WW - 1, 48, "foodtruck");
   },
   ground(g) {
-    g.fillStyle = "#c9c3b5"; g.fillRect(0, 0, WW, WH);
+    g.fillStyle = "#8f8c86"; g.fillRect(0, 0, WW, WH);   // the rally fills a car park: asphalt with painted bays
+    { const r2 = rng(42); for (let k = 0; k < 2600; k++) { g.fillStyle = r2() < .5 ? "rgba(255,255,255,.05)" : "rgba(0,0,0,.07)"; g.fillRect(r2() * WW, r2() * FENCE_Y, .18, .18); } }
+    g.fillStyle = "rgba(255,255,255,.7)"; for (const y of [24, 44]) for (let x = 1; x < WW; x += 2.6) { g.fillRect(x, y - 2.4, .12, 4.8); }
+    g.fillStyle = "rgba(255,210,58,.85)"; for (let y = 16; y < FENCE_Y - 2; y += 3) g.fillRect(19.85, y, .3, 1.6);
+    g.save(); g.translate(20, 34); g.globalAlpha = .28; g.fillStyle = "#ffd23a"; g.beginPath(); g.ellipse(0, 1.2, 6.5, 4.3, 0, 0, 7); g.fill(); g.beginPath(); g.arc(-3.6, -3, 3, 0, 7); g.fill(); g.fillStyle = "#e8742a"; g.beginPath(); g.ellipse(-6.6, -2.5, 1.6, .7, 0, 0, 7); g.fill(); g.restore(); g.globalAlpha = 1;
     const rand = rng(41);
     for (let k = 0; k < 1300; k++) { g.fillStyle = ["#ffd23a", "#2f6fc4", "#ffffff"][k % 3]; g.globalAlpha = .5; g.fillRect(rand() * WW, rand() * FENCE_Y, .25, .12); }
     g.globalAlpha = 1;

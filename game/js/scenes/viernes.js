@@ -36,6 +36,10 @@ SCENES.viernes = {
     // checkerboard marble floor
     for (let y = 0, i = 0; y < FENCE_Y; y += 2, i++) for (let x = 6, j = 0; x < WW - 6; x += 2, j++) { g.fillStyle = (i + j) % 2 ? "#e2dccf" : "#f1ede5"; g.fillRect(x, y, 2, 2); }
     g.strokeStyle = "rgba(160,150,130,.25)"; g.lineWidth = .04; for (let x = 6; x <= WW - 6; x += 2) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, FENCE_Y); g.stroke(); }
+    g.save(); g.globalAlpha = .22; g.fillStyle = "#e5484d"; g.font = "900 5px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    for (const [x, y, r] of [[20, 26, -.15], [20, 48, .1]]) { g.save(); g.translate(x, y); g.rotate(r); g.fillText("SALE", 0, 0); g.restore(); }
+    g.globalAlpha = .55; g.fillStyle = "#ffd23a"; for (let y = 12; y < 62; y += 7) for (const x of [9, 31]) { g.beginPath(); g.moveTo(x, y - 1.2); g.lineTo(x + 1, y + .2); g.lineTo(x + .4, y + .2); g.lineTo(x + .4, y + 1.2); g.lineTo(x - .4, y + 1.2); g.lineTo(x - .4, y + .2); g.lineTo(x - 1, y + .2); g.fill(); }
+    g.restore();
     g.fillStyle = "#8f8a80"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
     g.fillStyle = "#ffffff"; for (let x = 2; x < WW; x += 4) g.fillRect(x, 69, 2.2, .3);
   },
