@@ -72,7 +72,7 @@ function showOptions() {
 function showHowTo() {
   showCard(`<h2>How to play</h2>
     <ol class="howto">
-      <li><b>Plan.</b> Drag to draw fences (straight, freehand or prefab shapes), open or close gates at the bottom, place guards, stewards and props. The orange trails show where people will walk.</li>
+      <li><b>Plan.</b> Drag to draw fences (straight, freehand or prefab shapes), open or close gates at the bottom, place guards, stewards and props. The orange trails show where people will walk, red glows mark where they will pile up, and each exit says how busy it will get.</li>
       <li><b>Open the gates.</b> A random twist is drawn, the crowd pours in and heads for the show.</li>
       <li><b>Survive the show.</b> Animals, vehicles and worse will cross the crowd. Click to shout through the megaphone (3 uses): people calm down and step back.</li>
       <li><b>Everybody out.</b> When the show ends they all leave through the same gates. Most disasters happen here.</li>
