@@ -165,6 +165,9 @@ around.
   (bouncy, strutting, waddling, shuffling). Some carry signs, flags, balloons or umbrellas.
 - **Sound**: recorded crowd, animal, impact and interface sounds (all CC0, listed in
   `game/audio/CREDITS.md`).
+- **Voices** (CC0): people yelp when trampled and gasp when squeezed, an announcer calls the
+  gates, the first medic, time over and the verdict, and animals and monsters get their own voices
+  (penguins, gorillas, zombies, aliens, bats, a werewolf, a snoring mayor).
 - **Music**: 17 recorded CC0 tracks (`game/music/CREDITS.md`): every venue has its own song, a calm
   one plays while you plan, the music opens up at each drop and goes muffled during the evacuation.
   If the files are missing, the game falls back to its synthesized music.

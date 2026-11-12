@@ -337,6 +337,7 @@ function start(mod) {
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] }; megaUsed = false;
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();
+  if (!demo) { VOICE.ann = Math.random() < .5 ? "male" : "female"; announce("go"); }
   if (MOD.uniform) MOD.uc = (Math.random() * SHIRTS.length) | 0;
   if (MOD.start) MOD.start();
   const scr = props.find(p => p.type === "screen");
@@ -344,7 +345,7 @@ function start(mod) {
   if (scene.onStart) scene.onStart();
   G3.photo = null;
 }
-function startEvac() { phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }
+function startEvac() { if (!demo) announce("time_over"); phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }
 function finish() {
   if (demo) { startDemo(); return; }
   phase = "done";
@@ -353,6 +354,8 @@ function finish() {
   if (sandbox) { showReport(stars, stuck, []); ui(); return; }   // sandbox: nothing is saved, nothing is earned
   const st = loadStats(); st.shows++; st.trampled += dead; st.abducted += abducted; st.saved += evacuated; if (stars === 3) st.perfect++; st.worst = Math.max(st.worst, dead); saveJSON("mh.stats", st);
   const fresh = awardMedals(stars, stuck, megaUsed);
+  setTimeout(() => announce(dead >= 500 ? "game_over" : stars === 3 ? (Math.random() < .5 ? "mission_completed" : "congratulations") : stars ? "objective_achieved" : "mission_failed"), 700);
+  if (fresh.length) setTimeout(() => announce("new_highscore"), 2300);
   if (Object.values(loadMedals()).reduce((n, m) => n + m.length, 0) >= 20) achieve("MEDAL_COLLECTOR");
   saveBest(sceneKey, stars);
   achieve("FIRST_SHOW");

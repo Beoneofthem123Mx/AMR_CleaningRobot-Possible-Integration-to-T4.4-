@@ -13,4 +13,8 @@ repository; check the original pages before shipping if you need certainty.
 | `ui_*` | Kenney "Interface Sounds" (kenney.nl), via github.com/Calinou/kenney-interface-sounds | CC0 1.0 |
 | `jingle_win`, `jingle_lose` | Kenney "Music Jingles" (kenney.nl) | CC0 1.0 |
 
+| `voice/male_*`, `voice/female_*`, `voice/pig_*` (ouches, gasps, falls, jumps) | Warfork player voices by Team Forbidden, via github.com/lavenderdotpet/CC0-Public-Domain-Sounds (`warfork-cc0`, whose notice states CC0 1.0) | CC0 1.0 |
+| `voice/ann_*` (the announcer: go, time over, medic, mission completed/failed, game over...) | Kenney "Voiceover Pack" (kenney.nl), voices by Jeffrey M. Smith (male) and the pack's female voice actor, via the same collection | CC0 1.0 |
+| `voice/cr_*` (cute animals, grunts, munching, snoring, zombie groans, aliens, bugs, howls, burps, coughs, mumbles) | CC0 creature SFX packs in github.com/lavenderdotpet/CC0-Public-Domain-Sounds | CC0 1.0 |
+
 The game still works without these files: every effect has a synthesized fallback.

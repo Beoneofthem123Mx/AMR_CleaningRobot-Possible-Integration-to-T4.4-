@@ -172,6 +172,8 @@ function audioCrowd(c) {
   const n = ag.length, crush = Math.min(1, Math.max(0, pr - 2.2) / 3 + (typeof shake !== "undefined" ? shake * .6 : 0));
   loopGain("crowd_loop", live ? Math.min(.75, n / 3800 * (hot ? .9 : .55)) : 0);
   loopGain("panic_loop", live ? crush * .8 : 0);
+  if (live && crush > .35 && Math.random() < crush * .05) voice("gasp", .35 + crush * .3, .7);
+  if (phase === "show" && fullAt && Math.random() < .004) voice(Math.random() < .5 ? "mumble" : Math.random() < .5 ? "burp" : "cough", .3, 4);
   loopGain("rain_loop", live && MOD && MOD.rain ? .5 : 0);
   if (SMP.crowd_loop && AU.loops.crowd_loop) AU.crowd.gain.setTargetAtTime(0, c.currentTime, .3);   // the recording replaces the synthetic murmur
   // now and then the crowd starts a chant
@@ -192,9 +194,40 @@ const SAMPLE_FOR = {
   back: [["ui_back"], .5, .1], erase: [["ui_erase"], .5, .05], win: [["jingle_win"], .7, 1], lose: [["jingle_lose"], .7, 1], gong: [["gong"], .6, 1], bell: [["bell"], .5, .5], spring: [["spring"], .6, .3], glass: [["glass"], .6, .3],
   howl: [["howl"], .7, 1], oink: [["oink"], .7, .5], cluck: [["cluck"], .7, .3],
 };
+// ---------- voices (CC0, see game/audio/CREDITS.md): people, the announcer and creatures ----------
+const VOICE_FILES = ["ann_female_1", "ann_female_2", "ann_female_3", "ann_female_congratulations", "ann_female_correct", "ann_female_game_over", "ann_female_go", "ann_female_hurry_up", "ann_female_mission_completed", "ann_female_mission_failed", "ann_female_new_highscore", "ann_female_objective_achieved", "ann_female_ready", "ann_female_time_over", "ann_female_war_call_for_backup", "ann_female_war_get_down", "ann_female_war_look_out", "ann_female_war_medic", "ann_female_wrong", "ann_male_1", "ann_male_2", "ann_male_3", "ann_male_congratulations", "ann_male_correct", "ann_male_game_over", "ann_male_go", "ann_male_hurry_up", "ann_male_mission_completed", "ann_male_mission_failed", "ann_male_new_highscore", "ann_male_objective_achieved", "ann_male_ready", "ann_male_time_over", "ann_male_war_call_for_backup", "ann_male_war_get_down", "ann_male_war_look_out", "ann_male_war_medic", "ann_male_wrong", "cr_alien_01", "cr_alien_03", "cr_alien_05", "cr_bug_01", "cr_bug_03", "cr_burp_01", "cr_cough_01", "cr_cute_01", "cr_cute_03", "cr_cute_05", "cr_cute_07", "cr_cute_09", "cr_die_01", "cr_die_03", "cr_eat_01", "cr_eat_03", "cr_grunt_01", "cr_grunt_03", "cr_howl", "cr_human_01", "cr_human_03", "cr_human_05", "cr_human_07", "cr_hurt_01", "cr_hurt_03", "cr_monster_01", "cr_monster_03", "cr_monster_05", "cr_monster_08", "cr_monster_12", "cr_ooh", "cr_snore", "female_falldeath", "female_gasp", "female_jump_1", "female_jump_2", "female_pain100", "female_pain25", "female_pain50", "female_pain75", "male_falldeath", "male_gasp", "male_jump_1", "male_jump_2", "male_pain100", "male_pain25", "male_pain50", "male_pain75", "pig_death", "pig_gasp", "pig_pain100", "pig_pain50"];
+const VG = {   // voice groups
+  ouch: ["male_pain25", "male_pain50", "male_pain75", "female_pain25", "female_pain50", "female_pain75", "male_pain100", "female_pain100"],
+  splat: ["male_falldeath", "female_falldeath"], gasp: ["male_gasp", "female_gasp"], whee: ["male_jump_1", "male_jump_2", "female_jump_1", "female_jump_2"],
+  pig: ["pig_pain50", "pig_pain100", "pig_gasp"], cute: ["cr_cute_01", "cr_cute_03", "cr_cute_05", "cr_cute_07", "cr_cute_09"], grunt: ["cr_grunt_01", "cr_grunt_03"],
+  munch: ["cr_eat_01", "cr_eat_03"], snore: ["cr_snore"], zombie: ["cr_monster_01", "cr_monster_03", "cr_monster_05", "cr_monster_08", "cr_monster_12"],
+  alien: ["cr_alien_01", "cr_alien_03", "cr_alien_05"], bug: ["cr_bug_01", "cr_bug_03"], howl: ["cr_howl"], burp: ["cr_burp_01"], cough: ["cr_cough_01"],
+  ooh: ["cr_ooh"], hurt: ["cr_hurt_01", "cr_hurt_03"], mumble: ["cr_human_01", "cr_human_03", "cr_human_05", "cr_human_07"], die: ["cr_die_01", "cr_die_03"],
+};
+// shouts that also get a voice
+const VOICE_BY_TEXT = { "BRAAAINS!": "zombie", "AWOOOO!": "howl", "OOK OOK!": "grunt", "MUNCH MUNCH!": "munch", "ZZZ...!": "snore", "WADDLE WADDLE!": "cute", "MWEEEH!": "cute",
+  "MEEEH!": "cute", "AWWWWW!": "cute", "WIFI?": "alien", "VWOOOM!": "alien", "SCREEECH!": "bug", "ACHOO!": "cough", "PEE-YOO!": "cough", "NOOO!": "splat", "MY SPLEEN!": "ouch",
+  "DIDN'T EVEN HURT!": "ouch", "MY PHONE!": "ouch", "WHEEE!": "whee", "WHEEEE!": "whee", "WHEEEEE!": "whee", "RAWR!": "zombie", "DINO DISCO!": "grunt", "OUTTA MY WAY!": "grunt",
+  "SHARK!": "gasp", "THAT'S NOT MY DAUGHTER-IN-LAW!": "gasp", "SPICY!": "cough", "HROOOOAAAH!": "grunt", "SQUEEZE!": "cute", "FREE HUGS!": "cute", "OINK!": "pig", "BOO!": "zombie",
+  "I VANT TO SHAKE YOUR HAND!": "zombie", "AHEM!": "cough", "MINE! MINE!": "cute", "COO COO!": "cute", "GRRR!": "grunt" };
+const VOICE = { last: {}, ann: Math.random() < .5 ? "male" : "female" };
+function voice(group, vol, minGap) {
+  const c = AU.ctx; if (!c || !AU.on) return false;
+  const list = (VG[group] || [group]).filter(n => SMP[n]); if (!list.length) return false;
+  const now = c.currentTime; if (now - (VOICE.last[group] || 0) < (minGap ?? .35)) return false;
+  VOICE.last[group] = now; return playSample(list[(Math.random() * list.length) | 0], vol ?? .7, .92 + Math.random() * .16);
+}
+// the stadium announcer: one voice per show
+function announce(line, vol) {
+  const c = AU.ctx; if (!c || !AU.on) return;
+  const n = `ann_${VOICE.ann}_${line}`; if (!SMP[n]) return;
+  if (c.currentTime - (VOICE.last.ann || 0) < 1.2) return; VOICE.last.ann = c.currentTime;
+  playSample(n, vol ?? .9, 1);
+}
 function loadSamples() {
   const c = AU.ctx; if (!c || AU.loading || typeof fetch !== "function" || c.constructor.name === "OfflineAudioContext") return;
   AU.loading = true; AU.loops = {};
+  for (const n of VOICE_FILES) fetch("audio/voice/" + n + ".ogg").then(r => r.arrayBuffer()).then(b => c.decodeAudioData(b)).then(buf => { SMP[n] = buf; }).catch(() => { /* optional */ });
   for (const n of SAMPLE_FILES) fetch("audio/" + n + ".ogg").then(r => r.arrayBuffer()).then(b => c.decodeAudioData(b)).then(buf => { SMP[n] = buf; }).catch(() => { /* no file: the synth version plays instead */ });
 }
 function playSample(name, vol, rate) {
@@ -261,4 +294,8 @@ const SFX_BY_TEXT = { "ROAR!": "roar", "GRRR!": "roar", "MEEP MEEP!": "honk", "B
   "SUICIDE DIVE!": "fiu", "CHAIR SHOT!": "crash", "THE MASK!": "fiu", "OUTTA MY WAY!": "roar", "MAKE WAY, MIJOS!": "cheer", "BREAK IT UP!": "whistle", "DIDN'T EVEN HURT!": "scream",
   "VANILLA!": "jingle", "SANDWICHES!": "cheer", "SPICY!": "scream", "I'LL FIX IT!": "honk", "LOOK OVER HERE!": "flash",
   "SAY CHEESE!": "flash", "HOT DOGS! TWO FOR TEN!": "honk", "BALLOONS! GET YOUR BALLOONS!": "jingle", "DON'T MIND ME, I'M LIVE!": "cheer" };
-function sfxFor(text) { const n = SFX_BY_TEXT[text] || (scene && scene.sfx && scene.sfx[text]); if (n) sfx(n); }
+function sfxFor(text) {
+  const n = SFX_BY_TEXT[text] || (scene && scene.sfx && scene.sfx[text]); if (n) sfx(n);
+  const v = VOICE_BY_TEXT[text]; if (v) voice(v, .75, .6);
+  if (text === "3!" || text === "2!" || text === "1!") announce(text[0], 1);
+}

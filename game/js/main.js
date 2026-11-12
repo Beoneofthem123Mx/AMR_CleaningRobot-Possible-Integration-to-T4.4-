@@ -20,6 +20,8 @@ function onDrop(first) {
 }
 let ghosts = [];   // souls of the trampled, rising with a halo
 function onFall(x, y) {
+  voice(Math.random() < .04 ? "pig" : Math.random() < .25 ? "splat" : "ouch", .55 + Math.random() * .25, .18);
+  if (dead === 0) announce("war_medic");
   if (ghosts.length < 260 && (dead < 40 || Math.random() < .45)) ghosts.push({ x, y, t: 0, life: 4.2 + Math.random() * 1.5, ph: Math.random() * 6.28, s: 1.15 + Math.random() * .35 });
   rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream");
   if (dead === 0) { G3.wantPhoto = true; slowT = 1.8; focus = { x, y }; caption("Ouch!", true, 1500); }
