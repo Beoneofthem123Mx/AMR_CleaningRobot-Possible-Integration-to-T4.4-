@@ -139,6 +139,10 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .card.menu .menuhead { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
 .card.menu .title { flex: none; padding: 6px 10px 10px; }
 .card.menu .logo { font-size: clamp(2.8rem, 7vw, 5.2rem); animation: logobob 3.2s ease-in-out infinite; }
+/* the title letters hop one after another, like a wave going through the crowd */
+.logo .lt { display: inline-block; animation: lethop 2.6s cubic-bezier(.3,1.6,.5,1) infinite; transform-origin: 50% 90%; }
+@keyframes lethop { 0%, 62%, 100% { transform: translateY(0) rotate(0) scale(1, 1); } 70% { transform: translateY(.04em) scale(1.08, .9); } 80% { transform: translateY(-.16em) rotate(-4deg) scale(.95, 1.08); } 90% { transform: translateY(0) rotate(2deg) scale(1.04, .96); } }
+@media (prefers-reduced-motion: reduce) { .logo .lt { animation: none; } }
 @keyframes logobob { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(-1deg) translateY(-4px); } }
 .card.menu .menuintro { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 9px; }
 .card.menu .tag { color: var(--caution); font-weight: 900; font-size: 1.1rem; margin: 0; text-transform: uppercase; letter-spacing: .02em; }

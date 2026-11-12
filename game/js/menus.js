@@ -28,7 +28,7 @@ function chooser() {
   const best = loadBest(), total = totalStars(), max = Object.keys(SCENES).length * 3, medals = loadMedals(), st = loadStats();
   const nMedals = Object.values(medals).reduce((n, m) => n + m.length, 0), maxMedals = Object.keys(SCENES).length * Object.keys(MEDALS).length;
   showCard(`<div class="menuhead">
-      <div class="title"><h1 class="logo">HUMAN<br>TSUNAMI</h1></div>
+      <div class="title"><h1 class="logo">${["HUMAN", "TSUNAMI"].map((w, j) => [...w].map((ch, i) => `<span class="lt" style="animation-delay:${((i + j * 5) * .09).toFixed(2)}s">${ch}</span>`).join("")).join("<br>")}</h1></div>
       <div class="menuintro">
         <p class="tag">A safety simulator for events that go horribly wrong</p>
         <p>Place the fences, the gates and the guards. Then the people pour in and absolutely everything happens. During the show, <b>click</b> to use the megaphone. Too much pressure and people go down — and get trampled.</p>
