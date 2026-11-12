@@ -272,9 +272,9 @@ function buildStatic3D() {
     if (o.kind === "tent" && !G3.tentMat) G3.tentMat = new THREE.MeshStandardMaterial({ map: stripeTex(["#d8322b", "#f6f1e7"], 8, false), roughness: .7 });   // clean candy stripes
     const mesh = new THREE.Mesh(geo, o.kind === "tent" ? G3.tentMat : o.kind === "player" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
     mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
-    if ((o.kind === "stands" || o.kind === "grandstand") && o.t === "r" && !scene.noFans) {   // seated toy fans that bounce during the show
-      const spots = [], r = rng(Math.round(o.x0 * 31 + o.y0 * 17));
-      for (let y = o.y0 + .45; y < o.y1 - .3; y += .62) for (let x = o.x0 + .45; x < o.x1 - .3; x += .62) if (r() < .82) spots.push([x + (r() - .5) * .12, y + (r() - .5) * .12, r()]);
+    if ((o.kind === "stands" || o.kind === "grandstand" || (o.kind === "bench" && sceneKey === "boda")) && o.t === "r" && !scene.noFans) {   // seated toy fans / guests that bounce during the show
+      const spots = [], r = rng(Math.round(o.x0 * 31 + o.y0 * 17)), rows = (a0, a1) => a1 - a0 < 1.2 ? [(a0 + a1) / 2] : Array.from({ length: Math.floor((a1 - a0 - .75) / .62) + 1 }, (_, i) => a0 + .45 + i * .62);
+      for (const y of rows(o.y0, o.y1)) for (const x of rows(o.x0, o.x1)) if (r() < (o.kind === "bench" ? .7 : .82)) spots.push([x + (r() - .5) * .12, y + (r() - .5) * .12, r()]);
       if (spots.length) {
         const n = spots.length, body = new THREE.InstancedMesh(new THREE.SphereGeometry(.22, 7, 5), FAN_MAT, n), head = new THREE.InstancedMesh(new THREE.SphereGeometry(.17, 7, 5), FAN_MAT, n);
         const M = new THREE.Matrix4(), cB = new THREE.Color(), cH = new THREE.Color();
