@@ -945,13 +945,14 @@ let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
 // living water: rolling wave normals for sun glints and a sky-colored sheen at grazing angles
 // seated fans in the stands: instanced, and the vertex shader makes each one hop on its own beat
-const FAN = { time: { value: 0 }, amp: { value: 0 } };
+const FAN = { time: { value: 0 }, amp: { value: 0 }, ola: { value: -99 } };
 const FAN_MAT = new THREE.MeshStandardMaterial({ roughness: .6 });
 FAN_MAT.onBeforeCompile = sh => {
-  sh.uniforms.uT = FAN.time; sh.uniforms.uA = FAN.amp;
-  sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uT, uA;").replace("#include <begin_vertex>", `#include <begin_vertex>
+  sh.uniforms.uT = FAN.time; sh.uniforms.uA = FAN.amp; sh.uniforms.uO = FAN.ola;
+  sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uT, uA, uO;").replace("#include <begin_vertex>", `#include <begin_vertex>
     { float id = float(gl_InstanceID); float ph = fract(sin(id * 12.9898) * 43758.5453) * 6.283;
-      transformed.y += abs(sin(uT * 7.0 + ph)) * uA * (.6 + .4 * fract(id * .37)) / 1.2; }`);
+      transformed.y += abs(sin(uT * 7.0 + ph)) * uA * (.6 + .4 * fract(id * .37)) / 1.2;
+      float od = abs(instanceMatrix[3].x - uO); transformed.y += max(0., 1. - od / 2.6) * .55; }`);   // the wave rolls through the stands too
 };
 FAN_MAT.customProgramCacheKey = () => "fans";
 const RIM = { value: .42 }, DROP_SEEN = new Set(); let prints = [];
@@ -1286,7 +1287,7 @@ function render3D(now, dtR) {
   }
   G3.landing = G3.landing.filter(d => !d.done);
   if (G3.exitMat) G3.exitMat.emissiveIntensity = (scene.night ? 1.1 : .35) + (phase === "evac" ? (scene.night ? .9 : 1.4) * (.5 + .5 * Math.sin(tt * 7)) : 0);   // exits pulse during the evacuation
-  FAN.time.value = tt; FAN.amp.value = live && fullAt ? (surgeT > 0 || cheerT > 0 ? .32 : .1) : .02;
+  FAN.time.value = tt; FAN.ola.value = ola ? ola.x : -99; FAN.amp.value = live && fullAt ? (surgeT > 0 || cheerT > 0 ? .32 : .1) : .02;
   RIM.value = scene.night ? (cine > .01 ? .9 : .5) : .42; WATER.time.value = tt;   // from above the bloom already lifts the crowd at night
   // rain: the floor slowly gets wet (darker and shiny), and dries after the show
   const wetT = live && MOD && MOD.rain ? 1 : 0; G3.wet = (G3.wet || 0) + (wetT - (G3.wet || 0)) * Math.min(1, dtR * (wetT ? .25 : .5));
