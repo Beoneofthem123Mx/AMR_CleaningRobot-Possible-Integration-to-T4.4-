@@ -861,7 +861,7 @@ function buildModel(m) {
       part(g, "sph", "#ffd23a", .95, .95, .95, 1.3, 2.4, 0);
       for (const s of [-1, 1]) { part(g, "sph", "#ffffff", .24, .24, .24, 2.05, 2.6, s * .35); part(g, "sph", "#111214", .1, .1, .1, 2.25, 2.6, s * .35); }
       for (const [x, z, c] of [[-1.8, .8, "#ff3fa4"], [-1.8, -.8, "#22d3ee"], [-.3, .9, "#7dff6a"]]) { part(g, "cyl", "#ffffff", .02, 1.4, .02, x, 2, z); part(g, "sph", c, .3, .36, .3, x, 2.85, z); }
-      u.dancers = [[-1.2, .4], [-1.2, -.4], [-.2, 0]].map(([x, z], i) => { const d = pivot(g, x, 1.35, z); part(d, "sph", SHIRTS[i * 4], .16, .3, .2, 0, .6, 0); part(d, "sph", "#e0ac84", .12, .12, .12, 0, 1.05, 0); return d; });
+      u.dancers = [[-1.2, .4], [-1.2, -.4], [-.2, 0]].map(([x, z], i) => { const d = pivot(g, x, 1.35, z); part(d, "sph", SHIRTS[i * 4], .22, .34, .24, 0, .55, 0); part(d, "sph", "#e0ac84", .17, .17, .17, 0, 1.02, 0); for (const sd of [-1, 1]) part(d, "sph", "#111214", .028, .035, .028, .16, 1.06, sd * .06); return d; });   // toy dancers
       break;
     }
     case "car": case "icecream": case "clowncar": {
