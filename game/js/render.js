@@ -1237,7 +1237,7 @@ function drawOverlay() {
     g.lineWidth = Math.max(3, .22 * ppm); g.strokeStyle = "#111214"; g.strokeText(q.text, 0, 0); g.fillStyle = "#ffd23a"; g.fillText(q.text, 0, 0);
     g.restore();
   }
-  for (const [gx, lvl] of gateBadges) {   // plan: how busy each exit will be
+  if (cine < .01) for (const [gx, lvl] of gateBadges) {   // plan: how busy each exit will be (top views only)
     Vproj.set(gx, .4, FENCE_Y + 1.2).project(G3.camera);
     const x = (Vproj.x + 1) / 2 * ov.width, y = (1 - Vproj.y) / 2 * ov.height, fs = Math.round(Math.max(12, .7 * ppm)), txt = ["EXIT OK", "BUSY EXIT", "CRUSH RISK"][lvl];
     g.globalAlpha = 1; g.font = `900 ${fs}px Rubik, system-ui, sans-serif`; const w = g.measureText(txt).width + fs;
