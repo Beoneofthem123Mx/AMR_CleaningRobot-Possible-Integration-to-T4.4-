@@ -895,6 +895,7 @@ function skyDome() {
   return G3.sky;
 }
 const SKY_TOP_D = new THREE.Color(0x3f8fe0), SKY_TOP_N = new THREE.Color(0x02040c), GOLD_SUN = new THREE.Color(0xff8a3c), GOLD_SKY = new THREE.Color(0xffc49a), GOLD_HOR = new THREE.Color(0xff9a5a), GOLD_TOP = new THREE.Color(0x5a74c8);
+const CAM_T = new THREE.Vector3(), CAM_V = new THREE.Vector3(), CAM_RC = { ray: new THREE.Raycaster() };
 function cineCamera(dt) {
   cineAng += dt * .11;
   const night = !!scene.night, c = G3.camera, d = cineDist, h = cineH || 1.9 + d * .16;
@@ -902,7 +903,16 @@ function cineCamera(dt) {
   c.fov = 52; c.near = .3; c.far = 600; c.updateProjectionMatrix();
   c.up.set(0, 1, 0);
   c.position.set(clamp(cx + Math.cos(cineAng) * d, 1.5, WW - 1.5), h + shake * .2, clamp(cy + Math.sin(cineAng) * d, 2, SH - 2));
-  c.lookAt(cx, cineH ? .3 : 1.5, cy);
+  // don't film through walls: if scenery stands between the subject and the lens, slide the lens in front of it
+  const tgt = CAM_T.set(cx, cineH ? .3 : 1.5, cy);
+  if (G3.static && ((CAM_RC.n = (CAM_RC.n || 0) + 1) % 6 === 0 || CAM_RC.k === undefined)) {
+    const dir = CAM_V.copy(c.position).sub(tgt), len = dir.length(); dir.normalize();
+    CAM_RC.ray.set(tgt, dir); CAM_RC.ray.far = len; const hit = CAM_RC.ray.intersectObject(G3.static, true).find(o => o.distance > 1.2 && o.object.visible);
+    CAM_RC.k = hit ? Math.max(.25, (hit.distance - .6) / len) : 1;
+  }
+  CAM_RC.s = (CAM_RC.s ?? 1) + ((CAM_RC.k ?? 1) - (CAM_RC.s ?? 1)) * Math.min(1, (dt || .016) * 4);
+  if (CAM_RC.s < .999) c.position.lerpVectors(tgt, c.position, CAM_RC.s).setY(Math.max(c.position.y, 1.2));
+  c.lookAt(tgt);
   SKY_TMP.copy(night ? SKY_NIGHT : SKY_DAY).lerp(GOLD_HOR, night ? 0 : (G3.golden || 0) * .85).multiplyScalar(1 - .85 * black);
   G3.scene.background.copy(SKY_TMP);
   if (!G3.scene.fog) G3.scene.fog = new THREE.Fog(0xffffff, 30, 190);
@@ -1089,13 +1099,18 @@ function renderParticles() {
 }
 function renderGhosts(tt) {
   const b = G3.ghostBody, e = G3.ghostEye, h = G3.ghostHalo; let n = 0;
-  const up = LAND ? [1, 0] : [0, -1];   // screen-up in the world, so faces look at the camera
+  const up0 = LAND ? [1, 0] : [0, -1], up = [0, 0];   // screen-up in the world, so faces look at the camera
   for (const g of ghosts) {
+    up[0] = up0[0]; up[1] = up0[1];
     if (n >= 260) break;
     const q = g.t / g.life, sc = (q < .12 ? q / .12 : q > .75 ? Math.max(0, (1 - q) / .25) : 1) * g.s;
     const x = g.x + Math.sin(tt * 2.2 + g.ph) * .25 * q * 3, y = g.y + Math.cos(tt * 1.7 + g.ph) * .2 * q * 3, hh = .5 + g.t * 1.25;
     M4.makeScale(sc, sc * (1 + Math.sin(tt * 5 + g.ph) * .06), sc); M4.setPosition(x, hh, y); b.setMatrixAt(n, M4); b.instanceColor.setXYZ(n, .7, .93, 1.1);
-    for (const s2 of [-1, 1]) { M4.makeScale(sc, sc, sc); M4.setPosition(x - up[0] * .1 * sc + s2 * up[1] * .08 * sc, hh + .3 * sc, y - up[1] * .1 * sc + s2 * up[0] * .08 * sc); e.setMatrixAt(n * 2 + (s2 > 0 ? 1 : 0), M4); }
+    if (cine > .01) {   // street camera: the eyes sit on the side facing the lens
+      const dx = G3.camera.position.x - x, dz = G3.camera.position.z - y, dl = Math.hypot(dx, dz) || 1;
+      up[0] = -dx / dl; up[1] = -dz / dl;
+    }
+    for (const s2 of [-1, 1]) { M4.makeScale(sc, sc, sc); const fo = cine > .01 ? .19 : .1; M4.setPosition(x - up[0] * fo * sc + s2 * up[1] * .08 * sc, hh + .3 * sc, y - up[1] * fo * sc + s2 * up[0] * .08 * sc); e.setMatrixAt(n * 2 + (s2 > 0 ? 1 : 0), M4); }
     M4.makeRotationX(Math.PI / 2); M4.scale(Vs.set(sc, sc, sc)); M4.setPosition(x, hh + .58 * sc, y); h.setMatrixAt(n, M4); h.instanceColor.setXYZ(n, 2.6, 2.1, .7);
     n++;
   }
