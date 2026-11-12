@@ -426,16 +426,16 @@ function initPeople() {
   // soft clay-figure people: a pill body, a big round head and rounded limbs
   // wobbly toy people: a pear-shaped body, a big round head sitting right on it, dot eyes, noodle arms, stubby legs
   const pear = [];
-  for (let i = 0; i <= 14; i++) { const q = i / 14, y = -.42 + q * .84, r = .05 + Math.sin(Math.PI * Math.pow(q, .82)) * (.27 - q * .1); pear.push(new THREE.Vector2(Math.max(.02, r), y)); }
-  const pearGeo = new THREE.LatheGeometry(pear, 14);
+  for (let i = 0; i <= 10; i++) { const q = i / 10, y = -.42 + q * .84, r = .05 + Math.sin(Math.PI * Math.pow(q, .82)) * (.27 - q * .1); pear.push(new THREE.Vector2(Math.max(.02, r), y)); }
+  const pearGeo = new THREE.LatheGeometry(pear, 12);
   P.torso = mk(pearGeo, std({ roughness: .58 }), N);
-  P.head = mk(new THREE.SphereGeometry(.2, 14, 10), std({ roughness: .5 }), N);
-  P.eye = mk(new THREE.SphereGeometry(.034, 6, 5), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .25 }), N * 2); P.eye.castShadow = false;
+  P.head = mk(new THREE.SphereGeometry(.2, 12, 8), std({ roughness: .5 }), N);
+  P.eye = mk(new THREE.SphereGeometry(.034, 5, 4), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .25 }), N * 2); P.eye.castShadow = false;
   P.xbar = mk(new THREE.BoxGeometry(.02, .1, .022), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .4 }), N * 2); P.xbar.castShadow = false;   // X eyes of the trampled
   P.mouth = mk(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a1414, roughness: .5 }), N); P.mouth.castShadow = false;
   P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
   P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
-  P.shoe = mk(new THREE.SphereGeometry(.075, 8, 6), std({ roughness: .45 }), N * 2);   // chunky toy shoes
+  P.shoe = mk(new THREE.SphereGeometry(.075, 6, 4), std({ roughness: .45 }), N * 2); P.shoe.castShadow = false;   // chunky toy shoes
   P.sign = mk(new THREE.BoxGeometry(.035, .42, .58), std({ roughness: .8 }), N);
   P.hair = mk(new THREE.SphereGeometry(.138, 8, 4, 0, Math.PI * 2, 0, Math.PI * .56), std({ roughness: .9 }), N);
   P.cap = mk(new THREE.CylinderGeometry(.14, .145, .1, 10), std({ roughness: .5 }), N);
@@ -448,7 +448,7 @@ function initPeople() {
   P.what = mk(new THREE.CylinderGeometry(.34, .34, .03, 14), std({ roughness: .8 }), N);
   P.whatTop = mk(new THREE.CylinderGeometry(.13, .15, .14, 10), std({ roughness: .8 }), N);
   P.balloon = mk(new THREE.SphereGeometry(.2, 10, 8), std({ roughness: .25, metalness: .1 }), N);
-  P.string = mk(new THREE.BoxGeometry(.012, .9, .012), std(), N * 2);
+  P.string = mk(new THREE.BoxGeometry(.012, .9, .012), std(), N * 2); P.string.castShadow = false;
   P.umb = mk(new THREE.ConeGeometry(.5, .2, 12), std({ roughness: .55, side: THREE.DoubleSide }), N);
   // sweat drops on the squeezed, cartoon stars circling the heads of the trampled
   P.drop = mk(new THREE.SphereGeometry(.035, 8, 6), new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: .05, metalness: .1, emissive: 0x1a4a6a }), N); P.drop.castShadow = false;
