@@ -53,6 +53,10 @@ canvas.ov { position: absolute; left: 0; top: 0; pointer-events: none; }
   transition: opacity .35s;
 }
 .caption.yellow { color: var(--caution); }
+/* milestones slam onto the screen: big, tilted, then they settle */
+.caption.slam { animation: capslam .55s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes capslam { 0% { transform: scale(2.6) rotate(-8deg); opacity: 0; } 45% { transform: scale(.92) rotate(2deg); opacity: 1; } 100% { transform: scale(1) rotate(-1.5deg); } }
+@media (prefers-reduced-motion: reduce) { .caption.slam { animation: none; } }
 .status {
   position: absolute; left: 50%; top: calc(3.2% + 2.9em); transform: translateX(-50%); white-space: nowrap; pointer-events: none; font-size: .78em;
   background: rgba(17,18,20,.72); color: var(--text); border-radius: 99px; padding: .3em .9em; font-weight: 700; font-variant-numeric: tabular-nums;

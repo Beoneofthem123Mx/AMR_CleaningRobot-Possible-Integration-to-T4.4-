@@ -124,7 +124,7 @@ function setDead(n, quiet) {
   dead = n; $("#dead").textContent = n;
   if (!quiet) { const b = $("#badge"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   if (first && !quiet) caption("And we don't like that.", true, 2600);
-  const ms = MILESTONES[n]; if (ms && !quiet) { caption(ms, true, 2600); sfx("boom"); shake = Math.min(1, shake + .5); announce(n >= 500 ? "game_over" : "war_call_for_backup"); }
+  const ms = MILESTONES[n]; if (ms && !quiet) { caption(ms, true, 2600); { const el = $("#caption"); el.classList.remove("slam"); void el.offsetWidth; el.classList.add("slam"); setTimeout(() => el.classList.remove("slam"), 2700); } flash = Math.max(flash, .8); slowT = Math.max(slowT, .5); sfx("boom"); shake = Math.min(1, shake + .5); announce(n >= 500 ? "game_over" : "war_call_for_backup"); }
 }
 function showCard(html, kind) {
   const c = $("#card"); c.innerHTML = html; c.className = "card" + (kind ? " " + kind : ""); c.onclick = null;
