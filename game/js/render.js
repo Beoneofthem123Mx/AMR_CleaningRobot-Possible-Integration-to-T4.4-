@@ -388,7 +388,7 @@ function initPeople() {
   P.mouth = mk(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a1414, roughness: .5 }), N); P.mouth.castShadow = false;
   P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
   P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
-  P.sign = mk(new THREE.BoxGeometry(.035, .5, .72), std({ roughness: .8 }), N);
+  P.sign = mk(new THREE.BoxGeometry(.035, .42, .58), std({ roughness: .8 }), N);
   P.hair = mk(new THREE.SphereGeometry(.138, 8, 4, 0, Math.PI * 2, 0, Math.PI * .56), std({ roughness: .9 }), N);
   P.cap = mk(new THREE.CylinderGeometry(.14, .145, .1, 10), std({ roughness: .5 }), N);
   P.brim = mk(new THREE.BoxGeometry(.18, .025, .22), std({ roughness: .5 }), N);
@@ -861,7 +861,7 @@ function skyDome() {
   G3.sky = new THREE.Mesh(new THREE.SphereGeometry(500, 32, 16), m); G3.sky.frustumCulled = false; G3.sky.renderOrder = -10; G3.scene.add(G3.sky);
   return G3.sky;
 }
-const SKY_TOP_D = new THREE.Color(0x3f8fe0), SKY_TOP_N = new THREE.Color(0x02040c);
+const SKY_TOP_D = new THREE.Color(0x3f8fe0), SKY_TOP_N = new THREE.Color(0x02040c), GOLD_SUN = new THREE.Color(0xff8a3c), GOLD_SKY = new THREE.Color(0xffc49a), GOLD_HOR = new THREE.Color(0xff9a5a), GOLD_TOP = new THREE.Color(0x5a74c8);
 function cineCamera(dt) {
   cineAng += dt * .11;
   const night = !!scene.night, c = G3.camera, d = cineDist, h = cineH || 1.9 + d * .16;
@@ -870,12 +870,12 @@ function cineCamera(dt) {
   c.up.set(0, 1, 0);
   c.position.set(clamp(cx + Math.cos(cineAng) * d, 1.5, WW - 1.5), h + shake * .2, clamp(cy + Math.sin(cineAng) * d, 2, SH - 2));
   c.lookAt(cx, cineH ? .3 : 1.5, cy);
-  SKY_TMP.copy(night ? SKY_NIGHT : SKY_DAY).multiplyScalar(1 - .85 * black);
+  SKY_TMP.copy(night ? SKY_NIGHT : SKY_DAY).lerp(GOLD_HOR, night ? 0 : (G3.golden || 0) * .85).multiplyScalar(1 - .85 * black);
   G3.scene.background.copy(SKY_TMP);
   if (!G3.scene.fog) G3.scene.fog = new THREE.Fog(0xffffff, 30, 190);
   G3.scene.fog.color.copy(SKY_TMP); G3.skirt.visible = true;
   const sky = skyDome(), su = sky.material.uniforms; sky.visible = true; sky.position.copy(c.position);
-  su.hor.value.copy(night ? SKY_NIGHT : SKY_DAY); su.top.value.copy(night ? SKY_TOP_N : SKY_TOP_D); su.night.value = night ? 1 : 0; su.dim.value = 1 - .85 * black; su.time.value = performance.now() / 1000;
+  su.hor.value.copy(SKY_TMP).multiplyScalar(1 / Math.max(.15, 1 - .85 * black)); su.top.value.copy(night ? SKY_TOP_N : SKY_TOP_D).lerp(GOLD_TOP, night ? 0 : (G3.golden || 0) * .6); su.night.value = night ? 1 : 0; su.dim.value = 1 - .85 * black; su.time.value = performance.now() / 1000;
   const sun = G3.sun; sun.target.position.set(cx, 0, cy); sun.position.set(cx - 22, 60, cy - 28);
   const sc = sun.shadow.camera, ext = 34; sc.left = -ext; sc.right = ext; sc.top = ext * 1.4; sc.bottom = -ext * 1.4; sc.updateProjectionMatrix();
   return [-1e9, 1e9, -1e9, 1e9];
@@ -1076,7 +1076,11 @@ function render3D(now, dtR) {
   WATER.time.value = tt; WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
   // blackout: the light fades slowly and comes back all at once
   const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
-  G3.hemi.intensity = scene.light.hemi * (1 - .8 * black); G3.sun.intensity = scene.light.sunI * (1 - .9 * black);
+  // golden hour: on day venues the light warms toward sunset as the show goes on, and stays warm for the way out
+  const gTarget = scene.night || !live ? 0 : phase === "evac" ? 1 : fullAt ? clamp((t - fullAt) / SHOW_TIME, 0, 1) : 0;
+  G3.golden = (G3.golden || 0) + (gTarget - (G3.golden || 0)) * Math.min(1, dtR * (live ? .8 : 3)); const gold = G3.golden * .95;
+  G3.sun.color.set(scene.light.sun).lerp(GOLD_SUN, gold); G3.hemi.color.set(scene.light.sky).lerp(GOLD_SKY, gold * .8);
+  G3.hemi.intensity = scene.light.hemi * (1 - .8 * black) * (1 - .12 * gold); G3.sun.intensity = scene.light.sunI * (1 - .9 * black) * (1 + .08 * gold);
   const vb = updateCamera(dtR);
   // spotlights and beams
   const cols = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"].map(lin);

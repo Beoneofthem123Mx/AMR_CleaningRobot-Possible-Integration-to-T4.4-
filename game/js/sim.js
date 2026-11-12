@@ -150,7 +150,7 @@ function looks() {
   // today's twists: Children's Day (everyone tiny) and mandatory uniform (everyone identical)
   // accessories: 1 balloon, 2 party hat, 3 umbrella, 4 kid on the shoulders, 5 wide sun hat
   const r2 = Math.random();
-  L.acc = r2 < .06 ? 1 : r2 < .11 ? 2 : r2 < .14 ? 3 : r2 < .17 ? 4 : r2 < .22 ? 5 : r2 < .26 ? 6 : r2 < .29 ? 7 : 0;
+  L.acc = r2 < .04 ? 1 : r2 < .09 ? 2 : r2 < .12 ? 3 : r2 < .15 ? 4 : r2 < .2 ? 5 : r2 < .225 ? 6 : r2 < .25 ? 7 : 0;   // not too many balloons and signs, or nobody sees the faces
   // build, gait, hair style and clothes (0 long, 1 short sleeves, 2 shorts, 3 both)
   const r3 = Math.random(), r4 = Math.random(), r5 = Math.random();
   L.bw = .82 + Math.random() * .5; L.ws = r3 < .45 ? 0 : r3 < .58 ? 1 : r3 < .7 ? 2 : r3 < .82 ? 3 : r3 < .92 ? 4 : 5;
