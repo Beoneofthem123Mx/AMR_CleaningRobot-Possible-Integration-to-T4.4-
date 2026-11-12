@@ -951,7 +951,7 @@ function skyDome() {
   return G3.sky;
 }
 const SKY_TOP_D = new THREE.Color(0x3f8fe0), SKY_TOP_N = new THREE.Color(0x02040c), GOLD_SUN = new THREE.Color(0xff8a3c), GOLD_SKY = new THREE.Color(0xffc49a), GOLD_HOR = new THREE.Color(0xff9a5a), GOLD_TOP = new THREE.Color(0x5a74c8);
-const CAM_T = new THREE.Vector3(), CAM_V = new THREE.Vector3(), CAM_RC = { ray: new THREE.Raycaster() };
+const CAM_T = new THREE.Vector3(), CAM_T2 = new THREE.Vector3(), CAM_V = new THREE.Vector3(), CAM_RC = { ray: new THREE.Raycaster() };
 function cineCamera(dt) {
   cineAng += dt * .11;
   const night = !!scene.night, c = G3.camera, d = cineDist, h = cineH || 1.9 + d * .16;
@@ -965,9 +965,15 @@ function cineCamera(dt) {
     const dir = CAM_V.copy(c.position).sub(tgt), len = dir.length(); dir.normalize();
     CAM_RC.ray.set(tgt, dir); CAM_RC.ray.far = len; const hit = CAM_RC.ray.intersectObject(G3.static, true).find(o => o.distance > 1.2 && o.object.visible);
     CAM_RC.k = hit ? Math.max(.25, (hit.distance - .6) / len) : 1;
+    // the subject may stand inside a big object (stands, a wall): look from the lens side too, and rise over it
+    const p0 = CAM_V.copy(c.position).lerp(tgt, 1 - CAM_RC.k), back = CAM_T2.copy(tgt).sub(p0); const bl = back.length(); back.normalize();
+    CAM_RC.ray.set(p0, back); CAM_RC.ray.far = bl; const hit2 = CAM_RC.ray.intersectObject(G3.static, true).find(o => o.distance < bl - 1.5 && o.object.visible);
+    CAM_RC.u = hit2 ? 6 : 0;
   }
+  CAM_RC.uy = (CAM_RC.uy || 0) + ((CAM_RC.u || 0) - (CAM_RC.uy || 0)) * Math.min(1, (dt || .016) * 3);
   CAM_RC.s = (CAM_RC.s ?? 1) + ((CAM_RC.k ?? 1) - (CAM_RC.s ?? 1)) * Math.min(1, (dt || .016) * 4);
   if (CAM_RC.s < .999) c.position.lerpVectors(tgt, c.position, CAM_RC.s).setY(Math.max(c.position.y, 1.2));
+  c.position.y += CAM_RC.uy;
   c.lookAt(tgt);
   SKY_TMP.copy(night ? SKY_NIGHT : SKY_DAY).lerp(GOLD_HOR, night ? 0 : (G3.golden || 0) * .85).multiplyScalar(1 - .85 * black);
   G3.scene.background.copy(SKY_TMP);
