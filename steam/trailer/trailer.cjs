@@ -110,7 +110,7 @@ async function captureClips() {
       await frame.screenshot({ path: path.join(dir, String(f).padStart(5, "0") + ".png") });
     }
     const log = await w.evaluate(() => { const L = window.__sfxLog; window.__sfxLog = []; return L; });
-    sfx.push({ seg: i, list: log.map(([nm, t]) => [nm, Math.max(0, t - t0)]).filter(e => e[1] < g.secs) });
+    sfx.push({ seg: i, list: log.filter(([nm, t]) => t >= t0 - .02).map(([nm, t]) => [nm, Math.max(0, t - t0)]).filter(e => e[1] < g.secs) });
     console.log("clip", i, g.clip, n, "frames, trampled:", (await w.evaluate(() => __game.s.dead)));
   }
   fs.writeFileSync(sfxFile, JSON.stringify(sfx));
