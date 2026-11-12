@@ -164,7 +164,10 @@ around.
 - **The crowd**: clay-figure people with different builds, hair, clothes and ways of walking
   (bouncy, strutting, waddling, shuffling). Some carry signs, flags, balloons or umbrellas.
 - **Sound**: recorded crowd, animal, impact and interface sounds (all CC0, listed in
-  `game/audio/CREDITS.md`) on top of the synthesized music.
+  `game/audio/CREDITS.md`).
+- **Music**: 17 recorded CC0 tracks (`game/music/CREDITS.md`): every venue has its own song, a calm
+  one plays while you plan, the music opens up at each drop and goes muffled during the evacuation.
+  If the files are missing, the game falls back to its synthesized music.
 
 ## Keyboard shortcuts
 

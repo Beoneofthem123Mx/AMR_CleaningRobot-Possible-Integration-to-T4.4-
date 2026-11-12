@@ -5,6 +5,8 @@
 const { _electron, chromium } = require(process.env.PLAYWRIGHT_PATH || "playwright");
 const fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
 const ROOT = path.resolve(__dirname, "../.."), WORK = path.join(__dirname, "work"), FPS = 30;
+// recorded CC0 music bed (game/music); set TRACK= to an empty value for the old synthesized music
+const TRACK = process.env.TRACK ?? "dance_1";
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map(Number) : null;
 
 // script: title cards and gameplay shots
@@ -113,7 +115,7 @@ async function captureClips() {
   }
   fs.writeFileSync(sfxFile, JSON.stringify(sfx));
   // soundtrack: the game's own music and effects, rendered offline
-  const plan = { segs: SEG.map(g => ({ dur: g.card ? g.dur : g.secs, card: !!g.card, hot: !!g.hot, end: !!g.end })), sfx };
+  const plan = { recorded: !!TRACK, segs: SEG.map(g => ({ dur: g.card ? g.dur : g.secs, card: !!g.card, hot: !!g.hot, end: !!g.end })), sfx };
   const wavB64 = await w.evaluate(async plan => {
     const total = plan.segs.reduce((s, g) => s + g.dur, 0) + 1.5, sr = 44100, off = new OfflineAudioContext(2, Math.ceil(sr * total), sr);
     AU.ctx = null; AU.on = true; const OrigAC = window.AudioContext; window.AudioContext = function () { return off; }; audioInit(); window.AudioContext = OrigAC;
@@ -127,7 +129,7 @@ async function captureClips() {
       if (g.card) { SFX.boom(a + .01); if (g.end) { SFX.cheer(a + .2); SFX.jingle(a + .5); } }
     });
     const endMusic = total - 1.2;
-    while (t < endMusic) { AU.step = step; const hot = plan.segs.some((g, i) => g.hot && t >= starts[i] && t < starts[i] + g.dur); st.play(step % st.steps, t, s, hot); t += s; step++; }
+    while (!plan.recorded && t < endMusic) { AU.step = step; const hot = plan.segs.some((g, i) => g.hot && t >= starts[i] && t < starts[i] + g.dur); st.play(step % st.steps, t, s, hot); t += s; step++; }
     AU.music.gain.setTargetAtTime(0, endMusic, .3); AU.crowd.gain.setTargetAtTime(0, endMusic - 1, .3);
     for (const { seg, list } of plan.sfx) for (const [nm, tt] of list) if (SFX[nm]) SFX[nm](starts[seg] + tt + .01);
     const buf = await off.startRendering(), L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length;
@@ -173,9 +175,14 @@ function assemble() {
   });
   fs.writeFileSync(path.join(WORK, "list.txt"), parts.map(p => `file '${p}'`).join("\n"));
   const final = path.join(__dirname, "human_tsunami_trailer.mp4");
-  sh("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", path.join(WORK, "list.txt"), "-i", path.join(WORK, "audio.wav"),
-    "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-maxrate", "7M", "-bufsize", "14M", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
-    "-af", "afade=t=out:st=" + (SEG.reduce((s, g) => s + (g.card ? g.dur : g.secs), 0) - 1) + ":d=1", "-shortest", "-movflags", "+faststart", final]);
+  const total = SEG.reduce((s, g) => s + (g.card ? g.dur : g.secs), 0);
+  // the music bed: loops if shorter than the trailer, sits under the game's sound effects, fades out at the end
+  const music = TRACK ? ["-stream_loop", "-1", "-i", path.join(ROOT, "game/music", TRACK + ".ogg")] : [];
+  const mix = TRACK ? `[2:a]volume=0.85,atrim=0:${total},afade=t=in:d=0.4[m];[1:a]volume=1.1[f];[f][m]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.95,afade=t=out:st=${total - 1.6}:d=1.6[a]`
+    : `[1:a]afade=t=out:st=${total - 1}:d=1[a]`;
+  sh("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", path.join(WORK, "list.txt"), "-i", path.join(WORK, "audio.wav"), ...music,
+    "-filter_complex", mix, "-map", "0:v", "-map", "[a]", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-maxrate", "7M", "-bufsize", "14M", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
+    "-shortest", "-movflags", "+faststart", final]);
   console.log("done:", final);
 }
 

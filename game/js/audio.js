@@ -115,8 +115,44 @@ Object.assign(STYLES, {
     if (i % 2 === 0) { const c = AU.ctx, o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.type = "sine"; o.frequency.value = note(roots[bar] + 24 + [0, 7, 12, 15, 19, 15, 12, 7][(i >> 1) % 8]); l.frequency.value = 6; lg.gain.value = 9; l.connect(lg); lg.connect(o.frequency); env(g, t, .05, hot ? .09 : .05, s * 2); o.connect(g); g.connect(d); o.start(t); l.start(t); o.stop(t + s * 2.2); l.stop(t + s * 2.2); }
   } },
 });
+// ---------- recorded music (CC0, see game/music/CREDITS.md); the synthesized music is the fallback ----------
+const TRACKS = { plaza: "party_1", circo: "silly_1", estadio: "dance_1", viernes: "funk_1", crucero: "party_3", boda: "jazz_1", hipodromo: "dnb_1",
+  trono: "funk_2", ciudad: "party_2", mitin: "silly_2", taco: "funk_1", ovni: "space_1", aeropuerto: "party_4", arena: "action_1", rocket: "chip_2",
+  zoo: "silly_1", cheese: "chip_1", zombie: "spooky_1", beach: "party_3", park: "chip_1" };
+const MUS = { bufs: {}, loading: {}, cur: null, name: "" };
+function musicBuffer(name) {
+  const c = AU.ctx; if (MUS.bufs[name] || MUS.loading[name] || !c || typeof fetch !== "function" || c.constructor.name === "OfflineAudioContext") return MUS.bufs[name];
+  MUS.loading[name] = true;
+  fetch("music/" + name + ".ogg").then(r => r.arrayBuffer()).then(b => c.decodeAudioData(b)).then(buf => { MUS.bufs[name] = buf; }).catch(() => { /* missing: synth music */ });
+  return null;
+}
+// crossfades to a track (or to silence with name = "")
+function musicTrack(name, vol) {
+  const c = AU.ctx; if (!c) return false;
+  if (name && name !== MUS.name) {
+    const buf = musicBuffer(name); if (!buf) return false;
+    if (MUS.cur) { const o = MUS.cur; o.g.gain.setTargetAtTime(0, c.currentTime, .6); setTimeout(() => { try { o.s.stop(); } catch (e) { /* already stopped */ } }, 4000); }
+    const s2 = c.createBufferSource(), g = c.createGain(), f = c.createBiquadFilter();
+    s2.buffer = buf; s2.loop = true; g.gain.value = 0; f.type = "lowpass"; f.frequency.value = 20000;
+    s2.connect(f); f.connect(g); g.connect(AU.musicBus); s2.start(); MUS.cur = { s: s2, g, f }; MUS.name = name;
+  }
+  if (MUS.cur) MUS.cur.g.gain.setTargetAtTime(vol, c.currentTime, .5);
+  return !!MUS.cur && MUS.name === name;
+}
 function audioTick() {
   const c = AU.ctx; if (!c || !AU.on) return;
+  {
+    // recorded music: calm track while planning, the venue's track in the show, muffled and quiet during the evacuation
+    const ph = phase, want = ph === "plan" || ph === "done" ? "plan_1" : TRACKS[sceneKey] || "party_1";
+    musicBuffer(TRACKS[sceneKey] || "party_1");
+    const vol = ph === "show" ? (fullAt ? .85 : .6) : ph === "evac" ? .35 : .45;
+    if (musicTrack(want, vol) && MUS.cur) {
+      MUS.cur.f.frequency.setTargetAtTime(ph === "evac" ? 900 : ph === "show" && surgeT > 0 ? 20000 : ph === "show" ? 9000 : 2500, c.currentTime, .3);
+      MUS.cur.s.playbackRate.setTargetAtTime(typeof slowT !== "undefined" && slowT > 0 ? .8 : 1, c.currentTime, .1);
+      AU.music.gain.setTargetAtTime(0, c.currentTime, .3);   // the recording replaces the synth music
+      audioCrowd(c); return;
+    }
+  }
   const live = phase === "show" || phase === "evac", st = STYLES[(scene && scene.music) || (sceneKey === "circo" ? "circus" : "edm")] || STYLES.edm;
   // music volume and filter depend on the moment of the show
   const hot = surgeT > 0, target = phase === "show" ? (fullAt ? .55 : .3) : phase === "evac" ? .12 : phase === "plan" ? .14 : 0;
@@ -124,6 +160,10 @@ function audioTick() {
   AU.musicFilter.frequency.setTargetAtTime(phase === "show" ? (hot ? 9000 : fullAt ? 3800 : 1600) : 700, c.currentTime, .3);
   const s = 60 / st.bpm / (st.steps === 12 ? 3 : 4);
   while (AU.nextT < c.currentTime + .12) { st.play(AU.step % st.steps, AU.nextT, s, hot); AU.nextT += s; AU.step++; }
+  audioCrowd(c);
+}
+function audioCrowd(c) {
+  const live = phase === "show" || phase === "evac", hot = surgeT > 0;
   // the crowd gets louder and higher-pitched when squeezed
   let pr = 0; for (let i = 0; i < ag.length; i += 25) pr += ag[i].ps; pr = ag.length ? pr / Math.ceil(ag.length / 25) : 0;
   AU.crowd.gain.setTargetAtTime(live ? Math.min(.5, .04 + ag.length / 9000 + pr * .03 + (hot ? .12 : 0)) : 0, c.currentTime, .3);
