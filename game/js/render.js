@@ -727,13 +727,15 @@ function buildModel(m) {
       const base = m.kind === "unicycle" ? .65 : 0;
       if (m.kind === "unicycle") { const w = part(g, "cyl", "#1c1c1c", .32, .08, .32, 0, .32, 0); w.rotation.x = Math.PI / 2; part(g, "cyl", "#9aa0a6", .03, .45, .03, 0, .65, 0); u.wheel = w; }
       const bodyG = pivot(g, 0, base, 0); u.body = bodyG;
-      part(bodyG, "sph", body, .2, .38, .26, 0, 1.15, 0);
-      part(bodyG, "sph", clown ? "#fbe9d7" : "#e0ac84", .15, .15, .15, .02, 1.65, 0);
-      if (clown) { part(bodyG, "sph", "#ff3b2f", .055, .055, .055, .17, 1.65, 0); for (const s of [-1, 1]) part(bodyG, "sph", "#ff5a3c", .1, .1, .1, -.02, 1.7, s * .14); }
-      if (m.kind === "flyer") part(bodyG, "sph", "#c9ced6", .17, .12, .17, 0, 1.72, 0);
-      if (m.kind === "dj") { for (const s of [-1, 1]) part(bodyG, "sph", "#e53229", .06, .08, .06, .02, 1.66, s * .15); part(g, "box", "#2b2d33", .6, .95, 1.6, .6, .48, 0); part(g, "box", basic("#22d3ee"), .62, .08, 1.62, .6, .9, 0); }
+      part(bodyG, "sph", body, .27, .44, .3, 0, 1.0, 0); part(bodyG, "sph", body, .2, .22, .22, 0, 1.34, 0);   // toy pear body
+      part(bodyG, "sph", clown ? "#fbe9d7" : "#e0ac84", .2, .2, .2, .02, 1.62, 0);
+      for (const s of [-1, 1]) part(bodyG, "sph", "#111214", .034, .042, .034, .21, 1.67, s * .075);
+      if (clown) { part(bodyG, "sph", "#ff3b2f", .07, .07, .07, .23, 1.6, 0); for (const s of [-1, 1]) part(bodyG, "sph", "#ff5a3c", .12, .12, .12, -.02, 1.68, s * .18); }
+      if (m.kind === "guard") { part(bodyG, "cyl", m.role === "slow" ? "#1b5e86" : "#20252b", .2, .09, .2, -.01, 1.8, 0); part(bodyG, "box", m.role === "slow" ? "#1b5e86" : "#20252b", .2, .025, .24, .17, 1.77, 0); }
+      if (m.kind === "flyer") part(bodyG, "sph", "#c9ced6", .22, .15, .22, 0, 1.72, 0);
+      if (m.kind === "dj") { for (const s of [-1, 1]) part(bodyG, "sph", "#e53229", .07, .09, .07, .02, 1.64, s * .2); part(g, "box", "#2b2d33", .6, .95, 1.6, .6, .48, 0); part(g, "box", basic("#22d3ee"), .62, .08, 1.62, .6, .9, 0); }
       if (m.kind === "influencer") {
-        part(bodyG, "sph", "#f5d36b", .17, .2, .17, -.05, 1.72, 0);
+        part(bodyG, "sph", "#f5d36b", .22, .24, .22, -.05, 1.7, 0);
         const ring = new THREE.Mesh(new THREE.TorusGeometry(.32, .04, 6, 20), basic("#ffffff")); ring.position.set(.75, 2, 0); ring.rotation.y = Math.PI / 2; g.add(ring);
         part(g, "cyl", "#222", .02, 2, .02, .75, 1, 0); part(g, "box", "#151617", .03, .16, .09, .45, 1.75, .2);
       }
