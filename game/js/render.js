@@ -264,7 +264,7 @@ function buildStatic3D() {
         part(pv, "sph", cap, r * .28, r * .28, r * .18, 0, 0, .05);
       }
     }
-    if (o.kind === "pool" || o.kind === "jacuzzi" || o.kind === "fountain") {   // a moving water surface on top
+    if (o.kind === "pool" || o.kind === "jacuzzi" || o.kind === "fountain" || o.kind === "zoo_pond") {   // a moving water surface on top
       if (!G3.poolMat) G3.poolMat = waterify(new THREE.MeshStandardMaterial({ color: 0x0f7fc0, roughness: .06, metalness: .05, transparent: true, opacity: .82 }), 2.2);
       const wg = o.t === "r" ? new THREE.PlaneGeometry(o.x1 - o.x0 - .3, o.y1 - o.y0 - .3) : new THREE.CircleGeometry(Math.max(.2, o.r - .25), 28);
       const wm = new THREE.Mesh(wg, G3.poolMat); wm.rotation.x = -Math.PI / 2;
