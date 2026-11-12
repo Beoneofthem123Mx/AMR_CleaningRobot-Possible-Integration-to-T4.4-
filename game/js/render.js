@@ -970,7 +970,7 @@ function cineCamera(dt) {
     // the subject may stand inside a big object (stands, a wall): look from the lens side too, and rise over it
     const p0 = CAM_V.copy(c.position).lerp(tgt, 1 - CAM_RC.k), back = CAM_T2.copy(tgt).sub(p0); const bl = back.length(); back.normalize();
     CAM_RC.ray.set(p0, back); CAM_RC.ray.far = bl; const hit2 = CAM_RC.ray.intersectObject(G3.static, true).find(o => o.distance < bl - 1.5 && o.object.visible);
-    CAM_RC.u = hit2 ? 6 : 0;
+    CAM_RC.u = hit2 && CAM_RC.k > .5 ? 3 : 0;   // only a small lift, and only when sliding in was not enough
   }
   CAM_RC.uy = (CAM_RC.uy || 0) + ((CAM_RC.u || 0) - (CAM_RC.uy || 0)) * Math.min(1, (dt || .016) * 3);
   CAM_RC.s = (CAM_RC.s ?? 1) + ((CAM_RC.k ?? 1) - (CAM_RC.s ?? 1)) * Math.min(1, (dt || .016) * 4);
