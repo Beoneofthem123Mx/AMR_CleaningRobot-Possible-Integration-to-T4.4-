@@ -76,9 +76,11 @@ SCENE_MODELS.plaza_screen = (g, u, m) => {
 SCENE_MODELS.plaza_band = (g, u, m) => {
   const b = pivot(g, 0, m.role === "drums" ? -.35 : 0, 0), y0 = b.position.y, dark = "#22242a";
   if (m.role !== "drums") for (const s of [-1, 1]) part(b, "cyl", dark, .07, .8, .07, 0, .4, s * .1);
-  part(b, "sph", m.col, .2, .38, .26, 0, 1.15, 0);
-  part(b, "sph", "#e0ac84", .15, .15, .15, .02, 1.65, 0);
-  part(b, "sph", m.hair || "#2b1d14", .16, .12, .16, -.03, 1.74, 0);
+  part(b, "sph", m.col, .27, .44, .3, 0, 1.0, 0); part(b, "sph", m.col, .2, .22, .22, 0, 1.34, 0);   // toy pear body like the crowd
+  part(b, "sph", "#e0ac84", .2, .2, .2, .02, 1.62, 0);
+  part(b, "sph", m.hair || "#2b1d14", .21, .13, .21, -.03, 1.74, 0);
+  for (const s of [-1, 1]) part(b, "sph", "#111214", .034, .042, .034, .21, 1.66, s * .07);
+  part(b, "sph", "#3a1414", .025, .04, .05, .205, 1.53, 0);
   const arms = [-1, 1].map(s => { const p = pivot(b, 0, 1.38, s * .27); part(p, "cyl", m.col, .055, .5, .055, 0, -.25, 0); part(p, "sph", "#e0ac84", .07, .07, .07, 0, -.52, 0); return p; });
   if (m.role === "guitar" || m.role === "bass") {
     const gt = pivot(b, .22, 1.0, 0); gt.rotation.x = .5;
