@@ -1192,11 +1192,12 @@ function render3D(now, dtR) {
   // animals, cars and objects
   const alive = new Set();
   for (const m of movers.concat(performers, guards)) {
-    if (!m.obj) { m.obj = buildModel(m); if (!m.obj.parent) G3.moverGrp.add(m.obj); }
+    if (!m.obj) { m.obj = buildModel(m); if (!m.obj.parent) G3.moverGrp.add(m.obj); if (phase === "plan" && m.kind === "guard") m.dropT = performance.now(); }
     if (m.kind === "flare" && Math.random() < .7) puff(m.x + (Math.random() - .5) * .3, m.y, 1.6, m.col, .25, 3.5, 1.4);
     if (m.dust && m.y > 0 && m.y < WH && Math.random() < .6) puff(m.x - Math.cos(m.ang) * .9, m.y - Math.sin(m.ang) * .9, .3, "#c9a77a", .3, 1.6, .5);
     alive.add(m.obj);
-    m.obj.position.set(m.x, (m.h || 0) + (m.kind === "beach" ? 1.7 + Math.abs(Math.sin(tt * 3 + m.x)) * .6 : 0), m.y);
+    const dq = m.dropT ? Math.min(1, (performance.now() - m.dropT) / 450) : 1; if (dq >= 1) m.dropT = 0;   // guards hop into place
+    m.obj.position.set(m.x, (m.h || 0) + (m.kind === "beach" ? 1.7 + Math.abs(Math.sin(tt * 3 + m.x)) * .6 : 0) + (1 - bounceOut(dq)) * 3.5, m.y);
     m.obj.rotation.y = -m.ang;
     animateModel(m, tt);
   }
