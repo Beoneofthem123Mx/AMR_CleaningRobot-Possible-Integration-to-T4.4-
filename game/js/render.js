@@ -401,6 +401,11 @@ function buildProp3D(grp, o) {
     sh(part(grp, "box", "#f7f7f5", 2, 1.4, 2, x, .7, y));
     sh(part(grp, "box", basic("#e53935"), 1.1, .06, .32, x, 2.42, y)); sh(part(grp, "box", basic("#e53935"), .32, .06, 1.1, x, 2.42, y));
     sh(part(grp, "box", "#e53935", .05, .5, .5, x + 1.01, .9, y));
+    for (const [dx, dz, ry] of [[0, 1.01, 0], [0, -1.01, 0], [-1.01, 0, 1]]) {   // red crosses on every side and a dark doorway
+      sh(part(grp, "box", basic("#e53935"), ry ? .04 : .6, .18, ry ? .6 : .04, x + dx, 1.05, y + dz)); sh(part(grp, "box", basic("#e53935"), ry ? .04 : .18, .6, ry ? .18 : .04, x + dx, 1.05, y + dz));
+    }
+    sh(part(grp, "box", "#3a2f2a", .04, .9, .6, x + 1.02, .45, y + .55));
+    G3.medicLights = G3.medicLights || []; const lt = part(grp, "sph", basic("#ff3b30"), .14, .14, .14, x, 2.62, y); G3.medicLights.push(lt);
   } else if (o.ptype === "screen") { // big screen on two legs, tilted so it reads from above
     for (const s of [-1, 1]) sh(part(grp, "box", "#2b2f35", .14, 2.6, .14, x, 1.3, y + s * 1.5));
     const scr = new THREE.Group(); scr.position.set(x, 2.9, y); scr.rotation.z = .9; grp.add(scr);
@@ -1338,6 +1343,7 @@ function render3D(now, dtR) {
     if (q >= 1 && !d.done) { d.done = true; for (let k = 0; k < 3; k++) puff(d.x + (Math.random() - .5) * 1.5, d.y + (Math.random() - .5) * 1.5, .2, "#e6dcc4", .25, .6, .3); }
   }
   G3.landing = G3.landing.filter(d => !d.done);
+  if (G3.medicLights) { G3.medicLights = G3.medicLights.filter(l => l.parent); const on = Math.sin(tt * 6) > 0 ? 1 : .25; for (const l of G3.medicLights) l.material.color.setRGB(2.4 * on, .3 * on, .25 * on); }   // blinking beacon
   if (G3.exitMat) G3.exitMat.emissiveIntensity = (scene.night ? 1.1 : .35) + (phase === "evac" ? (scene.night ? .9 : 1.4) * (.5 + .5 * Math.sin(tt * 7)) : 0);   // exits pulse during the evacuation
   FAN.time.value = tt; FAN.ola.value = ola ? ola.x : -99; FAN.amp.value = live && fullAt ? (surgeT > 0 || cheerT > 0 ? .32 : .1) : .02;
   RIM.value = scene.night ? (cine > .01 ? .9 : .5) : .42; WATER.time.value = tt;   // from above the bloom already lifts the crowd at night
