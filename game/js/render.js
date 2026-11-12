@@ -1026,6 +1026,15 @@ function updateFxLayer(live) {
   } else if (phase === "plan") G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height);
   g.scale(k, k);
   // red shadow under those who fell
+  // rain: little splash rings popping on the floor
+  if (MOD && MOD.rain && (phase === "show" || phase === "evac")) {
+    const now = performance.now() / 1000;
+    for (let i = 0; i < 70; i++) {
+      const sd = i * 12.9898, life = .55, ph = (now / life + (Math.sin(sd) * 43758.5 % 1)) % 1, cyc = Math.floor(now / life + (Math.sin(sd) * 43758.5 % 1));
+      const rx = Math.abs(Math.sin(sd * 1.7 + cyc * 3.1) * 9973 % WW), ry = Math.abs(Math.cos(sd * 2.3 + cyc * 1.7) * 7919 % SH);
+      g.strokeStyle = `rgba(235,245,255,${(.75 * (1 - ph)).toFixed(3)})`; g.lineWidth = .09; g.beginPath(); g.arc(rx, ry, .08 + ph * .35, 0, 7); g.stroke();
+    }
+  }
   // footprints and tire marks of heavy visitors
   for (const [x, y, tr, an] of prints) {
     g.fillStyle = "rgba(60,45,30,.22)";
