@@ -124,7 +124,9 @@ window.__game = { manual: on => { window.__manual = on; vnow = performance.now()
 // demo behind the menu: a real show so the title screen feels alive
 let demo = false;
 function startDemo() {
-  demo = true; const keys = ["plaza", "circo"], k = keys[(Math.random() * keys.length) | 0];
+  // the menu backdrop shows a venue the player has unlocked (the first two for new players)
+  const open = Object.keys(SCENES).filter(key => typeof isUnlocked === "function" && isUnlocked(key) && !SCENES[key].night);
+  demo = true; const keys = open.length > 2 ? open : ["plaza", "circo"], k = keys[(Math.random() * keys.length) | 0];
   sceneKey = k; scene = SCENES[k]; CROWD = scene.crowd; gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   buildWorld(); phase = "plan"; start(MODS_BY_ID.normal); camMode = 0;
 }
