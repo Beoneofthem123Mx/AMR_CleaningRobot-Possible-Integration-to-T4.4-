@@ -82,10 +82,15 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 - It's drawn in 3D with [three.js](https://threejs.org/) (r149, MIT license in `game/vendor/three.LICENSE`):
   the ground is a texture with the venue's markings, and on top sit the stages, fences, gates,
   animals and cars as 3D models with shadows.
-- The audience uses five character models (classic, cap, long hair, backpack and partygoer with a
-  glow stick) drawn with instanced meshes. Every person swings their arms and legs as they walk,
-  jumps and raises their arms during the show, flails when squeezed and lies flat on the ground if
-  trampled.
+- The audience are wobbly toy people (pear-shaped bodies, big heads, dot eyes, noodle arms, chunky
+  shoes) drawn with instanced meshes, with builds, gaits, hair, hats, signs, balloons and flags.
+  They lean into the walk, squash and stretch as they bounce, get thinner and taller when squeezed,
+  and show it on their faces: wide eyes and an O mouth under pressure, a grin when the drop hits,
+  X eyes when trampled. Falls are rag-doll tumbles with a bounce, dizzy stars and a comic impact mark.
+- Lighting and effects: HDR bloom, tilt-shift focus, contact shading, a split-tone grade, a golden
+  hour during day shows, an overcast look with a wet floor in the rain, a sky dome with clouds or
+  stars for the street camera, living water on pools and seas, lasers at night venues and phone
+  flashlights during blackouts.
 - If the hardware is struggling, the game automatically drops crowd shadows and lowers the
   resolution.
 - On landscape monitors the view is rotated so the stage sits on the left.

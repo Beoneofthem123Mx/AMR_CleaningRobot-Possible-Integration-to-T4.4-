@@ -83,7 +83,12 @@ and everything that can cross a crowd does.
 Each one behaves differently when a crowd, a car or an elephant leans on it.
 [*]Open and close gates, place security guards, water stations, first aid tents and a big screen.
 [*]Watch the flow preview and the pressure heatmap. Red is where the newspapers will be tomorrow.
+[*]The plan warns you: glowing red spots where people will pile up and a label on every exit.
 [/list]
+
+[h2]Floppy little people[/h2]
+Every attendee is a wobbly toy with dot eyes. They lean, bounce and squash, panic with an O mouth
+when squeezed, and go down like rag dolls with X eyes and dizzy stars. Then a tiny ghost floats up.
 
 [h2]Then watch it go wrong[/h2]
 [list]
