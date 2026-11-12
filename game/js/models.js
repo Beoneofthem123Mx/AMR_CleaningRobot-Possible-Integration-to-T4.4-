@@ -80,11 +80,11 @@ function personModel(g, u, P, m) {
   const sc = P.scale || 1, root = pivot(g, 0, 0, 0); root.scale.setScalar(sc);
   const b = pivot(root, 0, 0, 0); u.body = b;
   if (P.dress) { part(b, "cone", P.body, .55, 1.3, .55, 0, .65, 0); }
-  else for (const s of [-1, 1]) u.legs.push(leg(b, 0, .8, s * .1, .06, .8, P.legs));
+  else for (const s of [-1, 1]) { const lg = leg(b, 0, .66, s * .12, .085, .62, P.legs); part(lg, "sph", P.shoes || "#1c1c20", .12, .07, .085, .05, -.62, 0); u.legs.push(lg); }   // stubby legs with toy shoes
   part(b, "sph", P.body, .27, .44, .3, 0, 1.0, 0); part(b, "sph", P.body, .2, .22, .22, 0, 1.34, 0);   // pear body
   part(b, "sph", P.skin || "#e0ac84", .2, .2, .2, .02, 1.62, 0);                                            // big round head
   if (!P.noEyes) for (const s of [-1, 1]) part(b, "sph", "#111214", .034, .042, .034, .21, 1.66, s * .07);
-  const hc = P.hatCol || "#2b1d14";
+  const hc = P.hatCol || "#2b1d14", hat0 = b.children.length;
   if (P.hat === "sombrero") { part(b, "cyl", hc, .55, .04, .55, 0, 1.76, 0); part(b, "cyl", hc, .17, .25, .17, 0, 1.88, 0); part(b, "cyl", "#e3b23c", .56, .02, .56, 0, 1.79, 0); }
   else if (P.hat === "cap") { part(b, "cyl", hc, .15, .09, .15, .01, 1.76, 0); part(b, "box", hc, .16, .02, .22, .13, 1.73, 0); }
   else if (P.hat === "bun") { part(b, "sph", hc, .16, .12, .16, -.02, 1.72, 0); part(b, "sph", hc, .09, .09, .09, -.1, 1.84, 0); }
@@ -92,7 +92,8 @@ function personModel(g, u, P, m) {
   else if (P.hat === "veil") { part(b, "sph", hc, .17, .14, .17, -.02, 1.7, 0); part(b, "cone", mat("#ffffff", { transparent: true, opacity: .6 }), .35, 1.1, .35, -.25, 1.25, 0); }
   else if (P.hat === "hair") { part(b, "sph", hc, .17, .13, .17, -.02, 1.72, 0); }
   else part(b, "sph", "#2b1d14", .15, .1, .15, -.02, 1.71, 0);
-  u.arms = [-1, 1].map(s => { const p = pivot(b, 0, 1.4, s * .25); part(p, "cyl", P.body, .05, .6, .05, 0, -.3, 0); return p; });
+  for (const ch of b.children.slice(hat0)) { ch.position.y += .07; ch.position.y = 1.62 + (ch.position.y - 1.62) * 1.25; ch.scale.multiplyScalar(1.32); }   // hats sized for the big head
+  u.arms = [-1, 1].map(s => { const p = pivot(b, 0, 1.3, s * .28); part(p, "cyl", P.body, .045, .52, .045, 0, -.26, 0); part(p, "sph", P.skin || "#e0ac84", .062, .062, .062, 0, -.55, 0); return p; });
   if (P.extra) P.extra(g, u, b, m);
   // accessories drawn for the old smaller head (glasses, masks) sit a bit further out on the new one
   for (const ch of b.children) if (ch.position.y > 1.55 && ch.position.y < 1.8 && ch.position.x > .08 && ch.position.x < .2) ch.position.x += .07;
