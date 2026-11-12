@@ -24,7 +24,7 @@ const SEG = [
   { clip: "circo", warm: 28, secs: B * 4, cam: 4, cine: [9, 1.2], ev: [[-1.5, "elephants"], [-.4, "cannon"]], hot: true },
   { clip: "ovni", warm: 26, secs: B * 4, cam: 0, ev: [[-2, "abduccion"]], hot: true },
   { clip: "arena", warm: 26, secs: B * 4, cam: 1, ev: [[-1.3, "tope"], [-.4, "sillazo"]], hot: true },
-  { clip: "ciudad", warm: 26, secs: B * 4, cam: 4, cine: [11, 0], ev: [[-.8, "fuegos"]], hot: true },
+  { clip: "ciudad", warm: 26, secs: B * 4, cam: 4, cine: [5, 1.5708], ev: [[-.8, "fuegos"]], hot: true },
   { clip: "crucero", warm: 26, secs: B * 4, cam: 4, cine: [16, 1.2], ev: [[-.8, "flamenco"]], hot: true },
   { clip: "plaza", warm: 26, secs: B * 4, cam: 1, mod: "rain", ev: [[-.6, "dogs"]], hot: true },
   { clip: "zoo", warm: 26, secs: B * 4, cam: 1, ev: [[-1.6, "giraffe"], [-1.2, "penguins"]], hot: true },
