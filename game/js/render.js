@@ -515,6 +515,8 @@ function renderPeople(tt, dtR, vb) {
       const st = 1 + clamp(bob, 0, .4) * .9 - (bob < .02 && (a.dance || a.ws === 1) ? .07 : 0), sq = 1 / Math.sqrt(st);
       LT[0] *= sq; LT[1] *= sq; LT[2] *= sq; LT[3] *= st; LT[4] *= st; LT[5] *= st; LT[6] *= sq; LT[7] *= sq; LT[8] *= sq; LT[10] = LOCAL.torso[10] * (1 + (st - 1) * .4);
       FACE.lift = (st - 1) * .45;
+      const sqz = clamp((a.ps / PCRIT - .45) / .55, 0, 1);   // squeezed in the crowd: thinner and taller, like a toothpaste tube
+      if (sqz > 0) { const nx = 1 - .2 * sqz, ny = 1 + .12 * sqz; LT[0] *= nx; LT[1] *= nx; LT[2] *= nx; LT[3] *= ny; LT[4] *= ny; LT[5] *= ny; LT[6] *= nx; LT[7] *= nx; LT[8] *= nx; FACE.lift += .1 * sqz; }
     } else FACE.lift = 0;
     if (!down) {   // wobble: lean forward with speed and rock from foot to foot, the head follows
       const spd = Math.min(1.4, Math.hypot(a.vx, a.vy)), lean = spd * .16 + (a.ps > PCRIT * .55 ? .12 : 0), rock = Math.sin(a.wp) * .11 * Math.min(1, spd + .3);
