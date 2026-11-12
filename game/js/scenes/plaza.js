@@ -99,7 +99,7 @@ SCENE_MODELS.plaza_band = (g, u, m) => {
 };
 SCENES.plaza = {
   name: "The Plaza", tag: "Free concert", outside: "#a39a8b", bulbH: 1.95,
-  light: { sky: 0xfff1dc, ground: 0x9c8462, hemi: .68, sun: 0xffe3b5, sunI: 1.35 }, crowd: 3200, fenceBudget: 60, maxGates: 5, gates: [F, F, T, F, T, F, F],
+  light: { sky: 0xfff1dc, ground: 0x9c8462, hemi: .68, sun: 0xffe3b5, sunI: 1.35 }, crowd: 2600, fenceBudget: 70, maxGates: 5, gates: [F, F, T, F, T, F, F],
   intro: "Free concert in the plaza today. Also passing through the plaza: cars, dogs and giant beach balls.",
   acts: ["They're playing the hit!", "Everybody to the front!", "Drop the bass!", "Shoving time!"],
   events: ["car", "dogs", "beachballs", "icecream", "car", "dogs"],

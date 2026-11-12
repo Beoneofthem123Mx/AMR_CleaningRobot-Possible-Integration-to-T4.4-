@@ -211,7 +211,7 @@ function step() {
     }
   }
   stepGlobal(); stepMovers(); moverForces(); calmForces();
-  const out = [];
+  const out = []; let pmax = 0;
   for (const a of ag) {
     const leaving = evac && evacT > a.leave;
     if (windF.t > 0) a.fx += windF.x * 2.2 * Math.min(1, windF.t);
@@ -262,7 +262,7 @@ function step() {
     if (soft) a.p *= .7;   // foam padding soaks up the squeeze
     a.x = clamp(a.x, R, WW - R);
     if (!evac) a.y = Math.min(a.y, SH - R);
-    a.ps += (a.p - a.ps) * .1;
+    a.ps += (a.p - a.ps) * .1; if (a.ps > pmax) pmax = a.ps;
     const pc = PCRIT * (MOD && MOD.pcritMul || 1);
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
@@ -272,6 +272,8 @@ function step() {
     out.push(a);
   }
   ag = out;
+  // a calm evacuation is boring to watch: after 2 s with nobody squeezed the clock runs fast
+  calmT = evac && pmax < PCRIT * .4 ? calmT + DT : 0;
   // velvet ropes snap when the crowd leans on them too hard
   let snapped = false;
   for (const f of fences) {
@@ -331,7 +333,7 @@ function canStart() {
 const altShare = () => (MOD && MOD.altShare) || (props.some(p => p.type === "screen") ? .25 : 0);
 let planFences = null;
 // where people fell in the last show of this venue: shown on the plan and explained in the paper
-let lastFalls = [], lastFallsScene = "";
+let lastFalls = [], lastFallsScene = "", calmT = 0;
 // one sentence telling the player where it went wrong
 function fallTip() {
   if (!lastFalls.length) return "";
@@ -349,7 +351,7 @@ function start(mod) {
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] }; megaUsed = false;
-  phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; setDead(0, true); resetFx();
+  phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; calmT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();
   if (!demo) { VOICE.ann = Math.random() < .5 ? "male" : "female"; announce("go"); }
   if (MOD.uniform) MOD.uc = (Math.random() * SHIRTS.length) | 0;
@@ -364,7 +366,7 @@ function finish() {
   if (demo) { startDemo(); return; }
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
-  const stars = dead === 0 && stuck === 0 ? 3 : pct <= .01 ? 2 : pct <= .03 ? 1 : 0;
+  const stars = dead === 0 && stuck === 0 ? 3 : pct <= .015 ? 2 : pct <= .05 ? 1 : 0;
   if (sandbox) { showReport(stars, stuck, []); ui(); return; }   // sandbox: nothing is saved, nothing is earned
   const st = loadStats(); st.shows++; st.trampled += dead; st.abducted += abducted; st.saved += evacuated; if (stars === 3) st.perfect++; st.worst = Math.max(st.worst, dead); saveJSON("mh.stats", st);
   const fresh = awardMedals(stars, stuck, megaUsed);

@@ -81,7 +81,8 @@ function frame(now, fixed) {
   // recording mode (tests/trailer only): frames advance by hand with __game.tick
   if (window.__manual && fixed === undefined) { requestAnimationFrame(frame); return; }
   const real = fixed ?? Math.max(0, Math.min(.1, (now - last) / 1000)); last = now;
-  const sp = paused ? 0 : (demo && !fullAt ? 3 : speed) * (slowT > 0 ? .22 : 1);  // the demo behind the menu fills up fast
+  const ff = !demo && phase === "evac" && calmT > 2 && slowT <= 0;   // safe exit: fast-forward
+  const sp = paused ? 0 : (demo && !fullAt ? 3 : ff ? Math.max(speed, 4) : speed) * (slowT > 0 ? .22 : 1);  // the demo behind the menu fills up fast
   if (slowT > 0) slowT -= real;
   if (phase === "show" || phase === "evac") {
     acc += real / DT * sp; const n = Math.min(10, Math.floor(acc)); acc -= n; if (acc > 10) acc = 0;
@@ -89,7 +90,7 @@ function frame(now, fixed) {
     const ab = $("#abd"); ab.hidden = !abducted; if (abducted) ab.textContent = `Abducted ${abducted}`;
     $("#status").textContent = phase === "show"
       ? (spawned < CROWD ? `Entering ${spawned} / ${CROWD}` : `Show on · ends in ${Math.max(0, Math.ceil(fullAt + SHOW_TIME - t))} s`) + ` · Megaphone ${mega.n}`
-      : `Evacuating · ${ag.length} left · Megaphone ${mega.n}`;
+      : `Evacuating · ${ag.length} left` + (ff ? ` · ▶▶ all calm, fast-forward` : ` · Megaphone ${mega.n}`);
   } else if (phase === "plan") stepPreview(real);
   camKeys(real);
   updateFx(real * (phase === "show" || phase === "evac" ? sp : 1));

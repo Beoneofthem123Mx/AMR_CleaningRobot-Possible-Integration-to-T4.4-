@@ -84,7 +84,9 @@ cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", 
 
 // ===== Flow preview (the trails from the video) =====
 let preview = [];
-function resetPreview() { preview = []; }
+// crowding map of the preview: cells where many trails slow down and pile up are future crush points
+const DG = 2, dangerW = Math.ceil(WW / DG), dangerH = Math.ceil(SH / DG); let danger = new Float32Array(dangerW * dangerH);
+function resetPreview() { preview = []; danger.fill(0); }
 function seedParticle() {
   const open = []; for (let i = 0; i < SLOTS; i++) if (gates[i]) open.push(i);
   const i = open[(Math.random() * open.length) | 0];
@@ -92,11 +94,16 @@ function seedParticle() {
   return { x, y, trail: [], age: 0, life: 6 + Math.random() * 4 };
 }
 function stepPreview(dt) {
+  for (let i = 0; i < danger.length; i++) danger[i] *= Math.exp(-dt / 4);
   while (preview.length < 220) { const p = seedParticle(); p.age = Math.random() * p.life; preview.push(p); }
   for (let k = 0; k < preview.length; k++) {
     let p = preview[k]; p.age += dt;
     const id = cellOf(p.x, p.y);
-    if (p.age > p.life || !isFinite(fStage[id]) || fStage[id] < .6) { preview[k] = seedParticle(); continue; }
+    if (p.age > p.life || !isFinite(fStage[id]) || fStage[id] < .6) {
+      // where trails arrive is where the crowd will press: pile it into the danger map
+      if (isFinite(fStage[id]) && fStage[id] < .6) danger[clamp((p.y / DG) | 0, 0, dangerH - 1) * dangerW + clamp((p.x / DG) | 0, 0, dangerW - 1)] += 1;
+      preview[k] = seedParticle(); continue;
+    }
     const sp = 7 + (k % 5);
     p.x += (dirS[id * 2] + (Math.random() - .5) * .5) * sp * dt; p.y += (dirS[id * 2 + 1] + (Math.random() - .5) * .5) * sp * dt;
     p.trail.push(p.x, p.y, fStage[id]); if (p.trail.length > 90) p.trail.splice(0, 3);
