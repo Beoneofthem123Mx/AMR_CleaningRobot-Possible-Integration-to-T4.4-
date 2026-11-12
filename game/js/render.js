@@ -782,6 +782,13 @@ function updateFxLayer(live) {
   // red shadow under those who fell
   g.fillStyle = "rgba(200,30,30,.28)";
   for (const a of fallen) { g.beginPath(); g.arc(a.x, a.y, .7, 0, 7); g.fill(); }
+  if (phase === "plan" && lastFalls.length && lastFallsScene === sceneKey) {
+    // where people fell last time: soft red stains with an X on the worst spots
+    g.fillStyle = "rgba(229,50,41,.16)";
+    for (const [x, y] of lastFalls) { g.beginPath(); g.arc(x, y, .9, 0, 7); g.fill(); }
+    g.strokeStyle = "rgba(160,20,20,.75)"; g.lineWidth = .12;
+    for (let i = 0; i < lastFalls.length; i += 6) { const [x, y] = lastFalls[i]; g.beginPath(); g.moveTo(x - .3, y - .3); g.lineTo(x + .3, y + .3); g.moveTo(x + .3, y - .3); g.lineTo(x - .3, y + .3); g.stroke(); }
+  }
   if (phase === "plan") {
     g.lineCap = "round"; g.lineWidth = .22;
     for (const p of preview) {

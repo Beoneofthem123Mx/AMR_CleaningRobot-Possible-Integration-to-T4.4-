@@ -121,9 +121,11 @@ function setDead(n, quiet) {
 }
 function showCard(html, kind) {
   const c = $("#card"); c.innerHTML = html; c.className = "card" + (kind ? " " + kind : ""); c.onclick = null;
+  const menu = kind === "menu" || kind === "options" || (typeof demo !== "undefined" && demo);   // no game toolbar behind the menus
+  $("#bar").style.visibility = menu ? "hidden" : ""; $("#ftypes").style.display = menu ? "none" : "";
   $("#overlay").hidden = false; const b = $("#card .go"); if (b) b.focus();
 }
-function hideCard() { $("#overlay").hidden = true; }
+function hideCard() { $("#overlay").hidden = true; $("#bar").style.visibility = ""; $("#ftypes").style.display = ""; }
 function ui() {
   const plan = phase === "plan";
   $("#cFence").textContent = sandbox ? "∞" : `$${Math.round(fenceLeft())}`;

@@ -267,7 +267,7 @@ function step() {
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
     if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? .75 : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? 1.4 : .4));
-    if (a.dmg >= 1) { fallen.push(a); onFall(a.x, a.y); setDead(dead + 1); continue; }
+    if (a.dmg >= 1) { fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
     if (evac && a.y > SH - .6) { evacuated++; continue; }
     out.push(a);
   }
@@ -329,9 +329,23 @@ function canStart() {
 // the button goes through the today's-twist roulette; tests call start() directly
 // share of the crowd that heads for the alternative goal (a twist like free wifi, or the player's big screen)
 const altShare = () => (MOD && MOD.altShare) || (props.some(p => p.type === "screen") ? .25 : 0);
-let planFences = null;   // the plan as drawn, so fences broken during a show come back afterwards
+let planFences = null;
+// where people fell in the last show of this venue: shown on the plan and explained in the paper
+let lastFalls = [], lastFallsScene = "";
+// one sentence telling the player where it went wrong
+function fallTip() {
+  if (!lastFalls.length) return "";
+  const evacN = lastFalls.filter(f => f[2]).length, nearGates = lastFalls.filter(f => f[1] > FENCE_Y - 6).length;
+  let gi = 0, gb = -1; for (let i = 0; i < SLOTS; i++) { if (!gates[i]) continue; const n = lastFalls.filter(f => Math.abs(f[0] - slotX(i)) < SLOT_W * 1.6 && f[1] > FENCE_Y - 8).length; if (n > gb) { gb = n; gi = i; } }
+  const when = evacN > lastFalls.length * .6 ? "on the way out" : evacN < lastFalls.length * .3 ? "during the show" : "both during the show and on the way out";
+  const where = nearGates > lastFalls.length * .5 ? `right at one of the open gates` : "in the middle of the crowd";
+  const fix = nearGates > lastFalls.length * .5 ? "Open more gates, spread them apart, or slow people down there with stewards and wave breakers."
+    : "Give the crowd room: break up the push toward the stage with short fences, guards or a big screen elsewhere.";
+  return `Most were trampled ${where}, ${when}. ${fix} The red marks on the plan show exactly where.`;
+}   // the plan as drawn, so fences broken during a show come back afterwards
 function start(mod) {
   planFences = fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type }));
+  if (!demo) { lastFalls = []; lastFallsScene = sceneKey; }
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] }; megaUsed = false;

@@ -164,10 +164,10 @@ const QUOTES = [
 function showReport(stars, stuck, fresh) {
   const p = PLACE[sceneKey] || scene.place || scene.name.toUpperCase(), v = { P: p, N: CROWD.toLocaleString("en"), D: dead.toLocaleString("en") };
   const head = fill(pick(stars === 3 ? HEADLINES.perfect : stars ? HEADLINES.some : HEADLINES.bad), v);
-  const lines = [...eventLog].map(k => (scene.lines && scene.lines[k]) || EVENT_LINES[k]).filter(Boolean).sort(() => Math.random() - .5).slice(0, 2);
+  const lines = [...new Set([...eventLog].map(k => (scene.lines && scene.lines[k]) || EVENT_LINES[k]).filter(Boolean))].sort(() => Math.random() - .5).slice(0, 2);
   if (MOD && MOD.id !== "normal") {
     const ml = MOD.id.split("+").map(k => MOD_LINES[k]).filter(Boolean);
-    lines.unshift(...(ml.length ? ml : [`Today's twist: ${MOD.name.toLowerCase()}. Nobody announced it.`]));
+    for (const l of (ml.length ? ml : [`Today's twist: ${MOD.name.toLowerCase()}. Nobody announced it.`])) if (!lines.includes(l)) lines.unshift(l);
   }
   if (abducted) lines.unshift(`${abducted} attendees were abducted. Their families hope things go better for them up there.`);
   const date = new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" });
@@ -191,6 +191,7 @@ function showReport(stars, stuck, fresh) {
           </div>
         </div>
       </div>
+      ${stars < 3 && fallTip() ? `<p class="tip"><b>Safety inspector:</b> ${fallTip()}</p>` : ""}
       ${fresh && fresh.length ? `<div class="newmedals">${fresh.map(m => `<span class="medal got"><i>${MEDALS[m].icon}</i><b>New medal: ${MEDALS[m].name}</b><small>${MEDALS[m].desc}</small></span>`).join("")}</div>` : ""}
     </div>
     <div class="row"><button class="go" id="retry">Adjust the plan</button><button id="again">Run it again</button><button id="pick">Change venue</button></div>`, "report");
