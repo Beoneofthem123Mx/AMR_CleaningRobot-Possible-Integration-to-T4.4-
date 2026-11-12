@@ -1054,7 +1054,9 @@ function updateFxLayer(live) {
     }
   }
   // confetti litter on the floor
-  for (const [x, y, ci, r] of litter) { g.fillStyle = CONF[ci % CONF.length]; g.globalAlpha = .9; g.save(); g.translate(x, y); g.rotate(r); g.fillRect(-.17, -.1, .34, .2); g.restore(); }
+  for (const [x, y, ci, r, kind] of litter) {
+    if (kind === 1) { g.globalAlpha = 1; g.fillStyle = ["#1c1c20", "#f2f2f2", "#d8322b", "#2f6fc4", "#6b4a2b", "#1c1c20", "#e8b631"][ci]; g.save(); g.translate(x, y); g.rotate(r); g.beginPath(); g.ellipse(0, 0, .2, .12, 0, 0, 7); g.fill(); g.fillStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.ellipse(-.05, 0, .09, .06, 0, 0, 7); g.fill(); g.restore(); continue; }
+    g.fillStyle = CONF[ci % CONF.length]; g.globalAlpha = .9; g.save(); g.translate(x, y); g.rotate(r); g.fillRect(-.17, -.1, .34, .2); g.restore(); }
   g.globalAlpha = 1;
   // footprints and tire marks of heavy visitors
   for (const [x, y, tr, an] of prints) {
