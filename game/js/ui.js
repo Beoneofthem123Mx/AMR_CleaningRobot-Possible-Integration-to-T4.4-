@@ -12,8 +12,8 @@ cv.addEventListener("pointerdown", ev => {
   if (phase === "show" || phase === "evac") {
     const [x, y] = toWorld(ev);
     if (mega.n <= 0 && !sandbox) { caption("The megaphone is out of battery.", true, 1400); return; }
-    if (!sandbox) mega.n--; megaUsed = true; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true });
-    pop(x, y, "CALM DOWN, PLEASE!"); sfx("whistle"); return;
+    if (!sandbox) mega.n--; megaUsed = true; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true }, { x, y, t: -.18, mega: true }, { x, y, t: -.36, mega: true });   // three sound waves
+    shake = Math.min(1, shake + .25); pop(x, y, "CALM DOWN, PLEASE!"); sfx("whistle"); return;
   }
   if (phase !== "plan") return;
   const [x, y] = toWorld(ev);

@@ -1092,7 +1092,7 @@ function updateFxLayer(live) {
   if (drag) for (const [x0, y0, x1, y1] of dragSegs()) drawFence(g, { ax: x0, ay: y0, bx: x1, by: y1, type: drag.type }, true);
   g.lineWidth = .14;
   for (const r of rings) {
-    if (r.mega) { g.lineWidth = .3; g.strokeStyle = `rgba(255,210,58,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .5 + r.t * 4.5, 0, 7); g.stroke(); g.lineWidth = .14; continue; }
+    if (r.mega) { if (r.t < 0) continue; g.lineWidth = .3; g.strokeStyle = `rgba(255,210,58,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .5 + r.t * 4.5, 0, 7); g.stroke(); g.lineWidth = .14; continue; }
     g.strokeStyle = `rgba(229,50,41,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .3 + r.t * 1.8, 0, 7); g.stroke();
   }
   // megaphone area and goal that moved
