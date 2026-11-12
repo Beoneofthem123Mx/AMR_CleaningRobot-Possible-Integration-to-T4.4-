@@ -113,7 +113,7 @@ function init3D() {
   const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .9;
-  G3.renderer = renderer;
+  G3.renderer = renderer; G3.landing = [];
   const sc = G3.scene = new THREE.Scene(); sc.background = new THREE.Color(0x141516);
   G3.camera = new THREE.PerspectiveCamera(30, WW / WH, 1, 500); G3.camera.up.set(0, 0, -1);
   G3.hemi = new THREE.HemisphereLight(0xffffff, 0x8a8478, .9); sc.add(G3.hemi);
@@ -230,8 +230,14 @@ function buildStatic3D() {
       const geo = new THREE.BoxGeometry(o.x1 - o.x0, o.hb, o.y1 - o.y0); geo.translate((o.x0 + o.x1) / 2, o.hb / 2, (o.y0 + o.y1) / 2); buildingUV(geo);
       const mesh = new THREE.Mesh(geo, [side, side, m, m, side, side]); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh); continue;
     }
-    if (o.kind === "player") { buildFence3D(grp, o); continue; }
-    if (o.kind === "prop") { buildProp3D(grp, o); continue; }
+    if (o.kind === "player" || o.kind === "prop") {
+      // pieces placed while planning drop in from above with a bounce
+      const sub = new THREE.Group(); grp.add(sub);
+      if (o.kind === "player") buildFence3D(sub, o); else buildProp3D(sub, o);
+      const key = o.kind === "player" ? `f${o.ax.toFixed(2)},${o.ay.toFixed(2)},${o.bx.toFixed(2)},${o.by.toFixed(2)}` : `p${o.ptype}${o.x.toFixed(2)},${o.y.toFixed(2)}`;
+      if (!DROP_SEEN.has(key)) { DROP_SEEN.add(key); if (phase === "plan") { sub.position.y = 3; G3.landing.push({ g: sub, t0: performance.now(), x: o.kind === "player" ? (o.ax + o.bx) / 2 : o.x, y: o.kind === "player" ? (o.ay + o.by) / 2 : o.y }); } }
+      continue;
+    }
     const h = HEIGHTS[o.kind] || (scene.heights && scene.heights[o.kind]); if (!h && o.kind !== "tent") continue;
     let geo;
     if (o.kind === "tent") { geo = new THREE.ConeGeometry(Math.SQRT2 * 2.5, 3.4, 4, 1); geo.rotateY(Math.PI / 4); geo.translate((o.x0 + o.x1) / 2, 1.7, (o.y0 + o.y1) / 2); }
@@ -865,7 +871,7 @@ function toWorld(ev) {
 let cine = 0, cineAng = 0, cineDist = 13, cineH = 0;   // cineH: trailer only, a raised crane shot looking down
 const SKY_DAY = new THREE.Color(0x8fd0ff), SKY_NIGHT = new THREE.Color(0x0b1030), SKY_TMP = new THREE.Color();
 // living water: rolling wave normals for sun glints and a sky-colored sheen at grazing angles
-const RIM = { value: .42 };
+const RIM = { value: .42 }, DROP_SEEN = new Set();
 let SHOE_L = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
@@ -1152,6 +1158,11 @@ function render3D(now, dtR) {
   if (!G3.renderer) return;
   if (staticDirty) buildStatic3D();
   const tt = now / 1000, live = phase === "show" || phase === "evac";
+  for (const d of G3.landing) {   // fences and props landing
+    const q = Math.min(1, (performance.now() - d.t0) / 420); d.g.position.y = (1 - bounceOut(q)) * 3;
+    if (q >= 1 && !d.done) { d.done = true; for (let k = 0; k < 3; k++) puff(d.x + (Math.random() - .5) * 1.5, d.y + (Math.random() - .5) * 1.5, .2, "#e6dcc4", .25, .6, .3); }
+  }
+  G3.landing = G3.landing.filter(d => !d.done);
   RIM.value = scene.night ? .9 : .42; WATER.time.value = tt;
   // rain: the floor slowly gets wet (darker and shiny), and dries after the show
   const wetT = live && MOD && MOD.rain ? 1 : 0; G3.wet = (G3.wet || 0) + (wetT - (G3.wet || 0)) * Math.min(1, dtR * (wetT ? .25 : .5));
