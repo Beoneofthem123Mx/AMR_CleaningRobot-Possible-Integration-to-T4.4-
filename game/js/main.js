@@ -73,6 +73,11 @@ function updateFx(dt) {
   confetti = confetti.filter(c => c.life > 0);
   // firework sparks and smoke (flares, track dust)
   const sd = Math.pow(.5, dt);
+  // phone camera flashes popping in the crowd during the big moments
+  if (!demo && dt > 0 && ag.length && (surgeT > 0 || cheerT > 0) && sparks.length < 1400) for (let k = 0; k < 3; k++) {
+    if (Math.random() > .5) continue; const a = ag[(Math.random() * ag.length) | 0];
+    sparks.push({ x: a.x + Math.cos(a.h) * .3, y: a.y + Math.sin(a.h) * .3, h: 2.05, vx: 0, vy: 0, vh: 6 * dt * 3, col: "#ffffff", life: .09 });
+  }
   for (const p of sparks) { p.vx *= sd; p.vy *= sd; p.vh = p.vh * sd - 6 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.h += p.vh * dt; p.life -= dt; }
   sparks = sparks.filter(p => p.life > 0 && p.h > 0);
   for (const p of puffs) { p.h += p.vh * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += dt * p.grow; p.life -= dt; }
