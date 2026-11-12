@@ -982,18 +982,23 @@ function buildHorizon() {
   if (G3.horizon) { G3.scene.remove(G3.horizon); G3.horizon.traverse(o => { if (o.geometry && !o.userData.shared) o.geometry.dispose(); }); }
   const grp = G3.horizon = new THREE.Group(), r = rng(sceneKey.length * 97 + 13), cx = WW / 2, cz = SH / 2, night = !!scene.night;
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), C = new THREE.Color();
+  const wet = sceneKey === "crucero" ? () => true : sceneKey === "beach" ? x => x < 2 : () => false;   // no trees or towers standing in the sea
+  if (sceneKey === "crucero") { grp.visible = false; G3.scene.add(grp); return; }
   if (night) {
     const n = 90, im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ map: G3.winTex, color: 0x8a90a8, fog: true }), n);
     for (let i = 0; i < n; i++) { const a = i / n * 6.283 + r() * .05, d = 120 + r() * 40, w = 6 + r() * 10, h = 8 + r() * 34;
+      if (wet(cx + Math.cos(a) * d)) { M.makeScale(0, 0, 0); im.setMatrixAt(i, M); continue; }
       M.compose(V.set(cx + Math.cos(a) * d, h / 2 - .5, cz + Math.sin(a) * d), Q.setFromAxisAngle(V.clone().set(0, 1, 0), -a), S3.set(w, h, w)); im.setMatrixAt(i, M); im.setColorAt(i, C.setHSL(.62, .2, .2 + r() * .25)); }
     grp.add(im);
   } else {
     const base = new THREE.Color(scene.outside || "#7aa35a"), hill = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 8, 0, 6.283, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ roughness: 1 }), 26);
     for (let i = 0; i < 26; i++) { const a = i / 26 * 6.283 + r() * .2, d = 150 + r() * 50, w = 30 + r() * 40, h = 8 + r() * 16;
+      if (wet(cx + Math.cos(a) * d)) { M.makeScale(0, 0, 0); hill.setMatrixAt(i, M); continue; }
       M.compose(V.set(cx + Math.cos(a) * d, -1, cz + Math.sin(a) * d), Q.identity(), S3.set(w, h, w * .8)); hill.setMatrixAt(i, M); hill.setColorAt(i, C.setRGB(.36 + r() * .1, .55 + r() * .12, .3 + r() * .08).lerp(base, .25)); }
     grp.add(hill);
     const nt = 120, trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(.25, .3, 1, 6), mat("#6b4a2b"), nt), top = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: .9 }), nt);
     for (let i = 0; i < nt; i++) { const a = r() * 6.283, d = 70 + r() * 70, s2 = 1.6 + r() * 1.8, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+      if (wet(x)) { M.makeScale(0, 0, 0); trunk.setMatrixAt(i, M); top.setMatrixAt(i, M); continue; }
       M.compose(V.set(x, s2 * .8, z), Q.identity(), S3.set(s2, s2 * 1.6, s2)); trunk.setMatrixAt(i, M);
       M.compose(V.set(x, s2 * 2.1, z), Q.identity(), S3.set(s2 * 1.3, s2 * 1.4, s2 * 1.3)); top.setMatrixAt(i, M); top.setColorAt(i, C.setHSL(.27 + r() * .08, .5, .3 + r() * .12)); }
     grp.add(trunk, top);
@@ -1369,6 +1374,7 @@ function render3D(now, dtR) {
   for (const o of G3.moverGrp.children.slice()) if (!alive.has(o)) G3.moverGrp.remove(o);
   if (G3.trompo) G3.trompo.rotation.y = tt * 1.5;
   updateAmbient(tt, dtR);
+  if (scene.frame3D) scene.frame3D(tt, dtR);   // per-venue animation hook
   renderPeople(tt, dtR, vb);
   renderConfetti();
   renderParticles();

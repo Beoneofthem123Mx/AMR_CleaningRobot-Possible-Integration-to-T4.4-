@@ -290,6 +290,14 @@ SCENES.beach = {
     const sg = new THREE.ShapeGeometry(sh); sg.rotateX(Math.PI / 2);
     const sea = new THREE.Mesh(sg, waterify(new THREE.MeshStandardMaterial({ color: 0x1f8fd0, roughness: .1, metalness: .05, transparent: true, opacity: .72, side: THREE.DoubleSide }), 1.3));
     sea.position.y = .03; sea.receiveShadow = true; grp.add(sea);
+    // a foam line that washes up the sand and slides back
+    const pts = []; for (let y = -6; y <= 62; y += .5) pts.push(y);
+    const fg = new THREE.BufferGeometry(), pos = new Float32Array(pts.length * 6), idx = [];
+    pts.forEach((y, i) => { const x = BEACH_WATER(Math.max(0, Math.min(56, y))); pos.set([x - .55, .045, y, x + .35, .045, y], i * 6); if (i) { const a = (i - 1) * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } });
+    fg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); fg.setIndex(idx); fg.computeVertexNormals();
+    const foam = new THREE.Mesh(fg, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .7, depthWrite: false, side: THREE.DoubleSide }));
+    foam.renderOrder = 2; grp.add(foam);
+    scene.frame3D = tt => { const w = Math.sin(tt * .9); foam.position.x = .45 + w * .45; foam.material.opacity = .35 + .4 * (.5 + .5 * w); };
     // parasol canopies over every base
     for (const [x, y, col] of BEACH_PARASOLS) SCENE_MODELS.beach_parasol(pivot(grp, x, 0, y), {}, { col, x });
     // lifeguard tower: four legs, a deck, a hut with a red roof and a flag
