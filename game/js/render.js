@@ -192,6 +192,7 @@ function init3D() {
   // little ghosts that float up from the trampled: a pale body, two eyes and a glowing halo
   G3.ghostBody = inst(new THREE.CapsuleGeometry(.2, .3, 3, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: .78, depthWrite: false }), 260);
   G3.ghostEye = inst(new THREE.SphereGeometry(.045, 6, 4), new THREE.MeshBasicMaterial({ color: 0x15171c }), 520);
+  { const wg = new THREE.SphereGeometry(.16, 8, 5); wg.scale(.35, 1, 1.6); wg.translate(0, .02, .2); G3.ghostWing = inst(wg, new THREE.MeshBasicMaterial({ transparent: true, opacity: .7, depthWrite: false }), 520); }   // little angel wings
   G3.ghostHalo = inst(new THREE.TorusGeometry(.17, .03, 6, 16), new THREE.MeshBasicMaterial({ toneMapped: false }), 260);
   G3.puff = inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: .3, depthWrite: false }), 800);
   SHOE_L = toLin(["#1c1c20", "#f2f2f2", "#d8322b", "#2f6fc4", "#6b4a2b", "#1c1c20", "#e8b631"]);
@@ -1288,7 +1289,7 @@ function renderParticles() {
   pm.count = n; pm.instanceMatrix.needsUpdate = true; pm.instanceColor.needsUpdate = true;
 }
 function renderGhosts(tt) {
-  const b = G3.ghostBody, e = G3.ghostEye, h = G3.ghostHalo; let n = 0;
+  const b = G3.ghostBody, e = G3.ghostEye, h = G3.ghostHalo, wgm = G3.ghostWing; let n = 0;
   const up0 = LAND ? [1, 0] : [0, -1], up = [0, 0];   // screen-up in the world, so faces look at the camera
   for (const g of ghosts) {
     up[0] = up0[0]; up[1] = up0[1];
@@ -1302,9 +1303,15 @@ function renderGhosts(tt) {
     }
     for (const s2 of [-1, 1]) { M4.makeScale(sc, sc, sc); const fo = cine > .01 ? .19 : .1; M4.setPosition(x - up[0] * fo * sc + s2 * up[1] * .08 * sc, hh + .3 * sc, y - up[1] * fo * sc + s2 * up[0] * .08 * sc); e.setMatrixAt(n * 2 + (s2 > 0 ? 1 : 0), M4); }
     M4.makeRotationX(Math.PI / 2); M4.scale(Vs.set(sc, sc, sc)); M4.setPosition(x, hh + .58 * sc, y); h.setMatrixAt(n, M4); h.instanceColor.setXYZ(n, 2.6, 2.1, .7);
+    { const flap = Math.sin(tt * 14 + g.ph) * .55;   // wings sticking out to both sides, flapping
+      for (const sd of [-1, 1]) {
+        const dx = up[1] * sd, dz = -up[0] * sd; EUL.set(-.35 - flap, Math.atan2(dx, dz), 0, "YXZ"); Q.setFromEuler(EUL); Vs.setScalar(sc);
+        Vp.set(x + up[0] * .06 * sc + dx * .1 * sc, hh + .12 * sc, y + up[1] * .06 * sc + dz * .1 * sc); M4.compose(Vp, Q, Vs);
+        wgm.setMatrixAt(n * 2 + (sd > 0 ? 1 : 0), M4); wgm.instanceColor.setXYZ(n * 2 + (sd > 0 ? 1 : 0), 1.3, 1.35, 1.4);
+      } }
     n++;
   }
-  b.count = n; e.count = n * 2; h.count = n;
+  b.count = n; e.count = n * 2; h.count = n; wgm.count = n * 2; wgm.instanceMatrix.needsUpdate = true; wgm.instanceColor.needsUpdate = true;
   b.instanceMatrix.needsUpdate = e.instanceMatrix.needsUpdate = h.instanceMatrix.needsUpdate = true; b.instanceColor.needsUpdate = h.instanceColor.needsUpdate = true;
 }
 function render3D(now, dtR) {
