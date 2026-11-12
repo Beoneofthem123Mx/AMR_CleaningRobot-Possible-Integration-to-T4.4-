@@ -127,11 +127,27 @@ async function captureClips() {
       AU.musicFilter.frequency.setTargetAtTime(g.card ? 900 : g.hot ? 9000 : 4200, a, .08);
       AU.crowd.gain.setTargetAtTime(g.card ? .03 : g.hot ? .35 : .22, a, .2);
       if (g.card) { SFX.boom(a + .01); if (g.end) { SFX.cheer(a + .2); SFX.jingle(a + .5); } }
+      AU.crowd.gain.setTargetAtTime(0, a, .05);   // the recorded crowd bed replaces the synthetic murmur
     });
     const endMusic = total - 1.2;
     while (!plan.recorded && t < endMusic) { AU.step = step; const hot = plan.segs.some((g, i) => g.hot && t >= starts[i] && t < starts[i] + g.dur); st.play(step % st.steps, t, s, hot); t += s; step++; }
     AU.music.gain.setTargetAtTime(0, endMusic, .3); AU.crowd.gain.setTargetAtTime(0, endMusic - 1, .3);
-    for (const { seg, list } of plan.sfx) for (const [nm, tt] of list) if (SFX[nm]) SFX[nm](starts[seg] + tt + .01);
+    // the game's recorded sounds and voices, decoded into the offline context
+    await Promise.all(SAMPLE_FILES.map(n => ["audio/" + n, n]).concat(VOICE_FILES.map(n => ["audio/voice/" + n, n])).map(([u, n]) =>
+      fetch(u + ".ogg").then(r => r.arrayBuffer()).then(b => off.decodeAudioData(b)).then(bf => { SMP[n] = bf; }).catch(() => {})));
+    const at = (name, time, vol, rate) => { const b = SMP[name]; if (!b) return false; const src = off.createBufferSource(), g = off.createGain();
+      src.buffer = b; src.playbackRate.value = rate || 1; g.gain.value = vol; src.connect(g); g.connect(AU.sfx); src.start(time); return true; };
+    const pickOf = l => l[(Math.random() * l.length) | 0], ann = Math.random() < .5 ? "male" : "female";
+    for (const { seg, list } of plan.sfx) for (const [nm, tt] of list) {
+      const time = starts[seg] + tt + .01;
+      if (nm.startsWith("v:")) { const g = VG[nm.slice(2)]; if (g) at(pickOf(g), time, .7, .92 + Math.random() * .16); continue; }
+      if (nm.startsWith("a:")) { at(`ann_${ann}_${nm.slice(2)}`, time, .9); continue; }
+      const sm = SAMPLE_FOR[nm]; if (sm && at(pickOf(sm[0]), time, sm[1], .94 + Math.random() * .12)) continue;
+      if (SFX[nm]) SFX[nm](time);
+    }
+    // a bed of crowd noise under the gameplay shots, louder in the hot ones
+    plan.segs.forEach((g, i) => { if (g.card || !SMP.crowd_loop) return; const src = off.createBufferSource(), gn = off.createGain(); src.buffer = SMP.crowd_loop; src.loop = true;
+      gn.gain.value = g.hot ? .45 : .3; src.connect(gn); gn.connect(AU.sfx); src.start(starts[i]); src.stop(starts[i] + g.dur); });
     const buf = await off.startRendering(), L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length;
     const out = new DataView(new ArrayBuffer(44 + n * 4));
     const str = (o, s2) => { for (let k = 0; k < s2.length; k++) out.setUint8(o + k, s2.charCodeAt(k)); };

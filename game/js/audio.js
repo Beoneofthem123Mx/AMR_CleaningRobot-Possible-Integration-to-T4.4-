@@ -211,7 +211,13 @@ const VOICE_BY_TEXT = { "BRAAAINS!": "zombie", "AWOOOO!": "howl", "OOK OOK!": "g
   "SHARK!": "gasp", "THAT'S NOT MY DAUGHTER-IN-LAW!": "gasp", "SPICY!": "cough", "HROOOOAAAH!": "grunt", "SQUEEZE!": "cute", "FREE HUGS!": "cute", "OINK!": "pig", "BOO!": "zombie",
   "I VANT TO SHAKE YOUR HAND!": "zombie", "AHEM!": "cough", "MINE! MINE!": "cute", "COO COO!": "cute", "GRRR!": "grunt" };
 const VOICE = { last: {}, ann: Math.random() < .5 ? "male" : "female" };
+// trailer recording: voices are logged with the effects so they can be mixed afterwards
+function logVoice(tag, gap) {
+  if (!window.__sfxLog) return; const tt = vnow / 1000, L = window.__sfxLog, prev = L.findLast(e => e[0] === tag);
+  if (!prev || tt - prev[1] > gap) L.push([tag, tt]);
+}
 function voice(group, vol, minGap) {
+  logVoice("v:" + group, minGap ?? .35);
   const c = AU.ctx; if (!c || !AU.on) return false;
   const list = (VG[group] || [group]).filter(n => SMP[n]); if (!list.length) return false;
   const now = c.currentTime; if (now - (VOICE.last[group] || 0) < (minGap ?? .35)) return false;
@@ -219,6 +225,7 @@ function voice(group, vol, minGap) {
 }
 // the stadium announcer: one voice per show
 function announce(line, vol) {
+  logVoice("a:" + line, 1.2);
   const c = AU.ctx; if (!c || !AU.on) return;
   const n = `ann_${VOICE.ann}_${line}`; if (!SMP[n]) return;
   if (c.currentTime - (VOICE.last.ann || 0) < 1.2) return; VOICE.last.ann = c.currentTime;
