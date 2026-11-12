@@ -172,7 +172,9 @@ function showReport(stars, stuck, fresh) {
   if (abducted) lines.unshift(`${abducted} attendees were abducted. Their families hope things go better for them up there.`);
   const date = new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" });
   sfx(stars >= 2 ? "win" : "lose"); if (fresh && fresh.length) setTimeout(() => sfx("confirm"), 900);
-  showCard(`<div class="paper">
+  // stars pop in one by one; a perfect show rains confetti over the paper
+  const confetti = stars === 3 ? `<div class="confetti" aria-hidden="true">${Array.from({ length: 46 }, (_, i) => `<i style="left:${(Math.random() * 100).toFixed(1)}%;background:${CONF[i % CONF.length]};animation-delay:${(Math.random() * 1.6).toFixed(2)}s;animation-duration:${(2.4 + Math.random() * 1.8).toFixed(2)}s"></i>`).join("")}</div>` : "";
+  showCard(`${confetti}<div class="paper">
       ${sandbox ? `<div class="sandtag">SANDBOX · this never happened</div>` : ""}
       <div class="mast"><span>THE DAILY GOSSIP</span><small>${date} · Special edition · $5</small></div>
       <h2 class="head">${head}</h2>
@@ -180,7 +182,7 @@ function showReport(stars, stuck, fresh) {
       <div class="cols">
         <div class="story"><p>${lines.join(" ")}</p><p class="quote">${pick(scene.quotes || QUOTES)}</p></div>
         <div class="box">
-          <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "" : "off"}">★</span>`).join("")}</div>
+          <div class="stars">${[0, 1, 2].map(k => `<span class="${k < stars ? "pop" : "off"}" style="animation-delay:${(.5 + k * .28).toFixed(2)}s">★</span>`).join("")}</div>
           <div class="stats">
             <span>Crowd</span><span>${CROWD.toLocaleString("en")}</span>
             <span>Made it out OK</span><span>${evacuated.toLocaleString("en")}</span>
