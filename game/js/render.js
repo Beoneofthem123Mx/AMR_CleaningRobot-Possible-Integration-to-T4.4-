@@ -977,6 +977,30 @@ function waterify(m, scale) {
   };
   m.customProgramCacheKey = () => "water" + scale; return m;
 }
+// far-away scenery for the street camera: rolling hills and toy trees by day, a city skyline at night
+function buildHorizon() {
+  if (G3.horizon) { G3.scene.remove(G3.horizon); G3.horizon.traverse(o => { if (o.geometry && !o.userData.shared) o.geometry.dispose(); }); }
+  const grp = G3.horizon = new THREE.Group(), r = rng(sceneKey.length * 97 + 13), cx = WW / 2, cz = SH / 2, night = !!scene.night;
+  const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), C = new THREE.Color();
+  if (night) {
+    const n = 90, im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ map: G3.winTex, color: 0x8a90a8, fog: true }), n);
+    for (let i = 0; i < n; i++) { const a = i / n * 6.283 + r() * .05, d = 120 + r() * 40, w = 6 + r() * 10, h = 8 + r() * 34;
+      M.compose(V.set(cx + Math.cos(a) * d, h / 2 - .5, cz + Math.sin(a) * d), Q.setFromAxisAngle(V.clone().set(0, 1, 0), -a), S3.set(w, h, w)); im.setMatrixAt(i, M); im.setColorAt(i, C.setHSL(.62, .2, .2 + r() * .25)); }
+    grp.add(im);
+  } else {
+    const base = new THREE.Color(scene.outside || "#7aa35a"), hill = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 8, 0, 6.283, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ roughness: 1 }), 26);
+    for (let i = 0; i < 26; i++) { const a = i / 26 * 6.283 + r() * .2, d = 150 + r() * 50, w = 30 + r() * 40, h = 8 + r() * 16;
+      M.compose(V.set(cx + Math.cos(a) * d, -1, cz + Math.sin(a) * d), Q.identity(), S3.set(w, h, w * .8)); hill.setMatrixAt(i, M); hill.setColorAt(i, C.setRGB(.36 + r() * .1, .55 + r() * .12, .3 + r() * .08).lerp(base, .25)); }
+    grp.add(hill);
+    const nt = 120, trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(.25, .3, 1, 6), mat("#6b4a2b"), nt), top = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: .9 }), nt);
+    for (let i = 0; i < nt; i++) { const a = r() * 6.283, d = 70 + r() * 70, s2 = 1.6 + r() * 1.8, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+      M.compose(V.set(x, s2 * .8, z), Q.identity(), S3.set(s2, s2 * 1.6, s2)); trunk.setMatrixAt(i, M);
+      M.compose(V.set(x, s2 * 2.1, z), Q.identity(), S3.set(s2 * 1.3, s2 * 1.4, s2 * 1.3)); top.setMatrixAt(i, M); top.setColorAt(i, C.setHSL(.27 + r() * .08, .5, .3 + r() * .12)); }
+    grp.add(trunk, top);
+  }
+  grp.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.frustumCulled = false; } });
+  grp.visible = false; G3.scene.add(grp);
+}
 // sky dome for the street camera: gradient, sun glow, drifting clouds by day, stars and a moon by night
 function skyDome() {
   if (G3.sky) return G3.sky;
@@ -1036,6 +1060,8 @@ function cineCamera(dt) {
   G3.scene.background.copy(SKY_TMP);
   if (!G3.scene.fog) G3.scene.fog = new THREE.Fog(0xffffff, 30, 190);
   G3.scene.fog.color.copy(SKY_TMP); G3.skirt.visible = true;
+  if (!G3.horizon || G3.horizon.userData.key !== sceneKey) { buildHorizon(); G3.horizon.userData.key = sceneKey; }
+  G3.horizon.visible = true;
   const sky = skyDome(), su = sky.material.uniforms; sky.visible = true; sky.position.copy(c.position);
   su.hor.value.copy(SKY_TMP).multiplyScalar(1 / Math.max(.15, 1 - .85 * black)); su.top.value.copy(night ? SKY_TOP_N : SKY_TOP_D).lerp(GOLD_TOP, night ? 0 : (G3.golden || 0) * .6).lerp(SKY_RAIN_TOP, night ? 0 : (G3.wet || 0) * .85); su.night.value = night ? 1 : 0; su.dim.value = 1 - .85 * black; su.time.value = performance.now() / 1000;
   const sun = G3.sun; sun.target.position.set(cx, 0, cy); sun.position.set(cx - 22, 60, cy - 28);
@@ -1048,7 +1074,7 @@ function updateCamera(dt) {
     cine = 0; const c = G3.camera; c.fov = 30; c.near = 1; c.far = 500; c.updateProjectionMatrix();
     G3.scene.fog = null; G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
   }
-  G3.skirt.visible = false; if (G3.sky) G3.sky.visible = false;
+  G3.skirt.visible = false; if (G3.sky) G3.sky.visible = false; if (G3.horizon) G3.horizon.visible = false;
   const base = ((LAND ? WW : WH) / 2) / Math.tan(15 * Math.PI / 180), z = cam.z, h = base / z;
   const tilt = clamp((z - 1) * .5, 0, .42);
   const dx = LAND ? -1 : 0, dz = LAND ? 0 : 1;   // the screen's "down" direction in the world
