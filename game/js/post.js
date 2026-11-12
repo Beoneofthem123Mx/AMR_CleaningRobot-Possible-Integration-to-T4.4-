@@ -82,7 +82,7 @@ function postLook() {
   POST.dof += ((slow ? .95 : live ? .6 : .3) - POST.dof) * .08;
   const c = POST.mat.comp.uniforms;
   c.bloom.value = POST.bloom; c.dof.value = POST.dof; c.vig.value = night ? .3 : .26; c.sat.value = night ? 1.15 : 1.12; c.warm.value = night ? 0 : .025;
-  POST.mat.bright.uniforms.thr.value = night ? .42 : 2.0;
+  POST.mat.bright.uniforms.thr.value = night ? (typeof cine !== "undefined" && cine > .01 ? .75 : .42) : 2.0;   // the street camera is close to lit windows: less glow
 }
 function renderFrame() {
   const r = G3.renderer;

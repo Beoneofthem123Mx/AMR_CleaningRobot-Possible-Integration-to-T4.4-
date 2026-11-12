@@ -249,10 +249,24 @@ function buildStatic3D() {
   }
   // open gates: red arches
   for (let i = 0; i < SLOTS; i++) if (gates[i]) {
-    const cx = slotX(i), red = mat("#d8322b", { roughness: .45 });
-    for (const s of [-1, 1]) { const p = part(grp, "box", red, .28, 2.5, .28, cx + s * SLOT_W / 2, 1.25, FENCE_Y); p.userData.shared = true; }
-    const bar = part(grp, "box", red, SLOT_W + .3, .32, .3, cx, 2.5, FENCE_Y); bar.userData.shared = true;
-    const sign = part(grp, "box", mat("#ffffff"), 1.2, .5, .08, cx, 2.5, FENCE_Y - .2); sign.userData.shared = true;
+    const cx = slotX(i), red = mat("#d8322b", { roughness: .4 }), white = mat("#f4f1ea", { roughness: .5 });
+    for (const s of [-1, 1]) {   // striped round posts with a white foot
+      const p = part(grp, "cyl", red, .16, 2.5, .16, cx + s * SLOT_W / 2, 1.25, FENCE_Y); p.userData.shared = true;
+      for (const y of [.7, 1.5]) { const r = part(grp, "cyl", white, .17, .18, .17, cx + s * SLOT_W / 2, y, FENCE_Y); r.userData.shared = true; }
+      const f = part(grp, "cyl", white, .24, .14, .24, cx + s * SLOT_W / 2, .07, FENCE_Y); f.userData.shared = true;
+    }
+    const bar = part(grp, "box", red, SLOT_W + .4, .34, .34, cx, 2.55, FENCE_Y); bar.userData.shared = true;
+    if (!G3.exitMat) {   // a lit green EXIT sign, readable from above and from the street
+      const c = document.createElement("canvas"); c.width = 256; c.height = 96; const g = c.getContext("2d");
+      g.fillStyle = "#11a650"; g.fillRect(0, 0, 256, 96); g.strokeStyle = "#ffffff"; g.lineWidth = 6; g.strokeRect(6, 6, 244, 84);
+      g.fillStyle = "#ffffff"; g.font = "900 54px Rubik, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("EXIT", 150, 50);
+      g.beginPath(); g.moveTo(30, 48); g.lineTo(62, 26); g.lineTo(62, 38); g.lineTo(84, 38); g.lineTo(84, 58); g.lineTo(62, 58); g.lineTo(62, 70); g.closePath(); g.fill();
+      const tx = new THREE.CanvasTexture(c); tx.encoding = THREE.sRGBEncoding; tx.anisotropy = 4;
+      G3.exitMat = new THREE.MeshStandardMaterial({ map: tx, emissiveMap: tx, emissive: new THREE.Color(0xffffff), emissiveIntensity: .35, roughness: .5 });
+    }
+    G3.exitMat.emissiveIntensity = scene.night ? 1.1 : .35;
+    for (const z of [-.19, .19]) { const sign = part(grp, "box", G3.exitMat, 1.3, .5, .04, cx, 2.55, FENCE_Y + z); sign.userData.shared = true; if (z > 0) sign.rotation.y = Math.PI; }
+    const top = part(grp, "box", G3.exitMat, 1.3, .04, .5, cx, 2.73, FENCE_Y); top.userData.shared = true; top.rotation.x = 0;
   }
   G3.trompo = null;
   if (scene.extra3D) scene.extra3D(grp);

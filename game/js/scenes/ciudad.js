@@ -278,7 +278,18 @@ SCENES.ciudad = {
         if (r() < .7) awns[(r() * 5) | 0].push([...sz(sw - .25, .09, .55), x + wl.nx * .26, 3.02, y + wl.ny * .26]);
       }
     }
-    WIN.forEach((c, i) => cityInst(grp, "box", basic(c), wins[i])); CITY_COLS.forEach((c, i) => cityInst(grp, "box", basic(c), signs[i]));
+    // shop windows: a lit interior with shelves and a few shoppers' silhouettes, tinted per shop (not a flat white panel)
+    if (!CITY_TEX.shopWin) {
+      const c = document.createElement("canvas"); c.width = 128; c.height = 96; const g = c.getContext("2d"), q = rng(77);
+      const gr = g.createLinearGradient(0, 0, 0, 96); gr.addColorStop(0, "#fff6dc"); gr.addColorStop(1, "#b9a68a"); g.fillStyle = gr; g.fillRect(0, 0, 128, 96);
+      g.fillStyle = "rgba(60,45,35,.55)"; for (const y of [26, 50, 74]) g.fillRect(4, y, 120, 4);
+      for (let k = 0; k < 40; k++) { g.fillStyle = `hsla(${q() * 360},55%,${45 + q() * 20}%,.75)`; const y = [14, 38, 62][k % 3]; g.fillRect(6 + q() * 112, y + q() * 4, 4 + q() * 6, 10); }
+      g.fillStyle = "rgba(40,30,30,.45)"; for (let k = 0; k < 3; k++) { const x = 20 + q() * 90; g.beginPath(); g.arc(x, 58, 7, 0, 7); g.fill(); g.fillRect(x - 8, 64, 16, 32); }
+      g.fillStyle = "rgba(255,255,255,.35)"; g.beginPath(); g.moveTo(10, 0); g.lineTo(34, 0); g.lineTo(4, 96); g.lineTo(-20, 96); g.fill();   // glass reflection
+      g.strokeStyle = "#2a2c31"; g.lineWidth = 4; g.strokeRect(2, 2, 124, 92); g.beginPath(); g.moveTo(64, 0); g.lineTo(64, 96); g.stroke();
+      const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; CITY_TEX.shopWin = t;
+    }
+    WIN.forEach((c, i) => cityInst(grp, "box", new THREE.MeshBasicMaterial({ map: CITY_TEX.shopWin, color: new THREE.Color(c).multiplyScalar(.82), toneMapped: false }), wins[i])); CITY_COLS.forEach((c, i) => cityInst(grp, "box", basic(c), signs[i]));
     AWN.forEach((c, i) => cityInst(grp, "box", mat(c), awns[i])); cityInst(grp, "box", mat("#1c1d22"), doors);
     // string lights high above the streets (4.3 m and up), from building to building
     const bulbs = CITY_COLS.map(() => []), wires = []; let bi = 0;
