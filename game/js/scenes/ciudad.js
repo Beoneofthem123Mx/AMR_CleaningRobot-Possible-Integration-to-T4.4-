@@ -117,7 +117,7 @@ SCENE_MODELS.ciudad_stage = (g, u) => {
 SCENES.ciudad = {
   name: "The City", tag: "Night festival", outside: "#2a2d33", bulbH: 2.2, night: true, music: "edm",
   light: { sky: 0x5c70b0, ground: 0x15181f, hemi: .32, sun: 0xb0c0ff, sunI: .6 }, crowd: 3800, fenceBudget: 80, maxGates: 5, guards: 5,
-  gates: [F, T, F, T, F, T, F], unlock: 9,
+  gates: [F, F, T, F, T, F, F], unlock: 9,
   intro: "The whole city is the stage. Packed streets between tall buildings, fireworks, a parade and taxis that didn't get the memo that the street is closed.",
   acts: ["The whole city is partying!", "Louder!", "Every street is singing!", "Last song!"],
   events: ["fuegos", "taxi", "carroza", "policia", "fuegos", "dogs", "taxi"],
