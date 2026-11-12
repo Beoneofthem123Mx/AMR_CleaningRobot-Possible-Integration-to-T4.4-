@@ -1026,8 +1026,13 @@ function updateFxLayer(live) {
   } else if (phase === "plan") G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height);
   g.scale(k, k);
   // red shadow under those who fell
-  g.fillStyle = "rgba(200,30,30,.28)";
-  for (const a of fallen) { g.beginPath(); g.arc(a.x, a.y, .7, 0, 7); g.fill(); }
+  // under each trampled person: a comic "impact" starburst that pops out as they land
+  for (const a of fallen) {
+    const age = t - (a.fallAt ?? -9), q = Math.min(1, age / .35), r = (.55 + .45 * (1 - Math.pow(1 - q, 3))) * (age < .35 ? 1.25 - .25 * q : 1), rot = (a.fallLimb || 0);
+    g.fillStyle = "rgba(255,206,60,.42)"; g.beginPath();
+    for (let k2 = 0; k2 < 18; k2++) { const an = rot + k2 * Math.PI / 9, rr = (k2 % 2 ? .55 : 1) * r * 1.15; g.lineTo(a.x + Math.cos(an) * rr, a.y + Math.sin(an) * rr); }
+    g.fill(); g.fillStyle = "rgba(200,30,30,.3)"; g.beginPath(); g.arc(a.x, a.y, r * .55, 0, 7); g.fill();
+  }
   if (phase === "plan" && lastFalls.length && lastFallsScene === sceneKey) {
     // where people fell last time: soft red stains with an X on the worst spots
     g.fillStyle = "rgba(229,50,41,.16)";
