@@ -41,6 +41,8 @@ function initPost() {
         c += (texture2D(tB0, vUv).rgb * .55 + texture2D(tB1, vUv).rgb * .75 + texture2D(tB2, vUv).rgb) * bloom;
         float l = dot(c, vec3(.2126, .7152, .0722)); c = mix(vec3(l), c, sat); c = pow(c, vec3(1.07)) * 1.03;
         c *= vec3(1. + warm, 1., 1. - warm);
+        { float lum = dot(c, vec3(.2126, .7152, .0722));   // split tone: teal-ish shadows, warm highlights (a gentle film look)
+          c += mix(vec3(-.012, .004, .022), vec3(.02, .008, -.016), smoothstep(.15, .8, lum)); }
         vec2 q = vUv - .5; c *= 1. - vig * dot(q, q) * 1.8;
         gl_FragColor = vec4(max(c, 0.), 1.);
         #include <tonemapping_fragment>
