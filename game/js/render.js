@@ -299,6 +299,15 @@ function buildStatic3D() {
     const mesh = new THREE.Mesh(G3.beamGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, alphaMap: G3.beamAlpha, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
     mesh.position.set(b.x, b.h || 7, b.y); G3.dyn.add(mesh); return mesh;
   });
+  // night venues: laser beams fanning out from the stage over the crowd
+  G3.lasers = [];
+  if (scene.night && scene.beams.length) {
+    const src = scene.beams[0], src2 = scene.beams[scene.beams.length - 1], lg = new THREE.CylinderGeometry(.09, .09, 1, 6, 1, true); lg.translate(0, .5, 0); lg.rotateX(Math.PI / 2);
+    for (let i = 0; i < 8; i++) {
+      const b = i % 2 ? src2 : src, lm = new THREE.Mesh(lg, new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0x30ff6a : i % 3 === 1 ? 0xff3fd0 : 0x40c8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+      lm.position.set(b.x, (b.h || 7) - .5, b.y); lm.scale.z = 70; lm.userData.ph = i * .8; G3.dyn.add(lm); G3.lasers.push(lm);
+    }
+  }
   // lighting depends on the venue
   G3.hemi.color.set(scene.light.sky); G3.hemi.groundColor.set(scene.light.ground); G3.hemi.intensity = scene.light.hemi;
   G3.sun.color.set(scene.light.sun); G3.sun.intensity = scene.light.sunI;
@@ -565,11 +574,12 @@ function renderPeople(tt, dtR, vb) {
     FACE.state = 0; FACE.open = 0;
     const hc0 = HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
     // pressure view: hair and caps take the pressure color too, so the map reads from above
-    const hc = hm > .01 ? HC.set(hc0[0] + (hq[0] - hc0[0]) * hm, hc0[1] + (hq[1] - hc0[1]) * hm, hc0[2] + (hq[2] - hc0[2]) * hm) : hc0;
+    const hh = clamp((hm - .5) * 2, 0, 1);   // only the real pressure view (H), not the warning tint during a drop
+    const hc = hh > .01 ? HC.set(hc0[0] + (hq[0] - hc0[0]) * hh, hc0[1] + (hq[1] - hc0[1]) * hh, hc0[2] + (hq[2] - hc0[2]) * hh) : hc0;
     if (a.m !== 1 && hs === 4) { /* bald and proud */ }
     else if (a.m !== 1 && hs === 1) { emit(P.hair, C.hair, LOCAL.afro); colW(P.hair, C.hair++, hc[0] * k, hc[1] * k, hc[2] * k); }
     else if (a.m === 1) {
-      const cc = hm > .01 ? hc : SHIRT_L[a.ac];
+      const cc = hh > .01 ? hc : SHIRT_L[a.ac];
       emit(P.cap, C.cap, LOCAL.cap); colW(P.cap, C.cap++, cc[0] * k, cc[1] * k, cc[2] * k);
       emit(P.brim, C.brim, LOCAL.brim); colW(P.brim, C.brim++, cc[0] * k, cc[1] * k, cc[2] * k);
     } else {
@@ -577,7 +587,7 @@ function renderPeople(tt, dtR, vb) {
       if (hs === 2) { emit(P.head, C.head, LOCAL.bun); colW(P.head, C.head++, hc[0] * k, hc[1] * k, hc[2] * k); }
       else if (hs === 3) { emit(P.head, C.head, LOCAL.tail); colW(P.head, C.head++, hc[0] * k, hc[1] * k, hc[2] * k); }
     }
-    if (a.acc && !down && hm < .3) {   // accessories hide during the pressure view
+    if (a.acc && !down && hh < .4) {   // accessories hide during the pressure view
       const ac = SHIRT_L[a.ac];
       if (a.acc === 1) {        // balloon on a string, swaying
         LBAL[9] = -.12 + Math.sin(tt * 1.7 + a.ph) * .1; LBAL[10] = 2.72 + Math.sin(tt * 2.3 + a.ph) * .07; LBAL[11] = .3;
@@ -1202,6 +1212,11 @@ function render3D(now, dtR) {
     if (bm.white) mesh.material.color.setRGB(1, .97, .9); else mesh.material.color.setHSL(((now / 22 + i * 60) % 360) / 360, 1, .6);
     mesh.lookAt(bm.x + Math.cos(ang) * 20, 0, bm.y + Math.sin(ang) * 20);
   });
+  for (const lm of G3.lasers || []) {   // lasers sweep with the music, wild during the drop
+    const on = live && fullAt ? (surgeT > 0 ? 1 : .35) : 0, ph = lm.userData.ph, sp = surgeT > 0 ? 1.6 : .5;
+    lm.visible = on > 0; lm.material.opacity = on * (.55 + .45 * Math.sin(tt * 9 + ph * 3));
+    lm.lookAt(lm.position.x + Math.sin(tt * sp + ph) * 22, 0, lm.position.z + 30 + Math.cos(tt * sp * .7 + ph) * 12);
+  }
   // animals, cars and objects
   const alive = new Set();
   for (const m of movers.concat(performers, guards)) {
