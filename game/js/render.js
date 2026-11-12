@@ -952,7 +952,7 @@ function skyDome() {
   G3.sky = new THREE.Mesh(new THREE.SphereGeometry(500, 32, 16), m); G3.sky.frustumCulled = false; G3.sky.renderOrder = -10; G3.scene.add(G3.sky);
   return G3.sky;
 }
-const SKY_TOP_D = new THREE.Color(0x3f8fe0), SKY_TOP_N = new THREE.Color(0x02040c), GOLD_SUN = new THREE.Color(0xff8a3c), GOLD_SKY = new THREE.Color(0xffc49a), GOLD_HOR = new THREE.Color(0xff9a5a), GOLD_TOP = new THREE.Color(0x5a74c8);
+const SKY_TOP_D = new THREE.Color(0x3f8fe0), SKY_TOP_N = new THREE.Color(0x02040c), GOLD_SUN = new THREE.Color(0xff8a3c), GOLD_SKY = new THREE.Color(0xffc49a), GOLD_HOR = new THREE.Color(0xff9a5a), GOLD_TOP = new THREE.Color(0x5a74c8), SKY_RAIN = new THREE.Color(0xaab3bd), SKY_RAIN_TOP = new THREE.Color(0x6c7684);
 const CAM_T = new THREE.Vector3(), CAM_T2 = new THREE.Vector3(), CAM_V = new THREE.Vector3(), CAM_RC = { ray: new THREE.Raycaster() };
 function cineCamera(dt) {
   cineAng += dt * .11;
@@ -977,12 +977,12 @@ function cineCamera(dt) {
   if (CAM_RC.s < .999) c.position.lerpVectors(tgt, c.position, CAM_RC.s).setY(Math.max(c.position.y, 1.2));
   c.position.y += CAM_RC.uy;
   c.lookAt(tgt);
-  SKY_TMP.copy(night ? SKY_NIGHT : SKY_DAY).lerp(GOLD_HOR, night ? 0 : (G3.golden || 0) * .85).multiplyScalar(1 - .85 * black);
+  SKY_TMP.copy(night ? SKY_NIGHT : SKY_DAY).lerp(GOLD_HOR, night ? 0 : (G3.golden || 0) * .85).lerp(SKY_RAIN, night ? 0 : (G3.wet || 0) * .8).multiplyScalar(1 - .85 * black);
   G3.scene.background.copy(SKY_TMP);
   if (!G3.scene.fog) G3.scene.fog = new THREE.Fog(0xffffff, 30, 190);
   G3.scene.fog.color.copy(SKY_TMP); G3.skirt.visible = true;
   const sky = skyDome(), su = sky.material.uniforms; sky.visible = true; sky.position.copy(c.position);
-  su.hor.value.copy(SKY_TMP).multiplyScalar(1 / Math.max(.15, 1 - .85 * black)); su.top.value.copy(night ? SKY_TOP_N : SKY_TOP_D).lerp(GOLD_TOP, night ? 0 : (G3.golden || 0) * .6); su.night.value = night ? 1 : 0; su.dim.value = 1 - .85 * black; su.time.value = performance.now() / 1000;
+  su.hor.value.copy(SKY_TMP).multiplyScalar(1 / Math.max(.15, 1 - .85 * black)); su.top.value.copy(night ? SKY_TOP_N : SKY_TOP_D).lerp(GOLD_TOP, night ? 0 : (G3.golden || 0) * .6).lerp(SKY_RAIN_TOP, night ? 0 : (G3.wet || 0) * .85); su.night.value = night ? 1 : 0; su.dim.value = 1 - .85 * black; su.time.value = performance.now() / 1000;
   const sun = G3.sun; sun.target.position.set(cx, 0, cy); sun.position.set(cx - 22, 60, cy - 28);
   const sc = sun.shadow.camera, ext = 34; sc.left = -ext; sc.right = ext; sc.top = ext * 1.4; sc.bottom = -ext * 1.4; sc.updateProjectionMatrix();
   return [-1e9, 1e9, -1e9, 1e9];
@@ -1223,14 +1223,14 @@ function render3D(now, dtR) {
   RIM.value = scene.night ? (cine > .01 ? .9 : .5) : .42; WATER.time.value = tt;   // from above the bloom already lifts the crowd at night
   // rain: the floor slowly gets wet (darker and shiny), and dries after the show
   const wetT = live && MOD && MOD.rain ? 1 : 0; G3.wet = (G3.wet || 0) + (wetT - (G3.wet || 0)) * Math.min(1, dtR * (wetT ? .25 : .5));
-  { const gm = G3.ground.material, w = G3.wet; gm.roughness = .95 - .7 * w; gm.metalness = .15 * w; gm.color.setScalar((scene.night ? 1 : .9) - .26 * w); /* light floors a touch darker so the crowd pops */ } WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
+  { const gm = G3.ground.material, w = G3.wet; gm.roughness = .95 - .7 * w; gm.metalness = .15 * w; gm.color.setScalar((scene.night ? 1 : .9) - .36 * w); /* light floors a touch darker so the crowd pops */ } WATER.sky.value.set(scene.night ? 0x1a2550 : 0x5fb8e8).multiplyScalar(1 - .85 * black);
   // blackout: the light fades slowly and comes back all at once
   const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
   // golden hour: on day venues the light warms toward sunset as the show goes on, and stays warm for the way out
   const gTarget = scene.night || !live ? 0 : phase === "evac" ? 1 : fullAt ? clamp((t - fullAt) / SHOW_TIME, 0, 1) : 0;
   G3.golden = (G3.golden || 0) + (gTarget - (G3.golden || 0)) * Math.min(1, dtR * (live ? .8 : 3)); const gold = G3.golden * .95;
   G3.sun.color.set(scene.light.sun).lerp(GOLD_SUN, gold); G3.hemi.color.set(scene.light.sky).lerp(GOLD_SKY, gold * .8);
-  G3.hemi.intensity = scene.light.hemi * (1 - .8 * black) * (1 - .12 * gold); G3.sun.intensity = scene.light.sunI * (1 - .9 * black) * (1 + .08 * gold);
+  G3.hemi.intensity = scene.light.hemi * (1 - .8 * black) * (1 - .12 * gold); G3.sun.intensity = scene.light.sunI * (1 - .9 * black) * (1 + .08 * gold) * (1 - .4 * (G3.wet || 0));   // rain: overcast
   const vb = updateCamera(dtR);
   // spotlights and beams
   const cols = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"].map(lin);
