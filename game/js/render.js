@@ -980,7 +980,7 @@ function waterify(m, scale) {
 // far-away scenery for the street camera: rolling hills and toy trees by day, a city skyline at night
 function buildHorizon() {
   if (G3.horizon) { G3.scene.remove(G3.horizon); G3.horizon.traverse(o => { if (o.geometry && !o.userData.shared) o.geometry.dispose(); }); }
-  const grp = G3.horizon = new THREE.Group(), r = rng(sceneKey.length * 97 + 13), cx = WW / 2, cz = SH / 2, night = !!scene.night;
+  const grp = G3.horizon = new THREE.Group(), r = rng(sceneKey.length * 97 + 13), cx = WW / 2, cz = SH / 2, night = !!scene.night && sceneKey !== "ovni";   // the UFO lands in the countryside
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), C = new THREE.Color();
   const wet = sceneKey === "crucero" ? () => true : sceneKey === "beach" ? x => x < 2 : () => false;   // no trees or towers standing in the sea
   if (sceneKey === "crucero") { grp.visible = false; G3.scene.add(grp); return; }
@@ -1002,6 +1002,7 @@ function buildHorizon() {
       M.compose(V.set(x, s2 * .8, z), Q.identity(), S3.set(s2, s2 * 1.6, s2)); trunk.setMatrixAt(i, M);
       M.compose(V.set(x, s2 * 2.1, z), Q.identity(), S3.set(s2 * 1.3, s2 * 1.4, s2 * 1.3)); top.setMatrixAt(i, M); top.setColorAt(i, C.setHSL(.27 + r() * .08, .5, .3 + r() * .12)); }
     grp.add(trunk, top);
+    if (scene.night) for (const o of [hill, trunk, top]) o.material = o.material.clone(), o.material.color.setScalar(.25);   // moonlit countryside
   }
   grp.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.frustumCulled = false; } });
   grp.visible = false; G3.scene.add(grp);
