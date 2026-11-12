@@ -46,11 +46,11 @@ cambió alguno, ajusta el tamaño en `steam/art/render.cjs` y vuelve a ejecutar
 
 **Orden recomendado de capturas** (las primeras cuatro son las que más se ven):
 
-1. `02_circus.png` (multitud de colores y elefantes)
-2. `05_city.png` (fuegos artificiales de noche)
-3. `03_arena.png` (lucha libre)
-4. `15_grand_opening.png` (parque de diversiones)
-5. `11_zoo.png`, `10_launch_day.png`, `13_zombie.png`, `14_beach.png` y las demás
+1. `18_street_city.png` (la ciudad de noche a ras de suelo, dentro de la multitud)
+2. `02_circus.png` (multitud de colores y elefantes)
+3. `20_cruise_street.png` (cubierta del crucero con el mar al fondo)
+4. `19_plaza_street.png` (concierto en la plaza a ras de suelo)
+5. `21_city_rooftops.png`, `03_arena.png`, `15_grand_opening.png`, `17_crowd_closeup.png` y las demás
 
 ## 3. Descripción corta (máximo 300 caracteres)
 
