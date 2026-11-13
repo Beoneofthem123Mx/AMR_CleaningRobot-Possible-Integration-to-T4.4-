@@ -312,11 +312,11 @@ function buildStatic3D() {
   for (let i = 0; i < SLOTS; i++) if (gates[i]) {
     const cx = slotX(i), red = mat("#d8322b", { roughness: .4 }), white = mat("#f4f1ea", { roughness: .5 });
     for (const s of [-1, 1]) {   // striped round posts with a white foot
-      const p = part(grp, "cyl", red, .16, 2.5, .16, cx + s * SLOT_W / 2, 1.25, FENCE_Y); p.userData.shared = true;
-      for (const y of [.7, 1.5]) { const r = part(grp, "cyl", white, .17, .18, .17, cx + s * SLOT_W / 2, y, FENCE_Y); r.userData.shared = true; }
-      const f = part(grp, "cyl", white, .24, .14, .24, cx + s * SLOT_W / 2, .07, FENCE_Y); f.userData.shared = true;
+      const p = part(grp, "cyl", red, .16, 2.5, .16, cx + s * gateW(i) / 2, 1.25, FENCE_Y); p.userData.shared = true;
+      for (const y of [.7, 1.5]) { const r = part(grp, "cyl", white, .17, .18, .17, cx + s * gateW(i) / 2, y, FENCE_Y); r.userData.shared = true; }
+      const f = part(grp, "cyl", white, .24, .14, .24, cx + s * gateW(i) / 2, .07, FENCE_Y); f.userData.shared = true;
     }
-    const bar = part(grp, "box", red, SLOT_W + .4, .34, .34, cx, 2.55, FENCE_Y); bar.userData.shared = true;
+    const bar = part(grp, "box", red, gateW(i) + .4, .34, .34, cx, 2.55, FENCE_Y); bar.userData.shared = true;
     if (!G3.exitMat) {   // a lit green EXIT sign, readable from above and from the street
       const c = document.createElement("canvas"); c.width = 256; c.height = 96; const g = c.getContext("2d");
       g.fillStyle = "#11a650"; g.fillRect(0, 0, 256, 96); g.strokeStyle = "#ffffff"; g.lineWidth = 6; g.strokeRect(6, 6, 244, 84);
@@ -1600,6 +1600,12 @@ function render3D(now, dtR) {
   G3.sun.color.set(scene.light.sun).lerp(GOLD_SUN, gold); G3.hemi.color.set(scene.light.sky).lerp(GOLD_SKY, gold * .8);
   G3.hemi.intensity = scene.light.hemi * (1 - .8 * black) * (1 - .12 * gold); G3.sun.intensity = scene.light.sunI * (1 - .9 * black) * (1 + .08 * gold) * (1 - .4 * (G3.wet || 0));   // rain: overcast
   const vb = updateCamera(dtR);
+  {   // the venue moves under your feet: the ship rolls, machines rumble, stadiums bounce (scene.rock), plus every big shake
+    const tt2 = vnow / 1000, base = scene.rock ? scene.rock(tt2) : 0, sh = Math.min(1.5, shake);
+    const roll = base + sh * Math.sin(tt2 * 37) * .022, bounce = (scene.bounce ? scene.bounce(tt2) : 0) + sh * Math.sin(tt2 * 29) * .12;
+    if (roll) G3.camera.rotateZ(roll * (camMode === 4 ? 1.4 : 1));
+    if (bounce) G3.camera.position.y += bounce;
+  }
   // spotlights and beams
   const cols = ["#ff9ec7", "#9be7ff", "#ffe48a", "#b9a6ff", "#ffb38a"].map(lin);
   scene.bulbs.forEach((_, i) => {

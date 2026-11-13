@@ -15,8 +15,8 @@ function buildWorld() {
   // entrance fence with gates
   let x = 0;
   for (let i = 0; i < SLOTS; i++) {
-    const g0 = slotX(i) - SLOT_W / 2, g1 = slotX(i) + SLOT_W / 2;
-    seg(x, FENCE_Y, g0, FENCE_Y, .3, "fence");
+    const g0 = Math.max(x, slotX(i) - gateW(i) / 2), g1 = slotX(i) + gateW(i) / 2;
+    if (g0 > x + .01) seg(x, FENCE_Y, g0, FENCE_Y, .3, "fence");
     if (!gates[i]) seg(g0, FENCE_Y, g1, FENCE_Y, .3, "closed");
     x = g1;
   }

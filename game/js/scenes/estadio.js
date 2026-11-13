@@ -385,3 +385,6 @@ Object.assign(SCENES.estadio, {
     },
   },
 });
+
+SCENES.estadio.bounce = tt => cheerT > 0 ? Math.abs(Math.sin(tt * 9)) * .35 * Math.min(1, cheerT) : 0;
+SCENES.estadio.rock = tt => cheerT > 0 ? Math.sin(tt * 9) * .012 * Math.min(1, cheerT) : 0;

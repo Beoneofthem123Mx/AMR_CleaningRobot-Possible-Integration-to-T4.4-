@@ -60,13 +60,32 @@ function startWithRoulette() {
   audioInit();
   let pick = window.__forceMod ? MODS_BY_ID[window.__forceMod] : rollMod();
   if (chaosMode && !window.__forceMod) { let b = rollMod(), n = 0; while (b.id === pick.id && n++ < 5) b = rollMod(); pick = comboMod(pick.id === "normal" ? rollMod() : pick, b); }
-  showCard(`<div class="roulette"><small>Today's twist</small><h2 id="rl">…</h2><p id="rld">&nbsp;</p></div>`);
-  let k = 0, done = false;
-  const names = MODS.map(m => m.name);
-  const spin = setInterval(() => { $("#rl").textContent = names[k++ % names.length]; sfx("tick"); }, 70);
-  const go = () => { if (done) return; done = true; clearInterval(spin); hideCard(); start(pick); showModChip(pick); };
-  setTimeout(() => { clearInterval(spin); $("#rl").textContent = pick.name; $("#rld").textContent = pick.desc; sfx("cheer"); }, 1300);
-  setTimeout(go, 3300);
+  // a slot machine: the reel spins past every twist and clunks onto today's one
+  const ICON = { normal: "☕", wifi: "📶", influencer: "🤳", rain: "🌧️", reggaeton: "💃", moon: "🌙", rush: "🎟️", slowmo: "🐌", chanclas: "🩴", pigeons: "🐦", apagon: "💡", nino: "🧒", uniforme: "👕", tio: "🕺" };
+  const COLS = ["#ff6fb1", "#ffd23a", "#4fb8ff", "#7dff6a", "#a98bff", "#ff9a3c"];
+  const cell = (m, i) => `<div class="rcell" style="--c:${COLS[i % COLS.length]}"><i>${ICON[m.id] || m.icon || "🎲"}</i><b>${m.name}</b></div>`;
+  const other = () => { let m; do m = MODS[(Math.random() * MODS.length) | 0]; while (m.id === pick.id && MODS.length > 1); return m; };
+  const strip = []; for (let i = 0; i < 26; i++) strip.push(other());
+  strip.push(pick, other());
+  showCard(`<div class="roulette slot">
+      <div class="bulbs">${Array.from({ length: 18 }, (_, i) => `<span style="animation-delay:${(i * .06).toFixed(2)}s"></span>`).join("")}</div>
+      <small>Today's twist</small>
+      <div class="reelbox"><div class="reel" id="reel">${[MODS[0]].concat(strip).map(cell).join("")}</div><div class="payline"></div></div>
+      <div class="lever" id="lever"><span></span></div>
+      <h2 id="rl">&nbsp;</h2><p id="rld">&nbsp;</p><div class="rconf" id="rconf"></div>
+    </div>`);
+  let done = false, k = 0;
+  const reel = $("#reel"), CH = 64, target = (strip.length - 2) * CH;   // land the pick on the payline (second visible row)
+  requestAnimationFrame(() => { reel.style.transition = "transform 1.9s cubic-bezier(.12,.75,.18,1.04)"; reel.style.transform = `translateY(${-target}px)`; $("#lever").classList.add("pulled"); });
+  const tick = setInterval(() => { k++; sfx("tick"); }, 85);
+  const go = () => { if (done) return; done = true; clearInterval(tick); hideCard(); start(pick); showModChip(pick); };
+  setTimeout(() => {
+    clearInterval(tick); sfx("cheer");
+    $("#rl").innerHTML = `<span class="stamp">${ICON[pick.id] || "🎲"} ${pick.name}</span>`; $("#rld").textContent = pick.desc;
+    $("#rconf").innerHTML = Array.from({ length: 26 }, (_, i) => `<i style="left:${(Math.random() * 100).toFixed(1)}%;background:${COLS[i % COLS.length]};animation-delay:${(Math.random() * .3).toFixed(2)}s;--dx:${((Math.random() - .5) * 160).toFixed(0)}px"></i>`).join("");
+    document.querySelector(".roulette.slot").classList.add("won");
+  }, 2050);
+  setTimeout(go, 4300);
   $("#card").onclick = () => { if (k > 8) go(); };
 }
 function showModChip(m) {

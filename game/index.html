@@ -122,6 +122,28 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .card.menu .scenes { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 /* roulette */
 .roulette { text-align: center; padding: 10px 6px; min-width: 260px; }
+.roulette.slot { position: relative; padding: 18px 16px 10px; min-width: 340px; max-width: 380px; margin: 0 auto; }
+.roulette.slot #rld { max-width: 330px; margin: 0 auto; }
+.roulette .bulbs { position: absolute; inset: 4px; pointer-events: none; display: flex; flex-wrap: wrap; justify-content: space-between; align-content: space-between; }
+.roulette .bulbs span { width: 10px; height: 10px; border-radius: 50%; background: #ffd23a; box-shadow: 0 0 8px #ffd23a; animation: bulb .5s steps(2) infinite; }
+.roulette .bulbs span:nth-child(2n) { background: #ff3fa4; box-shadow: 0 0 8px #ff3fa4; }
+@keyframes bulb { 50% { opacity: .25; } }
+.reelbox { position: relative; height: 192px; overflow: hidden; margin: 10px auto 4px; width: 300px; border: 4px solid #111214; border-radius: 14px; background: linear-gradient(#111214, #2a2c34 18%, #f4f1ea 30%, #f4f1ea 70%, #2a2c34 82%, #111214); }
+.reel { will-change: transform; }
+.rcell { height: 64px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 2px dashed rgba(0,0,0,.15); }
+.rcell i { font-style: normal; font-size: 30px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--c); border: 3px solid #111214; }
+.rcell b { font-size: 1rem; text-align: left; line-height: 1.1; }
+.payline { position: absolute; left: 0; right: 0; top: 64px; height: 64px; border-top: 4px solid #d8322b; border-bottom: 4px solid #d8322b; box-shadow: 0 0 0 999px rgba(17,18,20,.28); pointer-events: none; }
+.lever { position: absolute; right: -22px; top: 70px; width: 14px; height: 90px; background: #9aa0a8; border-radius: 7px; border: 3px solid #111214; transform-origin: 50% 100%; transition: transform .25s; }
+.lever span { position: absolute; left: 50%; top: -22px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: #d8322b; border: 3px solid #111214; }
+.lever.pulled { animation: lever .7s ease-out; }
+@keyframes lever { 30% { transform: scaleY(-.6); } 100% { transform: none; } }
+.roulette .stamp { display: inline-block; background: #ffd23a; border: 4px solid #111214; border-radius: 12px; padding: 4px 14px; animation: capslam .45s cubic-bezier(.3,1.6,.5,1) both; box-shadow: 4px 4px 0 #111214; }
+.roulette.won .reelbox { animation: winflash .3s 3; }
+@keyframes winflash { 50% { border-color: #ffd23a; box-shadow: 0 0 18px #ffd23a; } }
+.rconf { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.rconf i { position: absolute; top: 40%; width: 8px; height: 12px; border-radius: 2px; animation: rconf 1.4s ease-out forwards; }
+@keyframes rconf { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), 220px) rotate(540deg); opacity: 0; } }
 .roulette small { font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #8a5a00; }
 .roulette h2 { font-size: 1.9rem; margin: 8px 0; min-height: 2.2em; display: grid; place-items: center; }
 /* the newspaper */
@@ -142,6 +164,20 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 /* title screen, game-style: dark glass panel over the live demo */
 .card.menu { max-width: 1120px; width: 100%; background: rgba(18,19,26,.82); color: #f4f4f2; border: 3px solid rgba(255,255,255,.12);
   backdrop-filter: blur(10px); box-shadow: 0 24px 60px rgba(0,0,0,.55); padding: 22px 24px 16px; gap: 14px; }
+.frame:has(.overlay:not([hidden]) .card.title) .badge, .frame:has(.overlay:not([hidden]) .card.title) .status, .frame:has(.overlay:not([hidden]) .card.title) .caption { display: none !important; }
+.card.menu.title { max-width: 720px; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; margin: auto; text-align: center; }
+.titlewrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 10px; }
+.titlewrap .splat { position: absolute; inset: 0 8%; background: radial-gradient(closest-side, rgba(18,19,26,.82), rgba(18,19,26,.55) 70%, transparent); border-radius: 50%; z-index: -1; }
+.card.menu .biglogo { font-size: clamp(3.4rem, 11vw, 7.6rem); text-shadow: .06em .06em 0 #d8322b, .1em .1em 0 #111214; animation: logodrop .9s cubic-bezier(.3,1.5,.5,1) both, logobob 3.2s 1s ease-in-out infinite; }
+@keyframes logodrop { 0% { transform: translateY(-120%) rotate(-12deg) scale(1.3); opacity: 0; } 100% { transform: translateY(0) rotate(-3deg) scale(1); opacity: 1; } }
+.titlewrap .tag { font-weight: 800; color: #ffd23a; font-size: 1.05rem; animation: fadein .6s .7s both; }
+.titlebtns { display: flex; flex-direction: column; gap: 10px; width: min(320px, 90%); animation: fadein .6s .9s both; }
+.titlebtns button { font-size: 1.05rem; padding: 10px 16px; justify-content: center; }
+.titlebtns button.big { font-size: 1.6rem; padding: 14px 18px; letter-spacing: .06em; animation: startpulse 1.4s 1.6s ease-in-out infinite; }
+@keyframes startpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes fadein { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.titlewrap .presskey { font-size: .85rem; color: #c9ccd2; animation: blink 1.6s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .25; } }
 .card.menu .menuhead { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
 .card.menu .title { flex: none; padding: 6px 10px 10px; }
 .card.menu .logo { font-size: clamp(2.8rem, 7vw, 5.2rem); animation: logobob 3.2s ease-in-out infinite; }

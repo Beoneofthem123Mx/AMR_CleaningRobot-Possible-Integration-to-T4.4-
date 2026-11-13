@@ -3,7 +3,7 @@
 let tool = "fence", drag = null;
 const maxGuards = () => sandbox ? 16 : (scene.guards || 3) + upg("guards");
 const nStewards = () => guards.filter(g => g.role === "slow").length, nGuards = () => guards.length - nStewards();
-const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0) + nStewards() * GUARD_ROLES.slow.cost;   // dollars spent
+const fenceUsed = () => gates.reduce((s, g) => s + (g === GATE_SIZES.wide.k ? GATE_SIZES.wide.cost : 0), 0) + fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0) + nStewards() * GUARD_ROLES.slow.cost;   // dollars spent
 const fenceLeft = () => sandbox ? 1e9 : FENCE_BUDGET * 10 - fenceUsed();
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
@@ -24,7 +24,13 @@ cv.addEventListener("pointerdown", ev => {
     if (badSlots().includes(i)) { toast(`${SLOT_XS ? "Something is in the way" : scene.slotWhy}: that gate can't be opened.`); return; }
     if (gates[i] && open <= 1) { toast("You need at least one open gate."); return; }
     if (!gates[i] && open >= MAX_GATES) { toast(`There's only enough staff for ${MAX_GATES} gates.`); return; }
-    gates[i] = !gates[i]; buildWorld(); ui(); sfx("select"); return;
+    const want = GATE_SIZES[gateSize].k;
+    if (gates[i] && gateK(i) !== want) {   // an open gate in another size: resize it
+      if (want === GATE_SIZES.wide.k && fenceLeft() < GATE_SIZES.wide.cost) { toast(`A wide gate costs $${GATE_SIZES.wide.cost}.`); return; }
+      gates[i] = want; buildWorld(); ui(); sfx("select"); toast(`${GATE_SIZES[gateSize].name}.`); return;
+    }
+    if (!gates[i] && want === GATE_SIZES.wide.k && fenceLeft() < GATE_SIZES.wide.cost) { toast(`A wide gate costs $${GATE_SIZES.wide.cost}.`); return; }
+    gates[i] = gates[i] ? false : want; buildWorld(); ui(); sfx("select"); return;
   }
   if (tool === "guard") {
     if (guardRole === "slow") {
@@ -129,7 +135,7 @@ function setDead(n, quiet) {
 }
 function showCard(html, kind) {
   const c = $("#card"); c.innerHTML = html; c.className = "card" + (kind ? " " + kind : ""); c.onclick = null;
-  const menu = kind === "menu" || kind === "options" || (typeof demo !== "undefined" && demo);   // no game toolbar behind the menus
+  const menu = (kind || "").startsWith("menu") || kind === "options" || (typeof demo !== "undefined" && demo);   // no game toolbar behind the menus
   $("#bar").style.visibility = menu ? "hidden" : ""; $("#ftypes").style.display = menu ? "none" : "";
   $("#overlay").hidden = false; const b = $("#card .go"); if (b) b.focus();
 }
@@ -156,7 +162,7 @@ function applyPlan(json) {
   try {
     const o = JSON.parse(json);
     if (!Array.isArray(o.gates) || o.gates.length !== SLOTS || !o.gates.some(Boolean)) return false;
-    gates = o.gates.map((g, i) => !!g && !badSlots().includes(i)); if (!gates.some(Boolean)) gates = scene.gates.slice();
+    gates = o.gates.map((g, i) => !!g && !badSlots().includes(i) ? (g === true ? true : +g || true) : false); if (!gates.some(Boolean)) gates = scene.gates.slice();
     fences = (o.fences || []).filter(f => FENCE_TYPES[f.type] && [f.ax, f.ay, f.bx, f.by, f.len].every(Number.isFinite)).map(f => ({ ...f }));
     guards = (o.guards || []).filter(g => Number.isFinite(g[0]) && Number.isFinite(g[1])).map(([x, y, role]) => ({ kind: "guard", role: GUARD_ROLES[role] ? role : "calm", x, y, ang: -Math.PI / 2, t: 0 }));
     props = (o.props || []).filter(p => PROP_TYPES[p.type] && Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => ({ type: p.type, x: p.x, y: p.y }));
@@ -194,6 +200,7 @@ function togglePause() {
 addEventListener("keydown", e => {
   if (e.target && e.target.tagName === "INPUT") return;
   const k = e.key.toLowerCase(), cardOpen = !$("#overlay").hidden;
+  if (k === "enter" && atTitle && !$("#overlay").hidden && $("#card").classList.contains("title")) { chooser(); return; }
   if (k === "escape" || k === "p") { if (phase === "show" || phase === "evac") togglePause(); else if (phase === "plan" && !cardOpen) chooser(); return; }
   if (cardOpen) return;
   if (phase === "plan" && k === "z" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undoPlan(); return; }
@@ -219,7 +226,7 @@ addEventListener("keydown", e => {
 });
 document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => {
   tool = b.dataset.tool; ui();
-  if (tool === "gate") toast("Tap the fence at the bottom to open or close gates.");
+  if (tool === "gate") toast("Pick a gate size, then tap a gate at the bottom to open, resize or close it.");
   if (tool === "guard") toast("Tap the venue to place security. Guards calm people; stewards slow them down before a bottleneck.");
   if (tool === "prop") toast("Tap the venue to place the selected prop. It's paid from the same budget as fences.");
 }));
@@ -277,7 +284,9 @@ $("#card").addEventListener("click", e => {
   const sk = e.target.closest("[data-scene]");
   if (sk) { loadScene(sk.dataset.scene); hideCard(); caption(!SLOT_XS ? "You plan it" : ROUTE.side && ROUTE.b ? "New route: B-stage mid-show, and they leave by the side exit" : ROUTE.side ? "New route: after the show they leave by the side exit" : ROUTE.b ? "New route: halfway through, the show moves to the B-stage" : "The entrances moved! You plan it", false, 0); }
   if (e.target.id === "retry") { paused = false; backToPlan(); }
-  if (e.target.id === "pick") chooser();
+  if (e.target.id === "pick") { if (atTitle) titleScreen(); else chooser(); }
+  if (e.target.closest && e.target.closest("#start")) chooser();
+  if (e.target.id === "title") titleScreen();
   if (e.target.id === "options") showOptions();
   if (e.target.closest && e.target.closest("#shop")) showShop();
   if (e.target.id === "howto") showHowTo();
@@ -295,7 +304,7 @@ function pickRole(k) { guardRole = k; tool = "guard"; ui(); toast(`${GUARD_ROLES
 let pickerFor = "";
 function renderPicker(plan) {
   const live = phase === "show" || phase === "evac";
-  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : live && !demo ? "powers" : sandbox && plan ? "sand" : "";
+  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard" || tool === "gate") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : live && !demo ? "powers" : sandbox && plan ? "sand" : "";
   if (want === "powers") {   // chaos powers: rebuilt every time, the charges change
     pickerFor = want; el.hidden = false;
     el.innerHTML = Object.entries(POWERS).map(([k, p]) => { const n = k === "mega" ? mega.n : charges[k] || 0;
@@ -315,6 +324,9 @@ function renderPicker(plan) {
     } else if (want === "sand") {
       el.innerHTML = `<button data-sand="crowd"></button><span class="sandnote">Sandbox: no budget, no limits, nothing counts. Pick the fence or props tool to build.</span>`;
       el.querySelector("button").addEventListener("click", () => { sandCrowd = sandCrowd === 1 ? 1.5 : sandCrowd === 1.5 ? .5 : 1; ui(); });
+    } else if (want === "gate") {   // gate sizes: click a closed gate to open it in this size, an open one to resize it
+      el.innerHTML = Object.entries(GATE_SIZES).map(([k, g]) => `<button data-k="${k}" title="${g.desc}"><i style="background:#d8322b;width:${Math.round(g.k * 14)}px"></i>${g.name}<span class="cnt">${g.cost && !sandbox ? "$" + g.cost : "free"}</span></button>`).join("");
+      el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { gateSize = b.dataset.k; ui(); toast(`${GATE_SIZES[gateSize].name}: ${GATE_SIZES[gateSize].desc}. Click a gate to open or resize it.`); }));
     } else if (want === "guard") {
       el.innerHTML = Object.entries(GUARD_ROLES).map(([k, f]) => `<button data-k="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">${f.cost && !sandbox ? "$" + f.cost : f.cost ? "" : "free"}</span></button>`).join("");
       el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => pickRole(b.dataset.k)));
@@ -328,7 +340,7 @@ function renderPicker(plan) {
     }
   }
   if (want === "sand") el.querySelector("button").textContent = `Crowd size: ×${sandCrowd} (${Math.min(5800, Math.round(scene.crowd * sandCrowd)).toLocaleString("en")})`;
-  const cur = want === "fence" ? fenceType : want === "guard" ? guardRole : propType;
+  const cur = want === "fence" ? fenceType : want === "guard" ? guardRole : want === "gate" ? gateSize : propType;
   el.querySelectorAll("button[data-shape]").forEach(b => b.classList.toggle("on", b.dataset.shape === fenceShape));
   el.querySelectorAll("button[data-k]").forEach(b => b.classList.toggle("on", b.dataset.k === cur));
 }

@@ -184,7 +184,7 @@ addEventListener("keydown", e => { if (e.key === "m" || e.key === "M") $("#bSoun
 try { init3D(); } catch (err) {
   showCard(`<h2>Your browser can't do 3D</h2><p>This game needs WebGL. Try an up-to-date Chrome, Edge, Firefox or Safari.</p>`);
 }
-resize(); loadScene("plaza"); startDemo(); chooser();
+resize(); loadScene("plaza"); startDemo(); titleScreen();
 // first launch: explain the game once
 try { if (!localStorage.getItem("mh.seen") && !window.__manual) { localStorage.setItem("mh.seen", "1"); showHowTo(); } } catch (er) { /* no storage */ }
 requestAnimationFrame(frame);

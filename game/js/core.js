@@ -63,6 +63,10 @@ let SLOT_XS = null, SLOT_BAD = [];
 // today's route: side (-1/+1) puts the way out on a side wall between ey0 and ey1; b moves the show to a B-stage at (bx, by) halfway through
 let ROUTE = { side: 0, ey0: 0, ey1: 0, b: false, bx: 0, by: 0, done: false };
 const slotX = i => SLOT_XS ? SLOT_XS[i] : WW * (i + .5) / SLOTS;
+// gate sizes: gates[i] is false (closed), true/1 (normal), .7 (narrow) or 1.45 (wide)
+const GATE_SIZES = { narrow: { k: .7, name: "Narrow gate", cost: 0, desc: "Slows the crowd at the entrance, but also at the exit" }, normal: { k: 1, name: "Normal gate", cost: 0, desc: "The standard size" }, wide: { k: 1.45, name: "Wide gate", cost: 60, desc: "Lets everyone in and out much faster. $60 from the budget" } };
+let gateSize = "normal";
+const gateK = i => gates[i] === true ? 1 : +gates[i] || 1, gateW = i => SLOT_W * gateK(i);
 const badSlots = () => SLOT_XS ? SLOT_BAD : ((typeof scene !== "undefined" && scene && scene.noSlots) || []);
 let shuffleGates = (() => { try { return localStorage.getItem("mh.shuffle") !== "off"; } catch (e) { return true; } })();
 let gates = [false, false, true, false, true, false, false], scene;

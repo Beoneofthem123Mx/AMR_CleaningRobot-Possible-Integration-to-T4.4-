@@ -209,3 +209,12 @@ Object.assign(SCENES.crucero, {
 });
 SCENES.crucero.lines = Object.assign(SCENES.crucero.lines || {}, { piratas: "A pirate ship boarded the party boat, fired three cannonballs into the conga line and left with forty sunscreens." });
 SCENES.crucero.quotes = (SCENES.crucero.quotes || []).concat(["“They said they were pirates. Honestly, the best entertainment on board,” said a passenger with no eyebrows."]);
+
+// the ship never stops rolling: the camera tilts with the swell and the deck crowd slides from rail to rail
+SCENES.crucero.rock = tt => Math.sin(tt * .55) * .035 + Math.sin(tt * 1.37) * .01 + (windF.t > 0 ? windF.x * .07 * Math.min(1, windF.t) : 0);
+SCENES.crucero.bounce = tt => Math.sin(tt * .8) * .25;
+SCENES.crucero.step = () => {
+  if (phase !== "show" && phase !== "evac") return;
+  const lean = Math.sin(t * .55) * .55 + Math.sin(t * 1.37) * .15;
+  for (const a of ag) a.vx += lean * DT;
+};

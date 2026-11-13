@@ -23,8 +23,30 @@ function sceneThumb(key) {
 }
 
 // ---------- title screen and venue picker ----------
+let atTitle = false;
+// the first thing you see: the logo over the live demo, START and the rest
+function titleScreen() {
+  if ((phase === "show" || phase === "evac") && !demo) return;
+  atTitle = true;
+  const total = totalStars(), max = Object.keys(SCENES).length * 3;
+  showCard(`<div class="titlewrap">
+      <div class="splat"></div>
+      <h1 class="logo biglogo">${["HUMAN", "TSUNAMI"].map((w, j) => [...w].map((ch, i) => `<span class="lt" style="animation-delay:${((i + j * 5) * .09).toFixed(2)}s">${ch}</span>`).join("")).join("<br>")}</h1>
+      <p class="tag">A safety simulator for events that go horribly wrong</p>
+      <div class="titlebtns">
+        <button class="go big" id="start">▶ START</button>
+        <button id="shop">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button>
+        <button id="options">Settings</button>
+        <button id="howto">How to play</button>
+        ${window.steam ? '<button id="quit">Quit</button>' : ""}
+      </div>
+      <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · ${Object.keys(SCENES).length} venues</p>
+      <p class="presskey">press <b>Enter</b> to start</p>
+    </div>`, "menu title");
+}
 function chooser() {
   if ((phase === "show" || phase === "evac") && !demo) return;
+  atTitle = false;
   const best = loadBest(), total = totalStars(), max = Object.keys(SCENES).length * 3, medals = loadMedals(), st = loadStats();
   const nMedals = Object.values(medals).reduce((n, m) => n + m.length, 0), maxMedals = Object.keys(SCENES).length * Object.keys(MEDALS).length;
   showCard(`<div class="menuhead">
@@ -45,7 +67,7 @@ function chooser() {
         <span class="txt"><b>${sc.name}</b><span>${sc.tag}</span><small>${sc.crowd.toLocaleString("en")} people</small>
         ${open ? `<span class="medals">${Object.entries(MEDALS).map(([m, d]) => `<i class="${(medals[key] || []).includes(m) ? "got" : ""}" title="${d.name}: ${d.desc}">${d.icon}</i>`).join("")}</span>` : ""}</span></button>`; }).join("")}</div>
     <p class="keys">Shortcuts: <b>1–5</b> tools (press again to switch fence/prop type) · <b>Space</b> opens gates · <b>H</b> pressure · <b>C</b> camera · <b>X</b> street view · <b>Wheel</b> zoom · <b>WASD</b>/right-drag pan · <b>V</b> speed · <b>M</b> sound · <b>G</b> effects · <b>Esc</b> pause</p>
-    <div class="row"><button id="shop" class="go">Upgrade shop <span class="tix">${TIX.toLocaleString("en")}</span></button><button id="options">Options</button><button id="howto">How to play</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
+    <div class="row"><button id="title">◀ Title</button><button id="shop" class="go">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button><button id="options">Options</button><button id="howto">How to play</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
   const b = $("#card .scene:not(:disabled)"); if (b) b.focus();
 }
 
