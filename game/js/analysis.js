@@ -5,10 +5,11 @@ const PM = { w: 40, h: 72, p: null, d: null, s: null, f: null, n: 0, key: "" };
 let ANALYSIS = null, analysisView = false;
 function pmReset() {
   PM.w = Math.ceil(WW); PM.h = Math.ceil(SH); const n = PM.w * PM.h;
-  PM.p = new Float32Array(n); PM.d = new Float32Array(n); PM.s = new Float32Array(n); PM.f = new Float32Array(n); PM.exits = new Array(SLOTS).fill(0); PM.side = 0; PM.n = 0; PM.key = sceneKey; ANALYSIS = null; analysisView = false;
+  PM.p = new Float32Array(n); PM.d = new Float32Array(n); PM.s = new Float32Array(n); PM.f = new Float32Array(n); PM.exits = new Array(SLOTS).fill(0); PM.side = 0; PM.times = []; PM.evacAt = null; PM.n = 0; PM.key = sceneKey; ANALYSIS = null; analysisView = false;
 }
 function pmSample() {   // every few steps: cheap
-  if (!PM.p || ++PM.n % 6) return;
+  if (!PM.p) return; ++PM.n; if (phase === "evac" && PM.evacAt === null) PM.evacAt = PM.n * DT;
+  if (PM.n % 6) return;
   for (const a of ag) {
     const c = (Math.min(PM.h - 1, Math.max(0, a.y | 0))) * PM.w + Math.min(PM.w - 1, Math.max(0, a.x | 0));
     if (a.ps > PM.p[c]) PM.p[c] = a.ps; PM.d[c]++;
@@ -19,6 +20,14 @@ function pmExit(a) {   // which way out each person took (for the exit-flow char
   if (!PM.exits || demo) return;
   if (a.y > SH - .6) { let bi = 0, bd = 1e9; for (let i = 0; i < SLOTS; i++) { const d = Math.abs(slotX(i) - a.x) + (gates[i] ? 0 : 50); if (d < bd) { bd = d; bi = i; } } PM.exits[bi]++; } else PM.side++;
 }
+function fallTimeline() {   // when people went down: during the show or on the way out
+  const T = PM.times || []; if (T.length < 3) return "";
+  const end = Math.max(PM.n * DT, 1), nb = 36, b = new Array(nb).fill(0); for (const x of T) b[Math.min(nb - 1, Math.floor(x / end * nb))]++;
+  const mx = Math.max(...b), ev = PM.evacAt !== null ? PM.evacAt / end : 1, inEv = T.filter(x => PM.evacAt !== null && x >= PM.evacAt).length, share = inEv / T.length;
+  const bars = b.map((n, i) => `<rect x="${i * 10 + 1}" y="${40 - Math.round(n / mx * 38)}" width="8" height="${Math.max(n ? 2 : 0, Math.round(n / mx * 38))}" rx="1.5" fill="${i / nb >= ev ? "#ff3b2f" : "#ffb238"}"/>`).join("");
+  return `<div class="flow"><b>When people went down</b><svg viewBox="0 0 360 52" class="tl">${bars}${ev < 1 ? `<line x1="${ev * 360}" x2="${ev * 360}" y1="0" y2="42" stroke="#fff" stroke-dasharray="3 3"/><text x="${ev * 360 + 4}" y="50" fill="#c9ccd2" font-size="9">evacuation</text>` : ""}<text x="0" y="50" fill="#c9ccd2" font-size="9">doors open</text></svg>
+    <small>${share > .6 ? `${Math.round(share * 100)}% went down on the way out: the exits are your problem. More gates, wider gates, and keep the area in front of them clear.` : share < .25 ? `Most went down during the show itself: the front and the flow toward the stage need pens, guards and water.` : `Both the show and the exit hurt: fix the worst hotspot first.`}</small></div>`;
+}
 function exitFlow() {
   if (!PM.exits) return "";
   const rows = PM.exits.map((n, i) => ({ n, i })).filter(r => gates[r.i] || r.n > 5); if (PM.side) rows.push({ n: PM.side, i: -1 });
@@ -27,7 +36,7 @@ function exitFlow() {
   return `<div class="flow"><b>Exit flow</b>${rows.map(r => `<div class="fr${hot === r ? " hot" : ""}"><span>${r.i < 0 ? "Side exit" : "Gate " + (r.i + 1)}</span><i style="width:${Math.max(2, Math.round(r.n / max * 100))}%"></i><em>${Math.round(r.n / tot * 100)}%</em></div>`).join("")}
     ${hot ? `<small>${hot.i < 0 ? "The side exit" : "Gate " + (hot.i + 1)} took ${Math.round(hot.n / tot * 100)}% of everybody. Make it wide, or open a gate next to it.</small>` : idle ? `<small>Gate ${idle.i + 1} was open but almost nobody used it: steer people to it with a barrier.</small>` : `<small>The crowd spread well over your exits.</small>`}</div>`;
 }
-function pmFall(x, y) { if (!PM.f) return; const c = (Math.min(PM.h - 1, Math.max(0, y | 0))) * PM.w + Math.min(PM.w - 1, Math.max(0, x | 0)); PM.f[c]++; }
+function pmFall(x, y) { if (!PM.f) return; PM.times.push(PM.n * DT); const c = (Math.min(PM.h - 1, Math.max(0, y | 0))) * PM.w + Math.min(PM.w - 1, Math.max(0, x | 0)); PM.f[c]++; }
 function analyze() {
   if (!PM.p || PM.key !== sceneKey) return null;
   // hotspots: cells weighted by falls and pressure, picked greedily with a 5 m exclusion radius
@@ -60,7 +69,7 @@ function showAnalysis() {
   el.hidden = false;
   el.innerHTML = `<h3>What went wrong?</h3><p class="lg"><i class="h1"></i>pressure <i class="h2"></i>crush <b>✕</b> someone went down <b class="num">1</b> hotspot</p>` +
     (a && a.spots.length ? a.spots.map((s, i) => `<div class="spot"><b class="num">${i + 1}</b><div><b>${s.cause}</b>${s.falls ? ` · ${s.falls} down here` : ""}<small>${s.tip}</small></div></div>`).join("")
-      : `<p>Nothing dramatic: no real hotspot. Whatever happened, it was spread out.</p>`) + exitFlow() +
+      : `<p>Nothing dramatic: no real hotspot. Whatever happened, it was spread out.</p>`) + fallTimeline() + exitFlow() +
     `<div class="row"><button class="go" id="anRetry">Adjust the plan</button><button id="anBack">Back to the report</button></div>`;
   el.querySelector("#anRetry").onclick = () => { el.hidden = true; paused = false; backToPlan(); };
   el.querySelector("#anBack").onclick = () => { el.hidden = true; analysisView = false; if (window.__lastReport) window.__lastReport(); };

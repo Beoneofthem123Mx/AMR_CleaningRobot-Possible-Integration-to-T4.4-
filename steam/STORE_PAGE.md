@@ -102,7 +102,8 @@ throw free pizza to pull the crowd away from a hotspot, or use the megaphone at 
 After every bad show, "What went wrong?" paints the venue with a pressure heat map, the spots where
 people were stuck and where they fell, and names the three worst hotspots with a cause (a jammed
 gate, a crush at the front, a squeeze point made by your own barrier, a corner trap) and what to
-try next. The map stays on the floor while you re-plan.
+try next. A timeline shows whether people went down during the show or on the way out, and an
+exit-flow chart shows which gate took everybody. The map stays on the floor while you re-plan.
 
 [h2]Endless venues[/h2]
 [list]

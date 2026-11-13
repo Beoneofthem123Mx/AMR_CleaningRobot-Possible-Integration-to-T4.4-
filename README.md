@@ -190,7 +190,8 @@ around.
 - **What went wrong?** (button in the report): a pressure heat map of the whole show, purple dots
   where people were stuck, X marks where they fell, and the three worst hotspots, each with a cause
   (jammed gate, crush at the front, a squeeze made by your own barrier, a corner trap, an open-floor
-  surge) and a tip. It stays faintly on the floor while you re-plan.
+  surge) and a tip, a timeline of when people went down (show or evacuation) and an exit-flow
+  chart that flags an overloaded or unused gate. It stays faintly on the floor while you re-plan.
 - **Daily challenge** (title screen): a venue and a twist picked by the date, your best result of the
   day, +100 tickets the first time you get three stars.
 - **World Tour** (title screen): five random unlocked venues in a row, each with a random twist,
