@@ -40,7 +40,6 @@ function titleScreen() {
         ${window.steam ? '<button id="quit">Quit</button>' : ""}
       </div>
       <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · ${Object.keys(SCENES).length} venues</p>
-      <p class="presskey">press <b>Enter</b> to start</p>
     </div>`, "menu title");
 }
 function chooser() {

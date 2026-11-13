@@ -178,6 +178,7 @@ function blast(x, y) {
     if (d < 3.4 && d > .01) { const s = (1 - d / 3.4) * 6; a.vx += dx / d * s; a.vy += dy / d * s; a.p += (1 - d / 3.4) * 3; if (a.springy && yeet(a, dx, dy)) continue; if (Math.random() < .6) toss(a, 1.6 + (1 - d / 3.4) * 2.5, 1 + Math.random() * .4); }   // explosions send people flying
   }
   pop(x, y - 1, "BOOM!"); burstAt(x, y, 90); shake = Math.min(1.2, shake + .8);
+  debris(x, y, .3, 46, 7); shockwave(x, y, true); hitStop(.28);
 }
 // temporary goal: everyone rushes to one spot for a few seconds (a sale, the bouquet, free tacos)
 let attrT = 0, timers = [];

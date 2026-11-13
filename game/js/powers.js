@@ -26,7 +26,7 @@ function usePower(x, y) {
         m.hit = true; m.dead = true; blast(x, y); flash = Math.max(flash, .5); shake = Math.min(1.5, shake + 1);
         for (const a of ag) { const d = Math.hypot(a.x - x, a.y - y); if (d < 1.2) { a.dmg = 1.6; a.forceFall = [3, 5, 6, 8][(Math.random() * 4) | 0]; } else if (d < 3.6 && Math.random() < .35) yeet(a, a.x - x, a.y - y); }
         for (let k = 0; k < 24; k++) { const an = k / 24 * 6.283; puff(x + Math.cos(an) * 2, y + Math.sin(an) * 2, .3, "#6a6058", .9, 2, .6); }
-        pop(x, y - 2, "KA-THOOOM!"); CRATERS.push([x, y, 2.6]);
+        pop(x, y - 2, "KA-THOOOM!"); CRATERS.push([x, y, 2.6]); debris(x, y, .4, 90, 10, ["#5a5560", "#3e3a40", "#ff9a3c", "#ffd23a", "#8a7f6a"]); hitStop(.45);
       } } });
   } else if (kind === "bowl") {
     const from = y > SH / 2 ? [x + (Math.random() - .5) * 6, SH + 2] : [-2, y], d = Math.hypot(x - from[0], y - from[1]) || 1;
@@ -37,7 +37,7 @@ function usePower(x, y) {
       if (m.landed) { m.h = 0; return; }
       m.vh -= 30 * DT; m.h += m.vh * DT;
       if (m.h <= 0) {
-        m.h = 0; m.landed = true; sfx("crash"); shake = Math.min(1.4, shake + .7); pop(x, y - 1.3, "CLANG!");
+        m.h = 0; m.landed = true; sfx("crash"); shake = Math.min(1.4, shake + .7); pop(x, y - 1.3, "CLANG!"); debris(x, y, .2, 24, 5); shockwave(x, y, true); hitStop(.2);
         for (const a of ag) { const d = Math.hypot(a.x - x, a.y - y); if (d < .95) { a.dmg = 1.6; a.forceFall = 4; } else if (d < 2.2) { a.vx += (a.x - x) / d * 3; a.vy += (a.y - y) / d * 3; toss(a, .7, .5); } }
         for (let k = 0; k < 8; k++) puff(x + rnd(-1, 1), y + rnd(-1, 1), .2, "#d9ccb0", .4, 1.2, .5);
       } } });
@@ -47,7 +47,7 @@ function usePower(x, y) {
       m.vh -= 24 * DT; m.h += m.vh * DT; m.ang += DT * 3;
       if (m.h <= 0) {
         m.h = 0; m.vh = 9 - m.bounces * 3; m.bounces++; m.x += rnd(-2.5, 2.5); m.y += rnd(-2.5, 2.5); sfx("moo"); shake = Math.min(1.2, shake + .45);
-        pop(m.x, m.y - 1.5, ["BOING!", "MOO-HOO!", "UDDER CHAOS!"][Math.min(2, m.bounces - 1)]);
+        pop(m.x, m.y - 1.5, ["BOING!", "MOO-HOO!", "UDDER CHAOS!"][Math.min(2, m.bounces - 1)]); debris(m.x, m.y, .2, 16, 4.5); shockwave(m.x, m.y, m.bounces === 1);
         for (const a of ag) { const d = Math.hypot(a.x - m.x, a.y - m.y); if (d < 2.3 && d > .01) { if (d < .8 && m.bounces === 1) { a.dmg = 1.6; a.forceFall = 4; } else if (!yeet(a, a.x - m.x, a.y - m.y)) toss(a, 1.5, .8); } }
         if (m.bounces >= 3) { m.dead = true; pop(m.x, m.y - 1.5, "MOO. (BOW)"); }
       } } });

@@ -4,7 +4,7 @@ const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", 
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
 let camFree = null;   // {z, x, y} while the player controls the camera (camMode 3)
 let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [];
-function resetFx() { cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; prints = []; litter = []; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
+function resetFx() { chunks = []; hitT = 0; cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; prints = []; litter = []; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
 function confettiAt(x, y, h, n, spread) {
   for (let i = 0; i < n && confetti.length < 1400; i++) {
     const a = Math.random() * 6.283, v = Math.random() * spread;
@@ -23,7 +23,7 @@ function onFall(x, y) {
   voice(Math.random() < .04 ? "pig" : Math.random() < .25 ? "splat" : "ouch", .55 + Math.random() * .25, .18);
   if (dead === 0) announce("war_medic");
   if (ghosts.length < 260 && (dead < 40 || Math.random() < .45)) ghosts.push({ x, y, t: 0, life: 4.2 + Math.random() * 1.5, ph: Math.random() * 6.28, s: 1.15 + Math.random() * .35 });
-  rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream");
+  rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream"); if (!demo) debris(x, y, .2, 5, 2.4, scene.night ? ["#55525a", "#3e3a40"] : ["#e6dcc4", "#c9bfa6"]);
   if (Math.random() < .35) { const an = Math.random() * 6.28, d = .8 + Math.random() * 1.2; litter.push([x + Math.cos(an) * d, y + Math.sin(an) * d, (Math.random() * 7) | 0, Math.random() * 6.28, 1]); }   // a lost shoe
   for (let k = 0; k < 4; k++) puff(x + (Math.random() - .5) * .6, y + (Math.random() - .5) * .6, .15, scene.night ? "#6a6870" : "#e6dcc4", .18 + Math.random() * .1, .8, .35);   // dust where they hit the floor
   if (dead === 0) { G3.wantPhoto = true; slowT = 1.8; focus = { x, y }; caption("Ouch!", true, 1500); }
@@ -46,7 +46,7 @@ function updateFx(dt) {
   const free = camMode === 3 && camFree && !demo;
   if (free) { tz = camFree.z; tx = camFree.x; ty = camFree.y; }
   // slow motion, zoomed in on the first person trampled
-  if (slowT > 0 && focus) { tz = 2.7; ty = focus.y; tx = focus.x; }
+  if (slowT > 0 && focus) { tz = Math.min(2.7, ZMAX()); ty = focus.y; tx = focus.x; }
   const kz = free && slowT <= 0 ? 1 - Math.pow(.0005, Math.max(dt, .016)) : 1 - Math.pow(slowT > 0 ? .02 : .3, Math.max(dt, slowT > 0 ? .016 : 0));
   cam.z += (tz - cam.z) * kz; cam.y += (ty - cam.y) * kz * (slowT > 0 || free ? 1 : .6); cam.x += (tx - cam.x) * kz;
   const hw = WW / (2 * cam.z), hh = WH / (2 * cam.z);
@@ -54,6 +54,13 @@ function updateFx(dt) {
   shake *= Math.pow(.03, dt); flash *= Math.pow(.04, dt);
   heatMix += ((heat ? 1 : surgeT > 0 ? .45 : 0) - heatMix) * (1 - Math.pow(.015, dt));
   for (const r of rings) r.t += dt; rings = rings.filter(r => r.t < 1.3);
+  for (const c of chunks) {   // debris physics
+    c.vh -= 16 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.h += c.vh * dt; c.r += c.w * dt; c.life -= dt;
+    if (c.h < .05) { c.h = .05; if (c.b++ < 2) { c.vh = Math.abs(c.vh) * .35; c.vx *= .5; c.vy *= .5; c.w *= .5; } else { c.vh = 0; c.vx *= .8; c.vy *= .8; c.w = 0; } }
+  }
+  chunks = chunks.filter(c => c.life > 0);
+  // smoke trails behind everyone who got launched into orbit
+  if (!demo && dt > 0) { let nt = 0; for (const a of ag) { if (!a.yeet || a.air <= 0) continue; if (++nt > 14) break; const q = 1 - a.air / (a.airD || 1), up = Math.sin(q * Math.PI) * (a.airH || 1.6); puff(a.x, a.y, up + .8, "#ffffff", .22, .55, 0); } }
   // kicked-up dust behind people who run (a few samples per frame, never in the menu demo)
   if (!demo && dt > 0 && ag.length && (phase === "show" || phase === "evac")) for (let k = 0; k < 4; k++) {
     const a = ag[(Math.random() * ag.length) | 0], sp = Math.hypot(a.vx, a.vy);
@@ -83,6 +90,18 @@ function updateFx(dt) {
   for (const p of puffs) { p.h += p.vh * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += dt * p.grow; p.life -= dt; }
   puffs = puffs.filter(p => p.life > 0);
 }
+// low-poly debris: chunky shards that fly out of every impact, spin, bounce once and fade (TABS-style chaos)
+let chunks = [], hitT = 0;
+const CHUNK_COLS = ["#e6dcc4", "#c9bfa6", "#8a7f6a", "#ffd23a", "#ff6fb1", "#4fb8ff", "#d8322b", "#f4f4f0"];
+function debris(x, y, h, n, power, cols) {
+  for (let k = 0; k < n && chunks.length < 900; k++) {
+    const a = Math.random() * 6.283, v = power * (.35 + Math.random() * .8);
+    chunks.push({ x, y, h, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vh: power * (.6 + Math.random() * .9), s: .5 + Math.random() * 1.1, r: Math.random() * 6, w: (Math.random() - .5) * 18, life: 1.6 + Math.random() * 1.2, c: (cols || CHUNK_COLS)[(Math.random() * (cols || CHUNK_COLS).length) | 0], b: 0 });
+  }
+}
+// a white shockwave ring on the floor, and a short freeze-frame for the really big hits
+function shockwave(x, y, big) { rings.push({ x, y, t: 0, wave: big ? 2 : 1 }); }
+function hitStop(s) { if (!demo) hitT = Math.max(hitT, s); }
 function puff(x, y, h, col, r, life, vh) {
   if (puffs.length > 700) return;
   puffs.push({ x, y, h, col, r, life, max: life, vh: vh ?? 1.2, vx: (Math.random() - .5) * .6, vy: (Math.random() - .5) * .6, grow: .7 });
@@ -112,7 +131,8 @@ function frame(now, fixed) {
   if (window.__manual && fixed === undefined) { requestAnimationFrame(frame); return; }
   const real = fixed ?? Math.max(0, Math.min(.1, (now - last) / 1000)); last = now;
   const ff = !demo && phase === "evac" && calmT > 2 && slowT <= 0;   // safe exit: fast-forward
-  const sp = paused ? 0 : (demo && !fullAt ? 3 : ff ? Math.max(speed, 4) : speed) * (slowT > 0 ? .22 : 1);  // the demo behind the menu fills up fast
+  const sp = paused ? 0 : (demo && !fullAt ? 3 : ff ? Math.max(speed, 4) : speed) * (slowT > 0 ? .22 : 1) * (hitT > 0 ? .15 : 1);
+  if (hitT > 0) hitT -= real;  // the demo behind the menu fills up fast
   if (slowT > 0) slowT -= real;
   if (phase === "show" || phase === "evac") {
     acc += real / DT * sp; const n = Math.min(10, Math.floor(acc)); acc -= n; if (acc > 10) acc = 0;

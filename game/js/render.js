@@ -192,6 +192,7 @@ function init3D() {
   G3.conf.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(1400 * 3), 3); sc.add(G3.conf);
   CONF_L = toLin(CONF);
   const inst = (geo, material, n) => { const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.count = 0; m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); sc.add(m); return m; };
+  G3.chunk = inst(new THREE.TetrahedronGeometry(.24, 0), new THREE.MeshStandardMaterial({ roughness: .7, flatShading: true }), 900); G3.chunk.castShadow = true;
   G3.spark = inst(new THREE.SphereGeometry(.11, 6, 4), new THREE.MeshBasicMaterial({ toneMapped: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), 1500);
   // little ghosts that float up from the trampled: a pale body, two eyes and a glowing halo
   G3.ghostBody = inst(new THREE.CapsuleGeometry(.2, .3, 3, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: .78, depthWrite: false }), 260);
@@ -1460,6 +1461,7 @@ function updateFxLayer(live) {
   if (drag) for (const [x0, y0, x1, y1] of dragSegs()) drawFence(g, { ax: x0, ay: y0, bx: x1, by: y1, type: drag.type }, true);
   g.lineWidth = .14;
   for (const r of rings) {
+    if (r.wave) { if (r.t > .7) continue; const q = r.t / .7; g.lineWidth = (r.wave > 1 ? .7 : .35) * (1 - q); g.strokeStyle = `rgba(255,255,255,${(.9 * (1 - q)).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .5 + q * (r.wave > 1 ? 9 : 4), 0, 7); g.stroke(); g.lineWidth = .14; continue; }
     if (r.mega) { if (r.t < 0) continue; g.lineWidth = .3; g.strokeStyle = `rgba(255,210,58,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .5 + r.t * 4.5, 0, 7); g.stroke(); g.lineWidth = .14; continue; }
     g.strokeStyle = `rgba(229,50,41,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .3 + r.t * 1.8, 0, 7); g.stroke();
   }
@@ -1502,6 +1504,17 @@ function drawOverlay() {
 const gateBadges = [];
 let CONF_L;
 const EUL = new THREE.Euler();
+function renderChunks() {
+  const m = G3.chunk; if (!m) return; let n = 0;
+  for (const c of chunks) {
+    if (n >= 900) break;
+    Vp.set(c.x, c.h, c.y); Q.setFromEuler(EUL.set(c.r, c.r * .7, c.r * 1.3)); Vs.setScalar(c.s * Math.min(1, c.life * 2));
+    M4.compose(Vp, Q, Vs); M4.toArray(m.instanceMatrix.array, n * 16);
+    const cc = linArr(c.c); m.instanceColor.array[n * 3] = cc[0]; m.instanceColor.array[n * 3 + 1] = cc[1]; m.instanceColor.array[n * 3 + 2] = cc[2];
+    n++;
+  }
+  m.count = n; m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true;
+}
 function renderConfetti() {
   const m = G3.conf; let n = 0;
   for (const c of confetti) {
@@ -1652,7 +1665,7 @@ function render3D(now, dtR) {
   updateAmbient(tt, dtR);
   if (scene.frame3D) scene.frame3D(tt, dtR);   // per-venue animation hook
   renderPeople(tt, dtR, vb);
-  renderConfetti();
+  renderChunks(); renderConfetti();
   renderParticles();
   renderGhosts(tt);
   updateFxLayer(live);

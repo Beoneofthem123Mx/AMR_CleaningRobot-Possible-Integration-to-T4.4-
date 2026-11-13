@@ -335,7 +335,7 @@ function step() {
     if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1; if (a.ps > pmax) pmax = a.ps;
     if (a.air > 0) { a.air -= DT; if (a.air <= 0 && a.yeet) {   // crash landing from orbit
-      a.yeet = 0; shake = Math.min(1.2, shake + .25); for (let k = 0; k < 6; k++) puff(a.x + (Math.random() - .5), a.y + (Math.random() - .5), .15, scene.night ? "#6a6870" : "#e6dcc4", .3, .9, .4);
+      a.yeet = 0; shake = Math.min(1.2, shake + .25); debris(a.x, a.y, .2, 10, 3.5); shockwave(a.x, a.y); for (let k = 0; k < 6; k++) puff(a.x + (Math.random() - .5), a.y + (Math.random() - .5), .15, scene.night ? "#6a6870" : "#e6dcc4", .3, .9, .4);
       if (!demo && Math.random() < .6) pop(a.x, a.y - 1, ["OOF!", "CRUNCH!", "I'M OK!", "10/10 LANDING", "SPLAT!"][(Math.random() * 5) | 0]);
       for (const b of ag) if (b !== a && (b.x - a.x) ** 2 + (b.y - a.y) ** 2 < 1.2) { b.vx += (b.x - a.x) * 3; b.vy += (b.y - a.y) * 3; toss(b, .8, .6); }   // knocks the neighbours over
     } }
