@@ -66,7 +66,11 @@ MODS.push(
       if (phase !== "show") return; MOD.zt = (MOD.zt || 0) - DT; if (MOD.zt > 0) return; MOD.zt = .25;
       const zid = OUTFIT_ID.zombie, zs = ag.filter(a => a.cos === zid);
       if (zs.length < 12 && fullAt === 0 && ag.length > 200) { const a = ag[(Math.random() * ag.length) | 0]; a.cos = zid; a.hs = 4; a.v0 *= .8; }
-      for (const z of zs.slice(0, 120)) for (let k = 0; k < 3; k++) { const b = ag[(Math.random() * ag.length) | 0]; if (b.cos !== zid && (b.x - z.x) ** 2 + (b.y - z.y) ** 2 < .5) { b.cos = zid; b.hs = 4; b.v0 *= .8; if (Math.random() < .1) pop(b.x, b.y - 1, ["BRAAAINS!", "I FEEL FUNNY", "GRAAAH!"][(Math.random() * 3) | 0]); } }
+      const cells = new Set(zs.map(z => ((z.x | 0) << 8) | (z.y | 0)));   // every square metre with a zombie in it
+      let bitten = 0;
+      for (const b of ag) if (b.cos !== zid && cells.has(((b.x | 0) << 8) | (b.y | 0)) && Math.random() < .1 && bitten < 7) {
+        bitten++; b.cos = zid; b.hs = 4; b.v0 *= .8; if (Math.random() < .08) pop(b.x, b.y - 1, ["BRAAAINS!", "I FEEL FUNNY", "GRAAAH!", "WHY IS MY ARM GREEN?"][(Math.random() * 4) | 0]);
+      }
     } },
   { id: "aliens", icon: "🛸", name: "Alien tourists", desc: "A UFO is parked above the venue. It keeps beaming people up for 'selfies'.", w: 1, events: ["ovni:abduccion", "ovni:abduccion"] },
   { id: "dragon", icon: "🐉", name: "A dragon RSVP'd", desc: "Nobody remembers inviting it. It sneezes fire when excited, and it is very excited.", w: 1, events: ["circo:dragon", "circo:dragon"] },

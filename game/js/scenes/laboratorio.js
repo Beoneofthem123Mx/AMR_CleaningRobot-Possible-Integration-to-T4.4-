@@ -126,7 +126,7 @@ SCENES.laboratorio = {
         for (const a of ag) if (Math.abs(a.x - m.x) < .6 && Math.abs(a.y - m.y) < 9 && a.air <= 0) { a.vx += 2; toss(a, .9, .5); } } });
       caption("Laser calibration in progress. Jump!", true, 1800); pop(4, y0 - 2, "PEW PEW!");
     },
-    clones() { const n = ag.length < 5400 ? spawnAt(20, 54, 80) : 0; pop(20, 52, n ? `+${n} CLONES!` : "CLONE ERROR"); caption("The cloning machine sneezed", true, 1800); sfx("ufo"); },
+    clones() { if (phase !== "show") return; const n = ag.length < 5400 ? spawnAt(20, 54, 80) : 0; pop(20, 52, n ? `+${n} CLONES!` : "CLONE ERROR"); caption("The cloning machine sneezed", true, 1800); sfx("ufo"); },
     pollo(side) { const y = rnd(28, 52); addMover({ kind: "lab_chicken", x: side ? -3 : WW + 3, y, pts: [[side ? WW + 4 : -4, y + rnd(-6, 6)]], speed: 1.6, r: 1.3, push: 45, scare: 3, say: "BAWK.", sayEvery: 2.6 }); caption("Experiment 7 is walking around", true, 1800); },
   },
   performers: () => [{ kind: "lab_sci", orbit: [20, 7.6, 2.5, .4, 0], h: 0, x: 0, y: 0, ang: 0, t: 0 }],
