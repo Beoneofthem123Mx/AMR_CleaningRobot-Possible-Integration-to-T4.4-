@@ -183,7 +183,7 @@ function showHowTo() {
     <div class="row"><button class="go" id="pick">Got it</button></div>`, "options");
 }
 // button labels for the sandbox's disaster buttons
-const EVENT_NAMES = { desvio: "Change of plan", camion: "Sound truck", lockdown: "Lockdown", cambio: "Platform change", car: "Lost driver", dogs: "Loose dogs", beachballs: "Beach balls", icecream: "Ice cream truck", lion: "Lion", elephants: "Elephants", clowncar: "Clown car", balls: "Circus balls",
+const EVENT_NAMES = { expreso: "Not in service", desvio: "Change of plan", camion: "Sound truck", lockdown: "Lockdown", cambio: "Platform change", car: "Lost driver", dogs: "Loose dogs", beachballs: "Beach balls", icecream: "Ice cream truck", lion: "Lion", elephants: "Elephants", clowncar: "Clown car", balls: "Circus balls",
   cannon: "Human cannonball", unicycles: "Unicycles", mascot: "Mascot", flares: "Flares", ola: "The wave", ball: "Giant ball", medic: "Medical cart", oferta: "Flash sale", carrito: "Runaway cart",
   abuela: "Grandma", tubeman: "Tube man", limpieza: "Floor scrubber", oleaje: "Big swell", gaviotas: "Seagulls", flamenco: "Inflatable flamingo", bocina: "Ship's horn", ramo: "Bouquet toss",
   pastel: "Rolling cake", dron: "Drone crash", mariachis: "Mariachis", suegra: "Mother-in-law", carrera: "Horse race", desbocado: "Runaway horse", tractor: "Tractor", inundacion: "Toilet flood",

@@ -22,10 +22,11 @@ SCENES.metro = {
   gates: [F, T, F, T, F, T, F], noSlots: [0], slotWhy: "That's the side track", unlock: 44,
   intro: "Rush hour on the metro platform. Trains come in on the back track and on the side track, one at a time; everyone squeezes into the doors until the train is full, then the next one comes on the OTHER track. Boarding counts as getting home.",
   acts: ["Mind the gap!", "Doors closing!", "Please move down inside the car!", "Next train!"],
-  events: ["musico", "ratas", "retraso", "mochilas", "musico", "ratas"],
+  events: ["musico", "ratas", "retraso", "mochilas", "musico", "ratas", "expreso", "expreso"],
   goal: o => o.kind === "barrier", goalMaxY: 62,
   heights: { track: .05, pillar: 4, bench: .5, kiosk: 1.6 },
   lines: {
+    expreso: "A train arrived, looked at everyone, said NOT IN SERVICE and left. The platform took it personally.",
     trains: "Trains came and went full; nobody remembers getting on, everybody remembers getting off.",
     musico: "A busker played the same song for every single train.",
     ratas: "Three rats crossed the platform with more confidence than the commuters.",
@@ -76,7 +77,7 @@ SCENES.metro = {
   },
   rock: tt => METRO.rumble * Math.sin(tt * 43) * .01,
   bounce: tt => METRO.rumble * Math.sin(tt * 37) * .1,
-  onStart() {
+  onStart() { METRO.skip = false;
     Object.assign(METRO, { state: "wait", t: 6, track: 0, fill: 0, boarded: 0, rumble: 0, att: -1, fields: null });
     const T = METRO_TRACKS[0];
     addMover({ kind: "metro_train", fixture: true, beh: "static", life: 1e9, x: T.from[0], y: T.from[1], ang: T.ang, r: 2, push: 0, air: true, h: 0, fill: 0 });
@@ -92,7 +93,8 @@ SCENES.metro = {
     const go = (to, k) => { tr.x += (to[0] - tr.x) * k; tr.y += (to[1] - tr.y) * k; };
     if (METRO.state === "wait") {   // the train glides in
       tr.moving = true; tr.ang = T.ang; go(T.stop, Math.min(1, DT * 1.4)); METRO.rumble = .8;
-      if (Math.hypot(tr.x - T.stop[0], tr.y - T.stop[1]) < .2 && METRO.t <= 0) { METRO.state = "board"; METRO.t = 9; tr.moving = false; if (!demo) { pop(T.stop[0], T.stop[1] + 4, "DOORS OPENING!"); sfx("beep"); } }
+      if (METRO.skip && Math.hypot(tr.x - T.stop[0], tr.y - T.stop[1]) < .4) { METRO.skip = false; METRO.state = "leave"; METRO.t = 4; if (!demo) { pop(T.stop[0], T.stop[1] + 4, "NOT IN SERVICE!"); sfx("beep"); for (let k = 0; k < 4; k++) { const [x, y] = crowdPoint(); later(.3 + k * .25, () => pop(x, y - 1, ["WHAT?!", "IT WAS EMPTY!", "COME BACK!", "I SAW SEATS!"][k])); } } }
+      else if (Math.hypot(tr.x - T.stop[0], tr.y - T.stop[1]) < .2 && METRO.t <= 0) { METRO.state = "board"; METRO.t = 9; tr.moving = false; if (!demo) { pop(T.stop[0], T.stop[1] + 4, "DOORS OPENING!"); sfx("beep"); } }
     } else if (METRO.state === "board") {   // everyone near a door squeezes in
       for (let i = ag.length - 1; i >= 0 && METRO.fill < 1; i--) {
         const a = ag[i]; if (a.air > 0) continue;
@@ -115,6 +117,7 @@ SCENES.metro = {
         tick(m) { if (Math.random() < .01) pop(m.x, m.y - 1, ["EEK! A RAT!", "IT'S HUGE!", "IT TOOK MY SANDWICH!"][(Math.random() * 3) | 0]); } });
       caption("Rats on the platform!", true, 1600);
     },
+    expreso() { METRO.skip = true; caption("Next train: not in service (nobody tells the crowd)", true, 2400); },
     retraso() { if (METRO.state === "wait") METRO.t = 10; caption("“There is a delay due to operational reasons”", true, 2400); pop(20, 9, "*DING DONG*"); sfx("beep"); for (let k = 0; k < 4; k++) { const [x, y] = crowdPoint(); later(.5 + k * .3, () => pop(x, y - 1, ["UGH!", "AGAIN?!", "I'M GONNA BE LATE!", "CLASSIC."][k])); } },
     mochilas() { for (const a of ag) if (Math.random() < .2) a.bags = Math.min(9, (a.bags || 0) + 3); caption("Giant backpacks everywhere", false, 1600); },
   },
