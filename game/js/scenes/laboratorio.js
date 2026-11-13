@@ -1,5 +1,6 @@
 // Human Tsunami · scene: Secret Lab Open House (aliens in tubes, failed experiments, scientists throwing chemicals, a teleporter)
-const LAB = { tubes: [[6, 22], [34, 22], [6, 44], [34, 44]], tele: [20, 30, 1.6], teleT: 0, sci: 0 };
+const LAB = { tubes: [[6, 22], [34, 22], [6, 44], [34, 44]], tele: [20, 30, 1.6], teleT: 0, sci: 0,
+  zap: [25, 33, 33, 40], zapOn: false, zapT: 4, grav: [11, 54, 3.4], portals: null };   // laser grid (switches on and off), zero-g room, temporary portals
 SCENE_PERSONS.lab_sci = { body: "#f4f4f0", legs: "#3a5f8a", hat: "hair", hatCol: "#e8e8e8", shoes: "#2b2f35",
   extra(g, u, b) { for (const s of [-1, 1]) part(b, "sph", mat("#bfe3ff", { roughness: .05, transparent: true, opacity: .7 }), .07, .07, .05, .3, 1.68, s * .08); part(b, "cyl", basic("#7dff6a"), .06, .2, .06, .3, 1.0, .3); } };
 SCENE_MODELS.lab_blob = (g, u) => { const b = part(g, "sph", mat("#7dff6a", { transparent: true, opacity: .8, roughness: .1 }), 1, .7, 1, 0, .6, 0); toyEyes(g, .7, .9, .3, .16); u.anim = tt => { b.scale.set(1 + Math.sin(tt * 6) * .1, .7 - Math.sin(tt * 6) * .08, 1 + Math.cos(tt * 6) * .1); }; };
@@ -26,7 +27,7 @@ SCENES.laboratorio = {
   gates: [F, T, F, T, F, T, F], unlock: 48,
   intro: "The secret government lab is having an open house (it's not secret anymore). The Big Machine demo is at the back, aliens float in tubes, the teleporter in the middle sends whoever steps on it somewhere random, and the scientists keep throwing chemicals at people 'for science'.",
   acts: ["Behold the Big Machine!", "For science!", "Do not touch the tubes!", "Results are… inconclusive!"],
-  events: ["escape", "quimicos", "blob", "laser", "clones", "pollo", "quimicos"],
+  events: ["escape", "quimicos", "blob", "laser", "clones", "pollo", "quimicos", "brecha", "portal", "portal"],
   goal: o => o.kind === "barrier", goalMaxY: 12,
   heights: { machine: 3, tube: 3.2, console: 1.2, tele: .2 },
   lines: {
@@ -37,6 +38,8 @@ SCENES.laboratorio = {
     clones: "The cloning machine sneezed and eighty identical visitors walked out.",
     pollo: "Experiment 7, a three-metre chicken, crossed the open house at a dignified pace.",
     tele: "The teleporter sent dozens of people to random spots. One of them is still in the gift shop.",
+    brecha: "Containment breach: every tube cracked at once and the specimens went to look for the snack bar.",
+    portal: "Two portals opened in the crowd. A man walked through one forty times 'to check'.",
   },
   quotes: ["“Everyone who glows will stop glowing eventually,” said a scientist.", "“The teleporter is 98% safe,” said the brochure.", "“This lab does not exist,” said a man in sunglasses to reporters."],
   build() {
@@ -52,6 +55,10 @@ SCENES.laboratorio = {
     const [tx, ty, tr] = LAB.tele; g.fillStyle = "#1b2a3a"; g.beginPath(); g.arc(tx, ty, tr + .5, 0, 7); g.fill();
     g.strokeStyle = "#22d3ee"; g.lineWidth = .2; for (let r = .4; r < tr; r += .4) { g.beginPath(); g.arc(tx, ty, r, 0, 7); g.stroke(); }
     g.font = "900 .7px Rubik, sans-serif"; g.textAlign = "center"; g.fillStyle = "#22d3ee"; g.fillText("TELEPORTER · STEP ON AT YOUR OWN RISK", tx, ty + tr + 1.2);
+    { const [x0, y0, x1, y1] = LAB.zap; g.fillStyle = "rgba(255,59,47,.14)"; g.fillRect(x0, y0, x1 - x0, y1 - y0); g.strokeStyle = "#ff3b2f"; g.lineWidth = .15; g.setLineDash([.5, .3]); g.strokeRect(x0, y0, x1 - x0, y1 - y0); g.setLineDash([]);
+      g.font = "900 .7px Rubik, sans-serif"; g.textAlign = "center"; g.fillStyle = "#ff3b2f"; g.fillText("LASER GRID · TESTING IN PROGRESS", (x0 + x1) / 2, y1 + .9); }
+    { const [gx, gy, gr] = LAB.grav; g.fillStyle = "rgba(169,139,255,.18)"; g.beginPath(); g.arc(gx, gy, gr, 0, 7); g.fill(); g.strokeStyle = "#a98bff"; g.lineWidth = .15; g.beginPath(); g.arc(gx, gy, gr, 0, 7); g.stroke();
+      g.font = "900 .7px Rubik, sans-serif"; g.textAlign = "center"; g.fillStyle = "#a98bff"; g.fillText("ZERO-G ROOM", gx, gy + gr + .9); }
     g.fillStyle = "#33384a"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
   },
   decor(g) {
@@ -78,18 +85,38 @@ SCENES.laboratorio = {
     // the teleporter: a ring of pylons and a spinning halo
     const [tx, ty, tr] = LAB.tele; for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; part(grp, "cyl", "#c9ced6", .12, 2, .12, tx + Math.cos(a) * (tr + .3), 1, ty + Math.sin(a) * (tr + .3)); }
     const halo = part(grp, "cyl", basic("#22d3ee", { transparent: true, opacity: .5 }), tr, .05, tr, tx, 2.1, ty); LAB.parts.push(["halo", halo]);
+    { const [x0, y0, x1, y1] = LAB.zap; LAB.bars = [];
+      for (const [x, y] of [[x0, y0], [x1, y0], [x0, y1], [x1, y1]]) part(grp, "cyl", "#3a3d45", .12, 1.6, .12, x, .8, y);
+      for (let k = 0; k < 4; k++) { const b = part(grp, "box", basic("#ff3b2f", { transparent: true, opacity: .8 }), x1 - x0, .04, .04, (x0 + x1) / 2, .4 + k * .35, y0); b.castShadow = false; LAB.bars.push(b);
+        const b2 = part(grp, "box", basic("#ff3b2f", { transparent: true, opacity: .8 }), x1 - x0, .04, .04, (x0 + x1) / 2, .4 + k * .35, y1); b2.castShadow = false; LAB.bars.push(b2);
+        for (const x of [x0, x1]) { const b3 = part(grp, "box", basic("#ff3b2f", { transparent: true, opacity: .8 }), .04, .04, y1 - y0, x, .4 + k * .35, (y0 + y1) / 2); b3.castShadow = false; LAB.bars.push(b3); } } }
+    { const [gx, gy, gr] = LAB.grav; const ring = part(grp, "cyl", basic("#a98bff", { transparent: true, opacity: .35 }), gr, .05, gr, gx, 3, gy); ring.castShadow = false; LAB.parts.push(["gring", ring]);
+      for (let k = 0; k < 8; k++) { const b = part(grp, "sph", basic("#e0d4ff"), .1, .1, .1, gx + Math.cos(k) * gr * .7, 1 + (k % 3) * .6, gy + Math.sin(k) * gr * .7); LAB.parts.push(["mote", b, k]); } }
+    for (const x of [.6, WW - .6]) for (let y = 12; y < 64; y += 8) { part(grp, "cyl", "#8a8f99", .18, 6, .18, x, 3, y).rotation.x = Math.PI / 2; part(grp, "cyl", "#b87333", .12, 1.4, .12, x, 1.2 + (y % 3) * .4, y + 2); }
     for (const x of [3, WW - 3]) { part(grp, "box", "#2b2f3a", 4, 1.2, 3, x, .6, 57.5); for (let k = 0; k < 4; k++) part(grp, "sph", basic(["#ff3fa4", "#7dff6a", "#ffd23a", "#22d3ee"][k]), .1, .1, .1, x - 1.2 + k * .8, 1.25, 56.5); }
   },
   frame3D(tt) {
     for (const p of LAB.parts || []) {
       if (p[0] === "core") p[1].scale.setScalar(1 + Math.sin(tt * 5) * .08);
       else if (p[0] === "alien") { p[1].position.y = 1.6 + Math.sin(tt * 1.3 + p[2]) * .25; p[1].rotation.y = Math.sin(tt * .7 + p[2]) * .8; }
+      else if (p[0] === "gring") p[1].rotation.y = tt * .6;
+      else if (p[0] === "mote") { p[1].position.y = 1 + Math.sin(tt * 1.2 + p[2]) * .8 + (p[2] % 3) * .4; }
       else { p[1].position.y = .3 + ((tt * .9) % 1) * 1.8; p[1].material.opacity = .6 * (1 - (tt * .9) % 1); }
     }
+    for (const b of LAB.bars || []) { b.visible = LAB.zapOn || (phase === "plan" && Math.sin(tt * 3) > .6); if (b.visible) b.material.opacity = .55 + Math.sin(tt * 40) * .3; }
+    if (LAB.portals) for (const [i, pt] of LAB.portals.entries()) { if (Math.random() < .5) puff(pt[0] + Math.cos(tt * 6 + i) * 1.2, pt[1] + Math.sin(tt * 6 + i) * 1.2, 1 + Math.random(), i ? "#4fb8ff" : "#ff9a3c", .25, .6, .3); }
   },
-  onStart() { LAB.teleT = 0; LAB.sci = 6; },
+  onStart() { LAB.teleT = 0; LAB.sci = 6; LAB.zapOn = false; LAB.zapT = 4; LAB.portals = null; },
   step() {
     if (phase !== "show" && phase !== "evac") return;
+    // the laser grid switches on 3 s out of every 7: anyone caught inside gets zapped out
+    LAB.zapT -= DT; if (LAB.zapT <= 0) { LAB.zapOn = !LAB.zapOn; LAB.zapT = LAB.zapOn ? 3 : 4; if (LAB.zapOn && !demo) { pop((LAB.zap[0] + LAB.zap[2]) / 2, LAB.zap[1] - 1, "GRID ON!"); sfx("beep"); } }
+    if (LAB.zapOn) { const [x0, y0, x1, y1] = LAB.zap, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      for (const a of ag) if (a.x > x0 && a.x < x1 && a.y > y0 && a.y < y1) { const dx = a.x - cx, dy = a.y - cy, d = Math.hypot(dx, dy) || 1; a.vx += dx / d * 9 * DT; a.vy += dy / d * 9 * DT; a.p += .2; if (Math.random() < .004) { toss(a, 1, .6); if (!demo) pop(a.x, a.y - 1, ["ZAP!", "BZZZT!", "MY HAIR!"][(Math.random() * 3) | 0]); } } }
+    // the zero-g room: people float around inside and nobody gets squeezed
+    { const [gx, gy, gr] = LAB.grav; for (const a of ag) if ((a.x - gx) ** 2 + (a.y - gy) ** 2 < gr * gr) { a.p *= .5; if (a.air <= 0 && Math.random() < .02) toss(a, 1.2 + Math.random() * 1.4, 1.6); } }
+    // portals: walk into the orange one, come out of the blue one
+    if (LAB.portals) { const [[ax, ay], [bx, by]] = LAB.portals; for (const a of ag) if ((a.x - ax) ** 2 + (a.y - ay) ** 2 < 1.4 && Math.random() < .4) { a.x = bx + (Math.random() - .5) * 2; a.y = by + (Math.random() - .5) * 2; if (!demo && Math.random() < .1) pop(a.x, a.y - 1, ["WHOA!", "AGAIN!", "WHERE AM I?"][(Math.random() * 3) | 0]); } }
     // the teleporter: anyone standing on it is beamed to a random free spot
     LAB.teleT -= DT;
     if (LAB.teleT <= 0) {
@@ -127,6 +154,16 @@ SCENES.laboratorio = {
       caption("Laser calibration in progress. Jump!", true, 1800); pop(4, y0 - 2, "PEW PEW!");
     },
     clones() { if (phase !== "show") return; const n = ag.length < 5400 ? spawnAt(20, 54, 80) : 0; pop(20, 52, n ? `+${n} CLONES!` : "CLONE ERROR"); caption("The cloning machine sneezed", true, 1800); sfx("ufo"); },
+    brecha() {   // containment breach: every tube cracks at once
+      flash = Math.max(flash, .8); shake = Math.min(1.2, shake + .6); sfx("siren"); caption("CONTAINMENT BREACH!", true, 2400);
+      for (const [x, y] of LAB.tubes) { for (let k = 0; k < 10; k++) puff(x + rnd(-1, 1), y + rnd(-1, 1), rnd(.5, 3), "#3fae5a", .6, 1.6, .6); debris(x, y, 1.5, 14, 4, ["#bfe3ff", "#9fd8ff", "#3fae5a"]);
+        addMover({ kind: "lab_alien", x: x + 2, y, pts: [crowdPoint(), crowdPoint(), [openGateX(), SH + 3]], speed: 4.6, r: .45, push: 22, scare: 3, agile: true, say: "", sayEvery: 9 }); }
+      pop(20, 20, "WEE-OO WEE-OO!");
+    },
+    portal() {
+      const a = crowdPoint(), b = crowdPoint(); if (Math.hypot(a[0] - b[0], a[1] - b[1]) < 10) return; LAB.portals = [a, b];
+      later(10, () => { LAB.portals = null; }); pop(a[0], a[1] - 1.5, "PORTAL!"); pop(b[0], b[1] - 1.5, "...PORTAL?"); caption("Two portals opened in the crowd", true, 1800); sfx("ufo");
+    },
     pollo(side) { const y = rnd(28, 52); addMover({ kind: "lab_chicken", x: side ? -3 : WW + 3, y, pts: [[side ? WW + 4 : -4, y + rnd(-6, 6)]], speed: 1.6, r: 1.3, push: 45, scare: 3, say: "BAWK.", sayEvery: 2.6 }); caption("Experiment 7 is walking around", true, 1800); },
   },
   performers: () => [{ kind: "lab_sci", orbit: [20, 7.6, 2.5, .4, 0], h: 0, x: 0, y: 0, ang: 0, t: 0 }],
