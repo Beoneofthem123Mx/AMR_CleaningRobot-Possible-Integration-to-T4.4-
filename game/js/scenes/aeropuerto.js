@@ -24,8 +24,8 @@ SCENES.aeropuerto = {
     for (let x = 4; x < 36; x += 8) rect(x, 56, x + 4, 57.5, "counter");
   },
   ground(g) {
-    g.fillStyle = "#e6e9ee"; g.fillRect(0, 0, WW, WH);
-    for (let y = 0, i = 0; y < FENCE_Y; y += 1.2, i++) for (let x = 0, j = 0; x < WW; x += 1.2, j++) { g.fillStyle = (i + j) % 2 ? "#dfe3e9" : "#eceff3"; g.fillRect(x, y, 1.2, 1.2); }
+    g.fillStyle = "#d2d6dc"; g.fillRect(0, 0, WW, WH);
+    for (let y = 0, i = 0; y < FENCE_Y; y += 1.2, i++) for (let x = 0, j = 0; x < WW; x += 1.2, j++) { g.fillStyle = (i + j) % 2 ? "#ccd1d8" : "#d8dbe0"; g.fillRect(x, y, 1.2, 1.2); }
     // polished terrazzo: warm stone bands, a big compass rose, wayfinding lines in airport colors
     for (let y = 2; y < FENCE_Y; y += 9.6) { g.fillStyle = "#c7cdd6"; g.fillRect(0, y, WW, .35); }
     for (let x = 0; x < WW; x += 9.6) { g.fillStyle = "#c7cdd6"; g.fillRect(x, 0, .35, FENCE_Y); }
