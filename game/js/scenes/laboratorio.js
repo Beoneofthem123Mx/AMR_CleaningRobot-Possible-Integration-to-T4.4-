@@ -27,10 +27,11 @@ SCENES.laboratorio = {
   gates: [F, T, F, T, F, T, F], unlock: 48,
   intro: "The secret government lab is having an open house (it's not secret anymore). The Big Machine demo is at the back, aliens float in tubes, the teleporter in the middle sends whoever steps on it somewhere random, and the scientists keep throwing chemicals at people 'for science'.",
   acts: ["Behold the Big Machine!", "For science!", "Do not touch the tubes!", "Results are… inconclusive!"],
-  events: ["escape", "quimicos", "blob", "laser", "clones", "pollo", "quimicos", "brecha", "portal", "portal"],
+  events: ["escape", "quimicos", "blob", "laser", "clones", "pollo", "quimicos", "brecha", "portal", "portal", "lockdown", "lockdown"],
   goal: o => o.kind === "barrier", goalMaxY: 12,
-  heights: { machine: 3, tube: 3.2, console: 1.2, tele: .2 },
+  heights: { machine: 3, tube: 3.2, console: 1.2, tele: .2, blast: 2.6 },
   lines: {
+    lockdown: "A lockdown dropped blast doors across the hall for eight seconds. The only way through was the middle, which everybody found at once.",
     escape: "Specimen 51 escaped its tube, took twelve selfies and left through gate 3.",
     quimicos: "The scientists threw unlabelled flasks at the visitors; some people are now very tall.",
     blob: "A friendly green blob rolled through the crowd absorbing hats.",
@@ -47,6 +48,7 @@ SCENES.laboratorio = {
     seg(5, 9, WW - 5, 9, .4, "barrier");
     for (const [x, y] of LAB.tubes) circ(x, y, 1.3, "tube");
     rect(1, 56, 5, 59, "console"); rect(WW - 5, 56, WW - 1, 59, "console");
+    if (LAB.lock > 0) { seg(1, 37, 15.5, 37, .5, "blast"); seg(24.5, 37, WW - 1, 37, .5, "blast"); }   // lockdown: blast doors with one gap in the middle
   },
   ground(g) {
     g.fillStyle = "#4a5160"; g.fillRect(0, 0, WW, WH);
@@ -106,9 +108,10 @@ SCENES.laboratorio = {
     for (const b of LAB.bars || []) { b.visible = LAB.zapOn || (phase === "plan" && Math.sin(tt * 3) > .6); if (b.visible) b.material.opacity = .55 + Math.sin(tt * 40) * .3; }
     if (LAB.portals) for (const [i, pt] of LAB.portals.entries()) { if (Math.random() < .5) puff(pt[0] + Math.cos(tt * 6 + i) * 1.2, pt[1] + Math.sin(tt * 6 + i) * 1.2, 1 + Math.random(), i ? "#4fb8ff" : "#ff9a3c", .25, .6, .3); }
   },
-  onStart() { LAB.teleT = 0; LAB.sci = 6; LAB.zapOn = false; LAB.zapT = 4; LAB.portals = null; },
+  onStart() { LAB.lock = 0; LAB.teleT = 0; LAB.sci = 6; LAB.zapOn = false; LAB.zapT = 4; LAB.portals = null; },
   step() {
     if (phase !== "show" && phase !== "evac") return;
+    if (LAB.lock > 0) { LAB.lock -= DT; if (LAB.lock <= 0) { buildWorld(); if (!demo) { pop(20, 36, "DOORS OPEN!"); sfx("beep"); } } }
     // the laser grid switches on 3 s out of every 7: anyone caught inside gets zapped out
     LAB.zapT -= DT; if (LAB.zapT <= 0) { LAB.zapOn = !LAB.zapOn; LAB.zapT = LAB.zapOn ? 3 : 4; if (LAB.zapOn && !demo) { pop((LAB.zap[0] + LAB.zap[2]) / 2, LAB.zap[1] - 1, "GRID ON!"); sfx("beep"); } }
     if (LAB.zapOn) { const [x0, y0, x1, y1] = LAB.zap, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
@@ -154,6 +157,11 @@ SCENES.laboratorio = {
       caption("Laser calibration in progress. Jump!", true, 1800); pop(4, y0 - 2, "PEW PEW!");
     },
     clones() { if (phase !== "show") return; const n = ag.length < 5400 ? spawnAt(20, 54, 80) : 0; pop(20, 52, n ? `+${n} CLONES!` : "CLONE ERROR"); caption("The cloning machine sneezed", true, 1800); sfx("ufo"); },
+    lockdown() {   // blast doors slam down across the hall: one narrow way through for eight seconds
+      if (LAB.lock > 0) return; LAB.lock = 8;
+      for (const a of ag) if (Math.abs(a.y - 37) < .7 && (a.x < 15.5 || a.x > 24.5)) a.y += a.y < 37 ? -.8 : .8;   // nobody gets cut in half
+      buildWorld(); caption("LOCKDOWN! Blast doors are coming down", true, 2200); pop(20, 35, "LOCKDOWN!"); sfx("siren"); shake = Math.min(1, shake + .4);
+    },
     brecha() {   // containment breach: every tube cracks at once
       flash = Math.max(flash, .8); shake = Math.min(1.2, shake + .6); sfx("siren"); caption("CONTAINMENT BREACH!", true, 2400);
       for (const [x, y] of LAB.tubes) { for (let k = 0; k < 10; k++) puff(x + rnd(-1, 1), y + rnd(-1, 1), rnd(.5, 3), "#3fae5a", .6, 1.6, .6); debris(x, y, 1.5, 14, 4, ["#bfe3ff", "#9fd8ff", "#3fae5a"]);

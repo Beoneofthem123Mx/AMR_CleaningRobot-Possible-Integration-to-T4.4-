@@ -17,10 +17,11 @@ SCENES.terminal = {
   gates: [F, T, F, T, F, T, F], unlock: 50,
   intro: "Friday 6 pm at the bus terminal. Buses pull into five bays at random, fill up and leave; the crowd runs to whichever doors are open. Boarding counts as getting home. Queues help. Nobody makes queues.",
   acts: ["Now boarding!", "Last call!", "Have your ticket ready!", "Departing in 1 minute!"],
-  events: ["huelga", "doble", "maletas", "perro", "doble", "maletas"],
+  events: ["huelga", "doble", "maletas", "perro", "doble", "maletas", "cambio", "cambio"],
   goal: o => o.kind === "barrier", goalMaxY: 12,
   heights: { bay: .3, kiosk: 1.6, bench: .5, pillar: 4 },
   lines: {
+    cambio: "A bus changed bays at the last second, and half the terminal changed bays with it, at a sprint.",
     buses: "Buses came, buses went, and nobody got on the one they wanted.",
     huelga: "The drivers went on strike for twenty seconds to demand longer naps (they have heard about the march).",
     doble: "A double-decker bus arrived and swallowed half the terminal.",
@@ -128,6 +129,13 @@ SCENES.terminal = {
   },
   ev: {
     huelga() { TERM.strike = 18; for (const b of TERM.buses) if (b.state !== "out") b.state = "out"; caption("Drivers' strike! No buses for a while", true, 2200); pop(20, 12, "ON STRIKE!"); for (let k = 0; k < 5; k++) { const [x, y] = crowdPoint(); later(.4 + k * .3, () => pop(x, y - 1, ["SERIOUSLY?!", "I HAVE A PLANE TO CATCH", "BOOOO!", "I'LL WALK!", "CLASSIC."][k])); } },
+    cambio() {   // platform change: a boarding bus moves to another free bay, the crowd sprints after it
+      const b = TERM.buses.find(q => q.state === "board"), free = TERM.bays.map((_, i) => i).filter(i => !TERM.buses.some(q => q.bay === i));
+      if (!b || !free.length) return;
+      const from = b.bay; b.bay = free.reduce((best, i) => Math.abs(i - from) > Math.abs(best - from) ? i : best, free[0]); b.state = "in"; b.t = 0;
+      caption(`Platform change! The ${b.route} bus now leaves from bay ${b.bay + 1}`, true, 2400); pop(TERM.bays[from], 10, "PLATFORM CHANGE!"); sfx("beep");
+      for (const a of ag) if ((a.x - TERM.bays[from]) ** 2 + (a.y - 10) ** 2 < 40) { a.v0 = Math.min(a.v0 * 1.25, 2.4); if (!demo && Math.random() < .05) pop(a.x, a.y - 1, ["NOT AGAIN!", "RUN!", "WHY?!", "MY SUITCASE!"][(Math.random() * 4) | 0]); }
+    },
     doble() { TERM.double = 2; caption("Double-decker buses incoming!", false, 1800); },
     maletas(side) { for (let n = 0; n < 4; n++) addMover({ kind: "term_cart", beh: "bounce", x: side ? 2 : WW - 2, y: rnd(20, 56), vx: (side ? 1 : -1) * rnd(3, 4.5), vy: rnd(-1.5, 1.5), r: .6, push: 25, life: 10 }); caption("Runaway luggage carts!", true, 1600); },
     perro(side) { const pts = [crowdPoint(), [TERM.bays[1], 11], crowdPoint(), [TERM.bays[3], 11], [side ? WW + 3 : -3, 40]]; addMover({ kind: "dog", x: side ? -2 : WW + 2, y: 40, pts, speed: 5, r: .35, push: 12, scare: 2, col: "#d9b98a", agile: true, say: "WOOF!", sayEvery: 1.6 }); caption("A lost dog is looking for its bus", false, 1600); },
