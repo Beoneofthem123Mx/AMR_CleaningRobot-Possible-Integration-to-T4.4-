@@ -261,7 +261,7 @@ function camKeys(dt) {
   if (camMode === 4) { cineAng += r * dt * 1.2; cineDist = clamp(cineDist * Math.exp(-(u + zz) * 1.2 * dt), 4, 34); return; }
   const f = freeCam(), sp = 28 / f.z * dt;
   // screen right/up in world coordinates (the venue is rotated on wide screens)
-  if (LAND) { f.y += r * sp; f.x += u * sp; } else { f.x += r * sp; f.y -= u * sp; }
+  if (LAND) { f.y += r * sp * VIEW_FLIP; f.x += u * sp * VIEW_FLIP; } else { f.x += r * sp * VIEW_FLIP; f.y -= u * sp * VIEW_FLIP; }
   f.z = clamp(f.z * Math.exp(zz * 1.6 * dt), 1, 5); clampFree();
 }
 $("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = speed + "×"; });

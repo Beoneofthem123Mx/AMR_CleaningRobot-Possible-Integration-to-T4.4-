@@ -1,6 +1,8 @@
 // Human Tsunami · 3D rendering
 // ===== 3D rendering (three.js) =====
 const TEXS = 16, FXS = 10;                 // pixels per meter: ground texture and effects layer
+// VIEW_FLIP -1 turns the top view around: the stage sits on the other side and the crowd flows the other way
+let VIEW_FLIP = 1;
 let S = 10, dpr = 1, staticLayer = null, staticDirty = true, camMode = 0, LAND = false;  // LAND: landscape monitor
 const G3 = {};
 const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
@@ -1189,11 +1191,11 @@ function updateCamera(dt) {
   G3.skirt.visible = false; if (G3.sky) G3.sky.visible = false; if (G3.horizon) G3.horizon.visible = false;
   const base = ((LAND ? WW : WH) / 2) / Math.tan(15 * Math.PI / 180), z = cam.z, h = base / z;
   const tilt = clamp((z - 1) * .5, 0, .42);
-  const dx = LAND ? -1 : 0, dz = LAND ? 0 : 1;   // the screen's "down" direction in the world
+  const FL = VIEW_FLIP, dx = LAND ? -FL : 0, dz = LAND ? 0 : FL;   // the screen's "down" direction in the world (FL -1: the venue is seen from the other side)
   const sx = (Math.random() - .5) * shake, sy = (Math.random() - .5) * shake;
   const lift = h * Math.sin(tilt) * .12, tx = cam.x + sx + dx * lift, tz = cam.y + sy + dz * lift;
   const roll = windF.t > 0 ? windF.x * .1 * Math.min(1, windF.t) * Math.sin(Math.min(1, (3.6 - windF.t) * 2) * Math.PI / 2) : 0;
-  G3.camera.up.set(LAND ? 1 : roll, 0, LAND ? roll : -1);
+  G3.camera.up.set(LAND ? FL : roll, 0, LAND ? roll : -FL);
   G3.camera.position.set(tx + dx * h * Math.sin(tilt), h * Math.cos(tilt), tz + dz * h * Math.sin(tilt));
   G3.camera.lookAt(tx, 0, tz);
   const sun = G3.sun, ext = WW / z * .9 + 8;
@@ -1401,7 +1403,7 @@ function renderParticles() {
 }
 function renderGhosts(tt) {
   const b = G3.ghostBody, e = G3.ghostEye, h = G3.ghostHalo, wgm = G3.ghostWing; let n = 0;
-  const up0 = LAND ? [1, 0] : [0, -1], up = [0, 0];   // screen-up in the world, so faces look at the camera
+  const up0 = LAND ? [VIEW_FLIP, 0] : [0, -VIEW_FLIP], up = [0, 0];   // screen-up in the world, so faces look at the camera
   for (const g of ghosts) {
     up[0] = up0[0]; up[1] = up0[1];
     if (n >= 260) break;
