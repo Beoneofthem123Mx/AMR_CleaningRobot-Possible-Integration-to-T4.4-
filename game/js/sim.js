@@ -267,7 +267,7 @@ function step() {
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
     if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? .75 : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? 1.4 : .4));
-    if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
+    if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; pickFall(a); fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
     if (evac && a.y > SH - .6) { evacuated++; continue; }
     out.push(a);
   }
@@ -335,6 +335,20 @@ let planFences = null;
 // where people fell in the last show of this venue: shown on the plan and explained in the paper
 let lastFalls = [], lastFallsScene = "", calmT = 0;
 // one sentence telling the player where it went wrong
+// rag-doll styles: 0 backflop, 1 faceplant, 2 spinning top, 3 launched by the crowd, 4 pancake then plank
+function pickFall(a) {
+  const r = Math.random();
+  a.fallType = r < .26 ? 0 : r < .48 ? 1 : r < .66 ? 2 : r < .84 ? 3 : 4;
+  a.fx0 = a.x; a.fy0 = a.y;
+  if (a.fallType === 3) {   // thrown along the push (or anywhere), but only onto free floor
+    const sp = Math.hypot(a.vx, a.vy), an = sp > .2 ? Math.atan2(a.vy, a.vx) + (Math.random() - .5) * .8 : Math.random() * 6.283;
+    for (const d of [2.2, 1.5, .9]) {
+      const x = a.x + Math.cos(an) * d, y = a.y + Math.sin(an) * d;
+      if (x > R && x < WW - R && y > R && y < SH - R && !blockedC[cellOf(x, y)]) { a.x = x; a.y = y; a.h = an; return; }
+    }
+    a.fallType = 0;
+  }
+}
 function fallTip() {
   if (!lastFalls.length) return "";
   const evacN = lastFalls.filter(f => f[2]).length, nearGates = lastFalls.filter(f => f[1] > FENCE_Y - 6).length;

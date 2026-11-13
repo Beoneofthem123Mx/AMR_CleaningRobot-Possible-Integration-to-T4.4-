@@ -454,6 +454,69 @@ const LE = new Float32Array(12), LH = new Float32Array(12), XB = new Float32Arra
 function lifted(src) { LH.set(src); LH[10] += FACE.lift; return LH; }
 const bounceOut = q => { const n = 7.5625, d = 2.75; return q < 1 / d ? n * q * q : q < 2 / d ? n * (q -= 1.5 / d) * q + .75 : q < 2.5 / d ? n * (q -= 2.25 / d) * q + .9375 : n * (q -= 2.625 / d) * q + .984375; };
 // like setBase, but tipped backwards by "tip" radians around the body's side axis (0 = standing, PI/2 = flat on the back)
+// general rag-doll pose: yaw h, then pitch (+ tips onto the back, - onto the face) around the side axis,
+// then roll around the forward axis; kF/kU/kS stretch each body axis (squash and stretch)
+function setPose(x, y, z, h, sc, pitch, roll, kF, kU, kS) {
+  const c = Math.cos(h), s = Math.sin(h), cp = Math.cos(pitch), sp = Math.sin(pitch), cr = Math.cos(roll), sr = Math.sin(roll);
+  const F = [c * cp, sp, s * cp], U1 = [-c * sp, cp, -s * sp], S0 = [-s, 0, c];
+  for (let i = 0; i < 3; i++) {
+    const U = U1[i] * cr + S0[i] * sr, S = -U1[i] * sr + S0[i] * cr;
+    Bm[i * 3] = F[i] * sc * kF; Bm[i * 3 + 1] = U * sc * kU; Bm[i * 3 + 2] = S * sc * kS;
+  }
+  Bt[0] = x; Bt[1] = y; Bt[2] = z;
+}
+// jelly wobble after a landing: big at first, dying out fast
+const jiggle = (age, f, d) => age < 0 ? 0 : Math.exp(-age * d) * Math.sin(age * f);
+function ragdoll(a, tt) {
+  const age = t - (a.fallAt ?? -9), ty = a.fallType || 0, ph = tt * 22 + (a.fallLimb || 0), R = RAG;
+  R.armL = 2.4; R.armR = 2.1; R.legL = .5; R.legR = -.5; R.open = 0;
+  let x = a.x, z = a.y, y = .26, yaw = a.h + (a.fallSpin || 0), pitch = Math.PI / 2, roll = 0, kF = 1, kU = 1, kS = 1, land = 0;
+  if (ty === 0) {            // BACKFLOP: arms windmill, topple backwards, bounce twice, spread-eagle
+    const q = clamp(age / .75, 0, 1), e = bounceOut(q), fl = (1 - q) * (1 - q);
+    pitch = e * Math.PI / 2; yaw = a.h + (a.fallSpin || 0) * e; y = .04 + .22 * e + Math.sin(q * Math.PI) * .4; land = .27;
+    R.armL = 2.4 + Math.sin(ph) * 1.6 * fl; R.armR = 2.1 + Math.cos(ph * 1.3) * 1.6 * fl; R.legL = .55 + Math.sin(ph * .9) * .9 * fl; R.legR = -.5 + Math.cos(ph * 1.1) * .9 * fl; R.open = fl;
+    const j = jiggle(age - .27, 34, 5) * .28; kF = 1 - j; kU = 1 + j * .4; kS = 1 + j * .4;
+  } else if (ty === 1) {     // FACEPLANT: a little hop, slam face-down, legs kick up in the air, skid forward
+    const hop = clamp(age / .22, 0, 1), fallq = clamp((age - .22) / .3, 0, 1), after = age - .52;
+    pitch = -.25 * Math.sin(hop * Math.PI) - (Math.PI / 2) * fallq * fallq;
+    y = .05 + Math.sin(hop * Math.PI) * .45 + .23 * fallq * fallq;
+    const sk = clamp(after / .35, 0, 1), skid = (1 - (1 - sk) * (1 - sk)) * .55 * (after > 0 ? 1 : 0);
+    x += Math.cos(yaw) * skid; z += Math.sin(yaw) * skid;
+    if (after > 0) { pitch += jiggle(after, 18, 4) * .22; const j = jiggle(after, 30, 6) * .3; kF = 1 - j; kU = 1 + j * .3; kS = 1 + j * .3; }
+    const kick = after > 0 ? Math.max(0, 1 - after / 1.4) : 0;
+    R.armL = 2.9 + Math.sin(ph * 1.4) * .5 * (after < 0 ? 1 : kick); R.armR = 3.0 + Math.cos(ph * 1.2) * .5 * (after < 0 ? 1 : kick);   // superman arms
+    R.legL = -.4 - (1.6 + Math.sin(ph * 1.1) * .7) * kick; R.legR = -.3 - (1.6 + Math.cos(ph) * .7) * kick;                             // legs bicycling up behind
+    R.open = after < .3 ? 1 : 0; land = .52;
+  } else if (ty === 2) {     // SPINNING TOP: spins faster and faster with arms out, wobbles, keels over sideways
+    const q = clamp(age / 1.15, 0, 1), spin = Math.min(age, 1) * Math.min(age, 1) * 26, tip = clamp((age - .7) / .35, 0, 1);
+    yaw = a.h + spin * (a.fallSpin > 0 ? 1 : -1);
+    const wob = Math.sin(age * 16) * .25 * clamp(age / .6, 0, 1) * (1 - tip);
+    pitch = wob * .6; roll = wob + bounceOut(tip) * Math.PI / 2 * (a.fallSpin > 0 ? 1 : -1);
+    y = .02 + .26 * tip + Math.abs(Math.sin(age * 9)) * .12 * (1 - tip);
+    R.armL = Math.PI / 2 + Math.sin(ph) * .3; R.armR = Math.PI / 2 + Math.cos(ph) * .3; R.legL = .3 * (1 - tip) + .5 * tip; R.legR = -.3 * (1 - tip) - .5 * tip; R.open = 1 - tip * .6;
+    const j = jiggle(age - 1.05, 32, 5) * .3; kS = 1 - j; kF = 1 + j * .3; kU = 1 + j * .3; land = 1.05;
+  } else if (ty === 3) {     // LAUNCHED: the crowd shoots them up, a backflip in the air, a splat on landing
+    const fly = .8, q = clamp(age / fly, 0, 1), after = age - fly;
+    x = a.fx0 + (a.x - a.fx0) * q; z = a.fy0 + (a.y - a.fy0) * q;
+    y = .26 + Math.sin(q * Math.PI) * 2.2 + (after > 0 ? Math.abs(jiggle(after, 14, 6)) * .35 : 0);
+    pitch = q * (Math.PI * 2 + Math.PI / 2); yaw = a.h + (a.fallSpin || 0) * .3;
+    R.armL = 2.6 + Math.sin(ph * 1.6) * .8 * (1 - q); R.armR = 2.6 + Math.cos(ph * 1.5) * .8 * (1 - q); R.legL = .9; R.legR = -.9; R.open = 1 - clamp(after, 0, 1);
+    if (after > 0) { const j = jiggle(after, 28, 4.5) * .42; kF = 1 - j; kU = 1 + j * .45; kS = 1 + j * .45; }
+    if (!a.landed && after >= 0) { a.landed = 1; for (let k = 0; k < 6; k++) puff(a.x + (Math.random() - .5) * 1.2, a.y + (Math.random() - .5) * 1.2, .15, scene.night ? "#6a6870" : "#e6dcc4", .25, .9, .4); shake = Math.min(1, shake + .25); pop(a.x, a.y - .5, "SPLAT!"); }
+    land = fly;
+  } else {                   // PANCAKE: flattened like a cartoon, springs back BOING, then falls over like a plank
+    const sq = clamp(age / .12, 0, 1), boing = age - .45, tip = clamp((age - .9) / .45, 0, 1);
+    let k = 1 - .65 * sq;
+    if (boing > 0) k = 1 + jiggle(boing, 26, 4) * .5 - (1 - clamp(boing / .15, 0, 1)) * .65;
+    kU = Math.max(.3, k); kF = kS = 1 / Math.sqrt(kU);
+    pitch = tip * tip * Math.PI / 2 * (a.fallSpin > 0 ? 1 : -1); y = .02 + .25 * tip;
+    if (tip >= 1) { const j = jiggle(age - 1.35, 30, 6) * .3; kF = 1 - j; kU = 1 + j * .3; }
+    R.armL = .3 + 2.4 * tip; R.armR = .3 + 2.2 * tip; R.legL = .1 + .4 * tip; R.legR = -.1 - .4 * tip; R.open = sq; land = 1.35;
+  }
+  setPose(x, y, z, yaw, a.sc, pitch, roll, kF, kU, kS);
+  return age >= land;
+}
+const RAG = { armL: 0, armR: 0, legL: 0, legR: 0, open: 0 };
 function setTilt(x, y, z, h, sc, tip) {
   // Bm is row-major; its columns are the body's forward, up and side axes in the world (same as setBase)
   const c = Math.cos(h), s = Math.sin(h), ct = Math.cos(tip), st = Math.sin(tip);
@@ -538,12 +601,9 @@ function renderPeople(tt, dtR, vb) {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
     if (down) {
       // rag-doll fall: topple backwards with a bounce, limbs flailing, then lie spread-eagled
-      const q = clamp((t - (a.fallAt ?? -9)) / .7, 0, 1), e = q < 1 ? bounceOut(q) : 1, fl = (1 - q) * (1 - q);
-      setTilt(a.x, .04 + .2 * e + Math.sin(q * Math.PI) * .35, a.y, a.h + (a.fallSpin || 0) * e, a.sc, e * Math.PI / 2);
-      const ph = tt * 22 + (a.fallLimb || 0);
-      armL = 2.4 + .5 * Math.sin(a.fallLimb || 0) + Math.sin(ph) * 1.4 * fl; armR = 2.1 + .6 * Math.cos(a.fallLimb || 0) + Math.cos(ph * 1.3) * 1.4 * fl;
-      legL = .55 + Math.sin(ph * .9) * .8 * fl; legR = -.5 + Math.cos(ph * 1.1) * .8 * fl;
-      FACE.state = 3; FACE.open = fl;
+      ragdoll(a, tt);
+      armL = RAG.armL; armR = RAG.armR; legL = RAG.legL; legR = RAG.legR;
+      FACE.state = 3; FACE.open = RAG.open;
     }
     else if (surging && a.dance && ((a.ph * 997) | 0) % 70 === 0) {
       // crowd surfing: carried overhead during the drop, waving
@@ -700,7 +760,7 @@ function renderPeople(tt, dtR, vb) {
   for (const a of fallen) {
     if (C.torso >= cap - 1) break; draw(a, true);
     const age = t - (a.fallAt ?? -99);
-    if (age > .45 && age < 5 && C.star < 1797) {   // dizzy stars over the head for a few seconds
+    if (age > [.45, .7, 1.1, .9, 1.45][a.fallType || 0] && age < 5.5 && C.star < 1797) {   // stars once they have landed   // dizzy stars over the head for a few seconds
       const hx = Bm[1] * 1.62 + Bt[0], hy = Bm[4] * 1.62 + Bt[1], hz = Bm[7] * 1.62 + Bt[2], fade = Math.min(1, (5 - age) / .8);
       for (let k = 0; k < 3; k++) {
         const an = tt * 4.5 + k * 2.094 + a.ph, o = C.star * 16, s = .9 * fade * a.sc, A = P.star.instanceMatrix.array, ca = Math.cos(tt * 6 + k), sa = Math.sin(tt * 6 + k);
