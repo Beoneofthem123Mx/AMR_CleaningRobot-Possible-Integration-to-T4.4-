@@ -355,7 +355,7 @@ function step() {
     if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? AID_DMG : 1.6) * (a.gear === "helmet" ? .75 : a.gear === "bubble" ? .7 : 1); else a.dmg = Math.max(0, a.dmg - DT * (aid ? AID_HEAL : .4));
     if (a.dmg >= 1 && bm("insurance") && insured < 20 && !demo) { insured++; abducted++; for (let k = 0; k < 4; k++) puff(a.x, a.y, 1 + k, "#7dff6a", .4, .8, 1.5); if (Math.random() < .5) pop(a.x, a.y - 1, "BEAMED UP!"); continue; }   // mothership insurance
     if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; pickFall(a); fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); pmFall(a.x, a.y); setDead(dead + 1); continue; }
-    if (evac && (a.y > SH - .6 || a.x < -.4 || a.x > WW + .4 || (ROUTE.side && leaving && a.y > ROUTE.ey0 - .6 && a.y < ROUTE.ey1 + .6 && (ROUTE.side < 0 ? a.x < .55 : a.x > WW - .55)))) { evacuated++; continue; }
+    if (evac && (a.y > SH - .6 || a.x < -.4 || a.x > WW + .4 || (ROUTE.side && leaving && a.y > ROUTE.ey0 - .6 && a.y < ROUTE.ey1 + .6 && (ROUTE.side < 0 ? a.x < .55 : a.x > WW - .55)))) { evacuated++; pmExit(a); continue; }
     out.push(a);
   }
   ag = out;
