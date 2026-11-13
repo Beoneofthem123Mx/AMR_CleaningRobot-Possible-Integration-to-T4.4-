@@ -38,7 +38,7 @@ const SEG = [
   { clip: "zombie", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "horde"]], hot: true },
   { clip: "beach", warm: 26, secs: B * 4, cam: 1, ev: [[-1.6, "whale"], [-1.2, "shark"]], hot: true },
   { clip: "park", warm: 26, secs: B * 4, cam: 1, ev: [[-1.5, "dinos"], [-.6, "coaster"]], hot: true },
-  { card: "20 VENUES", dur: B * 2, bg: "circo" },
+  { card: "22 VENUES", dur: B * 2, bg: "circo" },
   { card: "FENCES OF<br>ANY SHAPE", dur: B * 2, bg: "ciudad" },
   { card: "FLOPPY<br>RAG DOLLS", dur: B * 2, style: "yellow" },
   { card: "SANDBOX MODE", dur: B * 2, bg: "arena" },

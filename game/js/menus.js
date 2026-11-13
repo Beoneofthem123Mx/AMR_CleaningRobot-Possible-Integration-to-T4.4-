@@ -116,7 +116,7 @@ const EVENT_NAMES = { car: "Lost driver", dogs: "Loose dogs", beachballs: "Beach
   jingle: "Second truck", hug: "Mascot hugs", dinos: "Dino parade", coaster: "Coaster derails", teacup: "Runaway teacup", churros: "Free churros", fireworks: "Sideways fireworks", line: "The line starts here" };
 // ---------- the next morning's newspaper ----------
 const PLACE = { plaza: "THE PLAZA", circo: "THE CIRCUS", estadio: "THE STADIUM", crucero: "THE CRUISE", hipodromo: "THE RACETRACK", ciudad: "THE CITY",
-  viernes: "THE MALL", boda: "THE WEDDING OF THE YEAR", trono: "THE GOLDEN BATHROOM", mitin: "THE DUCK RALLY", taco: "THE TACO FESTIVAL", ovni: "DON CHUY'S CORNFIELD", aeropuerto: "THE AIRPORT", arena: "THE ARENA" };
+  viernes: "THE MALL", boda: "THE WEDDING OF THE YEAR", trono: "THE GOLDEN BATHROOM", mitin: "THE DUCK RALLY", taco: "THE TACO FESTIVAL", ovni: "DON CHUY'S CORNFIELD", aeropuerto: "THE AIRPORT", arena: "THE ARENA", nuclear: "THE NUCLEAR PLANT", guerra: "THE OLD BATTLEFIELD" };
 const HEADLINES = {
   lazy: [
     "ORGANIZER OF {P} PLACES ZERO FENCES, ZERO GUARDS, ZERO ANYTHING; {D} TRAMPLED",

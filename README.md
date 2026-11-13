@@ -131,6 +131,8 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 | **Zombie Walk** | 26 ★ | Night-time zombie parade by a haunted mansion: shambling hordes, a hearse, a giant inflatable pumpkin, fog machines, bats, a werewolf and a vampire who turns out to be the mayor. |
 | **Free Ice Cream Beach** | 28 ★ | A brand gives away ice cream on the beach: a shark fin (it's just Gary), a sunscreen spill, seagulls stealing cones, an inflatable whale, a slow-motion lifeguard and a jet ski that drives onto the sand. |
 | **Grand Opening** | 30 ★ | Opening day at a bootleg theme park: a knock-off mascot giving hugs, a dinosaur parade, a coaster car that leaves the track, a runaway teacup, free churros and fireworks that go sideways. |
+| **Meltdown Open Day** | 32 ★ | A nuclear plant opens its doors. The glowing uranium core sits in the middle of the way and every person standing near it heats it up (CORE TEMP meter). At 100% it goes off: everyone nearby flies, the closest go down and the rest glow green. Rolling barrels, Glowie the mascot, a hazmat inspector, a surprise drill and a burst steam pipe. |
+| **Battle Reenactment Day** | 36 ★ | An old training field with trenches, sandbags, a bunker, barbed wire and a vintage tank. Three marked minefields and a few stray mines (faintly visible while you plan) go off when stepped on. A tank, a biplane promising free soup by the bunker, a cannon salute, a mine-sniffing dog and marching reenactors. |
 
 Fences and guards also work against the chaos: animals and vehicles that bump into them turn
 around.

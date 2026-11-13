@@ -58,13 +58,13 @@ cambió alguno, ajusta el tamaño en `steam/art/render.cjs` y vuelve a ejecutar
 
 > Plan the fences, the gates and the guards. Then open the doors and watch thousands of people,
 > a lion, a runaway cheese and a billionaire's rocket ruin everything. A crowd-safety simulator
-> for events that go horribly wrong. 20 venues. Cheaper than a coffee.
+> for events that go horribly wrong. 22 venues. Cheaper than a coffee.
 
 **Español:**
 
 > Coloca las vallas, las puertas y los guardias. Luego abre y mira cómo miles de personas, un
 > león, un queso fugitivo y el cohete de un millonario lo arruinan todo. Un simulador de seguridad
-> para eventos que salen terriblemente mal. 20 escenarios. Más barato que un café.
+> para eventos que salen terriblemente mal. 22 escenarios. Más barato que un café.
 
 ## 4. Descripción larga ("About This Game")
 
@@ -92,11 +92,12 @@ when squeezed, and go down like rag dolls with X eyes and dizzy stars. Then a ti
 
 [h2]Then watch it go wrong[/h2]
 [list]
-[*]20 venues: a plaza concert, a circus, a stadium, Black Friday at the mall, a cruise ship, the
+[*]22 venues: a plaza concert, a circus, a stadium, Black Friday at the mall, a cruise ship, the
 wedding of the year, a racetrack, the grand opening of a golden toilet, a city festival, a
 political rally for a duck, a giant taco, a UFO landing, an airport, lucha libre, a billionaire's
 rocket launch, free zoo day, a downhill cheese chase, a zombie walk, a free ice cream beach and a
-bootleg theme park.
+bootleg theme park, a nuclear plant open day whose reactor heats up when people crowd it, and a battle
+reenactment on a field that was definitely, absolutely cleared of mines.
 [*]More than 100 events: lions, penguin parades, robot dogs, mariachis, a booster landing next to
 the crowd, a gorilla that steals a phone, mothers-in-law.
 [*]13 random twists drawn before every show: free wifi in one corner, a downpour, moon gravity,
@@ -139,7 +140,7 @@ pantalla gigante.
 
 [h2]Y luego mira cómo sale mal[/h2]
 [list]
-[*]20 escenarios: un concierto en la plaza, un circo, un estadio, el Viernes Negro, un crucero, la
+[*]22 escenarios: un concierto en la plaza, un circo, un estadio, el Viernes Negro, un crucero, la
 boda del año, un hipódromo, la inauguración de un baño de oro, un festival en la ciudad, el mitin
 de un pato, un taco gigante, el aterrizaje de un ovni, un aeropuerto, lucha libre, el cohete de un
 millonario, el día gratis del zoológico, una carrera de quesos cuesta abajo, una marcha zombi, una

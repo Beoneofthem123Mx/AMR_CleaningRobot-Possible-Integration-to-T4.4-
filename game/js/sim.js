@@ -295,6 +295,7 @@ function step() {
     out.push(a);
   }
   ag = out;
+  if (scene.step && !demo) scene.step();   // venue mechanics (reactor heat, land mines)
   if (surgeT > 0 && !demo && ag.length && Math.random() < .25) { const a = ag[(Math.random() * ag.length) | 0]; if (a.dance && toss(a, .9 + Math.random() * .9) && Math.random() < .3) pop(a.x, a.y - 1, ["WHEEE!", "YEET!", "WOOO!"][(Math.random() * 3) | 0]); }
   // a calm evacuation is boring to watch: after 2 s with nobody squeezed the clock runs fast
   calmT = evac && pmax < PCRIT * .4 ? calmT + DT : 0;

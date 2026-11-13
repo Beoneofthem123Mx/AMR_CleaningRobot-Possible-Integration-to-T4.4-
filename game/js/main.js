@@ -12,7 +12,7 @@ function confettiAt(x, y, h, n, spread) {
       vr: (Math.random() - .5) * 12, c: (Math.random() * CONF.length) | 0, life: 4 + Math.random() * 3 });
   }
 }
-function burst(n) { for (let i = 0; i < n; i += 20) { const b = scene.beams[(Math.random() * scene.beams.length) | 0]; confettiAt(b.x + (Math.random() - .5) * 4, b.y + 1, b.h || 7, 20, 7); } }
+function burst(n) { for (let i = 0; i < n; i += 20) { const b = scene.beams[(Math.random() * scene.beams.length) | 0] || { x: WW / 2, y: 6, h: 7 }; confettiAt(b.x + (Math.random() - .5) * 4, b.y + 1, b.h || 7, 20, 7); } }
 function burstAt(x, y, n) { confettiAt(x, y, 1, n, 6); }
 function onDrop(first) {
   flash = 1; burst(260); sfx("cheer"); sfx("crowdroar");

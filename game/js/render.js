@@ -656,6 +656,7 @@ function renderPeople(tt, dtR, vb) {
     let r, g, b;
     if (!down && a.dmg > .45) { r = red[0]; g = red[1]; b = red[2]; }
     else { r = sh[0] + (hq[0] - sh[0]) * hm; g = sh[1] + (hq[1] - sh[1]) * hm; b = sh[2] + (hq[2] - sh[2]) * hm; }
+    if (a.rad && a.rad > t) { r = .3; g = 1.7; b = .35; }   // radioactive glow after a meltdown
     r *= k; g *= k; b *= k;
     const bw = a.bw || 1;   // build: slim to chunky
     LT.set(LOCAL.torso); LT[0] *= bw; LT[8] *= bw;
@@ -1261,6 +1262,7 @@ function updateFxLayer(live) {
     g.strokeStyle = "rgba(255,111,177,.9)"; g.lineWidth = .18; g.setLineDash(on ? [] : [.5, .35]); g.beginPath(); g.arc(ROUTE.bx, ROUTE.by, r, 0, 7); g.stroke(); g.setLineDash([]);
     g.fillStyle = "#ffffff"; g.font = "900 1px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("B-STAGE", ROUTE.bx, ROUTE.by);
   }
+  if (scene.fx) scene.fx(g);   // venue floor effects, in venue meters
   // footprints and tire marks of heavy visitors
   for (const [x, y, tr, an] of prints) {
     g.fillStyle = "rgba(60,45,30,.22)";
@@ -1366,6 +1368,7 @@ function drawOverlay() {
     g.fillStyle = ["#2fae5a", "#f0a91e", "#e53229"][lvl]; g.beginPath(); g.roundRect(x - w / 2, y - fs * .8, w, fs * 1.6, fs * .8); g.fill();
     g.lineWidth = 2; g.strokeStyle = "#111214"; g.stroke(); g.fillStyle = "#fff"; g.fillText(txt, x, y + 1);
   }
+  if (scene.hud && !demo) { g.save(); scene.hud(g, ov.width, ov.height); g.restore(); }   // venue meters
   if (flash > .01) { g.globalAlpha = 1; g.fillStyle = `rgba(255,255,255,${(flash * .22).toFixed(3)})`; g.fillRect(0, 0, ov.width, ov.height); }
 }
 const gateBadges = [];
