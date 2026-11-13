@@ -152,10 +152,11 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 | **Battle Reenactment Day** | 36 ★ | An old training field with trenches, sandbags, a bunker, barbed wire and a vintage tank. Three marked minefields and a few stray mines (faintly visible while you plan) go off when stepped on. A tank, a biplane promising free soup by the bunker, a cannon salute, a mine-sniffing dog and marching reenactors. |
 | **Factory Open Day** | 38 ★ | A rubber-duck factory: two conveyor belts drag anyone who steps on them sideways, three hot ovens push people away, robot arms swing and presses thump (the camera feels it). A runaway robot arm, a box avalanche, an oven blast, shift change and the red button. |
 | **The Procession** | 40 ★ | The float with the Saviour statue is carried slowly around the square on a sawdust carpet and two thirds of the crowd follow it everywhere; when they block it, it stops and the bearers shove. Brass band, incense, petals from the balconies, candle wax and rain. |
-| **The Protest March** | 42 ★ | Thousands march to City Hall for longer naps and three-day weekends; signs everywhere and chants that ripple through the crowd. Very polite riot police, water balloons, a news drone and a counter-protest in favour of Mondays. |
+| **The Protest March** | 42 ★ | Thousands march down an avenue of balconies to City Hall for longer naps and three-day weekends; signs everywhere, chants that ripple through the crowd, sit-ins that suddenly block the street, a giant banner and a drum line. Very polite riot police, water balloons, a news drone and a counter-protest in favour of Mondays. |
 | **Rush Hour Metro** | 44 ★ | A platform with two tracks: a train comes in, the crowd squeezes into its doors until it is full (boarding counts as getting home), it leaves and the next one arrives on the OTHER track, so everybody runs across. Buskers, rats, delays and giant backpacks. |
 | **The Market** | 46 ★ | Twelve stalls in three rows; people hop from stall to stall and come out with bags while the vendors yell "DEAL!" and "SPECIAL PRICE!". Flash deals, a fruit avalanche, loose chickens and a hand truck down the aisle. |
-| **Secret Lab Open House** | 48 ★ | Aliens floating in tubes, a teleporter that beams whoever stands on it somewhere random, scientists throwing chemicals (shrink, grow, glow, fly), an escaped alien, a slime blob, a laser sweep, a cloning accident and a three-metre chicken. |
+| **Secret Lab Open House** | 48 ★ | A laser grid that switches on and off, a zero-g room, containment breaches, portals, aliens floating in tubes, a teleporter that beams whoever stands on it somewhere random, scientists throwing chemicals (shrink, grow, glow, fly), an escaped alien, a slime blob, a laser sweep, a cloning accident and a three-metre chicken. |
+| **The Bus Terminal** | 50 ★ | Five bays; buses (AIRPORT, BEACH, GRANDMA'S HOUSE...) pull into random bays, take whoever reaches their door and leave, so the crowd keeps running to whichever doors are open. Departures board, a drivers' strike, double-deckers, runaway luggage carts and a lost dog. |
 
 Fences and guards also work against the chaos: animals and vehicles that bump into them turn
 around.
@@ -177,6 +178,28 @@ around.
   when it rains, a sea of umbrellas. When the music drops, a few lucky people go crowd surfing.
 - **Director's camera**: in automatic mode, the camera peeks at each event for a few seconds (the
   elephant, the UFO, the taxi that didn't know the street was closed).
+
+## Strategy layer
+
+- **Crowd control**: an empty or half-hearted plan never earns stars. The free guards count for
+  little; barriers, gadgets and wide gates are what make a crowd "managed". The Crowd Control meter
+  (bottom left while planning) goes from UNMANAGED to SOLID; below SOLID the crowd shoves harder.
+- **Live decisions** (bar during the show): open an emergency gate, drop a barrier between two
+  clicks, send a steward or guard running to a new spot, throw free pizza to pull the crowd away from
+  a hotspot, use the megaphone. Then the chaos powers, separated, for fun.
+- **What went wrong?** (button in the report): a pressure heat map of the whole show, purple dots
+  where people were stuck, X marks where they fell, and the three worst hotspots, each with a cause
+  (jammed gate, crush at the front, a squeeze made by your own barrier, a corner trap, an open-floor
+  surge) and a tip. It stays faintly on the floor while you re-plan.
+- **Daily challenge** (title screen): a venue and a twist picked by the date, your best result of the
+  day, +100 tickets the first time you get three stars.
+- **Level editor** (title screen → Custom venues): drag stages, walls, buildings, kiosks, tents and
+  pools, click poles, toggle gates, set the crowd, budget, day or night and the events, test it, save
+  it, and share it as a code (`HT1:...`, plain JSON inside, the same payload a Workshop item would
+  carry). Custom venues don't award stars or tickets.
+- **Secret achievements**: ten of them, with a popup and a Secrets screen that only shows hints.
+- **Shop**: upgrades, crowd gear, gadgets you unlock with tickets and place as props, today's deals,
+  and the "definitely not a black market" that takes abducted people as payment.
 
 ## Upgrade shop, moving entrances and direction
 
