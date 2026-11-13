@@ -859,7 +859,15 @@ function renderPeople(tt, dtR, vb) {
   };
   // street camera: nobody stands in front of the lens
   const ccx = G3.camera.position.x, ccz = G3.camera.position.z, near = cine > .01 ? 2.4 * 2.4 : -1;
-  for (const a of ag) { if (a.x < vb[0] || a.x > vb[1] || a.y < vb[2] || a.y > vb[3]) continue; if ((a.x - ccx) ** 2 + (a.y - ccz) ** 2 < near) continue; draw(a, false); }
+  // street camera: skip everyone behind the lens or outside the field of view (plus a margin for shadows)
+  let fx = 0, fz = 0, cosH = -2;
+  if (cine > .01) { G3.camera.getWorldDirection(CAM_V); const l = Math.hypot(CAM_V.x, CAM_V.z) || 1; fx = CAM_V.x / l; fz = CAM_V.z / l; cosH = Math.cos(Math.min(1.45, Math.atan(Math.tan(G3.camera.fov * Math.PI / 360) * G3.camera.aspect) + .35)); }
+  for (const a of ag) {
+    if (a.x < vb[0] || a.x > vb[1] || a.y < vb[2] || a.y > vb[3]) continue;
+    const dx = a.x - ccx, dz = a.y - ccz, d2 = dx * dx + dz * dz; if (d2 < near) continue;
+    if (cosH > -2 && d2 > 4 && (dx * fx + dz * fz) < cosH * Math.sqrt(d2)) continue;
+    draw(a, false);
+  }
   // grow or shrink the full-detail circle so about PLOD.max people get it
   PLOD.r2 = clamp(PLOD.r2 * (PLOD.n >= PLOD.max ? .88 : PLOD.n < PLOD.max * .8 ? 1.08 : 1), 9, 40000);
   for (const a of fallen) {
