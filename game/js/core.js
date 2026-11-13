@@ -27,6 +27,8 @@ const upg = k => (typeof window !== "undefined" && window.__manual) ? 0 : (UPG[k
 const MEGA_R = () => 5.5 * (1 + .2 * upg("loud"));
 loadShop();
 let SLOT_XS = null, SLOT_BAD = [];
+// today's route: side (-1/+1) puts the way out on a side wall between ey0 and ey1; b moves the show to a B-stage at (bx, by) halfway through
+let ROUTE = { side: 0, ey0: 0, ey1: 0, b: false, bx: 0, by: 0, done: false };
 const slotX = i => SLOT_XS ? SLOT_XS[i] : WW * (i + .5) / SLOTS;
 const badSlots = () => SLOT_XS ? SLOT_BAD : ((typeof scene !== "undefined" && scene && scene.noSlots) || []);
 let shuffleGates = (() => { try { return localStorage.getItem("mh.shuffle") !== "off"; } catch (e) { return true; } })();

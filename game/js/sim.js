@@ -6,7 +6,11 @@ let megaUsed = false, FOAM_K = .7, AID_DMG = .75, AID_HEAL = 1.4;   // whether t
 function buildWorld() {
   obs = [];
   // venue edges
-  seg(0, 0, 0, SH, .2, "edge"); seg(WW, 0, WW, SH, .2, "edge"); seg(0, 0, WW, 0, .2, "edge");
+  for (const xw of [0, WW]) {   // side walls, with today's emergency exit cut into one of them
+    if (ROUTE.side && xw === (ROUTE.side < 0 ? 0 : WW)) { seg(xw, 0, xw, ROUTE.ey0, .2, "edge"); seg(xw, ROUTE.ey1, xw, SH, .2, "edge"); }
+    else seg(xw, 0, xw, SH, .2, "edge");
+  }
+  seg(0, 0, WW, 0, .2, "edge");
   scene.build();
   // entrance fence with gates
   let x = 0;
@@ -75,7 +79,10 @@ function buildFields() {
     if (py > scene.goalMaxY) return false;
     return front.some(o => contact(o, px, py)[2] < 1.1);
   });
-  fExit = dijkstra(id => !blockedC[id] && ((id / GW) | 0) >= GH - 2);
+  if (ROUTE.side) {   // the way out is the side exit, not the gates people came in through
+    const col = ROUTE.side < 0 ? 0 : GW - 1;
+    fExit = dijkstra(id => { if (blockedC[id] || id % GW !== col) return false; const py = ((id / GW) | 0) * CS + CS / 2; return py > ROUTE.ey0 + .3 && py < ROUTE.ey1 - .3; });
+  } else fExit = dijkstra(id => !blockedC[id] && ((id / GW) | 0) >= GH - 2);
   dirS = dirField(fStage); dirE = dirField(fExit);
   baseS = null; attr = null; altF = null; altDir = null;
 }
@@ -200,6 +207,9 @@ function step() {
     for (let k = 0; k < 30 && spawned < CROWD; k++) spawn();
     if (spawned >= CROWD) {
       if (!fullAt) { fullAt = t; nextDrop = t + 6; drops = 0; caption("The show begins", false, 2200); burst(140); }
+      if (ROUTE.b && fullAt && !ROUTE.done && t > fullAt + SHOW_TIME * .45) {   // the band jumps to the B-stage and the crowd follows
+        ROUTE.done = true; tempAttract(ROUTE.bx, ROUTE.by, 3.2, SHOW_TIME * .55 + 1, .85); caption("Surprise! The band moves to the B-stage", true, 2600); pop(ROUTE.bx, ROUTE.by - 1.5, "B-STAGE!"); sfx("cheer");
+      }
       if (t > nextDrop && t < fullAt + SHOW_TIME - 5) { surgeT = 3.5; nextDrop = t + (10 + Math.random() * 5) * (MOD && MOD.dropMul || 1); onDrop(drops++ === 0); }
       if (t > fullAt + SHOW_TIME) startEvac();
     }
@@ -234,6 +244,7 @@ function step() {
     a.dance = phase === "show" && !leaving && fullAt > 0 && f[id] <= a.tol + 1;
     if (a.dance) { a.fx += Math.cos(t * 5.5 + a.ph) * .9; a.fy += Math.sin(t * 4.3 + a.ph * 1.7) * .9; a.h += Math.sin(t * 2.7 + a.ph) * .04; }
     let dx = dir[id * 2], dy = dir[id * 2 + 1];
+    if (leaving && ROUTE.side && a.y > ROUTE.ey0 && a.y < ROUTE.ey1 && (ROUTE.side < 0 ? a.x < 1.6 : a.x > WW - 1.6)) { const yc = (ROUTE.ey0 + ROUTE.ey1) / 2; dx = ROUTE.side; dy = clamp((yc - a.y) * .35, -.8, .8); const l = Math.hypot(dx, dy); dx /= l; dy /= l; }   // at the side exit: out, away from the corners
     if (!isFinite(f[id])) {
       // stuck in a blocked cell: look for the nearest free cell
       const gx = id % GW, gy = (id / GW) | 0; let best = Infinity;
@@ -271,7 +282,7 @@ function step() {
       if (ft === "rope" && a.p > PCRIT * .4) o.fence.strain = (o.fence.strain || 0) + (a.p - PCRIT * .4) * DT;
     }
     if (soft) a.p *= FOAM_K;   // foam padding soaks up the squeeze
-    a.x = clamp(a.x, R, WW - R);
+    if (leaving && ROUTE.side && a.y > ROUTE.ey0 && a.y < ROUTE.ey1) a.x = clamp(a.x, -3, WW + 3); else a.x = clamp(a.x, R, WW - R);
     if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1; if (a.ps > pmax) pmax = a.ps;
     if (a.air > 0) a.air -= DT;
@@ -280,7 +291,7 @@ function step() {
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
     if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? AID_DMG : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? AID_HEAL : .4));
     if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; pickFall(a); fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
-    if (evac && a.y > SH - .6) { evacuated++; continue; }
+    if (evac && (a.y > SH - .6 || a.x < -.4 || a.x > WW + .4 || (ROUTE.side && leaving && a.y > ROUTE.ey0 - .6 && a.y < ROUTE.ey1 + .6 && (ROUTE.side < 0 ? a.x < .55 : a.x > WW - .55)))) { evacuated++; continue; }
     out.push(a);
   }
   ag = out;
@@ -335,6 +346,28 @@ function saveBest(key, stars) {
 }
 
 // ===== Phases =====
+// today's route: classic, side exit, B-stage or both; each part is only used if it really works in this venue
+function pickRoute() {
+  ROUTE = { side: 0, ey0: 0, ey1: 0, b: false, bx: 0, by: 0, done: false };
+  const r = Math.random(), wantSide = r < .35 || r >= .75, wantB = r >= .55;
+  if (wantSide) for (let tries = 0; tries < 10; tries++) {
+    const side = Math.random() < .5 ? -1 : 1, yc = 16 + Math.random() * (FENCE_Y - 30);
+    ROUTE.side = side; ROUTE.ey0 = yc - 5.5; ROUTE.ey1 = yc + 5.5; buildWorld();
+    const col = side < 0 ? 0 : GW - 1; let free = 0;
+    for (let y = ROUTE.ey0 + .5; y < ROUTE.ey1 - .5; y += CS) if (!blockedC[cellOf(col * CS + CS / 2, y)]) free++;
+    let reach = true; for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fExit[cellOf(slotX(i), FENCE_Y - 1.2)])) reach = false;
+    let fromStage = false; for (let id = 0; id < GW * GH && !fromStage; id++) if (fStage[id] === 0 && isFinite(fExit[id])) fromStage = true;
+    if (free >= 15 && reach && fromStage) break;
+    ROUTE.side = 0; buildWorld();
+  }
+  if (wantB) for (let tries = 0; tries < 40; tries++) {
+    const x = 6 + Math.random() * (WW - 12), y = FENCE_Y * .45 + Math.random() * (FENCE_Y * .55 - 14);
+    let ok = isFinite(fStage[cellOf(x, y)]) && fStage[cellOf(x, y)] > 6;
+    for (let a = 0; a < 6.28 && ok; a += .8) if (blockedC[cellOf(x + Math.cos(a) * 2.6, y + Math.sin(a) * 2.6)]) ok = false;
+    if (ok) { ROUTE.b = true; ROUTE.bx = x; ROUTE.by = y; break; }
+  }
+  buildWorld();
+}
 // a fresh uneven layout: seven gates with random gaps between them (never overlapping)
 function slotLayout() {
   const min = SLOT_W + 1.2, lo = SLOT_W / 2 + .5, hi = WW - SLOT_W / 2 - .5, slack = hi - lo - (SLOTS - 1) * min;
@@ -414,6 +447,7 @@ function start(mod) {
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3 + upg("battery"), active: [] }; megaUsed = false;
   LAZY = !demo && !sandbox && fences.length === 0 && guards.length === 0 && props.length === 0;
   UNM = demo || sandbox ? 0 : clamp(1 - planSafety() / 4, 0, 1);
+  ROUTE.done = false;
   FOAM_K = .7 - .1 * upg("foam"); AID_DMG = .75 - .15 * upg("medic"); AID_HEAL = 1.4 + .4 * upg("medic");
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; calmT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();

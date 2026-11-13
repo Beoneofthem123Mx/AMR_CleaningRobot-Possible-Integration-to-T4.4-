@@ -135,7 +135,7 @@ function startDemo() {
   // the menu backdrop shows a venue the player has unlocked (the first two for new players)
   const open = Object.keys(SCENES).filter(key => typeof isUnlocked === "function" && isUnlocked(key) && !SCENES[key].night);
   demo = true; const keys = open.length > 2 ? open : ["plaza", "circo"], k = keys[(Math.random() * keys.length) | 0];
-  sceneKey = k; scene = SCENES[k]; CROWD = scene.crowd; VIEW_FLIP = 1; SLOT_XS = null; SLOT_BAD = []; gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
+  sceneKey = k; scene = SCENES[k]; CROWD = scene.crowd; VIEW_FLIP = 1; ROUTE = { side: 0, ey0: 0, ey1: 0, b: false, bx: 0, by: 0, done: false }; SLOT_XS = null; SLOT_BAD = []; gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   buildWorld(); phase = "plan"; start(MODS_BY_ID.normal); camMode = 0;
 }
 function loadScene(key) {
@@ -143,9 +143,10 @@ function loadScene(key) {
   loadShop(); STEWARD_R = 3 + .7 * upg("steward"); GUARD_CALM = 3.6 * (1 + .15 * upg("calm"));
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = Math.round(scene.fenceBudget * (1 + .15 * upg("budget"))); MAX_GATES = sandbox ? SLOTS : scene.maxGates;
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
-  SLOT_XS = null; SLOT_BAD = []; buildWorld();
+  SLOT_XS = null; SLOT_BAD = []; ROUTE = { side: 0, ey0: 0, ey1: 0, b: false, bx: 0, by: 0, done: false }; buildWorld();
   // entrances move on every visit (unless turned off in Options); a saved plan only fits the fixed layout
   const moved = !window.__manual && shuffleGates && shuffleSlots();
+  if (moved) pickRoute();   // and not always in-and-back-out: a side exit, a B-stage, or both
   // which way the crowd flows on screen: half the venues one way, half the other; with moving entrances it changes every visit
   const idx = Object.keys(SCENES).indexOf(key);
   VIEW_FLIP = window.__manual ? 1 : shuffleGates ? (Math.random() < .5 ? -1 : 1) : (idx % 2 ? -1 : 1);

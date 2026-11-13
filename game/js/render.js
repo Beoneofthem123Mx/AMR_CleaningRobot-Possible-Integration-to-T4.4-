@@ -1247,6 +1247,20 @@ function updateFxLayer(live) {
     if (kind === 1) { g.globalAlpha = 1; g.fillStyle = ["#1c1c20", "#f2f2f2", "#d8322b", "#2f6fc4", "#6b4a2b", "#1c1c20", "#e8b631"][ci]; g.save(); g.translate(x, y); g.rotate(r); g.beginPath(); g.ellipse(0, 0, .2, .12, 0, 0, 7); g.fill(); g.fillStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.ellipse(-.05, 0, .09, .06, 0, 0, 7); g.fill(); g.restore(); continue; }
     g.fillStyle = CONF[ci % CONF.length]; g.globalAlpha = .9; g.save(); g.translate(x, y); g.rotate(r); g.fillRect(-.17, -.1, .34, .2); g.restore(); }
   g.globalAlpha = 1;
+  // today's route: the side exit (green, with arrows pointing out) and the B-stage pad
+  if (ROUTE.side) {
+    const xw = ROUTE.side < 0 ? 0 : WW, sd = ROUTE.side, yc = (ROUTE.ey0 + ROUTE.ey1) / 2, pul = phase === "evac" ? .5 + .5 * Math.sin(performance.now() / 150) : 1;
+    g.fillStyle = `rgba(47,174,90,${(.35 * pul).toFixed(3)})`; g.fillRect(sd < 0 ? 0 : WW - 4, ROUTE.ey0, 4, ROUTE.ey1 - ROUTE.ey0);
+    g.fillStyle = `rgba(47,174,90,${(.85 * pul).toFixed(3)})`;
+    for (const dy of [-1.8, 0, 1.8]) { const ax = xw - sd * 2.6, ay = yc + dy; g.beginPath(); g.moveTo(ax + sd * 1.5, ay); g.lineTo(ax, ay - .7); g.lineTo(ax, ay + .7); g.fill(); }
+    g.save(); g.translate(xw - sd * 4.6, yc); g.rotate(sd < 0 ? Math.PI / 2 : -Math.PI / 2); g.font = "900 .9px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("WAY OUT", 0, 0); g.restore();
+  }
+  if (ROUTE.b) {
+    const on = ROUTE.done && phase === "show", r = 2.8;
+    g.fillStyle = on ? "rgba(255,111,177,.45)" : "rgba(255,111,177,.2)"; g.beginPath(); g.arc(ROUTE.bx, ROUTE.by, r, 0, 7); g.fill();
+    g.strokeStyle = "rgba(255,111,177,.9)"; g.lineWidth = .18; g.setLineDash(on ? [] : [.5, .35]); g.beginPath(); g.arc(ROUTE.bx, ROUTE.by, r, 0, 7); g.stroke(); g.setLineDash([]);
+    g.fillStyle = "#ffffff"; g.font = "900 1px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("B-STAGE", ROUTE.bx, ROUTE.by);
+  }
   // footprints and tire marks of heavy visitors
   for (const [x, y, tr, an] of prints) {
     g.fillStyle = "rgba(60,45,30,.22)";
@@ -1279,7 +1293,10 @@ function updateFxLayer(live) {
     // load on each open gate during the evacuation: people per gate, minus the help of stewards nearby
     const open = []; for (let i = 0; i < SLOTS; i++) if (gates[i]) open.push(i);
     gateBadges.length = 0;
-    for (const i of open) {
+    if (ROUTE.side) {   // everyone leaves through the side exit (about as wide as three gates)
+      const x = ROUTE.side < 0 ? 1.2 : WW - 1.2, y = (ROUTE.ey0 + ROUTE.ey1) / 2, help = guards.filter(gd => gd.role === "slow" && Math.hypot(gd.x - x, gd.y - y) < 10).length;
+      const load = scene.crowd / 4.2 / (1 + help * .18); gateBadges.push([x, load > 900 ? 2 : load > 600 ? 1 : 0, y]);
+    } else for (const i of open) {
       const x = slotX(i), help = guards.filter(gd => gd.role === "slow" && Math.hypot(gd.x - x, gd.y - FENCE_Y) < 9).length;
       const load = scene.crowd / open.length / (1 + help * .18), lvl = load > 900 ? 2 : load > 600 ? 1 : 0;
       gateBadges.push([x, lvl]);
@@ -1342,8 +1359,8 @@ function drawOverlay() {
     g.lineWidth = Math.max(3, .22 * ppm); g.strokeStyle = "#111214"; g.strokeText(q.text, 0, 0); g.fillStyle = "#ffd23a"; g.fillText(q.text, 0, 0);
     g.restore();
   }
-  if (cine < .01) for (const [gx, lvl] of gateBadges) {   // plan: how busy each exit will be (top views only)
-    Vproj.set(gx, .4, FENCE_Y + 1.2).project(G3.camera);
+  if (cine < .01) for (const [gx, lvl, gy] of gateBadges) {   // plan: how busy each exit will be (top views only)
+    Vproj.set(gx, .4, gy ?? FENCE_Y + 1.2).project(G3.camera);
     const x = (Vproj.x + 1) / 2 * ov.width, y = (1 - Vproj.y) / 2 * ov.height, fs = Math.round(Math.max(12, .7 * ppm)), txt = ["EXIT OK", "BUSY EXIT", "CRUSH RISK"][lvl];
     g.globalAlpha = 1; g.font = `900 ${fs}px Rubik, system-ui, sans-serif`; const w = g.measureText(txt).width + fs;
     g.fillStyle = ["#2fae5a", "#f0a91e", "#e53229"][lvl]; g.beginPath(); g.roundRect(x - w / 2, y - fs * .8, w, fs * 1.6, fs * .8); g.fill();

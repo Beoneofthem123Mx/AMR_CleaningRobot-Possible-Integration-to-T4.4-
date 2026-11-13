@@ -267,7 +267,7 @@ function camKeys(dt) {
 $("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = speed + "×"; });
 $("#card").addEventListener("click", e => {
   const sk = e.target.closest("[data-scene]");
-  if (sk) { loadScene(sk.dataset.scene); hideCard(); caption(SLOT_XS ? "The entrances moved! You plan it" : "You plan it", false, 0); }
+  if (sk) { loadScene(sk.dataset.scene); hideCard(); caption(!SLOT_XS ? "You plan it" : ROUTE.side && ROUTE.b ? "New route: B-stage mid-show, and they leave by the side exit" : ROUTE.side ? "New route: after the show they leave by the side exit" : ROUTE.b ? "New route: halfway through, the show moves to the B-stage" : "The entrances moved! You plan it", false, 0); }
   if (e.target.id === "retry") { paused = false; backToPlan(); }
   if (e.target.id === "pick") chooser();
   if (e.target.id === "options") showOptions();
