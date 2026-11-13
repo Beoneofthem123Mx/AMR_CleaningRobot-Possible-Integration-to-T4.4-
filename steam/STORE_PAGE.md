@@ -47,10 +47,12 @@ cambió alguno, ajusta el tamaño en `steam/art/render.cjs` y vuelve a ejecutar
 **Orden recomendado de capturas** (las primeras cuatro son las que más se ven):
 
 1. `18_street_city.png` (la ciudad de noche a ras de suelo, dentro de la multitud)
-2. `02_circus.png` (multitud de colores y elefantes)
-3. `20_cruise_street.png` (cubierta del crucero con el mar al fondo)
-4. `19_plaza_street.png` (concierto en la plaza a ras de suelo)
-5. `21_city_rooftops.png`, `03_arena.png`, `15_grand_opening.png`, `17_crowd_closeup.png` y las demás
+2. `38_post_mortem.png` (el análisis "What went wrong?": mapa de calor, causas, línea de tiempo y flujo por puerta; vende la profundidad de estrategia)
+3. `02_circus.png` (multitud de colores y elefantes)
+4. `34_protest_march.png` (la marcha al atardecer con el camión de sonido y los rascacielos)
+5. `25_plan_danger.png` (la fase de plan con las zonas de riesgo marcadas)
+6. `39_world_tour.png` (la Gira Mundial: cinco shows seguidos con ventajas)
+7. `36_secret_lab_lockdown.png`, `35_bus_terminal.png`, `37_factory.png`, `20_cruise_street.png`, `19_plaza_street.png`, `21_city_rooftops.png`, `03_arena.png` y las demás
 
 ## 3. Descripción corta (máximo 300 caracteres)
 
