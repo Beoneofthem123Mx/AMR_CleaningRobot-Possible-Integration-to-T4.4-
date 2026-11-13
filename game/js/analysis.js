@@ -95,13 +95,13 @@ function drawAnalysis(g) {
   if (analysisView && PM.view >= 0 && PM.snaps[PM.view]) {   // timelapse frame: density as the cell's opacity, pressure as its colour
     const s = PM.snaps[PM.view];
     for (let i = 0; i < s.d.length; i++) { if (!s.d[i]) continue; const x = i % PM.w, y = (i / PM.w) | 0, q = Math.min(1, s.p[i] / 200), dd = Math.min(1, s.d[i] / 5);
-      g.fillStyle = q > .3 ? `rgba(255,${Math.round(220 - 190 * q)},${Math.round(60 - 40 * q)},${(.25 + .6 * dd).toFixed(2)})` : `rgba(79,184,255,${(.12 + .5 * dd).toFixed(2)})`; g.fillRect(x, y, 1, 1); }
+      g.fillStyle = heatRGBA(q > .3 ? .66 + .34 * q : .1, q > .3 ? .25 + .6 * dd : .12 + .5 * dd); g.fillRect(x, y, 1, 1); }
     return;
   }
   for (let i = 0; i < PM.p.length; i++) {
     const v = PM.p[i] / PCRIT; if (v < .25) continue;
     const x = i % PM.w, y = (i / PM.w) | 0, q = Math.min(1, (v - .25) / .9);
-    g.fillStyle = `rgba(${255},${Math.round(220 - 190 * q)},${Math.round(60 - 40 * q)},${((.15 + .5 * q) * al).toFixed(3)})`; g.fillRect(x, y, 1, 1);
+    g.fillStyle = heatRGBA(.66 + .34 * q, (.15 + .5 * q) * al); g.fillRect(x, y, 1, 1);
     if (PM.s[i] > 40) { g.fillStyle = `rgba(122,44,255,${(.35 * al).toFixed(3)})`; g.fillRect(x + .35, y + .35, .3, .3); }
     if (PM.f[i]) { g.strokeStyle = `rgba(20,20,22,${(.8 * al).toFixed(3)})`; g.lineWidth = .12; g.beginPath(); g.moveTo(x + .2, y + .2); g.lineTo(x + .8, y + .8); g.moveTo(x + .8, y + .2); g.lineTo(x + .2, y + .8); g.stroke(); }
   }

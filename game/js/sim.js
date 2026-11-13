@@ -153,6 +153,14 @@ const cellOf = (x, y) => clamp(Math.floor(y / CS), 0, GH - 1) * GW + clamp(Math.
 // ===== Crowd =====
 const SHIRTS = ["#d8433b","#2f6fc4","#e8b631","#3d9a5b","#8a4fbf","#e07a2e","#f4f4f0","#2b2f35","#3fb3c4","#d0679b","#7a8c3a","#9b5a3c"];
 const HEAT = ["#2c4fd6","#2f86e0","#2fb8d0","#33c08a","#5cc63c","#b8d230","#f2c530","#f39424","#ec5a22","#e0322b"];
+// colour-blind friendly pressure palette (plasma: no red/green pairs), switched in Options
+const HEAT_STD = HEAT.slice(), HEAT_CB = ["#0d0887","#46039f","#7201a8","#9c179e","#bd3786","#d8576b","#ed7953","#fb9f3a","#fdca26","#f0f921"];
+let CB = false; try { CB = localStorage.getItem("mh.cb") === "on"; } catch (e) { /* no storage */ }
+function applyCB() { HEAT.splice(0, HEAT.length, ...(CB ? HEAT_CB : HEAT_STD)); if (typeof toLin === "function" && typeof HEAT_L !== "undefined" && HEAT_L) HEAT_L = toLin(HEAT); }
+applyCB();
+// pressure 0..1 as an rgba string from the current palette (the post-mortem heat map uses it)
+function heatRGBA(q, al) { const f = Math.max(0, Math.min(1, q)) * (HEAT.length - 1), i = Math.min(HEAT.length - 2, f | 0), k = f - i, A = HEAT[i], B = HEAT[i + 1], ch = (h, o) => parseInt(h.substr(o, 2), 16);
+  return `rgba(${[1, 3, 5].map(o => Math.round(ch(A, o) + (ch(B, o) - ch(A, o)) * k)).join(",")},${al.toFixed(3)})`; }
 let surgeT = 0, nextDrop = 0, drops = 0, SURGE = [.55, 1.1];
 let abducted = 0, slipT = 0, MOD = null, eventLog = new Set(), mega = { n: 3, active: [] }; megaUsed = false;
 // shopping: people pop into the venue shops and come back out buried in bags

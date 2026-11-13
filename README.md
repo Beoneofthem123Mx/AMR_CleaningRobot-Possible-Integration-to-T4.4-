@@ -269,6 +269,9 @@ march, the metro and the bus terminal, a factory district with chimneys, silos a
 around the factory and the reactor, hangars and a control tower around the airport and the launch
 pad. The live controls bar during the show is one slim row.
 
+Options → **Colour-blind palette** switches the pressure colours (pressure view and post-mortem)
+to a dark-blue-to-yellow scale with no red/green pairs.
+
 ## Keyboard shortcuts
 
 **1–5** tools · **Space** opens the gates · **H** pressure · **C** camera · **V** speed ·

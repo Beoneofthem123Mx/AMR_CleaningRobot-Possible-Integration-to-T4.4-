@@ -202,7 +202,7 @@ function init3D() {
   G3.puff = inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: .3, depthWrite: false }), 800);
   SHOE_L = toLin(["#1c1c20", "#f2f2f2", "#d8322b", "#2f6fc4", "#6b4a2b", "#1c1c20", "#e8b631"]);
   COS_L = [null].concat(toLin(["#8a5a34", "#4caf50", "#f4f4f0"])); COS_X = [null].concat(toLin(["#5e3a20", "#ffd23a", "#f2a52b", "#e53935"]));
-  SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
+  SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); if (typeof applyCB === "function") applyCB(); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
   initPeople();
   initPost();
   resize();
