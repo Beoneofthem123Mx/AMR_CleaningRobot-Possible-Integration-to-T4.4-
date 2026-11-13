@@ -3,6 +3,11 @@
 // What they flatten counts as pancaked, like everything else: they are for fun, not for stars.
 const POWERS = {
   mega:   { icon: "📣", name: "Megaphone", desc: "Calms people down around the click" },
+  // live decisions: change the venue while the crowd is in it
+  egate:   { icon: "🚪", name: "Emergency gate", n: 2, live: true, desc: "Click a closed gate at the bottom to throw it open (wide) right now" },
+  wall:    { icon: "🚧", name: "Drop barrier", n: 3, live: true, desc: "Click two points: a steel barrier (up to 7 m) drops between them, mid-show" },
+  steward: { icon: "🦺", name: "Move steward", n: 99, live: true, desc: "Click a steward or guard, then click where they should run to" },
+  pizza:   { icon: "🍕", name: "Free pizza", n: 2, live: true, desc: "Drops free pizza at the click: part of the crowd runs there for a few seconds" },
   meteor: { icon: "☄️", name: "Meteor", n: 1, desc: "A small meteor. Big crater. Nobody saw it coming." },
   bowl:   { icon: "🎳", name: "Bowling ball", n: 1, desc: "A giant bowling ball rolls through the click from the edge" },
   anvil:  { icon: "⚓", name: "Anvil", n: 1, desc: "Classic cartoon anvil. CLANG." },
@@ -12,15 +17,35 @@ const POWERS = {
   freeze:   { icon: "⏸", name: "Pause remote", bm: 1, desc: "Everyone freezes for 4 seconds; the pressure drains" },
   antigrav: { icon: "🪐", name: "Anti-gravity", bm: 1, desc: "Gravity off for a moment: everyone floats" },
 };
-let power = "mega", charges = {};
+let power = "mega", charges = {}, pendingWall = null, pendingGuard = null;
 let freezeT = 0;
-function resetPowers() { power = "mega"; charges = {}; freezeT = 0; for (const [k, p] of Object.entries(POWERS)) if (p.bm) charges[k] = bm(k) || (typeof sandbox !== "undefined" && sandbox) ? p.bm : 0; for (const [k, p] of Object.entries(POWERS)) if (p.n) charges[k] = p.n + (typeof upg === "function" ? upg("chaos") : 0) + (typeof gearOn === "function" && gearOn("pockets") ? 1 : 0); }
+function resetPowers() { power = "mega"; charges = {}; freezeT = 0; pendingWall = null; pendingGuard = null; for (const [k, p] of Object.entries(POWERS)) if (p.bm) charges[k] = bm(k) || (typeof sandbox !== "undefined" && sandbox) ? p.bm : 0; for (const [k, p] of Object.entries(POWERS)) if (p.n) charges[k] = p.n + (typeof upg === "function" ? upg("chaos") : 0) + (typeof gearOn === "function" && gearOn("pockets") ? 1 : 0); }
 function usePower(x, y) {
   if ((charges[power] || 0) <= 0 && !sandbox) { caption(`No ${POWERS[power].name.toLowerCase()} left this show.`, true, 1400); power = "mega"; ui(); return; }
   if (!sandbox) charges[power]--;
   eventLog.add("power_" + power); POWER_USED = true;
   const kind = power; if (!sandbox && charges[power] <= 0) power = "mega";
   ui(); sfx("click");
+  if (kind === "egate") {   // open the nearest closed gate, wide
+    let best = -1, bd = 6; for (let i = 0; i < SLOTS; i++) { if (gates[i] || badSlots().includes(i)) continue; const d = Math.abs(slotX(i) - x) + Math.max(0, Math.abs(y - FENCE_Y) - 4); if (d < bd) { bd = d; best = i; } }
+    if (best < 0) { charges.egate++; power = "egate"; ui(); caption("Click a CLOSED gate on the fence at the bottom.", true, 1600); return; }
+    gates[best] = GATE_SIZES.wide.k; buildWorld(); pop(slotX(best), FENCE_Y - 2, "EMERGENCY EXIT!"); sfx("siren"); shockwave(slotX(best), FENCE_Y - 1); eventLog.add("egate"); return;
+  }
+  if (kind === "wall") {   // two clicks: start, then end
+    if (!pendingWall) { pendingWall = [x, y]; charges.wall++; power = "wall"; ui(); rings.push({ x, y, t: 0, mega: true }); caption("Now click where the barrier ends", false, 1400); return; }
+    let [ax, ay] = pendingWall, dx = x - ax, dy = y - ay, L = Math.hypot(dx, dy); pendingWall = null;
+    if (L < .8) { charges.wall++; ui(); return; } if (L > 7) { x = ax + dx / L * 7; y = ay + dy / L * 7; L = 7; }
+    fences.push({ ax, ay, bx: x, by: y, len: L, type: "steel" }); buildWorld(); sfx("drop"); pop((ax + x) / 2, (ay + y) / 2 - 1, "BARRIER!"); debris((ax + x) / 2, (ay + y) / 2, .3, 10, 3); eventLog.add("wall"); return;
+  }
+  if (kind === "steward") {   // pick someone, then send them
+    if (!pendingGuard) { let best = null, bd = 6.25; for (const g of guards) { const d = (g.x - x) ** 2 + (g.y - y) ** 2; if (d < bd) { bd = d; best = g; } }
+      charges.steward++; power = "steward"; ui(); if (!best) { caption("Click on one of your stewards or guards first", true, 1400); return; }
+      pendingGuard = best; rings.push({ x: best.x, y: best.y, t: 0, mega: true }); caption("Now click where they should go", false, 1400); return; }
+    pendingGuard.tx = clamp(x, 1, WW - 1); pendingGuard.ty = clamp(y, 1, FENCE_Y - 1); pop(pendingGuard.x, pendingGuard.y - 1.4, ["ON IT!", "ROGER!", "MOVING!"][(Math.random() * 3) | 0]); pendingGuard = null; charges.steward++; power = "steward"; ui(); return;
+  }
+  if (kind === "pizza") {
+    tempAttract(x, y, 2.6, 5, .35); pop(x, y - 1, "FREE PIZZA!"); burstAt(x, y, 30); for (let k = 0; k < 8; k++) puff(x + rnd(-1, 1), y + rnd(-1, 1), .4, "#ffb238", .35, 1, .5); sfx("jingle"); eventLog.add("pizza"); return;
+  }
   if (kind === "meteor") {
     rings.push({ x, y, t: 0 }); pop(x, y - 1, "LOOK UP!");
     addMover({ kind: "meteor", beh: "static", life: 4, x: x + 14, y: y - 18, sx: x + 14, sy: y - 18, tx: x, ty: y, r: .9, push: 0, air: true, h: 40, say: "", tick(m) {

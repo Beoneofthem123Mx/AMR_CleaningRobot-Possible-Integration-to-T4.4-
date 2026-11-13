@@ -311,7 +311,7 @@ function pickProp(type) { propType = type; tool = "prop"; ui(); toast(`${PROP_TY
 function pickShape(k) { fenceShape = k; tool = "fence"; ui(); toast(`${FENCE_SHAPES[k].name} — ${FENCE_SHAPES[k].desc}`); }
 function pickRole(k) { guardRole = k; tool = "guard"; ui(); toast(`${GUARD_ROLES[k].name} — ${GUARD_ROLES[k].desc}`); }
 let pickerFor = "", pickerClosed = "";
-const PICK_TITLE = { fence: "Barrier type & shape", prop: "Props", guard: "Security", gate: "Gate size", powers: "Megaphone & chaos powers", sand: "Sandbox" };
+const PICK_TITLE = { fence: "Barrier type & shape", prop: "Props", guard: "Security", gate: "Gate size", powers: "Live controls · chaos powers", sand: "Sandbox" };
 // every picker gets a title and a close button; it pops back up when its tool is picked again
 function pickerChrome(el, want) {
   const k = want.startsWith("mayhem") ? "Mayhem" : PICK_TITLE[want] || "";
@@ -324,7 +324,7 @@ function renderPicker(plan) {
   if (want === "powers") {   // chaos powers: rebuilt every time, the charges change
     pickerFor = want;
     el.innerHTML = Object.entries(POWERS).filter(([k, p]) => !p.bm || bm(k) || sandbox).map(([k, p]) => { const n = k === "mega" ? mega.n : charges[k] || 0;
-      return `<button data-pw="${k}" class="${power === k ? "on" : ""}" title="${p.desc}" ${n <= 0 ? "disabled" : ""}>${p.icon} ${p.name}<span class="cnt">×${n}</span></button>`; }).join("");
+      return `${k === "meteor" ? '<span class="sep"></span>' : ""}<button data-pw="${k}" class="${power === k ? "on" : ""}${p.live ? " live" : ""}" title="${p.desc}" ${n <= 0 ? "disabled" : ""}>${p.icon} ${p.name}<span class="cnt">${n > 50 ? "" : "×" + n}</span></button>`; }).join("");
     pickerChrome(el, want); el.hidden = pickerClosed === want;
     el.querySelectorAll("button[data-pw]").forEach(b => b.addEventListener("click", () => { power = b.dataset.pw; ui(); if (power !== "mega") toast(`${POWERS[power].name}: ${POWERS[power].desc}. Click the venue.`); }));
     return;

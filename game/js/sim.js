@@ -362,6 +362,10 @@ function step() {
   TwoBody.update(ag, DT);   // torsos on elastic joints, stumbles and domino chains (twobody.js)
   if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
   if (props.length) gadgetStep();
+  for (const gd of guards) if (gd.tx !== undefined) {   // a steward sent somewhere mid-show runs there
+    const dx = gd.tx - gd.x, dy = gd.ty - gd.y, d = Math.hypot(dx, dy);
+    if (d < .2) { gd.tx = undefined; buildWorld(); } else { gd.x += dx / d * Math.min(d, 3.2 * DT); gd.y += dy / d * Math.min(d, 3.2 * DT); gd.ang = Math.atan2(dy, dx); }
+  }
   if (!demo && spawned > 150) crowdShouts();
   if (yeetT > 0) yeetT -= DT;
   if (freezeT > 0) freezeT -= DT;
