@@ -1,7 +1,7 @@
 // Human Tsunami · plan editing and interface
 // ===== Plan editing =====
 let tool = "fence", drag = null;
-const maxGuards = () => sandbox ? 16 : (scene.guards || 3);
+const maxGuards = () => sandbox ? 16 : (scene.guards || 3) + upg("guards");
 const nStewards = () => guards.filter(g => g.role === "slow").length, nGuards = () => guards.length - nStewards();
 const fenceUsed = () => fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0) + nStewards() * GUARD_ROLES.slow.cost;   // dollars spent
 const fenceLeft = () => sandbox ? 1e9 : FENCE_BUDGET * 10 - fenceUsed();
@@ -271,6 +271,7 @@ $("#card").addEventListener("click", e => {
   if (e.target.id === "retry") { paused = false; backToPlan(); }
   if (e.target.id === "pick") chooser();
   if (e.target.id === "options") showOptions();
+  if (e.target.closest && e.target.closest("#shop")) showShop();
   if (e.target.id === "howto") showHowTo();
   if (e.target.id === "again") { paused = false; backToPlan(); startWithRoulette(); }
   if (e.target.id === "quit" && window.steam) window.steam.quit();

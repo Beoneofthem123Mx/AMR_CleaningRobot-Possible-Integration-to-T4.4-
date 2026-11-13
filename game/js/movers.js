@@ -26,7 +26,7 @@ function chaosPool() {
 let windF = { x: 0, t: 0 }, ola = null, rockets = [], sparks = [], puffs = [], cheerT = 0;
 // security guards placed by the player
 let guards = [];
-const GUARD_CALM = 3.6;
+let GUARD_CALM = 3.6;
 function openGateX() { const open = []; for (let i = 0; i < SLOTS; i++) if (gates[i]) open.push(slotX(i)); return open[(Math.random() * open.length) | 0] || WW / 2; }
 function addMover(m) { movers.push(Object.assign({ t: 0, ang: 0, i: 0, push: 30, scare: 0, spin: 0, h: 0, home: [m.x, m.y] }, m)); }
 function crowdPoint() { return [rnd(4, 36), rnd(22, 60)]; }
@@ -312,7 +312,7 @@ function calmForces() {
   const sources = guards.filter(g => g.role !== "slow").map(g => [g.x, g.y, GUARD_CALM]);
   for (const pr of props) if (pr.type === "water") sources.push([pr.x, pr.y, PROP_TYPES.water.calm]);
   for (const m of movers) if (m.calm) sources.push([m.x, m.y, m.calm]);
-  for (const mg of mega.active) sources.push([mg.x, mg.y, 5.5, true]);
+  for (const mg of mega.active) sources.push([mg.x, mg.y, MEGA_R(), true]);
   for (const [x, y, rad, push] of sources) {
     const gx0 = clamp(Math.floor((x - rad) / CS), 0, GW - 1), gx1 = clamp(Math.floor((x + rad) / CS), 0, GW - 1);
     const gy0 = clamp(Math.floor((y - rad) / CS), 0, GH - 1), gy1 = clamp(Math.floor((y + rad) / CS), 0, GH - 1);

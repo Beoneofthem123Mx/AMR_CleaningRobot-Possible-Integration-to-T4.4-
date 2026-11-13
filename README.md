@@ -153,6 +153,18 @@ around.
 - **Director's camera**: in automatic mode, the camera peeks at each event for a few seconds (the
   elephant, the UFO, the taxi that didn't know the street was closed).
 
+## Upgrade shop, moving entrances and direction
+
+- Every show pays **tickets**: 10 for showing up, more for everyone who got home, 20 per star and 30 per
+  new medal (sandbox pays nothing). Spend them in the **Upgrade shop** in the main menu: bigger budget,
+  megaphone batteries and reach, steward training, extra security, charming guards, softer foam and
+  better first aid, three levels each.
+- **Moving entrances**: every visit to a venue shuffles the seven gates into a new, uneven layout (only
+  spots that really work are used) and opens the venue's usual number of them at random. Turn it off
+  in Options to get fixed gates and a plan saved per venue.
+- **Direction**: the top view turns around between visits, so the stage can sit on either side and the
+  crowd flows either way.
+
 ## Modes, medals and saves
 
 - **Medals**: every venue has five optional challenges: *On a budget* (at most 5 trampled spending

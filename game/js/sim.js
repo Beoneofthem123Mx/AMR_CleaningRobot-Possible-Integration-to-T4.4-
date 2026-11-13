@@ -1,5 +1,5 @@
 // Human Tsunami · venue, flow fields, crowd and phases
-let megaUsed = false;   // whether the megaphone was used this show (for the Hands off medal)
+let megaUsed = false, FOAM_K = .7, AID_DMG = .75, AID_HEAL = 1.4;   // whether the megaphone was used this show (for the Hands off medal)
 function buildWorld() {
   obs = [];
   // venue edges
@@ -267,7 +267,7 @@ function step() {
       if (ft === "foam") soft = true;
       if (ft === "rope" && a.p > PCRIT * .4) o.fence.strain = (o.fence.strain || 0) + (a.p - PCRIT * .4) * DT;
     }
-    if (soft) a.p *= .7;   // foam padding soaks up the squeeze
+    if (soft) a.p *= FOAM_K;   // foam padding soaks up the squeeze
     a.x = clamp(a.x, R, WW - R);
     if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1; if (a.ps > pmax) pmax = a.ps;
@@ -275,7 +275,7 @@ function step() {
     const pc = PCRIT * (MOD && MOD.pcritMul || 1);
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
-    if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? .75 : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? 1.4 : .4));
+    if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? AID_DMG : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? AID_HEAL : .4));
     if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; pickFall(a); fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
     if (evac && a.y > SH - .6) { evacuated++; continue; }
     out.push(a);
@@ -407,7 +407,8 @@ function start(mod) {
   if (!demo) { lastFalls = []; lastFallsScene = sceneKey; }
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
-  clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3, active: [] }; megaUsed = false;
+  clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3 + upg("battery"), active: [] }; megaUsed = false;
+  FOAM_K = .7 - .1 * upg("foam"); AID_DMG = .75 - .15 * upg("medic"); AID_HEAL = 1.4 + .4 * upg("medic");
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; calmT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();
   if (!demo) { VOICE.ann = Math.random() < .5 ? "male" : "female"; announce("go"); }
@@ -424,9 +425,12 @@ function finish() {
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
   const stars = dead === 0 && stuck === 0 ? 3 : pct <= .015 ? 2 : pct <= .05 ? 1 : 0;
+  LAST_EARN = 0;
   if (sandbox) { showReport(stars, stuck, []); ui(); return; }   // sandbox: nothing is saved, nothing is earned
   const st = loadStats(); st.shows++; st.trampled += dead; st.abducted += abducted; st.saved += evacuated; if (stars === 3) st.perfect++; st.worst = Math.max(st.worst, dead); saveJSON("mh.stats", st);
   const fresh = awardMedals(stars, stuck, megaUsed);
+  // tickets for the shop: something for showing up, more for everyone who got home, stars and new medals
+  LAST_EARN = 10 + Math.floor(evacuated / 60) + stars * 20 + fresh.length * 30; loadShop(); TIX += LAST_EARN; saveShop();
   setTimeout(() => announce(dead >= 500 ? "game_over" : stars === 3 ? (Math.random() < .5 ? "mission_completed" : "congratulations") : stars ? "objective_achieved" : "mission_failed"), 700);
   if (fresh.length) setTimeout(() => announce("new_highscore"), 2300);
   if (Object.values(loadMedals()).reduce((n, m) => n + m.length, 0) >= 20) achieve("MEDAL_COLLECTOR");

@@ -45,10 +45,25 @@ function chooser() {
         <span class="txt"><b>${sc.name}</b><span>${sc.tag}</span><small>${sc.crowd.toLocaleString("en")} people</small>
         ${open ? `<span class="medals">${Object.entries(MEDALS).map(([m, d]) => `<i class="${(medals[key] || []).includes(m) ? "got" : ""}" title="${d.name}: ${d.desc}">${d.icon}</i>`).join("")}</span>` : ""}</span></button>`; }).join("")}</div>
     <p class="keys">Shortcuts: <b>1–5</b> tools (press again to switch fence/prop type) · <b>Space</b> opens gates · <b>H</b> pressure · <b>C</b> camera · <b>X</b> street view · <b>Wheel</b> zoom · <b>WASD</b>/right-drag pan · <b>V</b> speed · <b>M</b> sound · <b>G</b> effects · <b>Esc</b> pause</p>
-    <div class="row"><button id="options">Options</button><button id="howto">How to play</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
+    <div class="row"><button id="shop" class="go">Upgrade shop <span class="tix">${TIX.toLocaleString("en")}</span></button><button id="options">Options</button><button id="howto">How to play</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
   const b = $("#card .scene:not(:disabled)"); if (b) b.focus();
 }
 
+// ---------- upgrade shop ----------
+function showShop() {
+  loadShop();
+  const rows = Object.entries(UPGRADES).map(([k, u]) => {
+    const lv = UPG[k] || 0, max = lv >= u.costs.length, cost = max ? 0 : u.costs[lv];
+    return `<div class="upg"><i>${u.icon}</i><div><b>${u.name}</b><small>${u.desc}</small><span class="pips">${[0, 1, 2].map(n => `<em class="${n < lv ? "on" : ""}"></em>`).join("")}</span></div>
+      <button data-buy="${k}" ${max || TIX < cost ? "disabled" : ""}>${max ? "MAX" : `<span class="tix">${cost}</span>`}</button></div>`;
+  }).join("");
+  showCard(`<h2>Upgrade shop</h2><p class="shopbal">You have <span class="tix big">${TIX.toLocaleString("en")}</span> tickets. Every show earns more: everyone who gets home, every star and every new medal pays.</p>
+    <div class="shop">${rows}</div><div class="row"><button class="go" id="pick">Back</button></div>`, "options shopcard");
+  for (const b of document.querySelectorAll("[data-buy]")) b.onclick = ev => {
+    ev.stopPropagation(); const k = b.dataset.buy, u = UPGRADES[k], lv = UPG[k] || 0; if (lv >= u.costs.length || TIX < u.costs[lv]) return;
+    TIX -= u.costs[lv]; UPG[k] = lv + 1; saveShop(); sfx("confirm"); showShop();
+  };
+}
 // ---------- options ----------
 function showOptions() {
   const pct = v => Math.round(v * 100);
@@ -196,6 +211,7 @@ function showReport(stars, stuck, fresh) {
           </div>
         </div>
       </div>
+      ${LAST_EARN ? `<p class="earn">+<span class="tix">${LAST_EARN}</span> tickets for the upgrade shop</p>` : ""}
       ${stars < 3 && fallTip() ? `<p class="tip"><b>Safety inspector:</b> ${fallTip()}</p>` : ""}
       ${fresh && fresh.length ? `<div class="newmedals">${fresh.map(m => `<span class="medal got"><i>${MEDALS[m].icon}</i><b>New medal: ${MEDALS[m].name}</b><small>${MEDALS[m].desc}</small></span>`).join("")}</div>` : ""}
     </div>

@@ -9,6 +9,23 @@ let CROWD = 3200, FENCE_BUDGET = 60, MAX_GATES = 5;
 const SHOW_TIME = 40;
 const FENCE_Y = 66, SLOTS = 7, SLOT_W = 2.6;
 // gate positions: evenly spaced by default; each visit to a venue can shuffle them into a new, uneven layout
+// ===== upgrade shop: tickets earned after every show buy permanent upgrades (3 levels each) =====
+const UPGRADES = {
+  budget:  { icon: "$",  name: "Bigger budget",       desc: "+15% fence money per level, in every venue", costs: [60, 150, 320] },
+  battery: { icon: "+",  name: "Megaphone batteries", desc: "+1 megaphone use per show, per level", costs: [80, 190, 380] },
+  loud:    { icon: "))", name: "Louder megaphone",    desc: "+20% megaphone reach per level", costs: [60, 140, 300] },
+  steward: { icon: "S",  name: "Steward training",    desc: "Stewards slow people down 0.7 m further per level", costs: [70, 160, 330] },
+  guards:  { icon: "G",  name: "Extra security",      desc: "+1 guard in every venue, per level", costs: [90, 210, 420] },
+  calm:    { icon: "~",  name: "Charming guards",     desc: "Guards calm people 15% further per level", costs: [60, 140, 300] },
+  foam:    { icon: "o",  name: "Softer foam",         desc: "Foam walls soak up more of the squeeze", costs: [50, 120, 260] },
+  medic:   { icon: "✚",  name: "Better first aid",    desc: "First aid tents protect and heal more", costs: [70, 160, 340] },
+};
+let UPG = {}, TIX = 0, LAST_EARN = 0;
+function loadShop() { try { UPG = JSON.parse(localStorage.getItem("mh.upg") || "{}") || {}; TIX = +(localStorage.getItem("mh.tix") || 0) || 0; } catch (e) { UPG = {}; TIX = 0; } }
+function saveShop() { try { localStorage.setItem("mh.upg", JSON.stringify(UPG)); localStorage.setItem("mh.tix", String(TIX)); } catch (e) { /* no storage */ } }
+const upg = k => (typeof window !== "undefined" && window.__manual) ? 0 : (UPG[k] || 0);   // recordings and tests play without upgrades
+const MEGA_R = () => 5.5 * (1 + .2 * upg("loud"));
+loadShop();
 let SLOT_XS = null, SLOT_BAD = [];
 const slotX = i => SLOT_XS ? SLOT_XS[i] : WW * (i + .5) / SLOTS;
 const badSlots = () => SLOT_XS ? SLOT_BAD : ((typeof scene !== "undefined" && scene && scene.noSlots) || []);
@@ -67,7 +84,7 @@ const GUARD_ROLES = {
   slow: { name: "Steward", col: "#4fc3f7", cost: 40, max: 10, desc: "Holds a SLOW sign: everyone within 3 m walks at half speed. Put them before a bottleneck. Hired from the fence budget." },
 };
 let guardRole = "calm";
-const STEWARD_R = 3;
+let STEWARD_R = 3;
 const fenceCost = f => f.len * FENCE_TYPES[f.type || "steel"].cost;
 // props the player can place with the same budget
 const PROP_TYPES = {

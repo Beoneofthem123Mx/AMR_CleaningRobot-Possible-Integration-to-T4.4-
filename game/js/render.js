@@ -1317,7 +1317,7 @@ function updateFxLayer(live) {
     g.strokeStyle = `rgba(229,50,41,${(1 - r.t / 1.3).toFixed(3)})`; g.beginPath(); g.arc(r.x, r.y, .3 + r.t * 1.8, 0, 7); g.stroke();
   }
   // megaphone area and goal that moved
-  for (const mg of mega.active) { g.fillStyle = "rgba(255,210,58,.12)"; g.beginPath(); g.arc(mg.x, mg.y, 5.5, 0, 7); g.fill(); }
+  for (const mg of mega.active) { g.fillStyle = "rgba(255,210,58,.12)"; g.beginPath(); g.arc(mg.x, mg.y, MEGA_R(), 0, 7); g.fill(); }
   if (attr && phase !== "plan") { g.strokeStyle = "rgba(255,80,160,.8)"; g.lineWidth = .25; g.setLineDash([.6, .4]); g.beginPath(); g.arc(attr.x, attr.y, attr.r + .4 + Math.sin(performance.now() / 150) * .2, 0, 7); g.stroke(); g.setLineDash([]); }
   G3.fxTex.needsUpdate = true;
 }
