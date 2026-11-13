@@ -1,7 +1,7 @@
 // Human Tsunami · plan editing and interface
 // ===== Plan editing =====
 let tool = "fence", drag = null;
-const maxGuards = () => sandbox ? 16 : (scene.guards || 3) + upg("guards");
+const maxGuards = () => sandbox ? 16 : (scene.guards || 3) + upg("guards") + 2 * tourN("guards");
 const nStewards = () => guards.filter(g => g.role === "slow").length, nGuards = () => guards.length - nStewards();
 const fenceUsed = () => gates.reduce((s, g) => s + (g === GATE_SIZES.wide.k ? GATE_SIZES.wide.cost : 0), 0) + fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0) + nStewards() * GUARD_ROLES.slow.cost;   // dollars spent
 const fenceLeft = () => sandbox ? 1e9 : FENCE_BUDGET * 10 - fenceUsed();
@@ -162,7 +162,7 @@ function ui() {
   trackPlan();
 }
 // ===== The plan: saved per venue, with undo =====
-const planKey = () => "mh.plan." + (sandbox ? "sb." : "") + sceneKey;
+const planKey = () => "mh.plan." + (sandbox ? "sb." : "") + (TOUR ? "tour." : "") + sceneKey;
 const planState = () => JSON.stringify({ gates, fences: fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type || "steel", g: f.g })), guards: guards.map(g => [g.x, g.y, g.role || "calm"]), props });
 let lastPlan = null, planHistory = [], undoing = false;
 function applyPlan(json) {
@@ -201,7 +201,7 @@ function togglePause() {
   if ((phase !== "show" && phase !== "evac") || demo) return;
   paused = !paused;
   if (paused) showCard(`<h2>Paused</h2><p>Everyone is frozen in place. Nobody's complaining, for now.</p>
-    <div class="row"><button class="go" id="resume">Resume</button><button id="retry">Back to planning</button><button id="pick">Menu</button></div>`);
+    <div class="row"><button class="go" id="resume">Resume</button>${TOUR ? '<button id="tourQuit">Abandon the tour</button>' : '<button id="retry">Back to planning</button><button id="pick">Menu</button>'}</div>`);
   else hideCard();
 }
 addEventListener("keydown", e => {
@@ -238,12 +238,12 @@ document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click"
   if (tool === "prop") toast("Tap the venue to place the selected prop. It's paid from the same budget as fences.");
 }));
 // Stop doesn't throw the show away: it pauses and asks whether to keep going, start over or go back to planning
-$("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : phase === "done" ? backToPlan() : stopMenu());
+$("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : phase === "done" ? (TOUR && window.__lastReport ? window.__lastReport() : backToPlan()) : stopMenu());
 function stopMenu() {
   if ((phase !== "show" && phase !== "evac") || demo) return;
   paused = true;
   showCard(`<h2>Stopped</h2><p>The show is frozen right where it was. ${dead ? `${dead.toLocaleString("en")} pancaked so far.` : "Nobody hurt so far."}</p>
-    <div class="row"><button class="go" id="resume">Keep going</button><button id="again">Start this show over</button><button id="retry">Back to planning</button></div>`);
+    <div class="row"><button class="go" id="resume">Keep going</button>${TOUR ? '<button id="tourQuit">Abandon the tour</button>' : '<button id="again">Start this show over</button><button id="retry">Back to planning</button>'}</div>`);
 }
 let heat = false, speed = 1;
 $("#bHeat").addEventListener("click", () => { heat = !heat; $("#bHeat").classList.toggle("on", heat); });
@@ -289,6 +289,7 @@ function camKeys(dt) {
 $("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : speed === 4 ? .5 : 1; $("#bSpeed").textContent = (speed === .5 ? "0.5" : speed) + "×"; });
 $("#card").addEventListener("click", e => {
   const sk = e.target.closest("[data-scene]");
+  if (sk) TOUR = null;   // picking a venue by hand leaves the tour
   if (sk) { loadScene(sk.dataset.scene); hideCard(); caption(!SLOT_XS ? "You plan it" : ROUTE.side && ROUTE.b ? "New route: B-stage mid-show, and they leave by the side exit" : ROUTE.side ? "New route: after the show they leave by the side exit" : ROUTE.b ? "New route: halfway through, the show moves to the B-stage" : "The entrances moved! You plan it", false, 0); }
   if (e.target.id === "retry") { paused = false; backToPlan(); }
   if (e.target.id === "pick") { if (atTitle) titleScreen(); else chooser(); }

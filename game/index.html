@@ -187,9 +187,29 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .card.menu .biglogo { font-size: clamp(2.4rem, min(11vw, 13vh), 7.6rem); text-shadow: .06em .06em 0 #d8322b, .1em .1em 0 #111214; animation: logodrop .9s cubic-bezier(.3,1.5,.5,1) both, logobob 3.2s 1s ease-in-out infinite; }
 @keyframes logodrop { 0% { transform: translateY(-120%) rotate(-12deg) scale(1.3); opacity: 0; } 100% { transform: translateY(0) rotate(-3deg) scale(1); opacity: 1; } }
 .titlewrap .tag { font-weight: 800; color: #ffd23a; font-size: 1.05rem; animation: fadein .6s .7s both; }
-.titlebtns { display: flex; flex-direction: column; gap: 10px; width: min(320px, 90%); animation: fadein .6s .9s both; }
+.titlebtns { display: grid; grid-template-columns: repeat(6, 1fr); gap: min(10px, 1.3vh); width: min(560px, 94%); animation: fadein .6s .9s both; }
+.titlebtns > button { grid-column: span 2; min-width: 0; } .titlebtns > button.big, .titlebtns > #quit { grid-column: span 6; } .titlebtns > button.daily, .titlebtns > button.tourb { grid-column: span 3; }
+.card.menu .titlebtns button.daily { background: linear-gradient(90deg, #2f7fd6, #a98bff); color: #fff; border-color: #111214; } .card.menu .titlebtns button.tourb { background: linear-gradient(90deg, #ff4f9a, #ff9a3c); color: #fff; border-color: #111214; }
+.titlebtns .tsmall { grid-column: span 6; display: flex; gap: min(10px, 1.3vh); } .titlebtns .tsmall button { flex: 1; min-width: 0; padding-left: 8px; padding-right: 8px; }
+@media (max-width: 560px) { .titlebtns > button.daily, .titlebtns > button.tourb { grid-column: span 6; } }
 .titlebtns button { font-size: 1.05rem; padding: min(10px, 1.2vh) 16px; justify-content: center; }
 .titlebtns button.daily { display: flex; flex-direction: column; gap: 2px; background: linear-gradient(90deg, #2f7fd6, #a98bff); color: #fff; border-color: #111214; }
+.titlebtns button.tourb { display: flex; flex-direction: column; gap: 2px; background: linear-gradient(90deg, #ff6fb1, #ff9a3c); color: #fff; border-color: #111214; }
+.titlebtns button.tourb small { font-size: .72rem; font-weight: 700; opacity: .9; }
+.card.tourcard { max-width: min(640px, 94vw); }
+.tour { text-align: center; } .tour h2 { margin: 2px 0 6px; font-weight: 900; text-transform: uppercase; }
+.tour .tkick { display: inline-block; padding: 3px 10px; border-radius: 99px; background: #111214; color: #ffd23a; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; font-size: .7rem; }
+.tour .ttwist { margin: 0 0 10px; }
+.tstops { display: flex; justify-content: center; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
+.tstops span { display: grid; place-items: center; min-width: 64px; padding: 6px 4px; border: 2px solid #111214; border-radius: 10px; background: #f3efe6; font-weight: 900; color: #e8a400; }
+.tstops span i { font-style: normal; font-size: .62rem; color: #111214; font-weight: 700; max-width: 80px; line-height: 1.1; }
+.tstops span.now { background: #ffd23a; color: #111214; transform: scale(1.08); } .tstops span.done { background: #dff5d8; }
+.tallow { margin: 8px auto; padding: 8px 12px; border-radius: 12px; background: #111214; color: #fff; max-width: 420px; } .tallow b { color: #ffd23a; font-size: 1.4em; } .tallow small { display: block; color: #c9ccd2; }
+.tperks { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 8px 0; } .tperk { padding: 3px 9px; border-radius: 99px; background: #e9e3ff; border: 2px solid #111214; font-weight: 700; font-size: .78rem; }
+.tpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.tpick button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; white-space: normal; }
+.tpick button i { font-style: normal; font-size: 2rem; } .tpick button small { font-weight: 600; font-size: .72rem; opacity: .85; }
+@media (max-width: 520px) { .tpick { grid-template-columns: 1fr; } }
 .titlebtns button.daily small { font-size: .72rem; font-weight: 700; opacity: .9; }
 .titlebtns button.big { font-size: 1.6rem; padding: min(14px, 1.6vh) 18px; letter-spacing: .06em; animation: startpulse 1.4s 1.6s ease-in-out infinite; }
 @keyframes startpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
@@ -398,6 +418,7 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
   <script src="js/powers.js"></script>
   <script src="js/secrets.js"></script>
   <script src="js/analysis.js"></script>
+  <script src="js/tour.js"></script>
   <script src="js/editor.js"></script>
 <script src="js/twobody.js"></script>
   <script src="js/sim.js"></script>

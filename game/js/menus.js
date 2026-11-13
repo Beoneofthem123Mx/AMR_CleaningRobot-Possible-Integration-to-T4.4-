@@ -37,10 +37,11 @@ function titleScreen() {
         <button class="go big" id="start">▶ START</button>
         ${(() => { const d = dailyPick(), b = dailyBest(), sc = SCENES[d.key], m = MODS_BY_ID[d.mod];
           return `<button id="daily" class="daily">📅 Daily challenge<small>${sc.name} + ${m.name}${b.dead !== undefined ? ` · your best today: ${b.dead.toLocaleString("en")} pancaked${b.stars === 3 ? " ★★★" : ""}` : " · +100 tickets for 3 stars"}</small></button>`; })()}
-        <button id="shop">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button>
-        <button id="customs">🛠 Custom venues & editor</button>
+        ${(() => { const b = tourBest(); return `<button id="tour" class="tourb">🌍 World Tour<small>${b.score !== undefined ? `Best score ${b.score.toLocaleString("en")}` : "5 shows in a row, perks, no retries"}</small></button>`; })()}
+        <div class="tsmall"><button id="shop">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button>
+        <button id="customs">🛠 Editor</button>
         <button id="options">Settings</button>
-        ${window.steam ? '<button id="quit">Quit</button>' : ""}
+        ${window.steam ? '<button id="quit">Quit</button>' : ""}</div>
       </div>
       <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · ${realKeys().length} venues</p>
     </div>`, "menu title");
@@ -281,7 +282,7 @@ function showReport(stars, stuck, fresh) {
   // stars pop in one by one; a perfect show rains confetti over the paper
   const confetti = stars === 3 ? `<div class="confetti" aria-hidden="true">${Array.from({ length: 46 }, (_, i) => `<i style="left:${(Math.random() * 100).toFixed(1)}%;background:${CONF[i % CONF.length]};animation-delay:${(Math.random() * 1.6).toFixed(2)}s;animation-duration:${(2.4 + Math.random() * 1.8).toFixed(2)}s"></i>`).join("")}</div>` : "";
   showCard(`${confetti}<div class="paper">
-      ${sandbox ? `<div class="sandtag">SANDBOX · this never happened</div>` : ""}
+      ${sandbox ? `<div class="sandtag">SANDBOX · this never happened</div>` : ""}${TOUR ? `<div class="sandtag tourtag">WORLD TOUR · show ${TOUR.i + 1}/${TOUR.keys.length} · ${Math.max(0, tourLeft()).toLocaleString("en")} pancakes left</div>` : ""}
       <div class="mast"><span>THE DAILY GOSSIP</span><small>${date} · Special edition · $5</small></div>
       <h2 class="head">${head}</h2>
       ${G3.photo ? `<figure><img src="${G3.photo}" alt="Event photo"><figcaption>${scene.name}, yesterday. Photo: an attendee who never once put their phone down.</figcaption></figure>` : ""}
@@ -303,5 +304,5 @@ function showReport(stars, stuck, fresh) {
       ${stars < 3 && fallTip() ? `<p class="tip"><b>Safety inspector:</b> ${fallTip()}</p>` : ""}
       ${fresh && fresh.length ? `<div class="newmedals">${fresh.map(m => `<span class="medal got"><i>${MEDALS[m].icon}</i><b>New medal: ${MEDALS[m].name}</b><small>${MEDALS[m].desc}</small></span>`).join("")}</div>` : ""}
     </div>
-    <div class="row"><button class="go" id="retry">Adjust the plan</button>${dead > 0 ? '<button id="whyBtn">📊 What went wrong?</button>' : ""}<button id="again">Run it again</button><button id="pick">Change venue</button></div>`, "report");
+    <div class="row">${TOUR ? tourButtons() : `<button class="go" id="retry">Adjust the plan</button>${dead > 0 ? '<button id="whyBtn">📊 What went wrong?</button>' : ""}<button id="again">Run it again</button><button id="pick">Change venue</button>`}</div>`, "report");
 }

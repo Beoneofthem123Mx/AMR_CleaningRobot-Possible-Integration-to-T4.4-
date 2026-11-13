@@ -107,6 +107,7 @@ try next. The map stays on the floor while you re-plan.
 [h2]Endless venues[/h2]
 [list]
 [*]29 venues, a daily challenge with a new venue and twist every day, Total Chaos mode and Sandbox.
+[*]World Tour: five random shows in a row, a perk after each one, one pancake allowance and no retries.
 [*]A level editor: build your own venue, test it and share it as a code.
 [/list]
 

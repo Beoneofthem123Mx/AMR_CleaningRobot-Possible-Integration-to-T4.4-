@@ -108,8 +108,8 @@ function rollMod() {
 function startWithRoulette() {
   if (phase !== "plan" || !canStart()) return;
   audioInit();
-  let pick = window.__forceMod ? MODS_BY_ID[window.__forceMod] : DAILY && DAILY.key === sceneKey ? MODS_BY_ID[DAILY.mod] : rollMod();
-  if (chaosMode && !window.__forceMod && !(DAILY && DAILY.key === sceneKey)) { let b = rollMod(), n = 0; while (b.id === pick.id && n++ < 5) b = rollMod(); pick = comboMod(pick.id === "normal" ? rollMod() : pick, b); }
+  let pick = window.__forceMod ? MODS_BY_ID[window.__forceMod] : tourMod() ? MODS_BY_ID[tourMod()] : DAILY && DAILY.key === sceneKey ? MODS_BY_ID[DAILY.mod] : rollMod();
+  if (chaosMode && !window.__forceMod && !tourMod() && !(DAILY && DAILY.key === sceneKey)) { let b = rollMod(), n = 0; while (b.id === pick.id && n++ < 5) b = rollMod(); pick = comboMod(pick.id === "normal" ? rollMod() : pick, b); }
   // a slot machine: the reel spins past every twist and clunks onto today's one
   const ICON = { normal: "☕", wifi: "📶", influencer: "🤳", rain: "🌧️", reggaeton: "💃", moon: "🌙", rush: "🎟️", slowmo: "🐌", chanclas: "🩴", pigeons: "🐦", apagon: "💡", nino: "🧒", uniforme: "👕", tio: "🕺" };
   const COLS = ["#ff6fb1", "#ffd23a", "#4fb8ff", "#7dff6a", "#a98bff", "#ff9a3c"];

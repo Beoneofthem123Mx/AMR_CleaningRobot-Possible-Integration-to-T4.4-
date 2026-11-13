@@ -181,6 +181,7 @@ function loadScene(key) {
   loadShop(); STEWARD_R = 3 + .7 * upg("steward"); GUARD_CALM = 3.6 * (1 + .15 * upg("calm"));
   TOD = TODS[(Math.random() * TODS.length) | 0];   // a different light on every visit
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = Math.round(scene.fenceBudget * (isBig() ? 1.35 : 1) * (1 + .15 * upg("budget"))); MAX_GATES = sandbox ? SLOTS : scene.maxGates;
+  if (TOUR) { FENCE_BUDGET = Math.round(FENCE_BUDGET * (1 + .2 * tourN("budget"))); MAX_GATES += tourN("gate"); }
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   SLOT_XS = null; SLOT_BAD = []; ROUTE = { side: 0, ey0: 0, ey1: 0, b: false, bx: 0, by: 0, done: false }; buildWorld();
   // entrances move on every visit (unless turned off in Options); a saved plan only fits the fixed layout
@@ -189,7 +190,7 @@ function loadScene(key) {
   // which way the crowd flows on screen: half the venues one way, half the other; with moving entrances it changes every visit
   const idx = Object.keys(SCENES).indexOf(key);
   VIEW_FLIP = window.__manual ? 1 : shuffleGates ? (Math.random() < .5 ? -1 : 1) : (idx % 2 ? -1 : 1);
-  if (moved) { planHistory = []; lastPlan = null; } else if (typeof loadPlan === "function") loadPlan();
+  if (moved || TOUR) { planHistory = []; lastPlan = null; } else if (typeof loadPlan === "function") loadPlan();
   backToPlan();
   if (!window.__manual) { cam.z = 1.35; cam.y = WH * .6; }   // arriving at a venue: start close to the gates and pull back to the whole plan
 }

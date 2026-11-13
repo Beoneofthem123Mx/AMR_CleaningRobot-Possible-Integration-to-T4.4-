@@ -19,7 +19,7 @@ const POWERS = {
 };
 let power = "mega", charges = {}, pendingWall = null, pendingGuard = null;
 let freezeT = 0;
-function resetPowers() { power = "mega"; charges = {}; freezeT = 0; pendingWall = null; pendingGuard = null; for (const [k, p] of Object.entries(POWERS)) if (p.bm) charges[k] = bm(k) || (typeof sandbox !== "undefined" && sandbox) ? p.bm : 0; for (const [k, p] of Object.entries(POWERS)) if (p.n) charges[k] = p.n + (typeof upg === "function" ? upg("chaos") : 0) + (typeof gearOn === "function" && gearOn("pockets") ? 1 : 0); }
+function resetPowers() { power = "mega"; charges = {}; freezeT = 0; pendingWall = null; pendingGuard = null; for (const [k, p] of Object.entries(POWERS)) if (p.bm) charges[k] = bm(k) || (typeof sandbox !== "undefined" && sandbox) ? p.bm : 0; for (const [k, p] of Object.entries(POWERS)) if (p.n) charges[k] = p.n + (typeof upg === "function" ? upg("chaos") : 0) + (typeof gearOn === "function" && gearOn("pockets") ? 1 : 0); if (typeof tourN === "function") { charges.egate += tourN("live"); charges.pizza += tourN("live"); charges.wall += 2 * tourN("walls"); } }
 function usePower(x, y) {
   if ((charges[power] || 0) <= 0 && !sandbox) { caption(`No ${POWERS[power].name.toLowerCase()} left this show.`, true, 1400); power = "mega"; ui(); return; }
   if (!sandbox) charges[power]--;

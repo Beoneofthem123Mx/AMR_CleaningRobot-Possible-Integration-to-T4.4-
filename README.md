@@ -193,7 +193,11 @@ around.
   surge) and a tip. It stays faintly on the floor while you re-plan.
 - **Daily challenge** (title screen): a venue and a twist picked by the date, your best result of the
   day, +100 tickets the first time you get three stars.
-- **Level editor** (title screen → Custom venues): drag stages, walls, buildings, kiosks, tents and
+- **World Tour** (title screen): five random unlocked venues in a row, each with a random twist,
+  one pancake allowance for the whole tour and no retries. After every show you pick one of three
+  perks (sponsor money, extra guards, spare batteries, an emergency kit, lavender mist, bolt
+  cutters, insurance, spare fence panels). Zero stars or going over the allowance ends the tour.
+- **Level editor** (title screen → Editor): drag stages, walls, buildings, kiosks, tents and
   pools, click poles, toggle gates, set the crowd, budget, day or night and the events, test it, save
   it, and share it as a code (`HT1:...`, plain JSON inside, the same payload a Workshop item would
   carry). Custom venues don't award stars or tickets.

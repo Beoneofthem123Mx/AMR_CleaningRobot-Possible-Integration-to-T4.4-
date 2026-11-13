@@ -348,7 +348,7 @@ function step() {
       if (!demo && Math.random() < .6) pop(a.x, a.y - 1, ["OOF!", "CRUNCH!", "I'M OK!", "10/10 LANDING", "SPLAT!"][(Math.random() * 5) | 0]);
       for (const b of ag) if (b !== a && (b.x - a.x) ** 2 + (b.y - a.y) ** 2 < 1.2) { b.vx += (b.x - a.x) * 3; b.vy += (b.y - a.y) * 3; toss(b, .8, .6); }   // knocks the neighbours over
     } }
-    const pc = PCRIT * (MOD && MOD.pcritMul || 1) * (1 - .3 * UNM) * (bm("probe") ? 1.2 : 1);
+    const pc = PCRIT * (MOD && MOD.pcritMul || 1) * (1 - .3 * UNM) * (bm("probe") ? 1.2 : 1) * (1 + .08 * tourN("chill"));
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
     if (a.gear === "ducks") a.p *= .8;
@@ -536,7 +536,7 @@ function start(mod) {
   if (!demo) { lastFalls = []; lastFallsScene = sceneKey; }
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (isBig() && !demo ? BIG_CROWD : 1) * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
-  clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3 + upg("battery"), active: [] }; megaUsed = false;
+  clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3 + upg("battery") + 2 * tourN("mega"), active: [] }; megaUsed = false;
   LAZY = !demo && !sandbox && fences.length === 0 && guards.length === 0 && props.length === 0;
   UNM = demo || sandbox ? 0 : clamp(1 - planSafety() / PLAN_NEED(), 0, 1);
   ROUTE.done = false;
@@ -575,6 +575,7 @@ function finish() {
   if (Object.values(loadMedals()).reduce((n, m) => n + m.length, 0) >= 20) achieve("MEDAL_COLLECTOR");
   if (!demo && dead > 0) ANALYSIS = analyze();
   saveBest(sceneKey, stars);
+  tourRecord(stars, dead);
   if (DAILY && DAILY.key === sceneKey && MOD && MOD.id === DAILY.mod) {   // today's challenge
     const b = dailyBest(), better = b.dead === undefined || dead < b.dead;
     if (stars === 3 && !b.paid) { b.paid = true; loadShop(); TIX += 100; LAST_EARN += 100; saveShop(); }
