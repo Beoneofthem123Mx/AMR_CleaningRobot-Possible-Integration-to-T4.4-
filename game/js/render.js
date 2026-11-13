@@ -1535,6 +1535,14 @@ function drawOverlay() {
   if (scene.hud && !demo) { g.save(); scene.hud(g, ov.width, ov.height); g.restore(); }   // venue meters
   if (flash > .01) { g.globalAlpha = 1; g.fillStyle = `rgba(255,255,255,${(flash * .22).toFixed(3)})`; g.fillRect(0, 0, ov.width, ov.height); }
 }
+const TODS = [
+  { id: "morning", gold: 0, sun: .92, hemi: 1.05, tint: "#fff0dc", sky: "#cfe6ff", k: .6 },
+  { id: "noon", gold: 0, sun: 1.05, hemi: 1, tint: null },
+  { id: "afternoon", gold: .35, sun: 1, hemi: .98, tint: null },
+  { id: "sunset", gold: .75, sun: .95, hemi: .9, tint: "#ff9a5a", sky: "#ffb48a", k: .25 },
+  { id: "overcast", gold: 0, sun: .55, hemi: 1.18, tint: "#dfe4ea", sky: "#c9d0d8", k: .7 },
+];
+let TOD = TODS[1]; const TD_COL = new THREE.Color();
 const gateBadges = [];
 let CONF_L;
 const EUL = new THREE.Euler();
@@ -1643,10 +1651,13 @@ function render3D(now, dtR) {
   // blackout: the light fades slowly and comes back all at once
   const bt = blackT > 0 && live ? 1 : 0; black += (bt - black) * (1 - Math.pow(bt ? .15 : .002, dtR));
   // golden hour: on day venues the light warms toward sunset as the show goes on, and stays warm for the way out
-  const gTarget = scene.night || !live ? 0 : phase === "evac" ? 1 : fullAt ? clamp((t - fullAt) / SHOW_TIME, 0, 1) : 0;
+  // time of day (picked on every visit to a day venue): morning, noon, afternoon, sunset or overcast
+  const td = scene.night ? null : TOD;
+  const gTarget = scene.night ? 0 : Math.max(td ? td.gold : 0, !live ? 0 : phase === "evac" ? 1 : fullAt ? clamp((t - fullAt) / SHOW_TIME, 0, 1) : 0);
   G3.golden = (G3.golden || 0) + (gTarget - (G3.golden || 0)) * Math.min(1, dtR * (live ? .8 : 3)); const gold = G3.golden * .95;
   G3.sun.color.set(scene.light.sun).lerp(GOLD_SUN, gold); G3.hemi.color.set(scene.light.sky).lerp(GOLD_SKY, gold * .8);
   G3.hemi.intensity = scene.light.hemi * (1 - .8 * black) * (1 - .12 * gold); G3.sun.intensity = scene.light.sunI * (1 - .9 * black) * (1 + .08 * gold) * (1 - .4 * (G3.wet || 0));   // rain: overcast
+  if (td) { G3.sun.intensity *= td.sun; G3.hemi.intensity *= td.hemi; if (td.tint) { G3.sun.color.lerp(TD_COL.set(td.tint), td.k); G3.hemi.color.lerp(TD_COL.set(td.sky), td.k * .7); } }
   const vb = updateCamera(dtR);
   {   // the venue moves under your feet: the ship rolls, machines rumble, stadiums bounce (scene.rock), plus every big shake
     const tt2 = vnow / 1000, base = scene.rock ? scene.rock(tt2) : 0, sh = Math.min(1.5, shake);

@@ -179,6 +179,7 @@ function startDemo() {
 function loadScene(key) {
   demo = false; if (camMode === 3) { camMode = 0; camFree = null; if (typeof camLabel === "function") camLabel(); }
   loadShop(); STEWARD_R = 3 + .7 * upg("steward"); GUARD_CALM = 3.6 * (1 + .15 * upg("calm"));
+  TOD = TODS[(Math.random() * TODS.length) | 0];   // a different light on every visit
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = Math.round(scene.fenceBudget * (isBig() ? 1.35 : 1) * (1 + .15 * upg("budget"))); MAX_GATES = sandbox ? SLOTS : scene.maxGates;
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   SLOT_XS = null; SLOT_BAD = []; ROUTE = { side: 0, ey0: 0, ey1: 0, b: false, bx: 0, by: 0, done: false }; buildWorld();
