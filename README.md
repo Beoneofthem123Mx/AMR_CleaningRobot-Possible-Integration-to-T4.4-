@@ -91,6 +91,16 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
   hour during day shows, an overcast look with a wet floor in the rain, a sky dome with clouds or
   stars for the street camera, living water on pools and seas, lasers at night venues and phone
   flashlights during blackouts.
+- Two-body comedy physics (`game/js/twobody.js`): on top of each agent (the pelvis, which keeps the
+  navigation and ground friction of the crowd sim) sits a heavier torso joined by an elastic
+  point-to-point constraint, with a soft, under-damped upright torque, so people sway, overshoot and
+  whip around when they start, stop or get shoved. A hard bump (by relative speed) starts a 1.5 s
+  stumble: the joint goes soft, the torso gets a random sideways shove and part of the impact passes
+  to the people in front (domino). Level of detail by distance to the camera: near agents get full
+  two-body physics, mid ones a kinematic torso, far ones none; one central loop updates them in
+  batches with an agent and time budget per step, so big crowds never freeze the browser.
+- The audience shouts: each venue has its own lines ("REFEREE, GLASSES!", "IS IT SUPPOSED TO GLOW?"),
+  and squeezed people complain instead.
 - If the hardware is struggling, the game automatically drops crowd shadows and lowers the
   resolution.
 - On landscape monitors the view is rotated so the stage sits on the left.
@@ -111,10 +121,10 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 
 | Venue | Unlocks at | What happens |
 |-------|------------|--------------|
-| **The Plaza** | — | Free concert. Cars drive through, plus an ice-cream truck, loose dogs and beach balls. |
-| **The Circus** | — | Under the big top: the lion escapes, elephants parade, the clown car, unicycles and the human cannonball. |
-| **The Stadium** | 2 ★ | Night concert on the pitch: flares, the mascot, the giant ball, the wave and the medical cart. |
-| **Black Friday** | 3 ★ | Mall sale: flash deals that send the crowd stampeding, runaway shopping carts, a grandma with elbows and a wet floor. |
+| **The Plaza** | — | Free concert. Cars drive through, plus an ice-cream truck, loose dogs and beach balls, food carts, a pickpocket chased by the police, and fans popping into the cafés around the square to come back with shopping bags. |
+| **The Circus** | — | Under the big top: the lion escapes, elephants parade, the clown car and unicycles; a unicorn leaving rainbows, a sneezing dragon, a griffin that snatches fans, bellhop monkeys, clowns balancing on giant balls, jugglers who miss the trick and fall from the trapeze, and the human cannonball firing volleys into the audience. |
+| **The Stadium** | 2 ★ | Cup final, Deportivo Chancla vs Real Burrito: a real match (keepers, passes, shots, saves, scoreboard) behind the barrier of the fan zone. Every goal makes the whole stadium jump and shove; the two fan gangs come down from the stands to brawl; flares, the mascot and the wave. |
+| **Black Friday** | 3 ★ | Mall sale: flash deals that send the crowd stampeding, runaway shopping carts, a grandma with elbows and a wet floor. Shoppers duck into the stores and come out buried in bags with a tower of boxes on their heads (slower and wobblier every trip). |
 | **The Cruise** | 4 ★ | Deck party: the swell tilts the ship, seagulls, an inflatable flamingo and the captain's horn. |
 | **Wedding of the Year** | 5 ★ | Influencer wedding: the bouquet toss sparks stampedes, the cake rolls away, the drone crashes, mariachis and the mother-in-law. |
 | **The Racetrack** | 6 ★ | Grand Prix: races right along the fence, runaway horses, the track tractor and dogs. |

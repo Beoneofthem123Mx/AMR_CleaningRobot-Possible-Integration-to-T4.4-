@@ -604,6 +604,7 @@ function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 
 
 function renderPeople(tt, dtR, vb) {
   const C = { eyeW: 0, ear: 0, spike: 0, hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0, bag: 0 }; COST_C = C;
+  if (typeof TwoBody !== "undefined") { const cp = G3.camera.position; TwoBody.setViewer(cp.x, cp.z, cp.y); }
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -671,7 +672,12 @@ function renderPeople(tt, dtR, vb) {
       if (sqz > 0) { const nx = 1 - .2 * sqz, ny = 1 + .12 * sqz; LT[0] *= nx; LT[1] *= nx; LT[2] *= nx; LT[3] *= ny; LT[4] *= ny; LT[5] *= ny; LT[6] *= nx; LT[7] *= nx; LT[8] *= nx; FACE.lift += .1 * sqz; }
     } else FACE.lift = 0;
     if (!down) {   // wobble: lean forward with speed and rock from foot to foot, the head follows
-      const spd = Math.min(1.4, Math.hypot(a.vx, a.vy)), lean = spd * .16 + (a.ps > PCRIT * .55 ? .12 : 0) + (a.old ? .2 : 0), rock = Math.sin(a.wp) * .11 * Math.min(1, spd + .3);
+      const spd = Math.min(1.4, Math.hypot(a.vx, a.vy)), tb = a.tb, tbOn = tb && tb.lod < 2 && a.air <= 0;
+      let lean = spd * .16 + (a.ps > PCRIT * .55 ? .12 : 0) + (a.old ? .2 : 0), rock = Math.sin(a.wp) * .11 * Math.min(1, spd + .3);
+      if (tbOn) {   // two-body physics: the torso sways on its elastic joint (twobody.js); stumblers windmill their arms
+        lean = lean * .5 + tb.lean * .85; rock = rock * .5 + tb.rock * .85;
+        if (tb.st > 0) { const ph = tt * 16 + a.ph; armL = 2.2 + Math.sin(ph) * 1.2; armR = 2.0 + Math.cos(ph * 1.1) * 1.2; }
+      }
       wob(LT, lean, rock); WOB.lean = lean; WOB.rock = rock;
     }
     emit(P.torso, C.torso, LT); colW(P.torso, C.torso++, r, g, b);
@@ -754,13 +760,13 @@ function renderPeople(tt, dtR, vb) {
     if (a.bags && !down && hh < .4 && C.bag < P.bag.instanceMatrix.count - 12) {   // overloaded shopper: bags on both hands, boxes on the head
       const n = a.bags, sw = Math.sin(tt * 6 + a.ph) * .07, az2 = .22 * bw + .05;
       for (let i = 0; i < Math.min(n, 4); i++) {
-        const side = i % 2 ? 1 : -1, j = i >> 1, bc = BAG_L[(a.bagC + i) % BAG_L.length];
+        const side = i % 2 ? 1 : -1, j = i >> 1, bc = BAG_L[((a.bagC | 0) + i) % BAG_L.length];
         LT.fill(0); LT[0] = .34; LT[4] = .44 + j * .04; LT[8] = .17;
         LT[9] = .1 + sw * (j + 1) - j * .08; LT[10] = .48 - j * .04; LT[11] = side * (az2 + .14 + j * .13);
         emit(P.bag, C.bag, LT); colW(P.bag, C.bag++, bc[0], bc[1], bc[2]);
       }
       for (let j = 0; j < n - 4; j++) {   // the tower of boxes, swaying more the higher it gets
-        const bc = BAG_L[(a.bagC + j + 3) % BAG_L.length], wob = Math.sin(tt * 3.1 + a.ph + j * .7) * .035 * (j + 1);
+        const bc = BAG_L[((a.bagC | 0) + j + 3) % BAG_L.length], wob = Math.sin(tt * 3.1 + a.ph + j * .7) * .035 * (j + 1);
         LT.fill(0); LT[0] = .4 - j * .035; LT[4] = .22; LT[8] = .36 - j * .03;
         LT[9] = wob; LT[10] = 2.02 + j * .23; LT[11] = Math.cos(tt * 2.3 + a.ph + j) * .02 * (j + 1);
         emit(P.bag, C.bag, LT); colW(P.bag, C.bag++, bc[0] * .9, bc[1] * .9, bc[2] * .9);

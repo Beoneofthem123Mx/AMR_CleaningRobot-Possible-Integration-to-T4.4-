@@ -268,6 +268,7 @@ function step() {
     // a UFO beam lifts people up
     if (a.beam) a.lift += DT * .75; else if (a.lift > 0) a.lift = Math.max(0, a.lift - DT * 1.5);
     for (const sw of stewards) if ((a.x - sw.x) ** 2 + (a.y - sw.y) ** 2 < STEWARD_R * STEWARD_R) { want *= .5; break; }
+    if (a.tb && a.tb.st > 0) want *= .45;   // stumbling (twobody.js): busy not falling over
     if (a.lift > 0) { want = 0; a.fx *= .2; a.fy *= .2; }
     if (a.lift > 1.5) { abducted++; continue; }
     const tau = slipT > 0 ? 2.2 : .5;   // on the slippery floor nobody can stop
@@ -304,6 +305,7 @@ function step() {
     out.push(a);
   }
   ag = out;
+  TwoBody.update(ag, DT);   // torsos on elastic joints, stumbles and domino chains (twobody.js)
   if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
   if (!demo && spawned > 150) crowdShouts();
   if (scene.step && !demo) scene.step();   // venue mechanics (reactor heat, land mines)
@@ -469,6 +471,7 @@ function start(mod) {
   const scr = props.find(p => p.type === "screen");
   if (scr && !MOD.altShare) setAlt(scr.x, scr.y, PROP_TYPES.screen.r + 2.2);
   if (scene.onStart) scene.onStart();
+  TwoBody.init(WW, WH); TwoBody.onStumble = (a, depth) => { if (!demo && Math.random() < (depth ? .02 : .06)) pop(a.x, a.y - 1.1, depth ? ["DOMINO!", "NOT ME TOO!", "WHOA-OA!"][(Math.random() * 3) | 0] : ["WHOA!", "OOPS!", "WATCH IT!", "MY BALANCE!"][(Math.random() * 4) | 0]); };
   SHOPPERS = []; shopT = 0; shoutT = 3; SHOP_DOORS = scene.shopDoors ? scene.shopDoors() : [];
   G3.photo = null;
 }
