@@ -206,7 +206,8 @@ function looks() {
   if (L.gear === "bubble") L.springy = true;
   if (MOD && MOD.rain && Math.random() < .45) L.acc = 3;
   if (MOD && MOD.sizeMul) L.sc *= MOD.sizeMul;
-  if (scene && scene.look) scene.look(L);   // venue-specific touches (protest signs, metro backpacks)
+  if (scene && scene.look) scene.look(L);
+  if (MOD && MOD.look && !(MOD.uniform)) MOD.look(L);   // twists that dress or change everyone   // venue-specific touches (protest signs, metro backpacks)
   if (MOD && MOD.uniform) { L.c = L.ac = MOD.uc || 0; L.pc = 0; L.cos = 0; }
   return L;
 }
@@ -353,7 +354,8 @@ function step() {
   if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
   if (!demo && spawned > 150) crowdShouts();
   if (yeetT > 0) yeetT -= DT;
-  if (scene.step && !demo) scene.step();   // venue mechanics (reactor heat, land mines)
+  if (scene.step && !demo) scene.step();
+  if (MOD && MOD.step && !demo) MOD.step();   // venue mechanics (reactor heat, land mines)
   if (surgeT > 0 && !demo && ag.length && Math.random() < .25) { const a = ag[(Math.random() * ag.length) | 0]; if (a.dance && toss(a, .9 + Math.random() * .9) && Math.random() < .3) pop(a.x, a.y - 1, ["WHEEE!", "YEET!", "WOOO!"][(Math.random() * 3) | 0]); }
   // a calm evacuation is boring to watch: after 2 s with nobody squeezed the clock runs fast
   calmT = evac && pmax < PCRIT * .4 ? calmT + DT : 0;
