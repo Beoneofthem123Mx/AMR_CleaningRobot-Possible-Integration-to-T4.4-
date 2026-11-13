@@ -118,7 +118,7 @@ Object.assign(STYLES, {
 // ---------- recorded music (CC0, see game/music/CREDITS.md); the synthesized music is the fallback ----------
 const TRACKS = { plaza: "party_1", circo: "silly_1", estadio: "dance_1", viernes: "funk_1", crucero: "party_3", boda: "jazz_1", hipodromo: "dnb_1",
   trono: "funk_2", ciudad: "party_2", mitin: "silly_2", taco: "funk_1", ovni: "space_1", aeropuerto: "party_4", arena: "action_1", rocket: "chip_2",
-  zoo: "silly_1", cheese: "chip_1", zombie: "spooky_1", beach: "party_3", park: "chip_1", nuclear: "action_1", guerra: "dnb_1", fabrica: "action_1", procesion: "jazz_1", marcha: "party_2", metro: "dnb_1", mercado: "funk_2", laboratorio: "space_1" };
+  zoo: "silly_1", cheese: "chip_1", zombie: "spooky_1", beach: "party_3", park: "chip_1", nuclear: "action_1", guerra: "dnb_1", fabrica: "action_1", procesion: "jazz_1", marcha: "party_2", metro: "dnb_1", mercado: "funk_2", laboratorio: "space_1", terminal: "funk_1" };
 const MUS = { bufs: {}, loading: {}, cur: null, name: "" };
 function musicBuffer(name) {
   const c = AU.ctx; if (MUS.bufs[name] || MUS.loading[name] || !c || typeof fetch !== "function" || c.constructor.name === "OfflineAudioContext") return MUS.bufs[name];

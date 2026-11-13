@@ -172,7 +172,7 @@ const VENUE_OUTFITS = {
   beach: ["swimmer", "swimmer", "pirate", "sailor"], park: ["clown", "superhero", "banana", "wizard"], nuclear: ["hazmat", "hazmat", "astronaut"],
   guerra: ["soldier", "soldier", "knight", "viking"],
   fabrica: ["hazmat", "chef", "tourist"], procesion: ["tux", "tourist", "king"], marcha: ["superhero", "clown", "duck", "tourist"],
-  metro: ["tux", "tourist", "astronaut"], mercado: ["chef", "banana", "hotdog", "cowboy"], laboratorio: ["hazmat", "astronaut", "zombie", "wizard"],
+  metro: ["tux", "tourist", "astronaut"], mercado: ["chef", "banana", "hotdog", "cowboy"], terminal: ["tourist", "tux", "sailor", "astronaut"], laboratorio: ["hazmat", "astronaut", "zombie", "wizard"],
 };
 const WACKY = ["hotdog", "banana", "astronaut", "knight", "wizard", "viking", "duck", "ghost", "pirate", "superhero", "clown"];
 function looks() {
