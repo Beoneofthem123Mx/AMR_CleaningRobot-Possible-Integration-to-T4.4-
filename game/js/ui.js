@@ -293,6 +293,8 @@ $("#card").addEventListener("click", e => {
   if (e.target.id === "pick") { if (atTitle) titleScreen(); else chooser(); }
   if (e.target.closest && e.target.closest("#start")) chooser();
   if (e.target.id === "title") titleScreen();
+  if (e.target.closest && e.target.closest("#daily")) { const d = dailyPick(); DAILY = d; loadScene(d.key); hideCard(); caption(`Daily challenge: ${SCENES[d.key].name} + ${MODS_BY_ID[d.mod].name}`, true, 2600); }
+  if (sk) DAILY = null;
   if (e.target.closest && e.target.closest("#secrets")) showSecrets();
   if (e.target.id === "options") showOptions();
   if (e.target.closest && e.target.closest("#shop")) showShop();

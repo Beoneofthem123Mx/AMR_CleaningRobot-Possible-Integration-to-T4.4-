@@ -80,6 +80,14 @@ MODS.push(
   { id: "disco", icon: "🪩", name: "Disco inferno", desc: "The DJ refuses to stop dropping the beat. Every drop, everybody jumps.", w: 1, dropMul: .35, bounce: 2.2 },
 );
 const MODS_BY_ID = Object.fromEntries(MODS.map(m => [m.id, m]));
+let DAILY = null;   // set while playing today's challenge
+function dailyPick() {
+  const d = new Date(), day = d.getFullYear() * 1000 + Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+  let x = day * 2654435761 % 4294967296; const r = () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const keys = Object.keys(SCENES), twists = MODS.filter(m => m.id !== "normal");
+  return { day, key: keys[Math.floor(r() * keys.length)], mod: twists[Math.floor(r() * twists.length)].id };
+}
+const dailyBest = () => { try { const o = JSON.parse(localStorage.getItem("mh.daily") || "{}"); return o.day === dailyPick().day ? o : { day: dailyPick().day }; } catch (e) { return { day: dailyPick().day }; } };
 // in chaos mode two of today's twists are combined
 function comboMod(a, b) {
   if (a.id === "normal") return b; if (b.id === "normal" || a.id === b.id) return a;
@@ -100,8 +108,8 @@ function rollMod() {
 function startWithRoulette() {
   if (phase !== "plan" || !canStart()) return;
   audioInit();
-  let pick = window.__forceMod ? MODS_BY_ID[window.__forceMod] : rollMod();
-  if (chaosMode && !window.__forceMod) { let b = rollMod(), n = 0; while (b.id === pick.id && n++ < 5) b = rollMod(); pick = comboMod(pick.id === "normal" ? rollMod() : pick, b); }
+  let pick = window.__forceMod ? MODS_BY_ID[window.__forceMod] : DAILY && DAILY.key === sceneKey ? MODS_BY_ID[DAILY.mod] : rollMod();
+  if (chaosMode && !window.__forceMod && !(DAILY && DAILY.key === sceneKey)) { let b = rollMod(), n = 0; while (b.id === pick.id && n++ < 5) b = rollMod(); pick = comboMod(pick.id === "normal" ? rollMod() : pick, b); }
   // a slot machine: the reel spins past every twist and clunks onto today's one
   const ICON = { normal: "☕", wifi: "📶", influencer: "🤳", rain: "🌧️", reggaeton: "💃", moon: "🌙", rush: "🎟️", slowmo: "🐌", chanclas: "🩴", pigeons: "🐦", apagon: "💡", nino: "🧒", uniforme: "👕", tio: "🕺" };
   const COLS = ["#ff6fb1", "#ffd23a", "#4fb8ff", "#7dff6a", "#a98bff", "#ff9a3c"];

@@ -35,6 +35,8 @@ function titleScreen() {
       <p class="tag">A safety simulator for events that go horribly wrong</p>
       <div class="titlebtns">
         <button class="go big" id="start">▶ START</button>
+        ${(() => { const d = dailyPick(), b = dailyBest(), sc = SCENES[d.key], m = MODS_BY_ID[d.mod];
+          return `<button id="daily" class="daily">📅 Daily challenge<small>${sc.name} + ${m.name}${b.dead !== undefined ? ` · your best today: ${b.dead.toLocaleString("en")} pancaked${b.stars === 3 ? " ★★★" : ""}` : " · +100 tickets for 3 stars"}</small></button>`; })()}
         <button id="shop">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button>
         <button id="options">Settings</button>
         ${window.steam ? '<button id="quit">Quit</button>' : ""}

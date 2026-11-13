@@ -568,6 +568,11 @@ function finish() {
   if (fresh.length) setTimeout(() => announce("new_highscore"), 2300);
   if (Object.values(loadMedals()).reduce((n, m) => n + m.length, 0) >= 20) achieve("MEDAL_COLLECTOR");
   saveBest(sceneKey, stars);
+  if (DAILY && DAILY.key === sceneKey && MOD && MOD.id === DAILY.mod) {   // today's challenge
+    const b = dailyBest(), better = b.dead === undefined || dead < b.dead;
+    if (stars === 3 && !b.paid) { b.paid = true; loadShop(); TIX += 100; LAST_EARN += 100; saveShop(); }
+    if (better) { b.dead = dead; b.stars = stars; } try { localStorage.setItem("mh.daily", JSON.stringify(b)); } catch (e) { /* no storage */ }
+  }
   achieve("FIRST_SHOW");
   if (stars === 3) achieve("PERFECT_" + sceneKey.toUpperCase());
   const best = loadBest();

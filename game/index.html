@@ -189,6 +189,8 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .titlewrap .tag { font-weight: 800; color: #ffd23a; font-size: 1.05rem; animation: fadein .6s .7s both; }
 .titlebtns { display: flex; flex-direction: column; gap: 10px; width: min(320px, 90%); animation: fadein .6s .9s both; }
 .titlebtns button { font-size: 1.05rem; padding: min(10px, 1.2vh) 16px; justify-content: center; }
+.titlebtns button.daily { display: flex; flex-direction: column; gap: 2px; background: linear-gradient(90deg, #2f7fd6, #a98bff); color: #fff; border-color: #111214; }
+.titlebtns button.daily small { font-size: .72rem; font-weight: 700; opacity: .9; }
 .titlebtns button.big { font-size: 1.6rem; padding: min(14px, 1.6vh) 18px; letter-spacing: .06em; animation: startpulse 1.4s 1.6s ease-in-out infinite; }
 @keyframes startpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 @keyframes fadein { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
