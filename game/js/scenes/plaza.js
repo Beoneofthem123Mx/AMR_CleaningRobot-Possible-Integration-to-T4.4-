@@ -99,12 +99,62 @@ SCENE_MODELS.plaza_band = (g, u, m) => {
     else { b.rotation.y = Math.sin(tt * 1.6 + ph) * .5; arms[1].rotation.z = .7 + Math.sin(tt * 12.4) * .3; }
   };
 };
+// ===== food carts and a pickpocket chase =====
+const PLAZA_CARTS = [{ x: 6.7, y: 33, food: "TACOS", col: "#e53229" }, { x: 33.3, y: 33, food: "HOT DOGS", col: "#2f7fd6" }, { x: 28.7, y: 47, food: "CHURROS", col: "#e8a020" }];
+const PLZ_SIGNS = {};
+function plzSignTex(text, col) {
+  if (PLZ_SIGNS[text]) return PLZ_SIGNS[text];
+  const c = document.createElement("canvas"); c.width = 256; c.height = 64; const g = c.getContext("2d");
+  g.fillStyle = col; g.fillRect(0, 0, 256, 64); g.fillStyle = "#ffffff"; g.fillRect(6, 6, 244, 52); g.fillStyle = col;
+  g.font = "900 40px Rubik, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(text, 128, 34);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return PLZ_SIGNS[text] = t;
+}
+// a street food cart: body, two wheels, a push handle, a striped umbrella and a sign (faces +x)
+SCENE_MODELS.plaza_cart = (g, u, m) => {
+  const col = m.col || "#e53229", food = m.food || "TACOS";
+  part(g, "box", mat("#f4f1ea", { roughness: .5 }), 2.4, .95, 1.3, 0, .85, 0);
+  part(g, "box", mat(col, { roughness: .45 }), 2.42, .25, 1.32, 0, .5, 0);
+  part(g, "box", mat("#c9ced6", { metalness: .6, roughness: .3 }), 2.5, .06, 1.4, 0, 1.34, 0);
+  for (const s of [-1, 1]) { const w = part(g, "cyl", "#1c1c20", .32, .14, .32, -.6, .32, s * .72); w.rotation.x = Math.PI / 2; part(g, "cyl", "#d9dde2", .12, .16, .12, -.6, .32, s * .72).rotation.x = Math.PI / 2; }
+  part(g, "cyl", "#8a8f99", .04, 1.1, .04, 1.25, .95, 0).rotation.z = 1.1;
+  part(g, "cyl", "#d9dde2", .035, 1.9, .035, -.4, 2.1, 0);
+  const umb = new THREE.Mesh(new THREE.ConeGeometry(1.5, .55, 8, 1, true), new THREE.MeshStandardMaterial({ map: stripeTex([col, "#ffffff"], 8, false), roughness: .7, side: THREE.DoubleSide }));
+  umb.position.set(-.4, 3.1, 0); umb.castShadow = true; g.add(umb);
+  for (const z of [-.67, .67]) { const sg = new THREE.Mesh(new THREE.PlaneGeometry(2, .5), new THREE.MeshBasicMaterial({ map: plzSignTex(food, col), toneMapped: false })); sg.position.set(0, .9, z * 1.01); if (z < 0) sg.rotation.y = Math.PI; g.add(sg); }
+  part(g, "cyl", mat("#ffd23a", { roughness: .4 }), .25, .3, .25, .6, 1.5, .25);   // a pot of something delicious
+};
+SCENE_PERSONS.plaza_vendor = { body: "#f4f4f2", legs: "#3a3f47", hat: "chef", hatCol: "#ffffff" };
+SCENE_PERSONS.plaza_cop = { body: "#1f3a7a", legs: "#18223a", hat: "cap", hatCol: "#18223a", shoes: "#111214",
+  extra(g, u, b) { part(b, "sph", "#ffd23a", .06, .07, .03, .27, 1.28, .1); part(b, "box", "#111214", .5, .06, .58, 0, .82, 0); } };
+SCENE_PERSONS.plaza_thief = { body: "#1c1c20", legs: "#1c1c20", hat: "cap", hatCol: "#1c1c20",
+  extra(g, u, b) {
+    for (const y of [.9, 1.08, 1.26]) part(b, "box", "#f4f4f2", .5, .07, .6, 0, y, 0);   // striped shirt
+    part(b, "box", "#111214", .06, .09, .4, .21, 1.67, 0);                                // burglar mask
+    part(b, "sph", "#c9a15a", .26, .3, .26, -.34, 1.15, 0); part(b, "sph", "#8a6a3a", .08, .08, .08, -.34, 1.47, 0);   // loot bag
+  } };
+// police chase: each officer keeps re-aiming at the thief; catching him ends the chase
+function plzCopTick(th) {
+  return m => {
+    if (m.leaving) return;
+    if (th.caught || th.dead) {
+      m.leaving = true; m.dead = false; m.pts = [[openGateX(), SH + 4]]; m.i = 0; m.say = "";
+      if (!th.caught && !th.told) { th.told = true; pop(m.x, m.y - 1.4, "HE GOT AWAY!"); }
+      return;
+    }
+    m.dead = false; m.pts = [[th.x, th.y]]; m.i = 0;
+    if (Math.hypot(th.x - m.x, th.y - m.y) < .95) {
+      th.caught = true; th.dead = true; eventLog.add("busted");
+      pop(th.x, th.y - 1.6, "BUSTED!"); sfx("whistle"); cheerT = Math.max(cheerT, 2.5); burstAt(th.x, th.y, 50); shake = Math.min(1, shake + .3);
+      for (let k = 0; k < 6; k++) puff(th.x + rnd(-.8, .8), th.y + rnd(-.8, .8), .3, "#d9ccb0", .35, 1, .4);
+    }
+  };
+}
 SCENES.plaza = {
   name: "The Plaza", tag: "Free concert", outside: "#a39a8b", bulbH: 1.95,
   light: { sky: 0xfff1dc, ground: 0x9c8462, hemi: .68, sun: 0xffe3b5, sunI: 1.35 }, crowd: 2600, fenceBudget: 70, maxGates: 5, gates: [F, F, T, F, T, F, F],
   intro: "Free concert in the plaza today. Also passing through the plaza: cars, dogs and giant beach balls.",
   acts: ["They're playing the hit!", "Everybody to the front!", "Drop the bass!", "Shoving time!"],
-  events: ["car", "dogs", "beachballs", "icecream", "car", "dogs"],
+  events: ["car", "dogs", "beachballs", "icecream", "ladron", "muestras", "carrito", "car", "ladron", "dogs", "muestras"],
   goal: o => o.kind === "barrier", goalMaxY: 30,
   build() {
     rect(6, 0, 34, 11, "stage");
@@ -117,6 +167,13 @@ SCENES.plaza = {
     rect(17.5, 39.5, 22.5, 44.5, "tent");
     rect(2.5, 52, 5.5, 55, "booth");
     rect(34.5, 52, 37.5, 55, "aid");
+    for (const c of PLAZA_CARTS) rect(c.x - 1.3, c.y - .75, c.x + 1.3, c.y + .75, "foodcart");
+  },
+  lines: {
+    ladron: "A pickpocket zig-zagged through the concert with two officers and half the crowd behind him.",
+    busted: "The police caught the pickpocket in front of the stage; the crowd gave the arrest a standing ovation.",
+    muestras: "A food cart offered free samples and caused the biggest stampede of the night.",
+    carrito: "An elote cart pushed through the crowd, and the crowd pushed right back.",
   },
   ground(g, px) {
     // warm stone paving: big slabs with joints and a little colour variation
@@ -209,10 +266,13 @@ SCENES.plaza = {
       const x = 1 + i * 2, sag = Math.sin(i / 19 * Math.PI) * 1.2;
       const f = part(grp, "cone", flags[(i + y) % 5], .32, .55, .06, x, 6.6 - sag, y); f.rotation.x = Math.PI;
     }
+    // street food carts parked in the square
+    for (const c of PLAZA_CARTS) SCENE_MODELS.plaza_cart(pivot(grp, c.x, 0, c.y), {}, c);
     // lamp posts hugging the walls
     for (const x of [.35, 39.65]) for (const y of [20, 32, 44, 56]) { part(grp, "cyl", "#2a2c31", .07, 4.2, .07, x, 2.1, y); part(grp, "sph", basic("#ffe6a8"), .22, .26, .22, x, 4.3, y); }
   },
   performers: () => [
+    ...PLAZA_CARTS.map(c => ({ kind: "plaza_vendor", orbit: [c.x - 1.9, c.y, .01, 0, 0], x: 0, y: 0, ang: 0, t: 0 })),
     { kind: "plaza_screen", orbit: [20, .45, .01, 0, 0], h: 1.8, x: 0, y: 0, ang: 0, t: 0 },
     { kind: "plaza_band", role: "sing", col: "#ff3fa4", hair: "#ffd23a", orbit: [20, 7.4, .01, 0, 0], h: 1.8, x: 0, y: 0, ang: 0, t: 0 },
     { kind: "plaza_band", role: "guitar", col: "#2f7fd6", inst: "#e53229", orbit: [15.5, 6.6, .01, 0, 0], h: 1.8, x: 0, y: 0, ang: 0, t: 0 },
@@ -220,5 +280,27 @@ SCENES.plaza = {
     { kind: "plaza_band", role: "drums", col: "#7dff6a", orbit: [20, 3.4, .01, 0, 0], h: 2.15, x: 0, y: 0, ang: 0, t: 0 },
     { kind: "plaza_band", role: "keys", col: "#ffd23a", orbit: [26, 4.6, .01, 0, 0], h: 1.8, x: 0, y: 0, ang: 0, t: 0 },
   ],
-
+  ev: {
+    ladron(side) {
+      const pts = []; for (let k = 0; k < 4; k++) pts.push(crowdPoint()); pts.push([openGateX(), SH + 4]);
+      addMover({ kind: "plaza_thief", x: side ? -1.5 : WW + 1.5, y: rnd(24, 40), pts, speed: 5.5, r: .45, push: 20, scare: 2.2, agile: true, say: "LOL BYE!", sayEvery: 2.6,
+        tick(m) { if (Math.random() < .008) pop(m.x, m.y - 1.2, ["CAN'T CATCH ME!", "SORRY! SORRY!", "$$$!", "NOT MY WALLET!"][(Math.random() * 4) | 0]); } });
+      const th = movers[movers.length - 1];   // addMover stores a copy: the officers must chase the real one
+      for (let n = 0; n < 2; n++) later(1.4 + n * .6, () => {
+        if (phase !== "show" && phase !== "evac") return;
+        addMover({ kind: "plaza_cop", x: side ? -1.5 - n : WW + 1.5 + n, y: th.y + n, pts: [[th.x, th.y]], speed: 4.6 + n * .3, r: .45, push: 32, scare: 1.2, agile: true, say: n ? "WEEEEE-OOOO!" : "STOP! POLICE!", sayEvery: 2.8, tick: plzCopTick(th) });
+      });
+      caption("A pickpocket! The police are right behind him", true, 2200); sfx("whistle");
+    },
+    muestras() {
+      const c = PLAZA_CARTS[(Math.random() * PLAZA_CARTS.length) | 0];
+      tempAttract(c.x, c.y + 2, 2.4, 5.5, .35); pop(c.x, c.y - 1.4, "FREE SAMPLES!"); sfx("confirm");
+      caption(`Free ${c.food.toLowerCase()}! A third of the crowd rushes the cart`, true, 2200);
+    },
+    carrito(side) {
+      const y = rnd(30, 58);
+      addMover({ kind: "plaza_cart", food: "ELOTES", col: "#3d9a5b", x: side ? -3 : WW + 3, y, pts: [[side ? WW + 4 : -4, y + rnd(-6, 6)]], speed: 1.7, r: 1.2, push: 26, scare: 1.4, say: "ELOTES! ESQUITES!", sayEvery: 2.6, tick: followTick(10, 2.4, .25) });
+      caption("The elote cart is coming through!", false, 1800);
+    },
+  },
 };

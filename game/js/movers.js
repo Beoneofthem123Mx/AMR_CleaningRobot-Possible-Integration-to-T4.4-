@@ -255,7 +255,7 @@ function stepMovers() {
     } else {
       const [tx, ty] = m.pts[m.i], dx = tx - m.x, dy = ty - m.y, d = Math.hypot(dx, dy);
       if (d < .5) { m.i++; if (m.i >= m.pts.length) m.dead = true; }
-      else { m.ang = turnTo(m.ang, Math.atan2(dy, dx), DT * 7); const sp = m.speed * (.6 + .4 * Math.max(0, Math.cos(m.ang - Math.atan2(dy, dx)))) / (1 + (m.hits || 0) * .3); m.x += Math.cos(m.ang) * sp * DT; m.y += Math.sin(m.ang) * sp * DT; }
+      else { m.ang = turnTo(m.ang, Math.atan2(dy, dx), DT * 7); const sp = m.speed * (.6 + .4 * Math.max(0, Math.cos(m.ang - Math.atan2(dy, dx)))) / (1 + (m.hits || 0) * (m.agile ? .04 : .3)); m.x += Math.cos(m.ang) * sp * DT; m.y += Math.sin(m.ang) * sp * DT; }
       if (m.kind === "gull") m.h = m.swoop && m.i === 0 ? Math.max(1.6, Math.min(6, d * .35)) : Math.min(7, (m.h || 6) + DT * 3);
       // a security guard stops animals and vehicles
       if (!m.bounced && !m.air && m.push) for (const gd of guards) {
