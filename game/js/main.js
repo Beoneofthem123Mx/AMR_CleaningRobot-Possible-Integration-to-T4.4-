@@ -152,7 +152,11 @@ function frame(now, fixed) {
   if (G3.renderer && live3d() && fixed === undefined) {
     perf.n++; perf.sum += real;
     if (perf.n >= 90) {
-      if (perf.sum / perf.n > .045 && perf.level < 2) {
+      // first, quietly: fewer people in full detail when frames are slow, more again when there is headroom
+      const avg = perf.sum / perf.n;
+      if (avg > .028 && PLOD.max > 300) PLOD.max = Math.max(300, (PLOD.max * .75) | 0);
+      else if (avg < .019 && PLOD.max < PLOD.base) PLOD.max = Math.min(PLOD.base, (PLOD.max * 1.15) | 0);
+      if (avg > .045 && PLOD.max <= 300 && perf.level < 2) {
         perf.level++;
         if (perf.level === 1) for (const k in P) P[k].castShadow = false;
         if (perf.level === 2) { POST.on = false; dpr = 1; G3.renderer.setPixelRatio(1); G3.sun.shadow.mapSize.set(1024, 1024); G3.sun.shadow.map && G3.sun.shadow.map.dispose(); G3.sun.shadow.map = null; }

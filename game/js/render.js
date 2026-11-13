@@ -1210,7 +1210,7 @@ const OUTFITS = [null, null, null, null,
   { n: "wizard", b: "#5f3d8a", l: "#3a2a5a", p(pt) { pt("c", -.02, 2.08, 0, 2.2, 3.4, 2.2, "#5f3d8a"); pt("b", -.02, 1.84, 0, .5, .03, .5, "#5f3d8a"); pt("s", .2, 1.42, 0, 1.3, 2.4, 1.6, "#e8e8e8"); for (let i = 0; i < 3; i++) pt("s", .05, 2.0 + i * .14, .13 - i * .04, .35, .35, .35, "#ffd23a"); } },
 ];
 const OUTFIT_ID = Object.fromEntries(OUTFITS.map((o, i) => o && [o.n, i]).filter(Boolean));
-const PLOD = { r2: 900, n: 0, max: 1100 };   // people drawn with full detail per frame
+const PLOD = { r2: 900, n: 0, max: 1100, base: 1100 };   // people drawn with full detail per frame
 let COST_C = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
