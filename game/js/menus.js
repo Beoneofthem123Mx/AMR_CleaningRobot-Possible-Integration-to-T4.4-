@@ -31,11 +31,11 @@ function chooser() {
       <div class="title"><h1 class="logo">${["HUMAN", "TSUNAMI"].map((w, j) => [...w].map((ch, i) => `<span class="lt" style="animation-delay:${((i + j * 5) * .09).toFixed(2)}s">${ch}</span>`).join("")).join("<br>")}</h1></div>
       <div class="menuintro">
         <p class="tag">A safety simulator for events that go horribly wrong</p>
-        <p>Place the fences, the gates and the guards. Then the people pour in and absolutely everything happens. During the show, <b>click</b> to use the megaphone. Too much pressure and people go down — and get trampled.</p>
+        <p>Place the fences, the gates and the guards. Then the people pour in and absolutely everything happens. During the show, <b>click</b> to use the megaphone, or pick a chaos power in the bar (meteor, anvil, a cow...). Too much pressure and people go down — and get pancaked.</p>
         <div class="row chaosrow"><button id="chaos" class="${chaosMode ? "go" : ""}">Total Chaos: ${chaosMode ? "ON" : "off"}</button><small>Events from every venue anywhere, plus two of today's twists at once.</small></div>
         <div class="row chaosrow"><button id="sandbox" class="${sandbox ? "go" : ""}">Sandbox: ${sandbox ? "ON" : "off"}</button><small>Every venue open, no budget, bigger crowds, and a button for every disaster. Nothing counts.</small></div>
         <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · <span class="starbig medalcount">◆ ${nMedals}</span> / ${maxMedals} medals · stars unlock new venues</p>
-        ${st.shows ? `<p class="career">Career: <b>${st.shows.toLocaleString("en")}</b> shows · <b>${st.trampled.toLocaleString("en")}</b> trampled · <b>${st.saved.toLocaleString("en")}</b> got home fine · <b>${st.perfect}</b> flawless${st.abducted ? ` · <b>${st.abducted}</b> abducted` : ""} · worst day: <b>${st.worst.toLocaleString("en")}</b></p>` : ""}
+        ${st.shows ? `<p class="career">Career: <b>${st.shows.toLocaleString("en")}</b> shows · <b>${st.trampled.toLocaleString("en")}</b> pancaked · <b>${st.saved.toLocaleString("en")}</b> got home fine · <b>${st.perfect}</b> flawless${st.abducted ? ` · <b>${st.abducted}</b> abducted` : ""} · worst day: <b>${st.worst.toLocaleString("en")}</b></p>` : ""}
       </div>
     </div>
     <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => {
@@ -50,18 +50,59 @@ function chooser() {
 }
 
 // ---------- upgrade shop ----------
-function showShop() {
-  loadShop();
-  const rows = Object.entries(UPGRADES).map(([k, u]) => {
+let shopTab = "upg";
+function showShop(tab) {
+  loadShop(); if (tab) shopTab = tab;
+  const tix = c => `<span class="tix">${c}</span>`, bought = NEXT.bought || [];
+  let rows = "";
+  if (shopTab === "upg") rows = Object.entries(UPGRADES).map(([k, u]) => {
     const lv = UPG[k] || 0, max = lv >= u.costs.length, cost = max ? 0 : u.costs[lv];
     return `<div class="upg"><i>${u.icon}</i><div><b>${u.name}</b><small>${u.desc}</small><span class="pips">${[0, 1, 2].map(n => `<em class="${n < lv ? "on" : ""}"></em>`).join("")}</span></div>
-      <button data-buy="${k}" ${max || TIX < cost ? "disabled" : ""}>${max ? "MAX" : `<span class="tix">${cost}</span>`}</button></div>`;
+      <button data-buy="${k}" ${max || TIX < cost ? "disabled" : ""}>${max ? "MAX" : tix(cost)}</button></div>`;
   }).join("");
-  showCard(`<h2>Upgrade shop</h2><p class="shopbal">You have <span class="tix big">${TIX.toLocaleString("en")}</span> tickets. Every show earns more: everyone who gets home, every star and every new medal pays.</p>
+  else if (shopTab === "gear") rows = Object.entries(GEAR).map(([k, g]) => {
+    const own = GEAR_OWN.includes(k), on = GEAR_ON.includes(k);
+    return `<div class="upg${on ? " worn" : ""}"><i>${g.icon}</i><div><b>${g.name}</b><small class="good">+ ${g.good}</small><small class="bad">− ${g.bad}</small></div>
+      ${own ? `<button data-wear="${k}" class="${on ? "go" : ""}" ${!on && GEAR_ON.length >= 3 ? "disabled" : ""}>${on ? "Worn" : "Wear"}</button>` : `<button data-gear="${k}" ${TIX < g.cost ? "disabled" : ""}>${tix(g.cost)}</button>`}</div>`;
+  }).join("");
+  else rows = todaysDeals().map(o => {
+    const d = DEALS[o.k], got = bought.includes(o.id), g = o.gear && GEAR[o.gear], cost = g ? Math.round(g.cost * .6) : o.cost;
+    return `<div class="upg deal"><i>${d.icon}</i><div><b>${g ? `${g.name} −40%` : d.name}</b><small>${g ? `${g.good} ${g.bad}` : d.desc}</small></div>
+      <button data-deal="${o.id}" ${got || TIX < cost ? "disabled" : ""}>${got ? "SOLD" : tix(cost)}</button></div>`;
+  }).join("") + `<p class="keys">New deals every day at midnight.${Object.keys(NEXT).filter(k => k !== "bought").length ? " Waiting for your next show: " + Object.entries(NEXT).filter(([k]) => k !== "bought").map(([k, v]) => ({ meteor: `+${v} meteors`, cow: `+${v} cows`, mega: `+${v} megaphone`, lucky: "lucky hat" })[k]).filter(Boolean).join(", ") + "." : ""}</p>`;
+  const tabs = [["upg", "Upgrades"], ["gear", `Crowd gear <small>${GEAR_ON.length}/3 worn</small>`], ["deals", "Today's deals"]].map(([k, n]) => `<button data-tab="${k}" class="${shopTab === k ? "on" : ""}">${n}</button>`).join("");
+  showCard(`<h2>Shop</h2><p class="shopbal">You have <span class="tix big">${TIX.toLocaleString("en")}</span> tickets. Every show earns more: everyone who gets home, every star and every new medal pays.</p>
+    <div class="row tabs">${tabs}</div>
+    ${shopTab === "gear" ? `<p class="keys">Up to 3 pieces worn at once. About 1 in 5 people shows up wearing each one, in every venue.</p>` : ""}
     <div class="shop">${rows}</div><div class="row"><button class="go" id="pick">Back</button></div>`, "options shopcard");
+  const buy = c => { if (TIX < c) return false; TIX -= c; return true; };
+  for (const b of document.querySelectorAll("[data-tab]")) b.onclick = ev => { ev.stopPropagation(); sfx("select"); showShop(b.dataset.tab); };
   for (const b of document.querySelectorAll("[data-buy]")) b.onclick = ev => {
-    ev.stopPropagation(); const k = b.dataset.buy, u = UPGRADES[k], lv = UPG[k] || 0; if (lv >= u.costs.length || TIX < u.costs[lv]) return;
-    TIX -= u.costs[lv]; UPG[k] = lv + 1; saveShop(); sfx("confirm"); showShop();
+    ev.stopPropagation(); const k = b.dataset.buy, u = UPGRADES[k], lv = UPG[k] || 0; if (lv >= u.costs.length || !buy(u.costs[lv])) return;
+    UPG[k] = lv + 1; saveShop(); sfx("confirm"); showShop();
+  };
+  for (const b of document.querySelectorAll("[data-gear]")) b.onclick = ev => {
+    ev.stopPropagation(); const k = b.dataset.gear; if (GEAR_OWN.includes(k) || !buy(GEAR[k].cost)) return;
+    GEAR_OWN.push(k); if (GEAR_ON.length < 3) GEAR_ON.push(k); saveShop(); sfx("confirm"); showShop();
+  };
+  for (const b of document.querySelectorAll("[data-wear]")) b.onclick = ev => {
+    ev.stopPropagation(); const k = b.dataset.wear; GEAR_ON = GEAR_ON.includes(k) ? GEAR_ON.filter(x => x !== k) : GEAR_ON.concat(k).slice(0, 3); saveShop(); sfx("select"); showShop();
+  };
+  for (const b of document.querySelectorAll("[data-deal]")) b.onclick = ev => {
+    ev.stopPropagation(); const o = todaysDeals().find(d => d.id === b.dataset.deal); if (!o || (NEXT.bought || []).includes(o.id)) return;
+    const cost = o.gear ? Math.round(GEAR[o.gear].cost * .6) : o.cost; if (!buy(cost)) return;
+    NEXT.bought = (NEXT.bought || []).filter(id => id.split(":")[0] === o.id.split(":")[0]).concat(o.id);
+    let msg = "";
+    if (o.k === "sale") { GEAR_OWN.push(o.gear); if (GEAR_ON.length < 3) GEAR_ON.push(o.gear); msg = `${GEAR[o.gear].name}! Worn from the next show.`; }
+    else if (o.k === "mystery") {
+      const spare = Object.keys(GEAR).filter(k => !GEAR_OWN.includes(k));
+      if (spare.length && Math.random() < .7) { const g = spare[(Math.random() * spare.length) | 0]; GEAR_OWN.push(g); if (GEAR_ON.length < 3) GEAR_ON.push(g); msg = `Mystery box: ${GEAR[g].name}!`; }
+      else { const n = [40, 60, 90, 150, 250][(Math.random() * 5) | 0]; TIX += n; msg = `Mystery box: ${n} tickets!`; }
+    } else if (o.k === "meteors") { NEXT.meteor = (NEXT.meteor || 0) + 3; msg = "+3 meteors next show."; }
+    else if (o.k === "cows") { NEXT.cow = (NEXT.cow || 0) + 3; msg = "+3 cows next show."; }
+    else if (o.k === "calm") { NEXT.mega = (NEXT.mega || 0) + 3; msg = "+3 megaphone uses next show."; }
+    else if (o.k === "lucky") { NEXT.lucky = 1; msg = "Lucky hat on: +50% tickets next show."; }
+    saveShop(); sfx("confirm"); showShop(); toast(msg);
   };
 }
 // ---------- options ----------
@@ -97,7 +138,7 @@ function showHowTo() {
     </ol>
     <p><b>Pressure</b> is what hurts people: watch the pressure view (H). Red means someone is about to go down. Narrow gaps, dead ends and too few gates are the usual suspects.</p>
     <p><b>An empty plan always fails.</b> With no fences, guards or props nobody is in charge: the crowd shoves harder, goes down sooner, and the show gets zero stars no matter what.</p>
-    <p><b>Zero trampled</b> earns three stars. Stars unlock venues. Each venue also has five optional medals.</p>
+    <p><b>Zero pancaked</b> earns three stars. Stars unlock venues. Each venue also has five optional medals.</p>
     <div class="row"><button class="go" id="pick">Got it</button></div>`, "options");
 }
 // button labels for the sandbox's disaster buttons
@@ -119,7 +160,7 @@ const PLACE = { plaza: "THE PLAZA", circo: "THE CIRCUS", estadio: "THE STADIUM",
   viernes: "THE MALL", boda: "THE WEDDING OF THE YEAR", trono: "THE GOLDEN BATHROOM", mitin: "THE DUCK RALLY", taco: "THE TACO FESTIVAL", ovni: "DON CHUY'S CORNFIELD", aeropuerto: "THE AIRPORT", arena: "THE ARENA", nuclear: "THE NUCLEAR PLANT", guerra: "THE OLD BATTLEFIELD" };
 const HEADLINES = {
   lazy: [
-    "ORGANIZER OF {P} PLACES ZERO FENCES, ZERO GUARDS, ZERO ANYTHING; {D} TRAMPLED",
+    "ORGANIZER OF {P} PLACES ZERO FENCES, ZERO GUARDS, ZERO ANYTHING; {D} PANCAKED",
     "\u201cI THOUGHT THEY WOULD ORGANIZE THEMSELVES\u201d: {P} SAFETY PLAN WAS A BLANK SHEET OF PAPER",
     "{N} PEOPLE, ZERO BARRIERS: {P} LEARNS WHAT A CROWD DOES WHEN NOBODY IS IN CHARGE",
   ],
@@ -131,13 +172,13 @@ const HEADLINES = {
   ],
   some: [
     "“NO INCIDENTS” AT {P}, SAYS ORGANIZER, WHO SAW NOTHING",
-    "{D} TRAMPLED AT {P}; AUTHORITIES PROMISE “MORE FENCES THAN EVER”",
+    "{D} PANCAKED AT {P}; AUTHORITIES PROMISE “MORE FENCES THAN EVER”",
     "“IT COULD HAVE BEEN WORSE,” SAYS ORGANIZER, AND HE'S TECHNICALLY RIGHT",
   ],
   bad: [
-    "CHAOS AT {P}: {D} TRAMPLED AND ORGANIZER FLEES ON A BICYCLE",
+    "CHAOS AT {P}: {D} PANCAKED AND ORGANIZER FLEES ON A BICYCLE",
     "“IT WAS A TOTAL SUCCESS,” INSISTS MAN IN CHARGE FROM THE TOP OF A TREE",
-    "{D} TRAMPLED; HEAD OF SECURITY BLAMES “PHYSICS”",
+    "{D} PANCAKED; HEAD OF SECURITY BLAMES “PHYSICS”",
     "{P} WAKES UP LITTERED WITH UNCLAIMED SNEAKERS",
   ],
 };
@@ -210,7 +251,7 @@ function showReport(stars, stuck, fresh) {
           <div class="stats">
             <span>Crowd</span><span>${CROWD.toLocaleString("en")}</span>
             <span>Made it out OK</span><span>${evacuated.toLocaleString("en")}</span>
-            <span>Trampled</span><span style="color:var(--danger)">${dead.toLocaleString("en")}</span>
+            <span>Pancaked</span><span style="color:var(--danger)">${dead.toLocaleString("en")}</span>
             ${abducted ? `<span>Abducted</span><span>${abducted}</span>` : ""}
             <span>Trapped</span><span>${stuck}</span>
             <span>Evacuation</span><span>${Math.round(evacT)} s</span>

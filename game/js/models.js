@@ -106,6 +106,27 @@ function personModel(g, u, P, m) {
 
 // ---------- animals and objects ----------
 const EXTRA_MODELS = {
+  meteor(g, u) {
+    const rock = part(g, "sph", mat("#4a3f3a", { roughness: .95 }), .9, .8, .85, 0, 0, 0);
+    part(g, "sph", basic("#ff8a2a"), 1.05, .95, 1.0, -.15, .05, 0).material.transparent = true; g.children[1].material.opacity = .55;
+    for (let k = 0; k < 5; k++) part(rock, "sph", "#2e2724", .3, .25, .3, Math.cos(k * 1.3) * .8, Math.sin(k * 2.1) * .6, Math.sin(k) * .7);
+    u.anim = tt => { rock.rotation.set(tt * 5, tt * 3, 0); };
+  },
+  bowling(g, u, m) {
+    const b = new THREE.Mesh(GEO.sph, mat("#1d2a6a", { roughness: .15, metalness: .2 })); b.scale.setScalar(m.r); b.position.y = m.r; b.castShadow = true; g.add(b);
+    for (const [x, y] of [[.25, .1], [.1, .3], [.35, .32]]) part(b, "sph", "#05070f", .16, .16, .16, .92 * Math.cos(x), y, .3 * Math.sin(y));
+    u.anim = (tt, mm) => { b.rotation.z = -mm.spin; };
+  },
+  anvil(g) {
+    const iron = mat("#3a3d45", { metalness: .7, roughness: .35 });
+    part(g, "box", iron, .9, .25, .55, 0, .12, 0); part(g, "box", iron, .45, .35, .4, 0, .42, 0); part(g, "box", iron, 1.3, .25, .55, .1, .72, 0);
+    part(g, "cone", iron, .2, .6, .2, .95, .72, 0).rotation.z = -Math.PI / 2;
+    part(g, "box", basic("#ffffff"), .5, .1, .02, 0, .42, .21); part(g, "box", basic("#111214"), .3, .05, .025, 0, .42, .22);   // "1000 KG" plate
+  },
+  peel(g) {
+    for (let k = 0; k < 4; k++) { const p = part(g, "sph", "#ffd23a", .1, .05, .32, Math.cos(k * 1.57) * .18, .04, Math.sin(k * 1.57) * .18); p.rotation.y = k * 1.57; }
+    part(g, "sph", "#f2e6b0", .14, .07, .14, 0, .06, 0); part(g, "cyl", "#6b4a2a", .03, .08, .03, 0, .12, 0);
+  },
   chair(g, u, m) {
     const metal = mat("#9aa0a8", { metalness: .7, roughness: .35 });
     part(g, "box", metal, .5, .05, .5, 0, .5, 0); part(g, "box", metal, .05, .55, .5, -.25, .8, 0);

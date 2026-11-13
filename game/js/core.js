@@ -6,7 +6,7 @@ const WW = 40, WH = 72, SH = 78, CS = .5, GW = WW / CS, GH = SH / CS;  // SH: th
 const R = .24, DT = 1 / 60;
 let PCRIT = 8.5;
 let CROWD = 3200, FENCE_BUDGET = 60, MAX_GATES = 5;
-const SHOW_TIME = 40;
+const SHOW_TIME = 45;
 const FENCE_Y = 66, SLOTS = 7, SLOT_W = 2.6;
 // gate positions: evenly spaced by default; each visit to a venue can shuffle them into a new, uneven layout
 // ===== upgrade shop: tickets earned after every show buy permanent upgrades (3 levels each) =====
@@ -19,10 +19,43 @@ const UPGRADES = {
   calm:    { icon: "~",  name: "Charming guards",     desc: "Guards calm people 15% further per level", costs: [60, 140, 300] },
   foam:    { icon: "o",  name: "Softer foam",         desc: "Foam walls soak up more of the squeeze", costs: [50, 120, 260] },
   medic:   { icon: "✚",  name: "Better first aid",    desc: "First aid tents protect and heal more", costs: [70, 160, 340] },
+  chaos:   { icon: "☄", name: "Chaos kit",            desc: "+1 meteor, bowling ball, anvil, cow and banana per show, per level", costs: [70, 170, 350] },
 };
+// crowd gear: things the audience wears. Equip up to 3; about 20% of people show up wearing each one. Every item helps AND hurts.
+const GEAR = {
+  helmet:    { icon: "⛑", name: "Hard hats",        cost: 120, good: "Wearers take 25% less squeeze damage", bad: "...and walk 10% slower" },
+  bubble:    { icon: "◎", name: "Bubble wrap suits", cost: 160, good: "Wearers take 30% less damage", bad: "...but anything that hits them sends them into orbit" },
+  skates:    { icon: "⛸", name: "Roller skates",     cost: 140, good: "Wearers leave 30% faster when the show ends", bad: "...and wipe out randomly on the way" },
+  propeller: { icon: "✣", name: "Propeller hats",    cost: 180, good: "Squeezed wearers can take off and hop out of the crush", bad: "...sometimes they take off for no reason at all" },
+  glasses:   { icon: "◐", name: "3D glasses",        cost: 110, good: "+20% tickets after every show", bad: "...wearers wander around and bump into people" },
+  cape:      { icon: "⚑", name: "Hero capes",        cost: 150, good: "Wearers run 20% faster to the exits", bad: "...and push 15% harder in the drops" },
+  pockets:   { icon: "▤", name: "Cargo shorts",      cost: 130, good: "+1 charge of every chaos power", bad: "...the pockets are full: wearers 10% slower" },
+  ducks:     { icon: "🦆", name: "Rubber duck rings", cost: 100, good: "Wearers bounce off each other: 20% less pressure", bad: "...and get stuck in doorways (slower at the gates)" },
+};
+// today's deals: three random offers that change every day
+const DEALS = {
+  mystery: { icon: "?", name: "Mystery box", desc: "A random piece of gear you don't have yet, or a pile of tickets" },
+  meteors: { icon: "☄", name: "Meteor shower", desc: "Next show: +3 meteors" },
+  lucky:   { icon: "✿", name: "Lucky hat", desc: "Next show: +50% tickets" },
+  cows:    { icon: "🐄", name: "Cow delivery", desc: "Next show: +3 cows" },
+  calm:    { icon: "))", name: "Spare batteries", desc: "Next show: +3 megaphone uses" },
+  sale:    { icon: "%", name: "Gear clearance", desc: "A random piece of gear at 40% off" },
+};
+let GEAR_OWN = [], GEAR_ON = [], NEXT = {};
+const gearOn = k => !(typeof window !== "undefined" && window.__manual) && GEAR_ON.includes(k);
 let UPG = {}, TIX = 0, LAST_EARN = 0;
-function loadShop() { try { UPG = JSON.parse(localStorage.getItem("mh.upg") || "{}") || {}; TIX = +(localStorage.getItem("mh.tix") || 0) || 0; } catch (e) { UPG = {}; TIX = 0; } }
-function saveShop() { try { localStorage.setItem("mh.upg", JSON.stringify(UPG)); localStorage.setItem("mh.tix", String(TIX)); } catch (e) { /* no storage */ } }
+function loadShop() {
+  try { UPG = JSON.parse(localStorage.getItem("mh.upg") || "{}") || {}; TIX = +(localStorage.getItem("mh.tix") || 0) || 0; } catch (e) { UPG = {}; TIX = 0; }
+  try { const g = JSON.parse(localStorage.getItem("mh.gear") || "{}") || {}; GEAR_OWN = (g.own || []).filter(k => GEAR[k]); GEAR_ON = (g.on || []).filter(k => GEAR_OWN.includes(k)).slice(0, 3); NEXT = g.next || {}; } catch (e) { GEAR_OWN = []; GEAR_ON = []; NEXT = {}; }
+}
+function saveShop() { try { localStorage.setItem("mh.upg", JSON.stringify(UPG)); localStorage.setItem("mh.tix", String(TIX)); localStorage.setItem("mh.gear", JSON.stringify({ own: GEAR_OWN, on: GEAR_ON, next: NEXT })); } catch (e) { /* no storage */ } }
+// the deals of the day: seeded by the date, so they change at midnight and survive restarts
+function todaysDeals() {
+  const d = new Date(), seed = d.getFullYear() * 400 + d.getMonth() * 32 + d.getDate(); let x = seed;
+  const r = () => { x = (x * 9301 + 49297) % 233280; return x / 233280; };
+  const keys = Object.keys(DEALS).sort(() => r() - .5).slice(0, 3), spare = Object.keys(GEAR).filter(k => !GEAR_OWN.includes(k));
+  return keys.map((k, i) => ({ k, id: seed + ":" + i, cost: k === "mystery" ? 90 : k === "sale" ? 0 : 35 + Math.round(r() * 30), gear: k === "sale" && spare.length ? spare[Math.floor(r() * spare.length)] : null })).filter(o => o.k !== "sale" || o.gear);
+}
 const upg = k => (typeof window !== "undefined" && window.__manual) ? 0 : (UPG[k] || 0);   // recordings and tests play without upgrades
 const MEGA_R = () => 5.5 * (1 + .2 * upg("loud"));
 loadShop();

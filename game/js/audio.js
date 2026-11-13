@@ -290,7 +290,7 @@ function sfx(name) {
   AU.lastSfx[name] = now; SFX[name](now + .01);
 }
 // every onomatopoeia in the game makes a sound
-const SFX_BY_TEXT = { "STOP! POLICE!": "whistle", "WEEEEE-OOOO!": "siren", "BUSTED!": "cheer", "HE GOT AWAY!": "ooh", "LOL BYE!": "fiu", "FREE SAMPLES!": "jingle", "ELOTES! ESQUITES!": "honk", "ROAR!": "roar", "GRRR!": "roar", "MEEP MEEP!": "honk", "BEEEP!": "honk", "HONK!": "honk", "WOOF!": "bark", "YELP!": "bark",
+const SFX_BY_TEXT = { "AAAAAAAAH!": "scream", "TELL MY MOM...": "scream", "DING DING!": "jingle", "TILT!": "beep", "BONUS!": "jingle", "STOP! POLICE!": "whistle", "WEEEEE-OOOO!": "siren", "BUSTED!": "cheer", "HE GOT AWAY!": "ooh", "LOL BYE!": "fiu", "FREE SAMPLES!": "jingle", "ELOTES! ESQUITES!": "honk", "ROAR!": "roar", "GRRR!": "roar", "MEEP MEEP!": "honk", "BEEEP!": "honk", "HONK!": "honk", "WOOF!": "bark", "YELP!": "bark",
   "PAWOOO!": "trumpet", "BOOM!": "boom", "CRASH!": "crash", "HALT!": "whistle", "WHOOOSH!": "fiu", "SPLASH!": "splash", "TOOOOOT!": "horn",
   "SQUAWK!": "quack", "NEIGHHH!": "neigh", "THEY'RE OFF!": "horn", "♪ ♫ ♪": "jingle", "OLEEE!": "cheer", "LET'S GOOO!": "cheer", "SETTLE DOWN!": "whistle", "COMING THROUGH!": "honk",
   "SALE!": "jingle", "♪ AY, AY, AY! ♪": "trumpet", "THAT'S NOT MY DAUGHTER-IN-LAW!": "scream", "IT'S CLOGGED!": "splash", "PHOTO WITH THE MAYOR!": "cheer",

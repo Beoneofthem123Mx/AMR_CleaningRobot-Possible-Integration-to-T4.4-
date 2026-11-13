@@ -6,7 +6,7 @@ A crowd-management desktop game for Steam (Windows and Linux), inspired by the c
 You are in charge of safety at a massive event. Before the gates open you draw fences and decide
 which entrances to open. Then thousands of people pour in, cram together in front of the stage and,
 when it's over, all leave at once. Meanwhile animals, cars and assorted objects wander through the
-crowd. If someone takes too much pressure for too long, they go down and the **TRAMPLED** counter
+crowd. If someone takes too much pressure for too long, they go down and the **PANCAKED** counter (a flattened toy person with X eyes)
 goes up.
 
 ## How to run it
@@ -99,6 +99,13 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
   to the people in front (domino). Level of detail by distance to the camera: near agents get full
   two-body physics, mid ones a kinematic torso, far ones none; one central loop updates them in
   batches with an agent and time budget per step, so big crowds never freeze the browser.
+- Shows last 45 seconds once the crowd is in.
+- Each venue dresses its crowd: pirates, sailors and swimmers on the cruise, luchadores at the arena,
+  astronauts at the launch, hazmat suits at the nuclear plant, zombies and ghosts at the zombie walk, and
+  so on, plus random weirdos anywhere (a hot dog, a banana, a knight, a wizard). About 1 in 8 people
+  are "springy": when something hits them they fly ten metres up, spinning and screaming, and crash
+  down on their neighbours. Nine fall styles: backflop, faceplant, spinning top, launched, pancake,
+  pinball, helicopter, dead bug and cartwheel.
 - The audience shouts: each venue has its own lines ("REFEREE, GLASSES!", "IS IT SUPPOSED TO GLOW?"),
   and squeezed people complain instead.
 - If the hardware is struggling, the game automatically drops crowd shadows and lowers the
@@ -125,7 +132,7 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 | **The Circus** | — | Under the big top: the lion escapes, elephants parade, the clown car and unicycles; a unicorn leaving rainbows, a sneezing dragon, a griffin that snatches fans, bellhop monkeys, clowns balancing on giant balls, jugglers who miss the trick and fall from the trapeze, and the human cannonball firing volleys into the audience. |
 | **The Stadium** | 2 ★ | Cup final, Deportivo Chancla vs Real Burrito: a real match (keepers, passes, shots, saves, scoreboard) behind the barrier of the fan zone. Every goal makes the whole stadium jump and shove; the two fan gangs come down from the stands to brawl; flares, the mascot and the wave. |
 | **Black Friday** | 3 ★ | Mall sale: flash deals that send the crowd stampeding, runaway shopping carts, a grandma with elbows and a wet floor. Shoppers duck into the stores and come out buried in bags with a tower of boxes on their heads (slower and wobblier every trip). |
-| **The Cruise** | 4 ★ | Deck party: the swell tilts the ship, seagulls, an inflatable flamingo and the captain's horn. |
+| **The Cruise** | 4 ★ | Deck party: the swell tilts the ship, seagulls, an inflatable flamingo and the captain's horn. Pirates: a pirate ship pulls alongside, fires cannonballs into the crowd and sends a boarding party. |
 | **Wedding of the Year** | 5 ★ | Influencer wedding: the bouquet toss sparks stampedes, the cake rolls away, the drone crashes, mariachis and the mother-in-law. |
 | **The Racetrack** | 6 ★ | Grand Prix: races right along the fence, runaway horses, the track tractor and dogs. |
 | **The Golden Throne** | 7 ★ | The world's most luxurious restroom opens: it clogs, golden rolls go rolling, the mayor takes selfies and it smells like vanilla. |
@@ -174,7 +181,17 @@ around.
 - Every show pays **tickets**: 10 for showing up, more for everyone who got home, 20 per star and 30 per
   new medal (sandbox pays nothing). Spend them in the **Upgrade shop** in the main menu: bigger budget,
   megaphone batteries and reach, steward training, extra security, charming guards, softer foam and
-  better first aid, three levels each.
+  better first aid and a chaos kit, three levels each.
+- **Crowd gear** (shop tab): hard hats, bubble wrap suits, roller skates, propeller hats, 3D glasses, hero
+  capes, cargo shorts and rubber duck rings. Wear up to three; about one in five people shows up in
+  each, and every piece has a bonus and a drawback (bubble wrap takes less damage but anything that
+  hits it goes into orbit; skates leave fast but wipe out; propellers lift people out of the crush but
+  sometimes for no reason).
+- **Today's deals** (shop tab): three random offers a day: a mystery box (a random piece of gear or a pile
+  of tickets), gear at 40% off, extra meteors or cows for the next show, spare batteries, a lucky hat.
+- **Chaos powers** during the show: next to the megaphone, a bar with a meteor, a giant bowling ball,
+  a cartoon anvil, a cow from the sky and banana peels, with limited charges per show. What they
+  flatten counts as pancaked: they are for fun, not for stars.
 - **Moving entrances**: every visit to a venue shuffles the seven gates into a new, uneven layout (only
   spots that really work are used) and opens the venue's usual number of them at random. Turn it off
   in Options to get fixed gates and a plan saved per venue.

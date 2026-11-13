@@ -11,9 +11,10 @@ cv.addEventListener("pointerdown", ev => {
   // during the show, each click uses the megaphone (three times per show)
   if (phase === "show" || phase === "evac") {
     const [x, y] = toWorld(ev);
+    if (power !== "mega") { usePower(x, y); return; }
     if (mega.n <= 0 && !sandbox) { caption("The megaphone is out of battery.", true, 1400); return; }
     if (!sandbox) mega.n--; megaUsed = true; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true }, { x, y, t: -.18, mega: true }, { x, y, t: -.36, mega: true });   // three sound waves
-    shake = Math.min(1, shake + .25); pop(x, y, "CALM DOWN, PLEASE!"); sfx("whistle"); return;
+    shake = Math.min(1, shake + .25); pop(x, y, "CALM DOWN, PLEASE!"); sfx("whistle"); ui(); return;
   }
   if (phase !== "plan") return;
   const [x, y] = toWorld(ev);
@@ -112,8 +113,8 @@ function stepPreview(dt) {
 
 // ===== Interface =====
 let toastTimer, capTimer;
-const MILESTONES = { 10: "10 trampled. Thoughts and prayers.", 50: "50 trampled. HR would like a word.", 100: "100 TRAMPLED — a new personal worst!", 250: "250. The insurance company just hung up.",
-  500: "500 TRAMPLED. This is now a documentary.", 1000: "1,000. They will name the law after you.", 2000: "2,000. At this point it's just impressive." };
+const MILESTONES = { 10: "10 pancaked. Thoughts and prayers.", 50: "50 pancaked. HR would like a word.", 100: "100 PANCAKED — a new personal worst!", 250: "250. The insurance company just hung up.",
+  500: "500 PANCAKED. This is now a documentary.", 1000: "1,000. They will name the law after you.", 2000: "2,000. At this point it's just impressive." };
 function caption(text, yellow, ms) {
   const el = $("#caption"); el.textContent = text; el.classList.toggle("yellow", !!yellow); el.style.opacity = 1;
   clearTimeout(capTimer); if (ms) capTimer = setTimeout(() => el.style.opacity = 0, ms);
@@ -227,7 +228,7 @@ $("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette()
 function stopMenu() {
   if ((phase !== "show" && phase !== "evac") || demo) return;
   paused = true;
-  showCard(`<h2>Stopped</h2><p>The show is frozen right where it was. ${dead ? `${dead.toLocaleString("en")} trampled so far.` : "Nobody hurt so far."}</p>
+  showCard(`<h2>Stopped</h2><p>The show is frozen right where it was. ${dead ? `${dead.toLocaleString("en")} pancaked so far.` : "Nobody hurt so far."}</p>
     <div class="row"><button class="go" id="resume">Keep going</button><button id="again">Start this show over</button><button id="retry">Back to planning</button></div>`);
 }
 let heat = false, speed = 1;
@@ -294,7 +295,14 @@ function pickRole(k) { guardRole = k; tool = "guard"; ui(); toast(`${GUARD_ROLES
 let pickerFor = "";
 function renderPicker(plan) {
   const live = phase === "show" || phase === "evac";
-  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : sandbox && plan ? "sand" : "";
+  const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : live && !demo ? "powers" : sandbox && plan ? "sand" : "";
+  if (want === "powers") {   // chaos powers: rebuilt every time, the charges change
+    pickerFor = want; el.hidden = false;
+    el.innerHTML = Object.entries(POWERS).map(([k, p]) => { const n = k === "mega" ? mega.n : charges[k] || 0;
+      return `<button data-pw="${k}" class="${power === k ? "on" : ""}" title="${p.desc}" ${n <= 0 ? "disabled" : ""}>${p.icon} ${p.name}<span class="cnt">×${n}</span></button>`; }).join("");
+    el.querySelectorAll("button[data-pw]").forEach(b => b.addEventListener("click", () => { power = b.dataset.pw; ui(); if (power !== "mega") toast(`${POWERS[power].name}: ${POWERS[power].desc}. Click the venue.`); }));
+    return;
+  }
   el.hidden = !want;
   if (want && want !== pickerFor) {
     pickerFor = want;

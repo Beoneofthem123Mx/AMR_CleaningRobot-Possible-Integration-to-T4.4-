@@ -152,3 +152,60 @@ SCENES.crucero = {
     { kind: "cru_float", col: "#7dff6a", orbit: [20, 32.5, .9, .3, 4], h: .2, x: 0, y: 0, ang: 0, t: 0 },
   ],
 };
+
+// ---------- pirates! a pirate ship pulls alongside, fires its cannons and sends a boarding party ----------
+SCENE_MODELS.pirate_ship = (g, u) => {
+  const wood = "#6b3f22", dark = "#3e2414";
+  part(g, "box", wood, 9, 2.2, 3.4, 0, 1.1, 0); part(g, "box", dark, 9.1, .3, 3.5, 0, 2.2, 0);
+  part(g, "box", wood, 2.6, 1.6, 3.2, -3.4, 2.8, 0); part(g, "cone", wood, 1.7, 2.4, 1.7, 5.3, 1.2, 0).rotation.z = -Math.PI / 2;
+  for (let i = 0; i < 4; i++) { const c = part(g, "cyl", "#151617", .22, .9, .22, -2.4 + i * 1.6, 1.4, 1.75); c.rotation.x = Math.PI / 2; }
+  for (const [x, h] of [[-1.5, 7], [2, 8.5]]) {
+    part(g, "cyl", dark, .14, h, .14, x, h / 2 + 2, 0);
+    const sail = part(g, "box", "#efe6cf", .08, h * .45, 2.8, x + .2, h * .62 + 2, 0); u.sails = (u.sails || []).concat(sail);
+  }
+  part(g, "box", "#111214", .03, .9, 1.3, 2.05, 10.9, .7); part(g, "sph", "#f4f4f0", .2, .2, .05, 2.08, 11.0, .7);   // the jolly roger (a smiley one)
+  for (const z of [-.1, .1]) part(g, "sph", "#111214", .04, .04, .02, 2.1, 11.05, .62 + z);
+  u.anim = (tt) => { g.rotation.x = Math.sin(tt * 1.3) * .06; g.rotation.z = Math.sin(tt * .9) * .03; (u.sails || []).forEach((s, i) => { s.scale.z = 1 + Math.sin(tt * 2 + i) * .05; }); };
+};
+SCENE_PERSONS.pirate = { body: "#f4f4f0", legs: "#2b2f35", hat: "hair", hatCol: "#1b1d22", shoes: "#3e2414",
+  extra(g, u, b, m) {
+    part(b, "box", "#1b1d22", .45, .1, .3, -.02, 1.92, 0); part(b, "box", "#e3b23c", .47, .03, .32, -.02, 1.88, 0);   // tricorn
+    part(b, "sph", "#111214", .05, .07, .05, .3, 1.68, .08);                                                             // eye patch
+    part(b, "box", "#d8322b", .32, .12, .5, 0, .82, 0);                                                                   // sash
+    const sw = part(b, "box", "#c9ced6", .04, .7, .05, .25, 1.0, .35); sw.rotation.z = -.6;                              // cutlass
+    if (m.captain) { part(b, "sph", "#3fae5a", .12, .14, .1, -.05, 1.45, .28); part(b, "cone", "#ff9a3c", .04, .1, .04, .06, 1.47, .28).rotation.z = -Math.PI / 2; part(b, "box", "#d8322b", .5, .5, .06, -.25, 1.1, 0); }
+  } };
+const PIRATE_SAYS = ["ARRR!", "WALK THE PLANK!", "SHIVER ME TIMBERS!", "YO HO HO!", "WHERE'S THE BUFFET?!", "THIS BE OUR PARTY NOW!", "GIVE US YER SUNSCREEN!"];
+Object.assign(SCENES.crucero, {
+  events: SCENES.crucero.events.concat(["piratas", "piratas"]),
+  ev: Object.assign(SCENES.crucero.ev || {}, {
+    piratas(side) {
+      const sx = side ? -9 : WW + 9, y0 = 74;
+      addMover({ kind: "pirate_ship", beh: "static", life: 30, x: sx, y: y0, r: 4, push: 0, scare: 0, air: true, h: -1, ang: -Math.PI / 2, say: "ARRR, A PARTY BOAT!", sayEvery: 5,
+        tick(m) {
+          if (m.y > 34) m.y -= 3.2 * DT; else if (m.t > 22) m.y -= 5 * DT;
+          m.gun = (m.gun ?? 2.5) - DT;
+          if (m.gun <= 0 && m.y < 66 && m.t < 20) {   // broadside: smoke at the ship, a cannonball lands in the crowd a moment later
+            m.gun = 2 + Math.random() * 1.2; sfx("boom"); shake = Math.min(1, shake + .25);
+            for (let k = 0; k < 5; k++) puff(m.x + (side ? 1.8 : -1.8), m.y + rnd(-3, 3), 1.4, "#e8e2d0", .8, 1.4, .6);
+            const [tx, ty] = crowdPoint(); later(.7, () => {
+              pop(tx, ty - 1, ["KABOOM!", "INCOMING!", "CANNONBALL!"][(Math.random() * 3) | 0]); burstAt(tx, ty, 30);
+              for (const a of ag) { const dx = a.x - tx, dy = a.y - ty, d = Math.hypot(dx, dy); if (d < 2.2 && d > .01) { if (a.springy && yeet(a, dx, dy)) continue; toss(a, 1.4 + (1 - d / 2.2) * 2, .9); a.vx += dx / d * 3; a.vy += dy / d * 3; a.p += 1; } }
+            });
+          }
+          if (!m.boarded && m.y < 52) {   // grappling hooks: the boarding party swings onto the deck
+            m.boarded = true; pop(m.x, m.y - 3, "BOARD HER, LADS!");
+            for (let n = 0; n < 6; n++) later(n * .35, () => {
+              const ex = side ? 3.4 : WW - 3.4, ey = m.y + rnd(-5, 5), pts = [crowdPoint(), crowdPoint(), crowdPoint(), [side ? -2 : WW + 2, rnd(30, 60)]];
+              addMover({ kind: "pirate", captain: n === 0, x: ex, y: ey, pts, speed: 3.4, r: .45, push: 22, scare: 1.5, agile: true, say: n ? "" : "ARRR!", sayEvery: 2.5,
+                tick(p) { if (Math.random() < .006) pop(p.x, p.y - 1.4, PIRATE_SAYS[(Math.random() * PIRATE_SAYS.length) | 0]); if (p.i === p.pts.length - 1 && (p.x < 3.5 || p.x > WW - 3.5) && !p.splash) { p.splash = true; pop(p.x, p.y - 1, "SPLASH!"); } } });
+            });
+          }
+          if (m.y < -12) m.dead = true;
+        } });
+      caption("PIRATES off the port bow!", true, 2400);
+    },
+  }),
+});
+SCENES.crucero.lines = Object.assign(SCENES.crucero.lines || {}, { piratas: "A pirate ship boarded the party boat, fired three cannonballs into the conga line and left with forty sunscreens." });
+SCENES.crucero.quotes = (SCENES.crucero.quotes || []).concat(["“They said they were pirates. Honestly, the best entertainment on board,” said a passenger with no eyebrows."]);

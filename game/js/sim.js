@@ -150,11 +150,23 @@ const HEAT = ["#2c4fd6","#2f86e0","#2fb8d0","#33c08a","#5cc63c","#b8d230","#f2c5
 let surgeT = 0, nextDrop = 0, drops = 0, SURGE = [.55, 1.1];
 let abducted = 0, slipT = 0, MOD = null, eventLog = new Set(), mega = { n: 3, active: [] }; megaUsed = false;
 // shopping: people pop into the venue shops and come back out buried in bags
+let SHOW_LUCKY = false;
 let SHOPPERS = [], SHOP_DOORS = [], shopT = 0;
 const SHOP_CRIES = ["SALE!!", "I REGRET NOTHING", "BAGS!", "ONE MORE STORE", "MY CREDIT CARD!", "IT WAS 90% OFF", "WORTH IT"];
 let ag = [], fallen = [], phase = "plan", spawned = 0, fullAt = 0, t = 0, evacT = 0, dead = 0, evacuated = 0;
 let hashHead = new Int32Array(GW * GH), hashNext = new Int32Array(0);
 
+const VENUE_OUTFITS = {
+  plaza: ["tourist", "superhero", "wizard", "clown"], circo: ["clown", "clown", "king", "wizard"], estadio: ["fan", "fan", "fan", "viking"],
+  viernes: ["tourist", "hotdog", "superhero"], crucero: ["sailor", "pirate", "pirate", "swimmer", "tourist"], boda: ["tux", "tux", "king"],
+  hipodromo: ["cowboy", "cowboy", "tux"], trono: ["king", "knight", "tux"], ciudad: ["superhero", "chef", "hotdog", "wizard"],
+  mitin: ["duck", "duck", "tux"], taco: ["chef", "luchador", "hotdog"], ovni: ["astronaut", "astronaut", "wizard"],
+  aeropuerto: ["tourist", "tourist", "astronaut"], arena: ["luchador", "luchador", "luchador", "king"], rocket: ["astronaut", "astronaut", "superhero"],
+  zoo: ["banana", "tourist", "cowboy"], cheese: ["chef", "cowboy", "knight"], zombie: ["zombie", "zombie", "ghost", "wizard"],
+  beach: ["swimmer", "swimmer", "pirate", "sailor"], park: ["clown", "superhero", "banana", "wizard"], nuclear: ["hazmat", "hazmat", "astronaut"],
+  guerra: ["soldier", "soldier", "knight", "viking"],
+};
+const WACKY = ["hotdog", "banana", "astronaut", "knight", "wizard", "viking", "duck", "ghost", "pirate", "superhero", "clown"];
 function looks() {
   const r = Math.random();
   const L = { m: r < .3 ? 0 : r < .5 ? 1 : r < .68 ? 2 : r < .84 ? 3 : 4, sc: Math.random() < .05 ? .72 : .88 + Math.random() * .2,
@@ -175,6 +187,21 @@ function looks() {
   else if (rt < .22) { L.sc = 1 + Math.random() * .08; L.bw = 1.45 + Math.random() * .25; L.ws = 4; L.v0m = .9; }
   else if (rt < .27) { L.sc = .86 + Math.random() * .08; L.ws = 5; L.v0m = .78; L.old = 1; L.hs = Math.random() < .4 ? 4 : 0; L.m = L.m === 4 ? 0 : L.m; if (Math.random() < .35) L.acc = 5; }
   else if (rt < .31) { L.cos = 1 + ((Math.random() * 3) | 0); L.sc = 1 + Math.random() * .12; L.bw = 1.15; L.m = 0; L.hs = 4; L.acc = 0; L.cl = 0; }
+  // dressed for the occasion: about a quarter wear the venue's outfits, and a few weirdos show up anywhere
+  const th = VENUE_OUTFITS[sceneKey], ro = Math.random();
+  if (!L.cos && typeof OUTFIT_ID !== "undefined" && !(MOD && MOD.uniform)) {
+    const name = th && ro < .26 ? th[(Math.random() * th.length) | 0] : ro > .94 ? WACKY[(Math.random() * WACKY.length) | 0] : null;
+    if (name && OUTFIT_ID[name]) {
+      L.cos = OUTFIT_ID[name]; L.cl = 0; L.m = 0;
+      if (!["zombie", "tourist", "superhero", "swimmer", "fan", "ghost", "banana", "hotdog", "duck", "luchador"].includes(name)) L.hs = 4;   // hats and helmets sit on a bald head
+      if (name === "tourist") L.acc = 5; else if (L.acc === 1 || L.acc === 3 || L.acc === 5 || L.acc === 4) L.acc = 0;
+      if (name === "zombie" || name === "ghost") L.v0m = .85;
+    }
+  }
+  L.springy = Math.random() < .12;
+  if (GEAR_ON.length && !(typeof window !== "undefined" && window.__manual)) for (const k of GEAR_ON) if (!L.gear && Math.random() < .2) L.gear = k;
+  if (L.gear === "helmet" || L.gear === "pockets") L.v0m = (L.v0m || 1) * .9;
+  if (L.gear === "bubble") L.springy = true;
   if (MOD && MOD.rain && Math.random() < .45) L.acc = 3;
   if (MOD && MOD.sizeMul) L.sc *= MOD.sizeMul;
   if (MOD && MOD.uniform) { L.c = L.ac = MOD.uc || 0; L.pc = 0; L.cos = 0; }
@@ -269,6 +296,15 @@ function step() {
     if (a.beam) a.lift += DT * .75; else if (a.lift > 0) a.lift = Math.max(0, a.lift - DT * 1.5);
     for (const sw of stewards) if ((a.x - sw.x) ** 2 + (a.y - sw.y) ** 2 < STEWARD_R * STEWARD_R) { want *= .5; break; }
     if (a.tb && a.tb.st > 0) want *= .45;   // stumbling (twobody.js): busy not falling over
+    if (a.gear) {   // crowd gear from the shop: every piece helps and hurts
+      const gr = a.gear;
+      if (leaving && (gr === "skates" || gr === "cape")) want *= gr === "skates" ? 1.3 : 1.2;
+      if (surging && gr === "cape") want *= 1.15;
+      if (gr === "ducks" && a.y > FENCE_Y - 3) want *= .8;
+      if (gr === "skates" && Math.random() < .0015 && toss(a, 1.1, .7) && !demo && Math.random() < .3) pop(a.x, a.y - 1, "WIPEOUT!");
+      if (gr === "propeller" && (a.ps > PCRIT * .75 ? Math.random() < .01 : Math.random() < .0004) && a.air <= 0) { toss(a, 2.6, 1.5); if (!demo && Math.random() < .4) pop(a.x, a.y - 1.2, "WHIRRRR!"); }
+      if (gr === "glasses" && Math.random() < .02) { a.fx += (Math.random() - .5) * 6; a.fy += (Math.random() - .5) * 6; }
+    }
     if (a.lift > 0) { want = 0; a.fx *= .2; a.fy *= .2; }
     if (a.lift > 1.5) { abducted++; continue; }
     const tau = slipT > 0 ? 2.2 : .5;   // on the slippery floor nobody can stop
@@ -295,11 +331,16 @@ function step() {
     if (leaving && ROUTE.side && a.y > ROUTE.ey0 && a.y < ROUTE.ey1) a.x = clamp(a.x, -3, WW + 3); else a.x = clamp(a.x, R, WW - R);
     if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1; if (a.ps > pmax) pmax = a.ps;
-    if (a.air > 0) a.air -= DT;
+    if (a.air > 0) { a.air -= DT; if (a.air <= 0 && a.yeet) {   // crash landing from orbit
+      a.yeet = 0; shake = Math.min(1.2, shake + .25); for (let k = 0; k < 6; k++) puff(a.x + (Math.random() - .5), a.y + (Math.random() - .5), .15, scene.night ? "#6a6870" : "#e6dcc4", .3, .9, .4);
+      if (!demo && Math.random() < .6) pop(a.x, a.y - 1, ["OOF!", "CRUNCH!", "I'M OK!", "10/10 LANDING", "SPLAT!"][(Math.random() * 5) | 0]);
+      for (const b of ag) if (b !== a && (b.x - a.x) ** 2 + (b.y - a.y) ** 2 < 1.2) { b.vx += (b.x - a.x) * 3; b.vy += (b.y - a.y) * 3; toss(b, .8, .6); }   // knocks the neighbours over
+    } }
     const pc = PCRIT * (MOD && MOD.pcritMul || 1) * (1 - .3 * UNM);
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
-    if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? AID_DMG : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? AID_HEAL : .4));
+    if (a.gear === "ducks") a.p *= .8;
+    if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? AID_DMG : 1.6) * (a.gear === "helmet" ? .75 : a.gear === "bubble" ? .7 : 1); else a.dmg = Math.max(0, a.dmg - DT * (aid ? AID_HEAL : .4));
     if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; pickFall(a); fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
     if (evac && (a.y > SH - .6 || a.x < -.4 || a.x > WW + .4 || (ROUTE.side && leaving && a.y > ROUTE.ey0 - .6 && a.y < ROUTE.ey1 + .6 && (ROUTE.side < 0 ? a.x < .55 : a.x > WW - .55)))) { evacuated++; continue; }
     out.push(a);
@@ -308,6 +349,7 @@ function step() {
   TwoBody.update(ag, DT);   // torsos on elastic joints, stumbles and domino chains (twobody.js)
   if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
   if (!demo && spawned > 150) crowdShouts();
+  if (yeetT > 0) yeetT -= DT;
   if (scene.step && !demo) scene.step();   // venue mechanics (reactor heat, land mines)
   if (surgeT > 0 && !demo && ag.length && Math.random() < .25) { const a = ag[(Math.random() * ag.length) | 0]; if (a.dance && toss(a, .9 + Math.random() * .9) && Math.random() < .3) pop(a.x, a.y - 1, ["WHEEE!", "YEET!", "WOOO!"][(Math.random() * 3) | 0]); }
   // a calm evacuation is boring to watch: after 2 s with nobody squeezed the clock runs fast
@@ -329,11 +371,11 @@ const achieve = id => { try { window.steam && window.steam.achieve(id); } catch 
 let sceneKey = "plaza";
 // medals: four optional challenges per venue
 const MEDALS = {
-  budget:   { icon: "$", name: "On a budget", desc: "At most 5 trampled spending $200 or less" },
-  handsoff: { icon: "✋", name: "Hands off", desc: "Zero trampled without guards or the megaphone" },
-  chaos:    { icon: "🌀", name: "Chaos survivor", desc: "Under 1% trampled in Total Chaos mode" },
-  disaster: { icon: "☠", name: "Catastrophe", desc: "500 or more trampled. On purpose, we assume." },
-  architect: { icon: "▲", name: "Architect", desc: "At most 5 trampled without opening a single extra gate: fences and stewards only" },
+  budget:   { icon: "$", name: "On a budget", desc: "At most 5 pancaked spending $200 or less" },
+  handsoff: { icon: "✋", name: "Hands off", desc: "Zero pancaked without guards or the megaphone" },
+  chaos:    { icon: "🌀", name: "Chaos survivor", desc: "Under 1% pancaked in Total Chaos mode" },
+  disaster: { icon: "☠", name: "Catastrophe", desc: "500 or more pancaked. On purpose, we assume." },
+  architect: { icon: "▲", name: "Architect", desc: "At most 5 pancaked without opening a single extra gate: fences and stewards only" },
 };
 function loadJSON(key, def) { try { return JSON.parse(localStorage.getItem(key) || "null") || def; } catch (e) { return def; } }
 function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* no storage */ } }
@@ -410,6 +452,18 @@ function shuffleSlots() {
   SLOT_XS = null; SLOT_BAD = []; gates = scene.gates.slice(); buildWorld(); return false;
 }
 // chaos: throw someone into the air (they somersault and land on their feet, unhurt)
+// springy people (about 1 in 8) don't just stumble when something hits them: they leave the atmosphere
+const YEET_CRIES = ["AAAAAAAAH!", "WHEEEEEEEE!", "TO INFINITY!", "I CAN FLY!", "YEEEEET!", "TELL MY MOM...", "NOT AGAAAIN!", "BYEEEEE!"];
+let yeetT = 0;
+function yeet(a, dx, dy) {
+  if (a.air > 0 || a.lift > 0 || yeetT > 0) return false;
+  yeetT = .2;
+  a.airD = a.air = 1.7 + Math.random() * 1.1; a.airH = 6 + Math.random() * 7; a.yeet = 1;
+  a.airSpin = (Math.random() < .5 ? -1 : 1) * (2 + Math.random() * 3); a.airYaw = (Math.random() - .5) * 16;
+  if (dx !== undefined) { const l = Math.hypot(dx, dy) || 1; a.vx = dx / l * 2.6; a.vy = dy / l * 2.6; }
+  if (!demo) { pop(a.x, a.y - 1.4, YEET_CRIES[(Math.random() * YEET_CRIES.length) | 0]); sfx("fiu"); }
+  return true;
+}
 function toss(a, h, d) {
   if (a.air > 0 || a.lift > 0) return false;
   a.airD = a.air = d || .75 + Math.random() * .4; a.airH = h || 1.2 + Math.random() * 1.2;
@@ -430,12 +484,12 @@ let lastFalls = [], lastFallsScene = "", calmT = 0;
 // one sentence telling the player where it went wrong
 // rag-doll styles: 0 backflop, 1 faceplant, 2 spinning top, 3 launched by the crowd, 4 pancake then plank
 function pickFall(a) {
-  const r = Math.random();
-  a.fallType = r < .26 ? 0 : r < .48 ? 1 : r < .66 ? 2 : r < .84 ? 3 : 4;
+  const forced = a.forceFall, r = Math.random(); a.forceFall = undefined;   // powers (anvil, meteor) pick the fall
+  a.fallType = forced !== undefined ? forced : r < .14 ? 0 : r < .27 ? 1 : r < .38 ? 2 : r < .5 ? 3 : r < .6 ? 4 : r < .7 ? 5 : r < .8 ? 6 : r < .9 ? 7 : 8;
   a.fx0 = a.x; a.fy0 = a.y;
-  if (a.fallType === 3) {   // thrown along the push (or anywhere), but only onto free floor
+  if (a.fallType === 3 || a.fallType === 5 || a.fallType === 8) {   // thrown along the push (or anywhere), but only onto free floor
     const sp = Math.hypot(a.vx, a.vy), an = sp > .2 ? Math.atan2(a.vy, a.vx) + (Math.random() - .5) * .8 : Math.random() * 6.283;
-    for (const d of [2.2, 1.5, .9]) {
+    for (const d of a.fallType === 3 ? [2.2, 1.5, .9] : [3.4, 2.4, 1.5, .9]) {
       const x = a.x + Math.cos(an) * d, y = a.y + Math.sin(an) * d;
       if (x > R && x < WW - R && y > R && y < SH - R && !blockedC[cellOf(x, y)]) { a.x = x; a.y = y; a.h = an; return; }
     }
@@ -451,7 +505,7 @@ function fallTip() {
   const where = nearGates > lastFalls.length * .5 ? `right at one of the open gates` : "in the middle of the crowd";
   const fix = nearGates > lastFalls.length * .5 ? "Open more gates, spread them apart, or slow people down there with stewards and wave breakers."
     : "Give the crowd room: break up the push toward the stage with short fences, guards or a big screen elsewhere.";
-  return `Most were trampled ${where}, ${when}. ${fix} The red marks on the plan show exactly where.`;
+  return `Most got pancaked ${where}, ${when}. ${fix} The red marks on the plan show exactly where.`;
 }   // the plan as drawn, so fences broken during a show come back afterwards
 function start(mod) {
   planFences = fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type }));
@@ -471,8 +525,12 @@ function start(mod) {
   const scr = props.find(p => p.type === "screen");
   if (scr && !MOD.altShare) setAlt(scr.x, scr.y, PROP_TYPES.screen.r + 2.2);
   if (scene.onStart) scene.onStart();
-  TwoBody.init(WW, WH); TwoBody.onStumble = (a, depth) => { if (!demo && Math.random() < (depth ? .02 : .06)) pop(a.x, a.y - 1.1, depth ? ["DOMINO!", "NOT ME TOO!", "WHOA-OA!"][(Math.random() * 3) | 0] : ["WHOA!", "OOPS!", "WATCH IT!", "MY BALANCE!"][(Math.random() * 4) | 0]); };
-  SHOPPERS = []; shopT = 0; shoutT = 3; SHOP_DOORS = scene.shopDoors ? scene.shopDoors() : [];
+  TwoBody.init(WW, WH); TwoBody.onStumble = (a, depth) => { if (a.springy && !depth && Math.random() < .35 && yeet(a)) return; if (!demo && Math.random() < (depth ? .02 : .06)) pop(a.x, a.y - 1.1, depth ? ["DOMINO!", "NOT ME TOO!", "WHOA-OA!"][(Math.random() * 3) | 0] : ["WHOA!", "OOPS!", "WATCH IT!", "MY BALANCE!"][(Math.random() * 4) | 0]); };
+  SHOPPERS = []; shopT = 0; shoutT = 3; resetPowers(); CRATERS = []; POWER_USED = false; SHOW_LUCKY = false;
+  if (!demo && !window.__manual && (NEXT.meteor || NEXT.cow || NEXT.mega || NEXT.lucky)) {   // the deals bought for this show
+    charges.meteor += NEXT.meteor || 0; charges.cow += NEXT.cow || 0; mega.n += NEXT.mega || 0; SHOW_LUCKY = !!NEXT.lucky;
+    delete NEXT.meteor; delete NEXT.cow; delete NEXT.mega; delete NEXT.lucky; saveShop();
+  } SHOP_DOORS = scene.shopDoors ? scene.shopDoors() : [];
   G3.photo = null;
 }
 function startEvac() { for (const a of SHOPPERS) shopOut(a); SHOPPERS = []; if (!demo) announce("time_over"); phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }
@@ -487,7 +545,7 @@ function finish() {
   const st = loadStats(); st.shows++; st.trampled += dead; st.abducted += abducted; st.saved += evacuated; if (stars === 3) st.perfect++; st.worst = Math.max(st.worst, dead); saveJSON("mh.stats", st);
   const fresh = awardMedals(stars, stuck, megaUsed);
   // tickets for the shop: something for showing up, more for everyone who got home, stars and new medals
-  LAST_EARN = 10 + Math.floor(evacuated / 60) + stars * 20 + fresh.length * 30; loadShop(); TIX += LAST_EARN; saveShop();
+  LAST_EARN = Math.round((10 + Math.floor(evacuated / 60) + stars * 20 + fresh.length * 30) * (gearOn("glasses") ? 1.2 : 1) * (SHOW_LUCKY ? 1.5 : 1)); loadShop(); TIX += LAST_EARN; saveShop();
   setTimeout(() => announce(dead >= 500 ? "game_over" : stars === 3 ? (Math.random() < .5 ? "mission_completed" : "congratulations") : stars ? "objective_achieved" : "mission_failed"), 700);
   if (fresh.length) setTimeout(() => announce("new_highscore"), 2300);
   if (Object.values(loadMedals()).reduce((n, m) => n + m.length, 0) >= 20) achieve("MEDAL_COLLECTOR");
@@ -507,7 +565,7 @@ function finish() {
     <div class="stats">
       <span>Crowd</span><span>${CROWD}</span>
       <span>Made it out OK</span><span>${evacuated}</span>
-      <span>Trampled</span><span style="color:var(--danger)">${dead}</span>
+      <span>Pancaked</span><span style="color:var(--danger)">${dead}</span>
       <span>Still trapped</span><span>${stuck}</span>
       <span>Evacuation time</span><span>${Math.round(evacT)} s</span>
     </div>

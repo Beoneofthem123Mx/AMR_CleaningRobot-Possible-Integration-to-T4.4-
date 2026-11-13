@@ -508,6 +508,39 @@ function ragdoll(a, tt) {
     if (after > 0) { const j = jiggle(after, 28, 4.5) * .42; kF = 1 - j; kU = 1 + j * .45; kS = 1 + j * .45; }
     if (!a.landed && after >= 0) { a.landed = 1; for (let k = 0; k < 6; k++) puff(a.x + (Math.random() - .5) * 1.2, a.y + (Math.random() - .5) * 1.2, .15, scene.night ? "#6a6870" : "#e6dcc4", .25, .9, .4); shake = Math.min(1, shake + .25); pop(a.x, a.y - .5, "SPLAT!"); }
     land = fly;
+  } else if (ty === 5) {     // PINBALL: shot across the floor, ricocheting left and right, spinning flat, DING DING
+    const dur = 1.4, q = clamp(age / dur, 0, 1), after = age - dur, e = 1 - (1 - q) * (1 - q), an = a.h;
+    const zig = Math.sin(q * Math.PI * 5) * .7 * (1 - q);
+    x = a.fx0 + (a.x - a.fx0) * e - Math.sin(an) * zig; z = a.fy0 + (a.y - a.fy0) * e + Math.cos(an) * zig;
+    pitch = Math.PI / 2 * clamp(age / .15, 0, 1); yaw = a.h + age * 16 * (1 - q) * (a.fallSpin > 0 ? 1 : -1);
+    y = .26 + Math.abs(Math.sin(q * Math.PI * 5)) * .35 * (1 - q);
+    R.armL = 2.4 + Math.sin(ph * 1.7) * 1.4 * (1 - q); R.armR = 2.2 + Math.cos(ph * 1.5) * 1.4 * (1 - q); R.legL = .5 + Math.sin(ph) * .8 * (1 - q); R.legR = -.5 - Math.cos(ph) * .8 * (1 - q); R.open = 1 - q;
+    if (after > 0) { const j = jiggle(after, 30, 5) * .35; kF = 1 - j; kU = 1 + j * .35; kS = 1 + j * .35; }
+    if (!a.dinged && q > .3) { a.dinged = 1; pop(x, z - .6, ["DING DING!", "TILT!", "BONUS!"][(a.fallLimb * 3 | 0) % 3]); }
+    land = dur;
+  } else if (ty === 6) {     // HELICOPTER: spins up like a propeller, hovers for a heartbeat, drops like a sack
+    const up = clamp(age / 1, 0, 1), drop = clamp((age - 1.05) / .3, 0, 1), after = age - 1.35;
+    yaw = a.h + age * age * 22 * (a.fallSpin > 0 ? 1 : -1);
+    y = .02 + Math.sin(up * Math.PI / 2) * 1.7 * (1 - drop * drop) + .24 * drop + (after > 0 ? Math.abs(jiggle(after, 16, 6)) * .3 : 0);
+    pitch = drop * Math.PI / 2; roll = Math.sin(age * 7) * .15 * (1 - drop);
+    R.armL = Math.PI / 2 + Math.sin(ph) * .15; R.armR = Math.PI / 2 - Math.sin(ph) * .15; R.legL = .25 + Math.sin(ph * 1.3) * .5 * (1 - drop); R.legR = -.25 - Math.sin(ph * 1.3) * .5 * (1 - drop); R.open = 1;
+    if (after > 0) { const j = jiggle(after, 26, 5) * .38; kF = 1 - j; kU = 1 + j * .4; kS = 1 + j * .4; }
+    land = 1.35;
+  } else if (ty === 7) {     // DEAD BUG: knees turn to jelly, wobble down, flip on the back and kick all four limbs in the air
+    const melt = clamp(age / .7, 0, 1), tip = clamp((age - .6) / .3, 0, 1), after = age - .9, kick = after > 0 ? Math.max(0, 1 - after / 2.6) : 1;
+    kU = Math.max(.35, 1 - .45 * melt + Math.sin(age * 24) * .22 * (1 - tip)); kF = kS = 1 / Math.sqrt(kU);
+    pitch = bounceOut(tip) * Math.PI / 2; y = .02 + .24 * tip;
+    if (tip >= 1) { R.armL = 1.7 + Math.sin(ph * 1.5) * .6 * kick; R.armR = 1.6 + Math.cos(ph * 1.7) * .6 * kick; R.legL = 1.5 + Math.sin(ph * 1.2) * .7 * kick; R.legR = 1.4 + Math.cos(ph * 1.4) * .7 * kick; }
+    else { R.armL = 2.6 + Math.sin(ph) * .8; R.armR = 2.5 + Math.cos(ph) * .8; R.legL = .5 * Math.sin(age * 24); R.legR = -.5 * Math.sin(age * 24); }
+    R.open = 1; land = .9;
+  } else if (ty === 8) {     // CARTWHEEL: rolls sideways like a starfish three times and ends up on its side
+    const dur = 1.2, q = clamp(age / dur, 0, 1), after = age - dur, an = a.h, sg = a.fallSpin > 0 ? 1 : -1;
+    x = a.fx0 + (a.x - a.fx0) * q; z = a.fy0 + (a.y - a.fy0) * q;
+    yaw = an - Math.PI / 2 * sg; roll = sg * (q * Math.PI * 6 + q * Math.PI / 2); pitch = 0;
+    y = .25 + .55 * Math.abs(Math.cos(q * Math.PI * 6)) * (1 - q) + (after > 0 ? Math.abs(jiggle(after, 18, 6)) * .25 : 0);
+    R.armL = R.armR = Math.PI * .8; R.legL = .7; R.legR = -.7; R.open = 1 - clamp(after, 0, 1);
+    if (after > 0) { const j = jiggle(after, 28, 5) * .3; kS = 1 - j; kF = 1 + j * .3; kU = 1 + j * .3; }
+    land = dur;
   } else {                   // PANCAKE: flattened like a cartoon, springs back BOING, then falls over like a plank
     const sq = clamp(age / .12, 0, 1), boing = age - .45, tip = clamp((age - .9) / .45, 0, 1);
     let k = 1 - .65 * sq;
@@ -554,8 +587,8 @@ function initPeople() {
   P.arm = mk(new THREE.CapsuleGeometry(.05, .48, 1, 5), std({ roughness: .6 }), N * 2);
   P.leg = mk(new THREE.CapsuleGeometry(.09, .42, 1, 5), std({ roughness: .7 }), N * 2);
   P.hand = mk(new THREE.IcosahedronGeometry(.066, 0), std({ roughness: .55 }), N * 2); P.hand.castShadow = false;   // round mitten hands
-  P.ear = mk(new THREE.SphereGeometry(.09, 8, 6), std({ roughness: .6 }), N); P.ear.castShadow = false;            // costume ears, combs
-  P.spike = mk(new THREE.ConeGeometry(.075, .2, 6), std({ roughness: .5 }), N); P.spike.castShadow = false;        // dino spikes, beaks
+  P.ear = mk(new THREE.SphereGeometry(.09, 8, 6), std({ roughness: .6 }), N * 3); P.ear.castShadow = false;            // costume ears, combs
+  P.spike = mk(new THREE.ConeGeometry(.075, .2, 6), std({ roughness: .5 }), N * 3); P.spike.castShadow = false;        // dino spikes, beaks
   P.shoe = mk(new THREE.SphereGeometry(.075, 6, 4), std({ roughness: .45 }), N * 2); P.shoe.castShadow = false;   // chunky toy shoes
   P.sign = mk(new THREE.BoxGeometry(.035, .42, .58), std({ roughness: .8 }), N);
   P.hair = mk(new THREE.SphereGeometry(.138, 8, 4, 0, Math.PI * 2, 0, Math.PI * .56), std({ roughness: .9 }), N);
@@ -646,6 +679,7 @@ function renderPeople(tt, dtR, vb) {
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
       if ((a.acc === 1 || a.acc === 3 || a.acc === 6) && !surging && a.ps < PCRIT * .55) armR = 2.7;  // holding the balloon / umbrella / sign up
       if (a.acc === 7) armL = 2.8 + Math.sin(tt * 7 + a.ph) * .25;   // waving a flag
+      if ((a.cos === 13 || a.cos === 20) && a.ps < PCRIT * .55) { armL = 1.45 + Math.sin(tt * 3 + a.ph) * .12; armR = 1.5 + Math.cos(tt * 3 + a.ph) * .12; }   // zombies and ghosts: arms out front
       if (a.bags && a.ps < PCRIT * .55) { armL = armR = .22 + Math.sin(tt * 9 + a.ph) * .05; bob *= .5; }   // arms dragged down by the shopping
       if (a.air > 0) {
         const q = 1 - a.air / (a.airD || 1), up = Math.sin(q * Math.PI) * (a.airH || 1.6);
@@ -656,7 +690,8 @@ function renderPeople(tt, dtR, vb) {
     }
     // clothes: blend into the pressure color; red when in danger
     const k = down ? .5 : 1, hq = HEAT_L[clamp(Math.floor(a.ps / PCRIT * HEAT_L.length), 0, HEAT_L.length - 1)];
-    const sh = a.cos ? COS_L[a.cos] : SHIRT_L[a.c], pa = a.cos ? COS_L[a.cos] : PANTS_L[a.pc];   // costumes are one color head to toe
+    const OU = a.cos > 3 ? OUTFITS[a.cos] : null;
+    const sh = OU ? lc(OU.b) : a.cos ? COS_L[a.cos] : SHIRT_L[a.c], pa = OU ? lc(OU.l) : a.cos ? COS_L[a.cos] : PANTS_L[a.pc];   // costumes are one color head to toe
     let r, g, b;
     if (!down && a.dmg > .45) { r = red[0]; g = red[1]; b = red[2]; }
     else { r = sh[0] + (hq[0] - sh[0]) * hm; g = sh[1] + (hq[1] - sh[1]) * hm; b = sh[2] + (hq[2] - sh[2]) * hm; }
@@ -681,7 +716,7 @@ function renderPeople(tt, dtR, vb) {
       wob(LT, lean, rock); WOB.lean = lean; WOB.rock = rock;
     }
     emit(P.torso, C.torso, LT); colW(P.torso, C.torso++, r, g, b);
-    const skn = a.cos ? COS_L[a.cos] : SKIN_L[a.sk];
+    const skn = OU ? (OU.s ? lc(OU.s) : SKIN_L[a.sk]) : a.cos ? COS_L[a.cos] : SKIN_L[a.sk];
     const HD = down ? LOCAL.head : wobPt(lifted(LOCAL.head)); emit(P.head, C.head, HD); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
     if (detail) {
       // expressions: 0 calm, 1 squeezed (wide eyes, O mouth), 2 cheering (squint, big grin), 3 trampled (X eyes)
@@ -715,7 +750,8 @@ function renderPeople(tt, dtR, vb) {
       }
     }
     FACE.state = 0; FACE.open = 0;
-    if (a.cos && C.spike < cap - 6) costume(a, down, k);
+    if (a.cos && C.spike < cap * 3 - 8 && C.ear < cap * 3 - 8 && C.bag < cap * 3 - 8) costume(a, down, k);
+    if (a.gear && hm < .7 && C.spike < cap * 3 - 8 && C.ear < cap * 3 - 8 && C.bag < cap * 3 - 8) gearParts(a, down, k, tt);
     const hc0 = a.old ? GREY_L : HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
     // pressure view: hair and caps take the pressure color too, so the map reads from above
     const hh = clamp((hm - .5) * 2, 0, 1);   // only the real pressure view (H), not the warning tint during a drop
@@ -803,7 +839,7 @@ function renderPeople(tt, dtR, vb) {
   for (const a of fallen) {
     if (C.torso >= cap - 1) break; draw(a, true);
     const age = t - (a.fallAt ?? -99);
-    if (age > [.45, .7, 1.1, .9, 1.45][a.fallType || 0] && age < 5.5 && C.star < 1797) {   // stars once they have landed   // dizzy stars over the head for a few seconds
+    if (age > [.45, .7, 1.1, .9, 1.45, 1.4, 1.5, .9, 1.25][a.fallType || 0] && age < 5.5 && C.star < 1797) {   // stars once they have landed   // dizzy stars over the head for a few seconds
       const hx = Bm[1] * 1.62 + Bt[0], hy = Bm[4] * 1.62 + Bt[1], hz = Bm[7] * 1.62 + Bt[2], fade = Math.min(1, (5 - age) / .8);
       for (let k = 0; k < 3; k++) {
         const an = tt * 4.5 + k * 2.094 + a.ph, o = C.star * 16, s = .9 * fade * a.sc, A = P.star.instanceMatrix.array, ca = Math.cos(tt * 6 + k), sa = Math.sin(tt * 6 + k);
@@ -1080,6 +1116,11 @@ function partM(x, y, z, rz, sx, sy, sz) {
 }
 function costume(a, down, k) {
   const C = COST_C, put = (mesh, idx, L, col) => { emit(mesh, idx, down ? L : wobPt(lifted(L))); colW(mesh, idx, col[0] * k, col[1] * k, col[2] * k); }, x2 = COS_X[a.cos];
+  if (a.cos > 3) {   // themed outfits: pieces built from spheres (r .09 × s), cones (.075 × .2 × s) and boxes (metres)
+    const o = OUTFITS[a.cos]; if (!o || !o.p) return;
+    const pt = (kind, x, y, z, sx, sy, sz, col, rz) => { const m = kind === "s" ? P.ear : kind === "c" ? P.spike : P.bag, key = kind === "s" ? "ear" : kind === "c" ? "spike" : "bag"; put(m, C[key]++, partM(x, y, z, rz || 0, sx, sy, sz), lc(col)); };
+    o.p(pt, a); return;
+  }
   if (a.cos === 1) for (const sd of [-1, 1]) put(P.ear, C.ear++, partM(-.02, 1.78, sd * .14, 0, 1, 1, .7), x2);
   else if (a.cos === 2) {
     put(P.ear, C.ear++, partM(.17, 1.58, 0, 0, .8, .55, 1.1), x2);   // a big snout
@@ -1089,7 +1130,52 @@ function costume(a, down, k) {
     put(P.spike, C.spike++, partM(.24, 1.57, 0, -Math.PI / 2, .8, .8, .8), x2);
   }
 }
+// crowd gear from the shop, drawn on top of whatever the person wears
+function gearParts(a, down, k, tt) {
+  const C = COST_C, pt = (kind, x, y, z, sx, sy, sz, col, rz) => { const m = kind === "s" ? P.ear : kind === "c" ? P.spike : P.bag, key = kind === "s" ? "ear" : kind === "c" ? "spike" : "bag", c = lc(col);
+    emit(m, C[key], down ? partM(x, y, z, rz || 0, sx, sy, sz) : wobPt(lifted(partM(x, y, z, rz || 0, sx, sy, sz)))); colW(m, C[key]++, c[0] * k, c[1] * k, c[2] * k); };
+  const g = a.gear;
+  if (g === "helmet") { pt("s", -.02, 1.8, 0, 2.7, 1.5, 2.7, "#ffd23a"); pt("b", .14, 1.79, 0, .2, .03, .4, "#f2c230"); }
+  else if (g === "bubble") { pt("s", 0, 1.08, 0, 4.2, 5.2, 4.2, "#bfe6ff"); for (let i = 0; i < 6; i++) pt("s", Math.cos(i) * .34, .85 + (i % 3) * .2, Math.sin(i) * .34, .45, .45, .45, "#e8f6ff"); }
+  else if (g === "skates") for (const z of [-.12, .12]) { pt("b", .04, .05, z, .3, .07, .12, "#ff3fa4"); for (const x of [-.06, .14]) pt("s", x, 0, z, .45, .45, .45, "#ffd23a"); }
+  else if (g === "propeller") { pt("s", -.02, 1.82, 0, 1.9, .9, 1.9, "#d8322b"); pt("b", -.02, 1.93, 0, .02, .1, .02, "#111214"); const sp = (tt * 18 + a.ph) % 6.283;
+    pt("b", -.02 + Math.cos(sp) * .0, 1.99, 0, .5 * Math.abs(Math.cos(sp)) + .04, .02, .5 * Math.abs(Math.sin(sp)) + .04, "#ffd23a"); }
+  else if (g === "glasses") { pt("s", .21, 1.68, -.075, .42, .5, .65, "#ff2a2a"); pt("s", .21, 1.68, .075, .42, .5, .65, "#2fa8ff"); pt("b", .2, 1.72, 0, .02, .04, .32, "#f4f4f0"); }
+  else if (g === "cape") { const fl = Math.sin(tt * 9 + a.ph) * .08; pt("b", -.26 - Math.abs(fl), .98, 0, .05, .95, .6, "#d8322b", .15 + fl); pt("s", .2, 1.12, 0, .6, .7, .3, "#ffd23a"); }
+  else if (g === "pockets") for (const z of [-.15, .15]) { pt("b", .03, .45, z * 1.35, .2, .2, .06, "#8a7a4a"); pt("b", .03, .54, z * 1.38, .21, .03, .07, "#6b5d38"); }
+  else if (g === "ducks") { pt("s", 0, .9, 0, 4.6, 1.2, 4.6, "#ffd23a"); pt("s", .38, 1.06, 0, 1.4, 1.4, 1.4, "#ffd23a"); pt("c", .52, 1.05, 0, .7, .7, .7, "#ff9a3c", -Math.PI / 2); }
+}
 const BAG_L = [[.95, .25, .45], [1, .8, .2], [.25, .65, .95], [.95, .95, .9], [.45, .85, .35], [.7, .45, .95], [.6, .42, .28]].map(c => c.map(v => v * v));
+// themed outfits (a.cos 4+): body colour, legs, optional skin (masks, zombies), pieces
+const LC = {}; const lc = h => LC[h] || (LC[h] = toLin([h])[0]);
+const OUTFITS = [null, null, null, null,
+  { n: "pirate", b: "#f4f4f0", l: "#2b2f35", p(pt, a) { pt("b", -.02, 1.9, 0, .5, .1, .34, "#1b1d22"); pt("c", -.02, 1.99, 0, 1.3, .6, 1.3, "#1b1d22"); pt("b", .02, 1.9, 0, .52, .03, .36, "#e3b23c");
+      pt("s", .21, 1.69, .075, .55, .6, .5, "#111214"); pt("b", .1, 1.72, 0, .02, .02, .44, "#111214"); pt("b", .2, 1.05, 0, .04, .7, .1, "#d8322b", .7);
+      if (a.ph < 2.5) { pt("s", -.02, 1.46, .3, 1.15, 1.3, 1.1, "#3fae5a"); pt("c", .08, 1.48, .3, .8, .8, .8, "#ff9a3c", -Math.PI / 2); pt("s", -.04, 1.56, .3, .7, .7, .7, "#d8322b"); } } },
+  { n: "clown", b: "#ff6fb1", l: "#ffd23a", p(pt) { pt("s", .25, 1.6, 0, .9, .9, .9, "#ff2a2a"); for (const z of [-1, 1]) pt("s", -.04, 1.76, z * .19, 1.6, 1.4, 1.2, z > 0 ? "#ff9a3c" : "#4fb8ff"); pt("c", -.02, 2.0, 0, 1.5, 1.6, 1.5, "#ffd23a"); pt("s", -.02, 2.17, 0, .6, .6, .6, "#ffffff"); pt("s", .26, 1.15, 0, .7, .7, .7, "#ffffff"); pt("s", .27, .95, 0, .7, .7, .7, "#ffffff"); } },
+  { n: "astronaut", b: "#f4f4f0", l: "#e6e6e2", p(pt) { pt("b", -.26, 1.12, 0, .16, .42, .34, "#d9dde3"); pt("s", .2, 1.67, 0, .5, .9, 2.1, "#1f3a7a"); pt("b", .05, 1.86, 0, .02, .16, .02, "#c9ced6"); pt("s", .05, 1.95, 0, .5, .5, .5, "#ff3b2f"); pt("b", .27, 1.22, .08, .02, .1, .1, "#2f7fd6"); } },
+  { n: "knight", b: "#9aa0a8", l: "#6b7078", p(pt) { pt("s", -.02, 1.76, 0, 2.6, 1.6, 2.6, "#b8bec6"); pt("b", .22, 1.69, 0, .02, .03, .22, "#111214"); pt("c", -.06, 2.02, 0, .9, 2, .9, "#d8322b"); pt("b", .06, 1.0, .34, .32, .42, .05, "#d8322b"); pt("b", .07, 1.0, .37, .1, .3, .02, "#ffd23a"); } },
+  { n: "hotdog", b: "#e8a050", l: "#e8a050", p(pt) { pt("s", .2, 1.2, 0, 1.3, 6, 1.4, "#c0402a"); pt("b", .32, 1.2, 0, .03, .6, .05, "#ffd23a", .3); pt("s", .01, 1.78, 0, 1.2, 1.8, 2.4, "#e8a050"); } },
+  { n: "banana", b: "#ffd23a", l: "#ffd23a", s: "#ffe27a", p(pt) { pt("c", -.03, 2.0, 0, .7, 1.4, .7, "#6b4a2a"); for (const z of [-1, 1]) pt("s", 0, 1.38, z * .3, 1.4, 2.6, .5, "#f2c230"); pt("s", .02, .62, 0, 1.2, .7, 1.2, "#6b4a2a"); } },
+  { n: "tourist", b: "#22d3ee", l: "#f4e3c0", p(pt) { for (const z of [-1, 1]) pt("s", .21, 1.68, z * .075, .4, .5, .7, "#111214"); pt("b", .27, 1.13, 0, .1, .13, .2, "#1b1d22"); pt("s", .32, 1.13, 0, .45, .45, .45, "#9aa0a8"); for (let i = 0; i < 4; i++) pt("s", .22, .9 + i * .14, (i % 2 ? .1 : -.1), .5, .5, .3, "#ff6fb1"); } },
+  { n: "tux", b: "#1b1d22", l: "#1b1d22", p(pt) { for (const z of [-1, 1]) pt("s", .22, 1.42, z * .06, .55, .45, .6, "#d8322b"); pt("b", .2, 1.15, 0, .03, .35, .12, "#f4f4f0"); pt("b", -.02, 1.97, 0, .26, .32, .26, "#111214"); pt("b", -.02, 1.83, 0, .44, .03, .44, "#111214"); pt("b", -.02, 1.86, 0, .27, .05, .27, "#d8322b"); } },
+  { n: "sailor", b: "#f4f4f0", l: "#1f3a7a", p(pt) { pt("s", -.02, 1.84, 0, 1.9, .6, 1.9, "#f4f4f0"); pt("b", -.02, 1.84, 0, .3, .04, .3, "#1f3a7a"); pt("b", -.2, 1.36, 0, .05, .2, .42, "#1f3a7a"); pt("b", .23, 1.32, 0, .03, .12, .12, "#d8322b"); } },
+  { n: "zombie", b: "#6b7a5a", l: "#4a3b2a", s: "#9fc48a", p(pt) { pt("b", .18, .98, .1, .04, .2, .14, "#3b4a2a", .4); pt("b", .1, 1.22, -.2, .04, .14, .1, "#8a2f2f"); pt("s", -.02, 1.8, .08, .6, .5, .6, "#5a4a3a"); } },
+  { n: "chef", b: "#f4f4f0", l: "#2b2f35", p(pt) { pt("s", -.02, 1.98, 0, 1.8, 2.4, 1.8, "#ffffff"); pt("b", -.02, 1.82, 0, .3, .08, .3, "#f4f4f0"); pt("b", .24, 1.0, 0, .02, .5, .3, "#e3e3de"); pt("s", .2, 1.52, .1, .4, .4, .4, "#d8322b"); } },
+  { n: "cowboy", b: "#c0583b", l: "#3a5f8a", p(pt) { pt("b", -.02, 1.83, 0, .66, .04, .56, "#7a4a2a"); pt("b", -.02, 1.93, 0, .28, .2, .28, "#7a4a2a"); pt("b", -.02, 1.86, 0, .29, .04, .29, "#2b1d14"); pt("s", .21, 1.38, 0, .6, .6, .5, "#e3b23c"); pt("b", .1, .78, 0, .3, .05, .3, "#e3b23c"); } },
+  { n: "duck", b: "#ffd23a", l: "#ff9a3c", s: "#ffd23a", p(pt) { pt("s", .24, 1.58, 0, 1.4, .5, 1.5, "#ff9a3c"); pt("s", -.04, 1.86, 0, .5, .9, .4, "#ffd23a"); for (const z of [-1, 1]) pt("s", -.05, 1.15, z * .3, .5, 1.6, 1.2, "#f2c230"); } },
+  { n: "luchador", b: "#d8322b", l: "#1f4fa8", s: "#1f4fa8", p(pt) { for (const z of [-1, 1]) pt("s", .17, 1.68, z * .075, .55, .75, .6, "#ffffff"); pt("c", -.02, 1.86, 0, .8, .8, .8, "#ffd23a"); pt("b", .2, 1.5, 0, .02, .04, .2, "#ffd23a"); pt("b", 0, .82, 0, .5, .12, .5, "#ffd23a"); } },
+  { n: "hazmat", b: "#ffd23a", l: "#ffd23a", p(pt) { pt("s", -.07, 1.65, 0, 2.6, 2.7, 2.7, "#ffd23a"); pt("s", .14, 1.66, 0, .8, 1.4, 2.4, "#6aa6c8"); pt("b", -.26, 1.12, 0, .14, .4, .3, "#3a3d45"); pt("s", .25, 1.48, 0, .5, .5, .5, "#2b2f35"); } },
+  { n: "soldier", b: "#5b6b3a", l: "#4a5530", p(pt) { pt("s", -.01, 1.8, 0, 2.8, 1.3, 2.8, "#4a5530"); pt("b", -.25, 1.1, 0, .14, .36, .3, "#6b5a3a"); pt("b", .22, .95, 0, .05, .06, .44, "#3a3d2a"); } },
+  { n: "ghost", b: "#f4f4f0", l: "#f4f4f0", s: "#f4f4f0", p(pt) { pt("s", .02, .55, 0, 3.2, 1.6, 3.2, "#f4f4f0"); pt("s", .22, 1.5, 0, .7, .8, .9, "#111214"); } },
+  { n: "king", b: "#8a1c2b", l: "#e3b23c", p(pt) { for (let i = 0; i < 5; i++) { const an = i / 5 * 6.283; pt("c", -.02 + Math.cos(an) * .13, 1.92, Math.sin(an) * .13, .6, .9, .6, "#ffd23a"); } pt("b", -.02, 1.86, 0, .3, .06, .3, "#ffd23a"); pt("b", -.24, 1.0, 0, .05, .95, .55, "#d8322b"); pt("b", -.2, 1.46, 0, .2, .07, .6, "#f4f4f0"); } },
+  { n: "swimmer", b: "#ff6fb1", l: "#f1c9a5", p(pt) { pt("s", 0, .95, 0, 4.4, 1.1, 4.4, "#ffd23a"); pt("s", .02, .97, 0, 3.4, 1.2, 3.4, "#ff3b2f"); for (const z of [-1, 1]) pt("s", .2, 1.68, z * .075, .5, .55, .6, "#22d3ee"); pt("b", .12, 1.85, .14, .03, .3, .03, "#ff9a3c"); } },
+  { n: "fan", b: "#d8322b", l: "#f4f4f0", p(pt, a) { const c = a.ph < 3.14 ? "#d8322b" : "#1f4fa8"; pt("b", .12, 2.1, .3, .07, .4, .14, c); pt("b", .12, 2.33, .3, .07, .12, .05, c); pt("b", .21, 1.66, 0, .02, .08, .2, a.ph < 3.14 ? "#ffffff" : "#ffd23a"); pt("b", 0, 1.43, 0, .32, .1, .5, a.ph < 3.14 ? "#ffffff" : "#ffd23a"); } },
+  { n: "viking", b: "#7a4a2a", l: "#5a3b22", p(pt) { pt("s", -.02, 1.8, 0, 2.6, 1.4, 2.6, "#9aa0a8"); for (const z of [-1, 1]) pt("c", -.02, 1.96, z * .26, 1, 1.7, 1, "#f4ecd8", -z * .9); pt("s", .2, 1.48, 0, 1.4, 1.5, 1.6, "#e3a040"); } },
+  { n: "superhero", b: "#2f6fc4", l: "#d8322b", p(pt) { pt("b", -.24, 1.0, 0, .05, 1.0, .6, "#d8322b"); pt("b", .2, 1.68, 0, .03, .08, .3, "#111214"); pt("s", .25, 1.12, 0, .8, .9, .3, "#ffd23a"); } },
+  { n: "wizard", b: "#5f3d8a", l: "#3a2a5a", p(pt) { pt("c", -.02, 2.08, 0, 2.2, 3.4, 2.2, "#5f3d8a"); pt("b", -.02, 1.84, 0, .5, .03, .5, "#5f3d8a"); pt("s", .2, 1.42, 0, 1.3, 2.4, 1.6, "#e8e8e8"); for (let i = 0; i < 3; i++) pt("s", .05, 2.0 + i * .14, .13 - i * .04, .35, .35, .35, "#ffd23a"); } },
+];
+const OUTFIT_ID = Object.fromEntries(OUTFITS.map((o, i) => o && [o.n, i]).filter(Boolean));
 let COST_C = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
@@ -1303,6 +1389,12 @@ function updateFxLayer(live) {
     g.fillStyle = "rgba(60,45,30,.22)";
     if (tr) { g.save(); g.translate(x, y); g.rotate(an); g.fillRect(-.5, -.18, 1, .36); g.restore(); }
     else { g.beginPath(); g.arc(x, y, .32, 0, 7); g.fill(); }
+  }
+  // meteor craters: scorched ring, dark pit, glowing cracks
+  if (phase !== "plan") for (const [cx, cy, cr] of CRATERS) {
+    g.fillStyle = "rgba(40,30,25,.55)"; g.beginPath(); g.arc(cx, cy, cr * 1.25, 0, 7); g.fill();
+    g.fillStyle = "rgba(20,16,14,.8)"; g.beginPath(); g.arc(cx, cy, cr * .8, 0, 7); g.fill();
+    g.strokeStyle = "rgba(255,140,40,.8)"; g.lineWidth = .1; for (let k2 = 0; k2 < 7; k2++) { const an = k2 * .9 + cx; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(an) * cr * 1.2, cy + Math.sin(an) * cr * 1.2); g.stroke(); }
   }
   // under each trampled person: a comic "impact" starburst that pops out as they land
   for (const a of fallen) {
