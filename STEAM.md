@@ -101,6 +101,22 @@ Secret achievements (hidden until unlocked; mark them *Hidden* in Steamworks). T
 
 Each achievement needs a 64×64 icon (achieved and unachieved versions).
 
+### Steam Workshop (custom venues)
+
+The game already publishes and reads Workshop items (Title screen → Editor → "⇪ Workshop" on a
+venue, and the "From the Steam Workshop" list for subscribed ones). Each item is one small text
+file, `venue.ht` (the venue's share code), plus a JPEG preview of its plan view. To switch it on:
+
+1. In Steamworks, open *Workshop* → *General* and enable **ISteamUGC** for the app (no file
+   types or in-game item definitions are needed).
+2. Add the tag **Venue** under *Workshop* → *Tags* so items can be filtered.
+3. Publish the Workshop changes (*Publish* tab) together with the store page.
+4. Players must accept the Steam Workshop agreement once; the game opens it in the overlay when
+   Steam asks for it.
+
+Without Steam (or with App ID 480) the buttons still show, publishing reports that Steam is not
+running, and share codes keep working as before.
+
 ## 5. Package
 
 ```sh

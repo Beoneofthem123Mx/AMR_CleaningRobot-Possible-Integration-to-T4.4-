@@ -112,18 +112,42 @@ function edUp(x, y) {
   edRebuild(); sfx("drop");
 }
 // the custom venues menu (from the title screen)
+// Steam Workshop (only inside the Steam build): publish a custom venue, play the ones you subscribed to
+const WS = window.steam && window.steam.workshop ? window.steam.workshop : null;
+function venuePreview(d) {   // the plan view of the venue, as a JPEG for the Workshop page
+  const was = CUSTOM; try { applyCustom(d); delete THUMBS.custom; return sceneThumb("custom"); } catch (e) { return ""; } finally { CUSTOM = was; delete THUMBS.custom; }
+}
+async function wsPublish(it) {
+  if (!WS || !it) return; toast("Publishing to the Steam Workshop…");
+  const r = await WS.publish({ title: it.d.name, desc: `A custom venue for Human Tsunami: ${it.d.crowd.toLocaleString("en")} people, ${it.d.items.length} pieces, ${it.d.night ? "night" : "day"}.`, code: venueCode(it.d), preview: venuePreview(it.d), itemId: it.ws || null });
+  if (!r || !r.ok) { toast(`Workshop: ${(r && r.error) || "something went wrong"}`); return; }
+  const l = loadCustom(), x = l.find(q => String(q.id) === String(it.id)); if (x) { x.ws = r.id; saveCustomList(l); }
+  toast(r.agreement ? "Published! Accept the Workshop agreement in the overlay so others can see it." : "Published on the Steam Workshop!"); customMenu();
+}
+async function wsFill() {
+  const el = $("#wsList"); if (!el) return; let items = [];
+  try { items = await WS.list(); } catch (e) { items = []; }
+  const ok = items.map(x => ({ id: x.id, d: parseVenueCode(x.code) })).filter(x => x.d);
+  el.innerHTML = ok.length ? ok.map(x => `<div class="upg"><i>🌐</i><div><b>${String(x.d.name).replace(/[<>&"]/g, "")}</b><small>${x.d.crowd.toLocaleString("en")} people · ${x.d.items.length} pieces · Workshop</small></div><div class="row"><button class="go" data-wsplay="${x.id}">Play</button><button data-wscopy="${x.id}">Copy to mine</button></div></div>`).join("")
+    : `<p class="keys">No subscribed venues yet. Browse the Workshop and subscribe to a few: they show up here.</p>`;
+  el.querySelectorAll("[data-wsplay]").forEach(b => b.onclick = () => { const x = ok.find(q => q.id === b.dataset.wsplay); applyCustom(x.d); customId = null; const was = shuffleGates; shuffleGates = false; loadScene("custom"); shuffleGates = was; hideCard(); caption(`${x.d.name}: you plan it`, false, 2200); });
+  el.querySelectorAll("[data-wscopy]").forEach(b => b.onclick = () => { const x = ok.find(q => q.id === b.dataset.wscopy), l = loadCustom(); l.push({ id: Date.now(), d: JSON.parse(JSON.stringify(x.d)) }); saveCustomList(l); customMenu(); toast(`“${x.d.name}” copied to your venues: you can edit it now.`); });
+}
 function customMenu() {
   EDIT = false; const l = loadCustom();
   showCard(`<h2>Custom venues</h2><p class="keys">Build your own venue, test it, and share it with a code. Codes are plain text: paste them anywhere.</p>
-    <div class="shop">${l.length ? l.map(it => `<div class="upg"><i>🏟</i><div><b>${it.d.name}</b><small>${it.d.crowd.toLocaleString("en")} people · ${it.d.items.length} pieces</small></div>
-      <div class="row"><button data-cplay="${it.id}" class="go">Play</button><button data-cedit="${it.id}">Edit</button><button data-ccode="${it.id}">Code</button><button data-cdel="${it.id}">✕</button></div></div>`).join("") : `<p>No custom venues yet.</p>`}</div>
-    <div class="row"><button class="go" id="cNew">＋ New venue</button><button id="cPaste">📋 Paste a code</button><button id="pick">Back</button></div>`, "options shopcard");
+    <div class="shop clist">${l.length ? l.map(it => `<div class="upg"><i>🏟</i><div><b>${it.d.name}</b><small>${it.d.crowd.toLocaleString("en")} people · ${it.d.items.length} pieces</small></div>
+      <div class="row"><button data-cplay="${it.id}" class="go">Play</button><button data-cedit="${it.id}">Edit</button><button data-ccode="${it.id}">Code</button>${WS ? `<button data-cpub="${it.id}" title="Publish on the Steam Workshop">${it.ws ? "⟳ Workshop" : "⇪ Workshop"}</button>` : ""}<button data-cdel="${it.id}">✕</button></div></div>`).join("") : `<p>No custom venues yet.</p>`}</div>
+    ${WS ? `<h3 class="wsh">From the Steam Workshop</h3><div class="shop clist" id="wsList"><p class="keys">Looking for subscribed venues…</p></div>` : ""}
+    <div class="row"><button class="go" id="cNew">＋ New venue</button><button id="cPaste">📋 Paste a code</button>${WS ? '<button id="wsBrowse">🌐 Browse the Workshop</button>' : ""}<button id="pick">Back</button></div>`, "options shopcard");
   const find = id => l.find(x => String(x.id) === String(id));
   document.querySelectorAll("[data-cplay]").forEach(b => b.onclick = () => { const it = find(b.dataset.cplay); applyCustom(it.d); customId = it.id; const was = shuffleGates; shuffleGates = false; loadScene("custom"); shuffleGates = was; hideCard(); caption(`${it.d.name}: you plan it`, false, 2200); });
   document.querySelectorAll("[data-cedit]").forEach(b => b.onclick = () => { const it = find(b.dataset.cedit); openEditor(JSON.parse(JSON.stringify(it.d)), it.id); });
   document.querySelectorAll("[data-ccode]").forEach(b => b.onclick = () => { const it = find(b.dataset.ccode), code = venueCode(it.d); try { navigator.clipboard.writeText(code); } catch (e) { /* no clipboard */ } toast("Code copied to the clipboard."); });
   document.querySelectorAll("[data-cdel]").forEach(b => b.onclick = () => { saveCustomList(l.filter(x => String(x.id) !== String(b.dataset.cdel))); customMenu(); });
   $("#cNew").onclick = () => openEditor(blankVenue(), null);
+  document.querySelectorAll("[data-cpub]").forEach(b => b.onclick = () => wsPublish(find(b.dataset.cpub)));
+  if (WS) { $("#wsBrowse").onclick = () => WS.browse(); wsFill(); }
   $("#cPaste").onclick = () => {
     showCard(`<h2>Paste a venue code</h2><textarea class="edcode" id="cCode" placeholder="HT1:..."></textarea><div class="row"><button class="go" id="cImport">Import</button><button id="cBack">Back</button></div>`, "options");
     $("#cBack").onclick = customMenu;

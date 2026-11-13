@@ -198,6 +198,8 @@ around.
   one pancake allowance for the whole tour and no retries. After every show you pick one of three
   perks (sponsor money, extra guards, spare batteries, an emergency kit, lavender mist, bolt
   cutters, insurance, spare fence panels). Zero stars or going over the allowance ends the tour.
+- **Steam Workshop**: in the Steam build, publish a custom venue to the Workshop with one click and
+  play the venues you subscribed to (setup in STEAM.md).
 - **Level editor** (title screen → Editor): drag stages, walls, buildings, kiosks, tents and
   pools, click poles, toggle gates, set the crowd, budget, day or night and the events, test it, save
   it, and share it as a code (`HT1:...`, plain JSON inside, the same payload a Workshop item would

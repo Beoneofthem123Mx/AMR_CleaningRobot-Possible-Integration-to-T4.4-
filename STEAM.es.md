@@ -89,6 +89,22 @@ Logros secretos (ocultos hasta desbloquearlos; márcalos como *Hidden* en Steamw
 
 Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
 
+### Steam Workshop (escenarios personalizados)
+
+El juego ya publica y lee elementos del Workshop (Título → Editor → "⇪ Workshop" en un escenario,
+y la lista "From the Steam Workshop" con los suscritos). Cada elemento es un archivo de texto
+pequeño, `venue.ht` (el código del escenario), más una vista previa JPEG del plano. Para activarlo:
+
+1. En Steamworks, abre *Workshop* → *General* y activa **ISteamUGC** para la app (no hace falta
+   definir tipos de archivo ni objetos del juego).
+2. Añade la etiqueta **Venue** en *Workshop* → *Tags* para poder filtrar.
+3. Publica los cambios del Workshop (pestaña *Publish*) junto con la página de la tienda.
+4. Cada jugador acepta una vez el acuerdo del Workshop; el juego lo abre en el overlay cuando
+   Steam lo pide.
+
+Sin Steam (o con el App ID 480) los botones se ven igual, publicar avisa de que Steam no está
+abierto, y los códigos para compartir siguen funcionando.
+
 ## 5. Empaquetar
 
 ```sh
