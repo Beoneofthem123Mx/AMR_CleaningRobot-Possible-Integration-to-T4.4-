@@ -56,15 +56,15 @@ cambió alguno, ajusta el tamaño en `steam/art/render.cjs` y vuelve a ejecutar
 
 **English (principal):**
 
-> Plan the fences, the gates and the guards. Then open the doors and watch thousands of people,
-> a lion, a runaway cheese and a billionaire's rocket ruin everything. A crowd-safety simulator
-> for events that go horribly wrong. 28 venues. Cheaper than a coffee.
+> A crowd-safety strategy game with real crowd physics. Plan barriers, gates and gadgets, make
+> live calls during the show, read the post-mortem heat map and fix your plan. 29 venues, a level
+> editor and thousands of very floppy people. Cheaper than a coffee.
 
 **Español:**
 
-> Coloca las vallas, las puertas y los guardias. Luego abre y mira cómo miles de personas, un
-> león, un queso fugitivo y el cohete de un millonario lo arruinan todo. Un simulador de seguridad
-> para eventos que salen terriblemente mal. 22 escenarios. Más barato que un café.
+> Un juego de estrategia de seguridad con física de multitudes real. Planea barreras, puertas y
+> gadgets, toma decisiones en vivo durante el show, lee el mapa de calor del desastre y corrige tu
+> plan. 29 escenarios, editor de niveles y miles de personitas muy blanditas. Más barato que un café.
 
 ## 4. Descripción larga ("About This Game")
 
@@ -73,17 +73,41 @@ cambió alguno, ajusta el tamaño en `steam/art/render.cjs` y vuelve a ejecutar
 ```
 YOU ARE IN CHARGE OF SAFETY. WE ARE SO SORRY.
 
-Human Tsunami is a top-down crowd management toy with real crowd physics and a body counter
-that says TRAMPLED. You plan the venue. Then thousands of tiny people pour in, the music drops,
-and everything that can cross a crowd does.
+Human Tsunami is a crowd-management strategy game with real crowd physics, wrapped in a very silly
+coat. Every attendee is simulated: pressure builds where the flow meets a wall, a gate or another
+crowd, and when it builds for too long, people go down. Your job is to design the event so that
+doesn't happen, and to save it live when it starts to.
 
-[h2]Plan it[/h2]
+[h2]A real puzzle under the jokes[/h2]
 [list]
-[*]Draw five kinds of fence: steel barriers, concrete, velvet rope, traffic cones and foam walls.
-Each one behaves differently when a crowd, a car or an elephant leans on it.
-[*]Open and close gates, place security guards, water stations, first aid tents and a big screen.
-[*]Watch the flow preview and the pressure heatmap. Red is where the newspapers will be tomorrow.
-[*]The plan warns you: glowing red spots where people will pile up and a label on every exit.
+[*]Plan on a budget: five kinds of barrier that behave differently under load, gates you can make
+narrow or wide, stewards that slow a bottleneck, guards, water, first aid and a shop full of
+gadgets (megaphone towers, chill-pill turrets, bouncy castles, hot-dog cannons, exit trampolines).
+[*]An empty or half-hearted plan never earns stars: an unmanaged crowd shoves harder. The Crowd
+Control meter tells you when your plan is still too thin.
+[*]Entrances move and the view turns around between visits, so a memorised solution stops working.
+[*]Every venue has its own rule to plan around: a reactor that heats up when people crowd it, a
+minefield, conveyor belts, a procession that walks through the crowd, trains and buses that only
+take whoever reaches their doors, a laser grid that switches on and off.
+[/list]
+
+[h2]Make the call while it happens[/h2]
+[list]
+[*]Open emergency gates, drop a barrier into a forming crush, send a steward to a new spot,
+throw free pizza to pull the crowd away from a hotspot, or use the megaphone at the right moment.
+[*]Or don't, and drop a meteor. It counts against you, but it is a very nice meteor.
+[/list]
+
+[h2]Learn why it failed[/h2]
+After every bad show, "What went wrong?" paints the venue with a pressure heat map, the spots where
+people were stuck and where they fell, and names the three worst hotspots with a cause (a jammed
+gate, a crush at the front, a squeeze point made by your own barrier, a corner trap) and what to
+try next. The map stays on the floor while you re-plan.
+
+[h2]Endless venues[/h2]
+[list]
+[*]29 venues, a daily challenge with a new venue and twist every day, Total Chaos mode and Sandbox.
+[*]A level editor: build your own venue, test it and share it as a code.
 [/list]
 
 [h2]Floppy little people[/h2]
@@ -92,19 +116,20 @@ when squeezed, and go down like rag dolls with X eyes and dizzy stars. Then a ti
 
 [h2]Then watch it go wrong[/h2]
 [list]
-[*]28 venues: a plaza concert, a circus, a stadium, Black Friday at the mall, a cruise ship, the
+[*]29 venues: a plaza concert, a circus, a stadium, Black Friday at the mall, a cruise ship, the
 wedding of the year, a racetrack, the grand opening of a golden toilet, a city festival, a
 political rally for a duck, a giant taco, a UFO landing, an airport, lucha libre, a billionaire's
 rocket launch, free zoo day, a downhill cheese chase, a zombie walk, a free ice cream beach and a
 bootleg theme park, a nuclear plant open day whose reactor heats up when people crowd it, and a battle
 reenactment on a field that was definitely, absolutely cleared of mines. Plus a rubber-duck factory
 with conveyor belts, a town procession, a protest march for longer naps, a rush-hour metro platform
-where trains fill up and leave, a market full of yelling vendors and a secret lab open house.
+where trains fill up and leave, a bus terminal, a market full of yelling vendors and a secret lab open house.
 [*]More than 100 events: lions, penguin parades, robot dogs, mariachis, a booster landing next to
 the crowd, a gorilla that steals a phone, mothers-in-law.
-[*]13 random twists drawn before every show: free wifi in one corner, a downpour, moon gravity,
+[*]31 random twists drawn before every show (giant day, raining cows, zombie outbreak...): free wifi in one corner, a downpour, moon gravity,
 Children's Day, the party uncle.
-[*]A megaphone with exactly three uses.
+[*]Chaos powers: meteors, a giant bowling ball, an anvil, a cow from the sky, banana peels.
+[*]Ten secret achievements nobody will tell you how to get.
 [/list]
 
 [h2]Read about it in the morning[/h2]
@@ -175,11 +200,12 @@ la página de la tienda", no en "interfaz".
 
 ## 5. Géneros y etiquetas sugeridos
 
-- **Géneros:** Simulation, Casual, Indie, Strategy.
-- **Etiquetas (elige hasta 20, las primeras pesan más):** Simulation, Funny, Comedy, Physics,
-  Sandbox, Management, Strategy, Casual, Top-Down, Dark Humor, Satire, Singleplayer, Indie,
-  Building, Crowd Management, Colorful, 3D, Replay Value, Family Friendly (solo si la encuesta de
-  contenido lo permite), Memes.
+- **Géneros:** Strategy, Simulation, Indie, Casual.
+- **Etiquetas (elige hasta 20, las primeras pesan más):** Strategy, Simulation, Management, Physics,
+  Puzzle, Level Editor, Funny, Comedy, Crowd Management, Sandbox, Replay Value, Top-Down, Dark Humor,
+  Satire, Singleplayer, Indie, Building, Colorful, 3D, Memes.
+- Pon **Strategy** y **Puzzle** delante de Funny/Comedy: así Steam lo muestra a quien busca juegos de
+  planificación (Mini Metro, Poly Bridge, Two Point) y no solo a quien busca memes.
 
 ## 6. Idiomas
 
