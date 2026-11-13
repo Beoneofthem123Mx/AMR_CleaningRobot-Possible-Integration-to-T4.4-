@@ -26,7 +26,7 @@ function buildWorld() {
     o.ftype = type; o.fence = f; if (type === "cones") o.soft = true;
   }
   for (const gd of guards) circ(gd.x, gd.y, .35, "guard");
-  for (const pr of props) { const o = circ(pr.x, pr.y, PROP_TYPES[pr.type].r, "prop"); o.ptype = pr.type; }
+  for (const pr of props) { const o = circ(pr.x, pr.y, PROP_TYPES[pr.type].r, "prop"); o.ptype = pr.type; if (pr.type === "bouncy") o.ftype = "foam"; }
   // spatial buckets
   buckets = Array.from({ length: BW * BH }, () => []);
   obs.forEach((o, i) => {
@@ -150,7 +150,7 @@ const HEAT = ["#2c4fd6","#2f86e0","#2fb8d0","#33c08a","#5cc63c","#b8d230","#f2c5
 let surgeT = 0, nextDrop = 0, drops = 0, SURGE = [.55, 1.1];
 let abducted = 0, slipT = 0, MOD = null, eventLog = new Set(), mega = { n: 3, active: [] }; megaUsed = false;
 // shopping: people pop into the venue shops and come back out buried in bags
-let SHOW_LUCKY = false;
+let SHOW_LUCKY = false, insured = 0;
 let SHOPPERS = [], SHOP_DOORS = [], shopT = 0;
 const SHOP_CRIES = ["SALE!!", "I REGRET NOTHING", "BAGS!", "ONE MORE STORE", "MY CREDIT CARD!", "IT WAS 90% OFF", "WORTH IT"];
 let ag = [], fallen = [], phase = "plan", spawned = 0, fullAt = 0, t = 0, evacT = 0, dead = 0, evacuated = 0;
@@ -299,6 +299,7 @@ function step() {
     // a UFO beam lifts people up
     if (a.beam) a.lift += DT * .75; else if (a.lift > 0) a.lift = Math.max(0, a.lift - DT * 1.5);
     for (const sw of stewards) if ((a.x - sw.x) ** 2 + (a.y - sw.y) ** 2 < STEWARD_R * STEWARD_R) { want *= .5; break; }
+    if (freezeT > 0) { want = 0; a.vx *= .85; a.vy *= .85; a.p *= .6; }   // the pause remote
     if (a.tb && a.tb.st > 0) want *= .45;   // stumbling (twobody.js): busy not falling over
     if (a.gear) {   // crowd gear from the shop: every piece helps and hurts
       const gr = a.gear;
@@ -340,11 +341,12 @@ function step() {
       if (!demo && Math.random() < .6) pop(a.x, a.y - 1, ["OOF!", "CRUNCH!", "I'M OK!", "10/10 LANDING", "SPLAT!"][(Math.random() * 5) | 0]);
       for (const b of ag) if (b !== a && (b.x - a.x) ** 2 + (b.y - a.y) ** 2 < 1.2) { b.vx += (b.x - a.x) * 3; b.vy += (b.y - a.y) * 3; toss(b, .8, .6); }   // knocks the neighbours over
     } }
-    const pc = PCRIT * (MOD && MOD.pcritMul || 1) * (1 - .3 * UNM);
+    const pc = PCRIT * (MOD && MOD.pcritMul || 1) * (1 - .3 * UNM) * (bm("probe") ? 1.2 : 1);
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
     if (a.gear === "ducks") a.p *= .8;
     if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? AID_DMG : 1.6) * (a.gear === "helmet" ? .75 : a.gear === "bubble" ? .7 : 1); else a.dmg = Math.max(0, a.dmg - DT * (aid ? AID_HEAL : .4));
+    if (a.dmg >= 1 && bm("insurance") && insured < 20 && !demo) { insured++; abducted++; for (let k = 0; k < 4; k++) puff(a.x, a.y, 1 + k, "#7dff6a", .4, .8, 1.5); if (Math.random() < .5) pop(a.x, a.y - 1, "BEAMED UP!"); continue; }   // mothership insurance
     if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; pickFall(a); fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
     if (evac && (a.y > SH - .6 || a.x < -.4 || a.x > WW + .4 || (ROUTE.side && leaving && a.y > ROUTE.ey0 - .6 && a.y < ROUTE.ey1 + .6 && (ROUTE.side < 0 ? a.x < .55 : a.x > WW - .55)))) { evacuated++; continue; }
     out.push(a);
@@ -352,8 +354,10 @@ function step() {
   ag = out;
   TwoBody.update(ag, DT);   // torsos on elastic joints, stumbles and domino chains (twobody.js)
   if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
+  if (props.length) gadgetStep();
   if (!demo && spawned > 150) crowdShouts();
   if (yeetT > 0) yeetT -= DT;
+  if (freezeT > 0) freezeT -= DT;
   if (scene.step && !demo) scene.step();
   if (MOD && MOD.step && !demo) MOD.step();   // venue mechanics (reactor heat, land mines)
   if (surgeT > 0 && !demo && ag.length && Math.random() < .25) { const a = ag[(Math.random() * ag.length) | 0]; if (a.dance && toss(a, .9 + Math.random() * .9) && Math.random() < .3) pop(a.x, a.y - 1, ["WHEEE!", "YEET!", "WOOO!"][(Math.random() * 3) | 0]); }
@@ -531,7 +535,7 @@ function start(mod) {
   if (scr && !MOD.altShare) setAlt(scr.x, scr.y, PROP_TYPES.screen.r + 2.2);
   if (scene.onStart) scene.onStart();
   TwoBody.init(WW, WH); TwoBody.onStumble = (a, depth) => { if (a.springy && !depth && Math.random() < .35 && yeet(a)) return; if (!demo && Math.random() < (depth ? .02 : .06)) pop(a.x, a.y - 1.1, depth ? ["DOMINO!", "NOT ME TOO!", "WHOA-OA!"][(Math.random() * 3) | 0] : ["WHOA!", "OOPS!", "WATCH IT!", "MY BALANCE!"][(Math.random() * 4) | 0]); };
-  SHOPPERS = []; shopT = 0; shoutT = 3; resetPowers(); CRATERS = []; POWER_USED = false; SHOW_LUCKY = false;
+  SHOPPERS = []; shopT = 0; shoutT = 3; insured = 0; resetPowers(); CRATERS = []; POWER_USED = false; SHOW_LUCKY = false;
   if (!demo && !window.__manual && (NEXT.meteor || NEXT.cow || NEXT.mega || NEXT.lucky)) {   // the deals bought for this show
     charges.meteor += NEXT.meteor || 0; charges.cow += NEXT.cow || 0; mega.n += NEXT.mega || 0; SHOW_LUCKY = !!NEXT.lucky;
     delete NEXT.meteor; delete NEXT.cow; delete NEXT.mega; delete NEXT.lucky; saveShop();
@@ -613,4 +617,34 @@ function shopOut(a) {
   a.v0 *= .86; a.bagC = a.bagC || ((Math.random() * 6) | 0);
   ag.push(a);
   if (Math.random() < .3) { pop(a.x, a.y - 1, SHOP_CRIES[(Math.random() * SHOP_CRIES.length) | 0]); }
+}
+
+// gadgets from the shop at work
+function gadgetStep() {
+  for (const pr of props) {
+    const k = pr.type; if (!PROP_TYPES[k] || !PROP_TYPES[k].gadget) continue;
+    pr.t = (pr.t || 0) - DT;
+    if (k === "megatower" && pr.t <= 0 && phase === "show") {   // yells CALM DOWN on its own
+      pr.t = 5; mega.active.push({ x: pr.x, y: pr.y, t: 2 }); rings.push({ x: pr.x, y: pr.y, t: 0, mega: true }); if (!demo && Math.random() < .5) pop(pr.x, pr.y - 2, ["CALM DOWN!", "PLEASE BREATHE!", "NO PUSHING!"][(Math.random() * 3) | 0]);
+    } else if (k === "pills" && pr.t <= 0) {   // one calming pill at the most squeezed person in range
+      pr.t = .9; let best = null, bp = PCRIT * .45;
+      for (const a of ag) { if (a.ps <= bp) continue; if ((a.x - pr.x) ** 2 + (a.y - pr.y) ** 2 < 64) { bp = a.ps; best = a; } }
+      if (best) { best.p = 0; best.ps *= .3; best.dmg *= .4; for (let q = 0; q <= 1; q += .25) puff(pr.x + (best.x - pr.x) * q, pr.y + (best.y - pr.y) * q, 1.2, "#ff6fb1", .12, .35, 0);
+        for (const a of ag) if ((a.x - best.x) ** 2 + (a.y - best.y) ** 2 < 2.5) { a.p *= .4; a.dmg *= .7; }
+        if (!demo && Math.random() < .15) pop(best.x, best.y - 1, ["AHHH...", "SO CHILL", "PEW! *RELAXES*", "I LOVE EVERYONE"][(Math.random() * 4) | 0]); }
+    } else if (k === "hotdogs" && pr.t <= 0 && phase === "show" && fullAt) {   // free food at the emptiest open spot
+      pr.t = 9; let bx = 0, by = 0, bn = 1e9;
+      for (let k2 = 0; k2 < 14; k2++) { const [x, y] = crowdPoint(); if (blockedC[cellOf(x, y)] || !isFinite(fStage[cellOf(x, y)])) continue; let n = 0; for (let i = 0; i < ag.length; i += 4) if ((ag[i].x - x) ** 2 + (ag[i].y - y) ** 2 < 16) n++; if (n < bn) { bn = n; bx = x; by = y; } }
+      if (bn < 1e9) { tempAttract(bx, by, 2.4, 4, .22); for (let q = 0; q <= 1; q += .2) puff(pr.x + (bx - pr.x) * q, pr.y + (by - pr.y) * q, 1 + Math.sin(q * Math.PI) * 4, "#ff9a3c", .2, .6, 0); burstAt(bx, by, 25); if (!demo) pop(bx, by - 1, "FREE HOT DOGS!"); sfx("boom"); }
+    } else if (k === "fan") {   // pushes everyone in front of it toward the gates
+      for (const a of ag) { const dx = a.x - pr.x, dy = a.y - pr.y; if (dy > -1 && dy < 7 && Math.abs(dx) < 2.5 + dy * .4) { a.vy += 1.2 * DT; if (Math.random() < .002) puff(a.x, a.y, 1.4, "#ffffff", .15, .4, 0); } }
+    } else if (k === "tubeman") {   // hypnotic: people nearby slow down to watch
+      for (const a of ag) if ((a.x - pr.x) ** 2 + (a.y - pr.y) ** 2 < 16) { a.vx *= .97; a.vy *= .97; a.p *= .8; }
+    } else if (k === "trampoline" && phase === "evac") {   // BOING: straight toward the nearest open gate
+      for (const a of ag) { if (a.air > 0 || (a.x - pr.x) ** 2 + (a.y - pr.y) ** 2 > 1.1) continue;
+        let gx = WW / 2, gd = 1e9; for (let i = 0; i < SLOTS; i++) if (gates[i] && Math.abs(slotX(i) - a.x) < gd) { gd = Math.abs(slotX(i) - a.x); gx = slotX(i); }
+        const dx = gx - a.x, dy = FENCE_Y - 1 - a.y, d = Math.hypot(dx, dy) || 1, jump = Math.min(d - .5, 7);
+        a.x += dx / d * jump; a.y += dy / d * jump; toss(a, 3 + Math.random() * 2, 1.1); if (!demo && Math.random() < .2) pop(a.x, a.y - 1, ["BOING!", "WHEEE!", "SEE YA!"][(Math.random() * 3) | 0]); }
+    }
+  }
 }

@@ -8,9 +8,13 @@ const POWERS = {
   anvil:  { icon: "⚓", name: "Anvil", n: 1, desc: "Classic cartoon anvil. CLANG." },
   cow:    { icon: "🐄", name: "Cow", n: 1, desc: "A cow falls from the sky and bounces. MOOO." },
   banana: { icon: "🍌", name: "Banana peels", n: 2, desc: "Everybody who steps there does a backflip" },
+  beam:     { icon: "🛸", name: "Tractor beam", bm: 2, desc: "Beams the crush up and drops them somewhere roomy" },
+  freeze:   { icon: "⏸", name: "Pause remote", bm: 1, desc: "Everyone freezes for 4 seconds; the pressure drains" },
+  antigrav: { icon: "🪐", name: "Anti-gravity", bm: 1, desc: "Gravity off for a moment: everyone floats" },
 };
 let power = "mega", charges = {};
-function resetPowers() { power = "mega"; charges = {}; for (const [k, p] of Object.entries(POWERS)) if (p.n) charges[k] = p.n + (typeof upg === "function" ? upg("chaos") : 0) + (typeof gearOn === "function" && gearOn("pockets") ? 1 : 0); }
+let freezeT = 0;
+function resetPowers() { power = "mega"; charges = {}; freezeT = 0; for (const [k, p] of Object.entries(POWERS)) if (p.bm) charges[k] = bm(k) || (typeof sandbox !== "undefined" && sandbox) ? p.bm : 0; for (const [k, p] of Object.entries(POWERS)) if (p.n) charges[k] = p.n + (typeof upg === "function" ? upg("chaos") : 0) + (typeof gearOn === "function" && gearOn("pockets") ? 1 : 0); }
 function usePower(x, y) {
   if ((charges[power] || 0) <= 0 && !sandbox) { caption(`No ${POWERS[power].name.toLowerCase()} left this show.`, true, 1400); power = "mega"; ui(); return; }
   if (!sandbox) charges[power]--;
@@ -51,6 +55,18 @@ function usePower(x, y) {
         for (const a of ag) { const d = Math.hypot(a.x - m.x, a.y - m.y); if (d < 2.3 && d > .01) { if (d < .8 && m.bounces === 1) { a.dmg = 1.6; a.forceFall = 4; } else if (!yeet(a, a.x - m.x, a.y - m.y)) toss(a, 1.5, .8); } }
         if (m.bounces >= 3) { m.dead = true; pop(m.x, m.y - 1.5, "MOO. (BOW)"); }
       } } });
+  } else if (kind === "beam") {   // everyone in the crush goes up the beam and comes down where there's room
+    let tx = x, ty = y, tn = 1e9;
+    for (let k = 0; k < 16; k++) { const [px, py] = crowdPoint(); if (blockedC[cellOf(px, py)] || !isFinite(fStage[cellOf(px, py)])) continue; let n = 0; for (let i = 0; i < ag.length; i += 3) if ((ag[i].x - px) ** 2 + (ag[i].y - py) ** 2 < 16) n++; if (n < tn) { tn = n; tx = px; ty = py; } }
+    let moved = 0;
+    for (const a of ag) if ((a.x - x) ** 2 + (a.y - y) ** 2 < 9 && moved < 60) { moved++; a.x = tx + (Math.random() - .5) * 3; a.y = ty + (Math.random() - .5) * 3; a.p = 0; a.ps *= .2; a.dmg *= .3; toss(a, 4, 1.2); }
+    for (let k = 0; k < 18; k++) { puff(x + rnd(-1.5, 1.5), y + rnd(-1.5, 1.5), rnd(.5, 6), "#7dff6a", .5, 1, .8); puff(tx + rnd(-1.5, 1.5), ty + rnd(-1.5, 1.5), rnd(.5, 5), "#7dff6a", .5, 1, -.4); }
+    pop(x, y - 2, `BEAMED ${moved}!`); sfx("ufo"); shockwave(tx, ty);
+  } else if (kind === "freeze") {
+    freezeT = 4; flash = Math.max(flash, .5); pop(WW / 2, 30, "⏸ PAUSED"); caption("Everybody freezes. Breathe.", true, 2000); sfx("beep");
+  } else if (kind === "antigrav") {
+    for (const a of ag) { if (!toss(a, 1.4 + Math.random() * 2.2, 1.6 + Math.random() * .8)) continue; a.p = 0; a.ps *= .2; a.dmg *= .5; a.airSpin = (Math.random() - .5) * 1.5; }
+    pop(WW / 2, 30, "ZERO G!"); caption("Gravity has left the building", true, 2000); sfx("ufo"); shake = Math.min(1, shake + .4);
   } else if (kind === "banana") {
     addMover({ kind: "peel", beh: "static", life: 10, x, y, r: .3, push: 0, air: true, h: 0, say: "", tick(m) {
       for (const a of ag) { if (a.air > 0 || (a.slipT || 0) > t) continue; const d = (a.x - m.x) ** 2 + (a.y - m.y) ** 2;

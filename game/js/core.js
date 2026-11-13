@@ -19,6 +19,7 @@ const UPGRADES = {
   calm:    { icon: "~",  name: "Charming guards",     desc: "Guards calm people 15% further per level", costs: [60, 140, 300] },
   foam:    { icon: "o",  name: "Softer foam",         desc: "Foam walls soak up more of the squeeze", costs: [50, 120, 260] },
   medic:   { icon: "✚",  name: "Better first aid",    desc: "First aid tents protect and heal more", costs: [70, 160, 340] },
+  stewards: { icon: "S+", name: "Steward agency deal", desc: "+3 stewards available in every venue, per level", costs: [80, 180, 360] },
   chaos:   { icon: "☄", name: "Chaos kit",            desc: "+1 meteor, bowling ball, anvil, cow and banana per show, per level", costs: [70, 170, 350] },
 };
 // crowd gear: things the audience wears. Equip up to 3; about 20% of people show up wearing each one. Every item helps AND hurts.
@@ -41,14 +42,27 @@ const DEALS = {
   calm:    { icon: "))", name: "Spare batteries", desc: "Next show: +3 megaphone uses" },
   sale:    { icon: "%", name: "Gear clearance", desc: "A random piece of gear at 40% off" },
 };
-let GEAR_OWN = [], GEAR_ON = [], NEXT = {};
+let GEAR_OWN = [], GEAR_ON = [], NEXT = {}, GADGETS_OWN = [];
+// "This is definitely not a black market": overpowered stuff, paid in people the UFOs took (nobody asks where they went)
+const BM_ITEMS = {
+  beam:      { icon: "🛸", name: "Borrowed tractor beam", price: 60, desc: "Chaos power, 2 per show: beams everyone in a 3 m crush straight up and drops them somewhere roomy." },
+  freeze:    { icon: "⏸", name: "Universal pause remote", price: 120, desc: "Chaos power, 1 per show: the whole crowd freezes for 4 seconds and the pressure drains away." },
+  antigrav:  { icon: "🪐", name: "Anti-gravity button", price: 150, desc: "Chaos power, 1 per show: gravity switches off for a moment. Everyone floats, nobody is squeezed." },
+  clones:    { icon: "👯", name: "Cloned stewards", price: 90, desc: "+5 stewards available in every venue. They all look exactly the same. Don't ask." },
+  probe:     { icon: "🧠", name: "Calm probe", price: 200, desc: "Everybody takes 20% more squeezing before going down. Side effects: none (that we'll admit to)." },
+  insurance: { icon: "👽", name: "Mothership insurance", price: 300, desc: "The first 20 people who would get pancaked each show are beamed up instead. They count as abducted." },
+};
+let BM = { own: [], spent: 0 };
+const bm = k => !(typeof window !== "undefined" && window.__manual) && BM.own.includes(k);
+const bmWallet = () => { try { const st = JSON.parse(localStorage.getItem("mh.stats") || "{}"); return Math.max(0, (st.abducted || 0) - BM.spent); } catch (e) { return 0; } };
+const gadgetOpen = k => !PROP_TYPES[k] || !PROP_TYPES[k].gadget || (typeof sandbox !== "undefined" && sandbox) || (typeof window !== "undefined" && window.__unlockAll) || GADGETS_OWN.includes(k);
 const gearOn = k => !(typeof window !== "undefined" && window.__manual) && GEAR_ON.includes(k);
 let UPG = {}, TIX = 0, LAST_EARN = 0;
 function loadShop() {
   try { UPG = JSON.parse(localStorage.getItem("mh.upg") || "{}") || {}; TIX = +(localStorage.getItem("mh.tix") || 0) || 0; } catch (e) { UPG = {}; TIX = 0; }
-  try { const g = JSON.parse(localStorage.getItem("mh.gear") || "{}") || {}; GEAR_OWN = (g.own || []).filter(k => GEAR[k]); GEAR_ON = (g.on || []).filter(k => GEAR_OWN.includes(k)).slice(0, 3); NEXT = g.next || {}; } catch (e) { GEAR_OWN = []; GEAR_ON = []; NEXT = {}; }
+  try { const g = JSON.parse(localStorage.getItem("mh.gear") || "{}") || {}; GEAR_OWN = (g.own || []).filter(k => GEAR[k]); GADGETS_OWN = g.gadgets || []; BM = Object.assign({ own: [], spent: 0 }, g.bm || {}); GEAR_ON = (g.on || []).filter(k => GEAR_OWN.includes(k)).slice(0, 3); NEXT = g.next || {}; } catch (e) { GEAR_OWN = []; GEAR_ON = []; NEXT = {}; }
 }
-function saveShop() { try { localStorage.setItem("mh.upg", JSON.stringify(UPG)); localStorage.setItem("mh.tix", String(TIX)); localStorage.setItem("mh.gear", JSON.stringify({ own: GEAR_OWN, on: GEAR_ON, next: NEXT })); } catch (e) { /* no storage */ } }
+function saveShop() { try { localStorage.setItem("mh.upg", JSON.stringify(UPG)); localStorage.setItem("mh.tix", String(TIX)); localStorage.setItem("mh.gear", JSON.stringify({ own: GEAR_OWN, on: GEAR_ON, next: NEXT, gadgets: GADGETS_OWN, bm: BM })); } catch (e) { /* no storage */ } }
 // the deals of the day: seeded by the date, so they change at midnight and survive restarts
 function todaysDeals() {
   const d = new Date(), seed = d.getFullYear() * 400 + d.getMonth() * 32 + d.getDate(); let x = seed;
@@ -132,6 +146,14 @@ const fenceCost = f => f.len * FENCE_TYPES[f.type || "steel"].cost;
 const PROP_TYPES = {
   water:  { name: "Water station", cost: 60, col: "#4fc3f7", r: .6, calm: 3, desc: "Free water: people within 3 m calm down." },
   medic:  { name: "First aid tent", cost: 120, col: "#e53935", r: 1.1, heal: 6, desc: "People within 6 m get patched up: squeezes hurt half as much and heal faster." },
+  // gadgets: unlocked once in the shop (tickets), then placed during planning like any prop
+  megatower: { gadget: 200, name: "Megaphone tower", cost: 90, col: "#ffd23a", r: .5, desc: "A megaphone on a pole that yells CALM DOWN by itself every few seconds (6.5 m)." },
+  pills:     { gadget: 260, name: "Chill-pill turret", cost: 110, col: "#ff6fb1", r: .5, desc: "Shoots calming pills at the most squeezed person within 8 m. Pew. Ahh." },
+  bouncy:    { gadget: 150, name: "Bouncy castle", cost: 80, col: "#a98bff", r: 1.4, desc: "A soft inflatable wall: people bounce off it instead of getting crushed against it." },
+  hotdogs:   { gadget: 180, name: "Hot-dog cannon", cost: 70, col: "#ff9a3c", r: .5, desc: "Fires free hot dogs at the emptiest spot in the venue: part of the crowd runs after them." },
+  fan:       { gadget: 120, name: "Giant fan", cost: 60, col: "#4fb8ff", r: .6, desc: "Blows the crowd gently toward the gates (7 m in front of it)." },
+  tubeman:   { gadget: 100, name: "Inflatable tube man", cost: 50, col: "#7ac943", r: .4, desc: "So hypnotic that people around it (4 m) slow down to stare." },
+  trampoline: { gadget: 240, name: "Exit trampoline", cost: 100, col: "#22d3ee", r: .9, desc: "When the show ends, anyone who steps on it is launched toward the nearest open gate." },
   screen: { name: "Big screen", cost: 150, col: "#7e57c2", r: .9, desc: "Shows the show: about a quarter of the crowd watches it instead of crushing at the stage." },
 };
 let props = [], propType = "water";   // placed props {type, x, y}

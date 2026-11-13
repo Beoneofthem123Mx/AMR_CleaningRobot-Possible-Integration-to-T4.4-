@@ -83,16 +83,26 @@ function showShop(tab) {
     return `<div class="upg${on ? " worn" : ""}"><i>${g.icon}</i><div><b>${g.name}</b><small class="good">+ ${g.good}</small><small class="bad">− ${g.bad}</small></div>
       ${own ? `<button data-wear="${k}" class="${on ? "go" : ""}" ${!on && GEAR_ON.length >= 3 ? "disabled" : ""}>${on ? "Worn" : "Wear"}</button>` : `<button data-gear="${k}" ${TIX < g.cost ? "disabled" : ""}>${tix(g.cost)}</button>`}</div>`;
   }).join("");
+  else if (shopTab === "gadgets") rows = Object.entries(PROP_TYPES).filter(([k, p]) => p.gadget).map(([k, p]) => {
+    const own = GADGETS_OWN.includes(k);
+    return `<div class="upg${own ? " worn" : ""}"><i style="background:${p.col};color:#111214">◆</i><div><b>${p.name}</b><small>${p.desc}</small><small class="good">Place it with the Props tool · $${p.cost} from the budget</small></div>
+      ${own ? `<button disabled>OWNED</button>` : `<button data-gadget="${k}" ${TIX < p.gadget ? "disabled" : ""}>${tix(p.gadget)}</button>`}</div>`;
+  }).join("");
+  else if (shopTab === "bm") rows = `<div class="bmhead">👽 <b>${bmWallet().toLocaleString("en")}</b> abducted people to trade · earned every time a UFO takes someone, in any venue</div>` + Object.entries(BM_ITEMS).map(([k, it]) => {
+    const own = BM.own.includes(k);
+    return `<div class="upg bmitem${own ? " worn" : ""}"><i>${it.icon}</i><div><b>${it.name}</b><small>${it.desc}</small></div>
+      ${own ? `<button disabled>OWNED</button>` : `<button data-bm="${k}" ${bmWallet() < it.price ? "disabled" : ""}><span class="ab">👽 ${it.price}</span></button>`}</div>`;
+  }).join("");
   else rows = todaysDeals().map(o => {
     const d = DEALS[o.k], got = bought.includes(o.id), g = o.gear && GEAR[o.gear], cost = g ? Math.round(g.cost * .6) : o.cost;
     return `<div class="upg deal"><i>${d.icon}</i><div><b>${g ? `${g.name} −40%` : d.name}</b><small>${g ? `${g.good} ${g.bad}` : d.desc}</small></div>
       <button data-deal="${o.id}" ${got || TIX < cost ? "disabled" : ""}>${got ? "SOLD" : tix(cost)}</button></div>`;
   }).join("") + `<p class="keys">New deals every day at midnight.${Object.keys(NEXT).filter(k => k !== "bought").length ? " Waiting for your next show: " + Object.entries(NEXT).filter(([k]) => k !== "bought").map(([k, v]) => ({ meteor: `+${v} meteors`, cow: `+${v} cows`, mega: `+${v} megaphone`, lucky: "lucky hat" })[k]).filter(Boolean).join(", ") + "." : ""}</p>`;
-  const tabs = [["upg", "Upgrades"], ["gear", `Crowd gear <small>${GEAR_ON.length}/3 worn</small>`], ["deals", "Today's deals"]].map(([k, n]) => `<button data-tab="${k}" class="${shopTab === k ? "on" : ""}">${n}</button>`).join("");
-  showCard(`<h2>Shop</h2><p class="shopbal">You have <span class="tix big">${TIX.toLocaleString("en")}</span> tickets. Every show earns more: everyone who gets home, every star and every new medal pays.</p>
+  const tabs = [["upg", "Upgrades"], ["gear", `Crowd gear <small>${GEAR_ON.length}/3 worn</small>`], ["gadgets", "Gadgets"], ["deals", "Today's deals"], ["bm", "This is definitely not a black market"]].map(([k, n]) => `<button data-tab="${k}" class="${shopTab === k ? "on" : ""}">${n}</button>`).join("");
+  showCard(`<h2>${shopTab === "bm" ? "We don't exist" : "Shop"}</h2><p class="shopbal">You have <span class="tix big">${TIX.toLocaleString("en")}</span> tickets. Every show earns more: everyone who gets home, every star and every new medal pays.</p>
     <div class="row tabs">${tabs}</div>
     ${shopTab === "gear" ? `<p class="keys">Up to 3 pieces worn at once. About 1 in 5 people shows up wearing each one, in every venue.</p>` : ""}
-    <div class="shop">${rows}</div><div class="row"><button class="go" id="pick">Back</button></div>`, "options shopcard");
+    <div class="shop">${rows}</div><div class="row"><button class="go" id="pick">Back</button></div>`, "options shopcard" + (shopTab === "bm" ? " bmcard" : ""));
   const buy = c => { if (TIX < c) return false; TIX -= c; return true; };
   for (const b of document.querySelectorAll("[data-tab]")) b.onclick = ev => { ev.stopPropagation(); sfx("select"); showShop(b.dataset.tab); };
   for (const b of document.querySelectorAll("[data-buy]")) b.onclick = ev => {
@@ -102,6 +112,14 @@ function showShop(tab) {
   for (const b of document.querySelectorAll("[data-gear]")) b.onclick = ev => {
     ev.stopPropagation(); const k = b.dataset.gear; if (GEAR_OWN.includes(k) || !buy(GEAR[k].cost)) return;
     GEAR_OWN.push(k); if (GEAR_ON.length < 3) GEAR_ON.push(k); saveShop(); sfx("confirm"); showShop();
+  };
+  for (const b of document.querySelectorAll("[data-bm]")) b.onclick = ev => {
+    ev.stopPropagation(); const k = b.dataset.bm, it = BM_ITEMS[k]; if (BM.own.includes(k) || bmWallet() < it.price) return;
+    BM.spent += it.price; BM.own.push(k); saveShop(); sfx("confirm"); showShop(); toast(`${it.name}. Pleasure doing no business with you.`);
+  };
+  for (const b of document.querySelectorAll("[data-gadget]")) b.onclick = ev => {
+    ev.stopPropagation(); const k = b.dataset.gadget; if (GADGETS_OWN.includes(k) || !buy(PROP_TYPES[k].gadget)) return;
+    GADGETS_OWN.push(k); saveShop(); sfx("confirm"); showShop(); toast(`${PROP_TYPES[k].name} unlocked! Place it with the Props tool.`);
   };
   for (const b of document.querySelectorAll("[data-wear]")) b.onclick = ev => {
     ev.stopPropagation(); const k = b.dataset.wear; GEAR_ON = GEAR_ON.includes(k) ? GEAR_ON.filter(x => x !== k) : GEAR_ON.concat(k).slice(0, 3); saveShop(); sfx("select"); showShop();

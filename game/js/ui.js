@@ -34,7 +34,7 @@ cv.addEventListener("pointerdown", ev => {
   }
   if (tool === "guard") {
     if (guardRole === "slow") {
-      if (nStewards() >= (sandbox ? 20 : GUARD_ROLES.slow.max)) { toast("That's every steward the agency had."); return; }
+      if (nStewards() >= (sandbox ? 20 : GUARD_ROLES.slow.max + 3 * upg("stewards") + (bm("clones") ? 5 : 0))) { toast("That's every steward the agency had."); return; }
       if (fenceLeft() < GUARD_ROLES.slow.cost) { toast(`A steward costs $${GUARD_ROLES.slow.cost}. Erase something first.`); return; }
     } else if (nGuards() >= maxGuards()) { toast("No guards left. Erase one to move it, or hire stewards from the budget."); return; }
     const gx = snap(x), gy = snap(y), id = cellOf(gx, gy);
@@ -208,7 +208,7 @@ addEventListener("keydown", e => {
   if (e.ctrlKey || e.metaKey) return;
   if (phase === "plan") {
     const tools = { "1": "fence", "2": "gate", "3": "guard", "4": "erase", "5": "prop" };
-    if (k === "5" && tool === "prop") { const ks = Object.keys(PROP_TYPES); pickProp(ks[(ks.indexOf(propType) + 1) % ks.length]); return; }
+    if (k === "5" && tool === "prop") { const ks = Object.keys(PROP_TYPES).filter(gadgetOpen); pickProp(ks[(ks.indexOf(propType) + 1) % ks.length]); return; }
     if (k === "3" && tool === "guard") { pickRole(guardRole === "calm" ? "slow" : "calm"); return; }
     if (k === "f" && tool === "fence") { const ks = Object.keys(FENCE_SHAPES); pickShape(ks[(ks.indexOf(fenceShape) + 1) % ks.length]); return; }
     if (k === "1" && tool === "fence") { const ks = Object.keys(FENCE_TYPES); pickFence(ks[(ks.indexOf(fenceType) + 1) % ks.length]); return; }
@@ -314,7 +314,7 @@ function renderPicker(plan) {
   const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard" || tool === "gate") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : live && !demo ? "powers" : sandbox && plan ? "sand" : "";
   if (want === "powers") {   // chaos powers: rebuilt every time, the charges change
     pickerFor = want;
-    el.innerHTML = Object.entries(POWERS).map(([k, p]) => { const n = k === "mega" ? mega.n : charges[k] || 0;
+    el.innerHTML = Object.entries(POWERS).filter(([k, p]) => !p.bm || bm(k) || sandbox).map(([k, p]) => { const n = k === "mega" ? mega.n : charges[k] || 0;
       return `<button data-pw="${k}" class="${power === k ? "on" : ""}" title="${p.desc}" ${n <= 0 ? "disabled" : ""}>${p.icon} ${p.name}<span class="cnt">×${n}</span></button>`; }).join("");
     pickerChrome(el, want); el.hidden = pickerClosed === want;
     el.querySelectorAll("button[data-pw]").forEach(b => b.addEventListener("click", () => { power = b.dataset.pw; ui(); if (power !== "mega") toast(`${POWERS[power].name}: ${POWERS[power].desc}. Click the venue.`); }));
@@ -340,7 +340,7 @@ function renderPicker(plan) {
       el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => pickRole(b.dataset.k)));
     } else {
       const list = want === "fence" ? FENCE_TYPES : PROP_TYPES;
-      el.innerHTML = Object.entries(list).map(([k, f]) =>
+      el.innerHTML = Object.entries(list).filter(([k]) => want === "fence" || gadgetOpen(k)).map(([k, f]) =>
         `<button data-k="${k}" title="${f.desc}"><i style="background:${f.col}"></i>${f.name}<span class="cnt">${sandbox ? "" : "$" + f.cost + (want === "fence" ? "/m" : "")}</span></button>`).join("") +
         (want === "fence" ? `<span class="sep"></span>` + Object.entries(FENCE_SHAPES).map(([k, f]) => `<button data-shape="${k}" title="${f.desc}">${f.name}</button>`).join("") : "");
       el.querySelectorAll("button[data-k]").forEach(b => b.addEventListener("click", () => want === "fence" ? pickFence(b.dataset.k) : pickProp(b.dataset.k)));

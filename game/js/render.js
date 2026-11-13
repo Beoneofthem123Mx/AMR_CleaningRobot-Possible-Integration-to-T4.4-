@@ -412,6 +412,24 @@ function buildProp3D(grp, o) {
     }
     sh(part(grp, "box", "#3a2f2a", .04, .9, .6, x + 1.02, .45, y + .55));
     G3.medicLights = G3.medicLights || []; const lt = part(grp, "sph", basic("#ff3b30"), .14, .14, .14, x, 2.62, y); G3.medicLights.push(lt);
+  } else if (o.ptype === "megatower") {   // a pole with three loudspeakers and a warning light
+    sh(part(grp, "cyl", "#8a8f99", .08, 3.4, .08, x, 1.7, y)); for (let k = 0; k < 3; k++) { const a = k * 2.094, c = sh(part(grp, "cone", "#f4f4f0", .28, .55, .28, x + Math.cos(a) * .3, 3.2, y + Math.sin(a) * .3)); c.rotation.set(Math.sin(a) * 1.4, 0, -Math.cos(a) * 1.4); }
+    sh(part(grp, "sph", basic("#ffd23a"), .15, .15, .15, x, 3.6, y)); sh(part(grp, "cyl", "#3a3d45", .5, .15, .5, x, .08, y));
+  } else if (o.ptype === "pills") {   // a pink turret with a pill-shaped barrel
+    sh(part(grp, "cyl", "#3a3d45", .45, .4, .45, x, .2, y)); sh(part(grp, "sph", "#ff6fb1", .42, .38, .42, x, .7, y));
+    const b = sh(part(grp, "cyl", "#ffffff", .1, .7, .1, x, .85, y - .35)); b.rotation.x = Math.PI / 2 - .3; sh(part(grp, "sph", "#ffd23a", .12, .12, .12, x, .95, y - .7)); toyEyes(grp, x + .3, .85, .14, .07);
+  } else if (o.ptype === "bouncy") {   // an inflatable castle with turrets
+    sh(part(grp, "cyl", "#a98bff", 1.4, .9, 1.4, x, .45, y)); for (let k = 0; k < 4; k++) { const a = k * 1.571 + .785; sh(part(grp, "cyl", ["#ff6fb1", "#ffd23a", "#4fb8ff", "#7ac943"][k], .3, 1.6, .3, x + Math.cos(a) * 1.1, .8, y + Math.sin(a) * 1.1)); sh(part(grp, "cone", "#ff3b2f", .32, .4, .32, x + Math.cos(a) * 1.1, 1.8, y + Math.sin(a) * 1.1)); }
+  } else if (o.ptype === "hotdogs") {   // a cannon on wheels with a hot dog in the barrel
+    const b = sh(part(grp, "cyl", "#2a2b2d", .25, 1.1, .25, x, .7, y)); b.rotation.x = -.8; for (const s2 of [-1, 1]) { const w = sh(part(grp, "cyl", "#8a5a34", .32, .1, .32, x + s2 * .35, .32, y)); w.rotation.z = Math.PI / 2; }
+    const hd = sh(part(grp, "cyl", "#c0402a", .1, .5, .1, x, 1.2, y - .4)); hd.rotation.x = -.8; sh(part(grp, "box", "#ff9a3c", .5, .3, .3, x, .25, y + .4));
+  } else if (o.ptype === "fan") {   // a giant fan facing the gates
+    sh(part(grp, "box", "#3a3d45", .5, 1.4, .3, x, .7, y)); const r = sh(part(grp, "cyl", "#4fb8ff", .7, .12, .7, x, 1.5, y + .2)); r.rotation.x = Math.PI / 2; sh(part(grp, "sph", "#f4f4f0", .15, .15, .15, x, 1.5, y + .3));
+  } else if (o.ptype === "tubeman") {   // a wacky waving tube man
+    sh(part(grp, "cyl", "#3a3d45", .3, .4, .3, x, .2, y)); sh(part(grp, "cyl", "#7ac943", .14, 2.6, .14, x, 1.7, y)); sh(part(grp, "sph", "#7ac943", .2, .2, .2, x, 3.1, y)); toyEyes(grp, x + .15, 3.15, .08, .06);
+    for (const s2 of [-1, 1]) { const ar = sh(part(grp, "cyl", "#7ac943", .07, .9, .07, x, 2.6, y + s2 * .35)); ar.rotation.x = s2 * .8; }
+  } else if (o.ptype === "trampoline") {   // a round trampoline with a springy mat
+    sh(part(grp, "cyl", "#22d3ee", .9, .1, .9, x, .45, y)); sh(part(grp, "cyl", "#111214", .78, .11, .78, x, .46, y)); for (let k = 0; k < 4; k++) { const a = k * 1.571; sh(part(grp, "cyl", "#8a8f99", .04, .45, .04, x + Math.cos(a) * .8, .22, y + Math.sin(a) * .8)); }
   } else if (o.ptype === "screen") { // big screen on two legs, tilted so it reads from above
     for (const s of [-1, 1]) sh(part(grp, "box", "#2b2f35", .14, 2.6, .14, x, 1.3, y + s * 1.5));
     const scr = new THREE.Group(); scr.position.set(x, 2.9, y); scr.rotation.z = .9; grp.add(scr);
