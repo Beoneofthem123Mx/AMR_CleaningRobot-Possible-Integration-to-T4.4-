@@ -1,0 +1,36 @@
+// Human Tsunami · things the audience yells during the show, per venue
+// A random happy fan shouts a venue line; a squeezed one complains instead.
+const CROWD_SHOUTS = {
+  plaza: ["PLAY FREEBIRD!", "I CAN SEE MY HOUSE!", "WHO ORDERED THE CHURROS?", "ENCORE! (ALREADY?)", "MY PIGEON!", "FREE CONCERT = FREE ELBOWS"],
+  circo: ["IS THAT LION VEGAN?", "I WANT TO BE A CLOWN!", "THE TRAPEZE GUY OWES ME $5", "DO THE CANNON AGAIN!", "SMELLS LIKE ELEPHANT", "MORE UNICORNS!", "WHERE'S MY POPCORN?!"],
+  estadio: ["REFEREE, GLASSES!", "OFFSIDE!!", "THAT WAS A DIVE!", "I COULD SCORE THAT!", "PASS IT, PABLO!", "OLE! OLE! OLE!", "SELL THE GOALKEEPER!"],
+  viernes: ["THAT TV IS MINE!", "MY GRANDMA BIT ME!", "IS THIS SOCK ON SALE?", "I NEED A FOURTH BLENDER", "COUPON EXPIRED?!", "SIZE XXXL OR NOTHING!"],
+  crucero: ["I'M ON A BOAT!", "WHERE'S THE BUFFET?", "I FEEL SEASICK", "MAN OVERBOARD! JK", "ALL-YOU-CAN-EAT SHRIMP!", "IS THAT AN ICEBERG?"],
+  boda: ["KISS! KISS! KISS!", "I OBJECT! (TO THE CAKE)", "MY EX IS HERE?!", "THROW THE BOUQUET!", "OPEN BAR?!", "UNCLE CARLOS, SIT DOWN"],
+  hipodromo: ["GO NUMBER 7!", "I BET MY CAR!", "THAT HORSE WINKED AT ME", "PHOTO FINISH!", "RUN, BUTTERCUP, RUN!", "MY HAT IS BIGGER"],
+  trono: ["LONG LIVE THE KING!", "NICE CROWN, BRO", "IS IT REAL GOLD?", "I'M ROYALTY TOO", "BOW! BOW!", "FREE PEASANT SNACKS?"],
+  ciudad: ["TAXI!!", "WHO PARKED THERE?", "PIZZA DELIVERY!", "IS THIS THE SUBWAY?", "HONK HONK!", "I LIVE HERE, LET ME IN!"],
+  mitin: ["QUACK THE VOTE!", "FOUR MORE QUACKS!", "DUCK YEAH!", "WHERE'S MY FREE HAT?", "MAKE PONDS GREAT AGAIN", "QUACK QUACK!"],
+  taco: ["EXTRA SALSA!", "IS IT GLUTEN FREE?", "TACO TUESDAY ON A FRIDAY?", "I WANT THE TORTILLA!", "MORE GUAC!", "TOO SPICY! MORE!"],
+  ovni: ["TAKE ME WITH YOU!", "I KNEW IT!", "PROBE MY COUSIN!", "SELFIE WITH ALIEN!", "THEY LOOK FRIENDLY", "WE COME IN PEACE (MOSTLY)"],
+  aeropuerto: ["SIGN MY FOREHEAD!", "I LOVE YOU!!!", "IS THAT HER?!", "MY FLIGHT LEFT!", "SELFIE! SELFIE!", "SHE LOOKED AT ME!"],
+  arena: ["DROP THE BASS!", "LOUDER!", "MY EARS!", "PHONE FLASHLIGHTS UP!", "MOSH PIT!", "ONE MORE SONG!"],
+  rocket: ["3... 2... 1...!", "TO THE MOON!", "IS IT SUPPOSED TO SMOKE?", "I'M AN ASTRONAUT NOW", "BLAST OFF!", "BRING BACK A ROCK!"],
+  zoo: ["THE PENGUIN STOLE MY HAT!", "DON'T FEED THE TOURISTS", "LOOK, A GIRAFFE!", "THAT MONKEY IS ME", "FREE ZOO = FREE CHAOS", "PET THE LLAMA!"],
+  cheese: ["CATCH THAT CHEESE!", "IT'S BRIE-LLIANT!", "GOUDA LUCK!", "I'M LACTOSE INTOLERANT AND I DON'T CARE", "ROLL, BABY, ROLL!", "CHEDDAR OR DEATH"],
+  zombie: ["BRAAAINS!", "IS THAT MAKEUP?!", "I'M A VEGETARIAN ZOMBIE", "GRAAAH!", "NICE COSTUME... RIGHT?", "BRAINS ON SALE!"],
+  beach: ["FREE ICE CREAM!", "SUNSCREEN!", "SAND IN MY EVERYTHING", "SEAGULL TOOK MY CONE!", "SHARK! JK", "VANILLA OR RIOT"],
+  park: ["FIRST IN LINE!", "IS IT OPEN YET?", "CUT THE RIBBON!", "I WANT THE GIANT SCISSORS", "FREE BALLOONS!", "OPENING DAY!!"],
+  nuclear: ["IS IT SUPPOSED TO GLOW?", "MY HAIR IS FLOATING", "FREE TOTE BAG!", "I FEEL TINGLY", "HUG THE ROD!", "MUTANT POWERS, ACTIVATE!"],
+  guerra: ["FOR GRANDPA!", "IS THIS TANK REAL?", "WATCH YOUR STEP!", "CHARGE!!", "MEDIC! (FOR MY SANDWICH)", "SOUP! FREE SOUP!"],
+};
+const SQUEEZE_SHOUTS = ["MY TOES!", "PERSONAL SPACE!", "I CAN'T BREATHE!", "WHO'S PUSHING?!", "MY HIP!", "STOP SHOVING!", "I'M A PANCAKE", "BACK UP!", "MOM?!", "MY PHONE!"];
+let shoutT = 3;
+function crowdShouts() {
+  shoutT -= DT; if (shoutT > 0 || !ag.length) return;
+  shoutT = 1.4 + Math.random() * 2.2;
+  const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.air > 0 || a.lift > 0) return;
+  const squeezed = a.ps > PCRIT * .5, list = squeezed ? SQUEEZE_SHOUTS : CROWD_SHOUTS[sceneKey];
+  if (!list || (!squeezed && phase !== "show")) return;
+  pop(a.x, a.y - 1.1, list[(Math.random() * list.length) | 0]);
+}

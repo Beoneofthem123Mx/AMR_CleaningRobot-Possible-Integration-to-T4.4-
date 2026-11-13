@@ -36,7 +36,7 @@ function spawnEvent(kind) {
   const before = new Set(movers);
   spawnEventRaw(kind);
   let best = null;
-  for (const m of movers) if (!before.has(m) && !m.small && m.kind !== "router" && (!best || m.r > best.r)) best = m;
+  for (const m of movers) if (!before.has(m) && !m.small && !m.fixture && m.kind !== "router" && (!best || m.r > best.r)) best = m;
   if (best) evCam = { m: best, t: 3.2 };
   if (Math.random() < .5) sfx("ooh");   // the crowd reacts
   if (Math.random() < .3 && phase === "show" && !demo) announce(Math.random() < .5 ? "war_look_out" : "war_get_down", .75);
@@ -228,11 +228,11 @@ function spawnAmbient() {
 function stepMovers() {
   if (phase === "show") {
     ambientT -= DT;
-    if (ambientT <= 0) { ambientT = rnd(9, 15); if (movers.filter(m => m.ambient).length < 3 && movers.length < 14) spawnAmbient(); }
+    if (ambientT <= 0) { ambientT = rnd(9, 15); if (movers.filter(m => m.ambient).length < 3 && movers.filter(m => !m.fixture).length < 14) spawnAmbient(); }
   }
   if (phase === "show" || phase === "evac") {
     eventT -= DT;
-    if (eventT <= 0 && movers.length < 16) {
+    if (eventT <= 0 && movers.filter(m => !m.fixture).length < 16) {
       const pool = chaosMode ? chaosPool() : scene.events.concat(MOD && MOD.events || []);
       spawnEvent(pool[(Math.random() * pool.length) | 0]); eventT = phase === "show" ? rnd(5.5, 8.5) : rnd(9, 13);
     }

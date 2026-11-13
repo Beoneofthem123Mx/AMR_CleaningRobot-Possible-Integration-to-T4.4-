@@ -149,6 +149,9 @@ const SHIRTS = ["#d8433b","#2f6fc4","#e8b631","#3d9a5b","#8a4fbf","#e07a2e","#f4
 const HEAT = ["#2c4fd6","#2f86e0","#2fb8d0","#33c08a","#5cc63c","#b8d230","#f2c530","#f39424","#ec5a22","#e0322b"];
 let surgeT = 0, nextDrop = 0, drops = 0, SURGE = [.55, 1.1];
 let abducted = 0, slipT = 0, MOD = null, eventLog = new Set(), mega = { n: 3, active: [] }; megaUsed = false;
+// shopping: people pop into the venue shops and come back out buried in bags
+let SHOPPERS = [], SHOP_DOORS = [], shopT = 0;
+const SHOP_CRIES = ["SALE!!", "I REGRET NOTHING", "BAGS!", "ONE MORE STORE", "MY CREDIT CARD!", "IT WAS 90% OFF", "WORTH IT"];
 let ag = [], fallen = [], phase = "plan", spawned = 0, fullAt = 0, t = 0, evacT = 0, dead = 0, evacuated = 0;
 let hashHead = new Int32Array(GW * GH), hashNext = new Int32Array(0);
 
@@ -256,6 +259,12 @@ function step() {
       want = isFinite(best) ? a.v0 * .6 : 0;
     }
     if (leaving && f[id] === 0) { dx = 0; dy = 1; }
+    if (a.shop >= 0 && !leaving && !surging) {   // off to the shops
+      const d = SHOP_DOORS[a.shop], ex = d[0] - a.x, ey = d[1] - a.y, dl = Math.hypot(ex, ey);
+      if (dl < .75) { a.shopOut = t + 2 + Math.random() * 4; a.vx = a.vy = 0; SHOPPERS.push(a); continue; }
+      dx = ex / dl; dy = ey / dl; want = a.v0 * .95;
+    } else if (a.shop >= 0 && (leaving || surging)) a.shop = -1;
+    if (a.shop >= 0 && t - a.shopGo > 14) a.shop = -1;   // gave up, the queue was too long
     // a UFO beam lifts people up
     if (a.beam) a.lift += DT * .75; else if (a.lift > 0) a.lift = Math.max(0, a.lift - DT * 1.5);
     for (const sw of stewards) if ((a.x - sw.x) ** 2 + (a.y - sw.y) ** 2 < STEWARD_R * STEWARD_R) { want *= .5; break; }
@@ -295,6 +304,8 @@ function step() {
     out.push(a);
   }
   ag = out;
+  if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
+  if (!demo && spawned > 150) crowdShouts();
   if (scene.step && !demo) scene.step();   // venue mechanics (reactor heat, land mines)
   if (surgeT > 0 && !demo && ag.length && Math.random() < .25) { const a = ag[(Math.random() * ag.length) | 0]; if (a.dance && toss(a, .9 + Math.random() * .9) && Math.random() < .3) pop(a.x, a.y - 1, ["WHEEE!", "YEET!", "WOOO!"][(Math.random() * 3) | 0]); }
   // a calm evacuation is boring to watch: after 2 s with nobody squeezed the clock runs fast
@@ -458,9 +469,10 @@ function start(mod) {
   const scr = props.find(p => p.type === "screen");
   if (scr && !MOD.altShare) setAlt(scr.x, scr.y, PROP_TYPES.screen.r + 2.2);
   if (scene.onStart) scene.onStart();
+  SHOPPERS = []; shopT = 0; shoutT = 3; SHOP_DOORS = scene.shopDoors ? scene.shopDoors() : [];
   G3.photo = null;
 }
-function startEvac() { if (!demo) announce("time_over"); phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }
+function startEvac() { for (const a of SHOPPERS) shopOut(a); SHOPPERS = []; if (!demo) announce("time_over"); phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }
 function finish() {
   if (demo) { startDemo(); return; }
   phase = "done";
@@ -507,3 +519,32 @@ function backToPlan() {
   hideCard(); caption("You plan it", false, 0); resetPreview(); ui();
 }
 
+
+// a few calm people near a shop door decide they need something right now
+function shopStep() {
+  shopT -= DT;
+  if (shopT <= 0 && ag.length > 40) {
+    shopT = .35 + Math.random() * .5;
+    for (let k = 0; k < 6; k++) {
+      const a = ag[(Math.random() * ag.length) | 0];
+      if (a.shop >= 0 || (a.bags || 0) > 5 || a.ps > PCRIT * .3 || a.air > 0 || a.lift > 0 || a.acc === 4) continue;
+      let best = -1, bd = 14 * 14;
+      for (let i = 0; i < SHOP_DOORS.length; i++) { const d = SHOP_DOORS[i], q = (d[0] - a.x) ** 2 + (d[1] - a.y) ** 2; if (q < bd && i !== a.lastShop) { bd = q; best = i; } }
+      if (best >= 0) { a.shop = best; a.shopGo = t; break; }
+    }
+  }
+  if (SHOPPERS.length) {
+    const keep = [];
+    for (const a of SHOPPERS) if (t > a.shopOut) shopOut(a); else keep.push(a);
+    SHOPPERS = keep;
+  }
+}
+function shopOut(a) {
+  const d = SHOP_DOORS[a.shop] || SHOP_DOORS[0];
+  a.x = d[0] + d[2] * .5 + (Math.random() - .5) * .4; a.y = d[1] + d[3] * .5 + (Math.random() - .5) * .4;
+  a.vx = d[2] * .8; a.vy = d[3] * .8; a.h = Math.atan2(a.vy, a.vx);
+  const was = a.bags || 0; a.bags = Math.min(9, was + 2 + ((Math.random() * 3) | 0)); a.lastShop = a.shop; a.shop = -1;
+  a.v0 *= .86; a.bagC = a.bagC || ((Math.random() * 6) | 0);
+  ag.push(a);
+  if (Math.random() < .3) { pop(a.x, a.y - 1, SHOP_CRIES[(Math.random() * SHOP_CRIES.length) | 0]); }
+}

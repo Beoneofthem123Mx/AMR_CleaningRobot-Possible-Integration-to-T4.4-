@@ -14,6 +14,7 @@ SCENES.viernes = {
   acts: ["Last few left!", "Today only!", "Grab two!", "Run, run, run!"],
   events: ["oferta", "oferta", "carrito", "abuela", "tubeman", "limpieza", "oferta"],
   goal: o => o.kind === "barrier", goalMaxY: 20,
+  shopDoors: () => SHOPS.map(sh => sh.side ? [WW - 6.45, sh.y + 5, -1, 0] : [6.45, sh.y + 5, 1, 0]),
   lines: {
     oferta: "A flash sale moved three thousand people in eleven seconds.",
     carrito: "A runaway shopping cart ran over several customers with great dignity.",

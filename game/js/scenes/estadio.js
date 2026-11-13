@@ -93,19 +93,17 @@ function ESTADIO_screen() {
   draw(0); return ESTADIO.screen = { tex, draw };
 }
 SCENES.estadio = {
-  name: "The Stadium", tag: "Concert on the pitch", outside: "#3b3f45", bulbH: 2.0, night: true, music: "edm",
-  light: { sky: 0x8aa2e0, ground: 0x1e2228, hemi: .34, sun: 0xdfe8ff, sunI: .8 }, crowd: 3600, fenceBudget: 70, maxGates: 5, guards: 4,
+  name: "The Stadium", tag: "The cup final", outside: "#3b3f45", bulbH: 2.0, night: true, music: "edm",
+  light: { sky: 0x8aa2e0, ground: 0x1e2228, hemi: .34, sun: 0xdfe8ff, sunI: .8 }, crowd: 2700, fenceBudget: 70, maxGates: 5, guards: 4,
   gates: [F, T, F, T, F, T, F], noSlots: [0, 6], slotWhy: "The stands are there", unlock: 2,
-  intro: "The final turned into a concert. Fans flood the pitch, flares are lit, the mascot is on the loose and the wave will not stop.",
-  acts: ["What a GOLAZO of a song!", "Everybody jump!", "The wave!", "Champions!"],
-  events: ["mascot", "flares", "ola", "ball", "medic", "flares", "ola", "mascot"],
-  goal: o => o.kind === "barrier", goalMaxY: 30,
+  intro: "Cup final: Deportivo Chancla vs Real Burrito. The fan zone is packed right up to the pitch-side barrier, every goal makes the whole stadium jump, and the two gangs in the stands REALLY don't like each other.",
+  acts: ["What a chance!", "Off the post!", "The wave!", "Champions!"],
+  events: ["mascot", "flares", "ola", "pelea", "medic", "pelea", "ola", "mascot", "flares"],
+  goal: o => o.kind === "barrier", goalMaxY: 33,
   build() {
     rect(0, 0, 3.5, FENCE_Y, "stands"); rect(WW - 3.5, 0, WW, FENCE_Y, "stands"); rect(0, 0, WW, 5, "stands");
-    rect(8, 5, 32, 11, "stage");
-    rect(4.2, 6, 7, 10, "speaker"); rect(33, 6, 35.8, 10, "speaker");
-    seg(3.5, 12.4, WW - 3.5, 12.4, .5, "barrier");
-    rect(17, 61, 23, 62, "goal");
+    rect(3.5, 5, WW - 3.5, 29.4, "pitch");   // the match is on: nobody in the fan zone gets onto the grass
+    seg(3.5, 29.6, WW - 3.5, 29.6, .5, "barrier");
     rect(3.5, 30, 5.2, 37, "bench"); rect(34.8, 30, 36.5, 37, "bench");
   },
   ground(g, px) {
@@ -115,22 +113,18 @@ SCENES.estadio = {
       g.fillStyle = i % 2 ? "#33903f" : "#287536"; g.fillRect(3.5, y, WW - 7, Math.min(3, FENCE_Y - y));
       g.fillStyle = i % 2 ? "rgba(255,255,255,.035)" : "rgba(0,0,0,.05)"; for (let x = 3.5; x < WW - 3.5; x += 3) g.fillRect(x, y, 1.5, Math.min(3, FENCE_Y - y));
     }
-    // darker run-off strip along the touchlines and behind the goal
-    g.fillStyle = "rgba(10,40,18,.35)"; g.fillRect(3.5, 12.6, 1.1, FENCE_Y - 12.6); g.fillRect(WW - 4.6, 12.6, 1.1, FENCE_Y - 12.6); g.fillRect(3.5, 62.4, WW - 7, FENCE_Y - 62.4);
-    // crisp white markings
-    const L = () => { g.strokeStyle = "rgba(255,255,255,.95)"; g.lineWidth = .2; g.lineCap = "butt"; };
-    L(); g.strokeRect(5, 14, 30, 47);
-    g.beginPath(); g.moveTo(5, 37.5); g.lineTo(35, 37.5); g.stroke();
-    g.beginPath(); g.arc(20, 37.5, 5, 0, 7); g.stroke();
-    g.strokeRect(11, 49, 18, 12); g.strokeRect(15.5, 57, 9, 4);          // south penalty and goal areas
-    g.beginPath(); g.arc(20, 53, 4.2, Math.PI + .95, -.95); g.stroke();   // the "D"
-    g.strokeRect(11, 14, 18, 12); g.strokeRect(15.5, 14, 9, 4);           // north areas (the stage hides that goal)
-    g.beginPath(); g.arc(20, 22, 4.2, .95, Math.PI - .95); g.stroke();
-    for (const [cx, cy, a0] of [[5, 14, 0], [35, 14, Math.PI / 2], [35, 61, Math.PI], [5, 61, -Math.PI / 2]]) { g.beginPath(); g.arc(cx, cy, 1, a0, a0 + Math.PI / 2); g.stroke(); }
-    g.fillStyle = "#ffffff"; for (const [x, y] of [[20, 37.5], [20, 53], [20, 22]]) { g.beginPath(); g.arc(x, y, .28, 0, 7); g.fill(); }
+    // the match pitch (top) and the fan zone (bottom, worn grass behind the barrier)
+    g.fillStyle = "rgba(60,40,20,.28)"; g.fillRect(3.5, 30, WW - 7, FENCE_Y - 30);
+    for (let k = 0; k < 900; k++) { g.fillStyle = k % 3 ? "rgba(90,70,40,.25)" : "rgba(200,190,150,.18)"; g.fillRect(3.5 + ((k * 37.3) % (WW - 7)), 30 + ((k * 13.7) % (FENCE_Y - 30)), .5, .3); }
+    const L = () => { g.strokeStyle = "rgba(255,255,255,.95)"; g.lineWidth = .18; g.lineCap = "butt"; };
+    L(); g.strokeRect(4.5, 6, 31, 22.5);
+    g.beginPath(); g.moveTo(20, 6); g.lineTo(20, 28.5); g.stroke();
+    g.beginPath(); g.arc(20, 17.25, 3.6, 0, 7); g.stroke();
+    g.strokeRect(4.5, 10.5, 6, 13.5); g.strokeRect(29.5, 10.5, 6, 13.5); g.strokeRect(4.5, 14, 2.4, 6.5); g.strokeRect(33.1, 14, 2.4, 6.5);
+    g.beginPath(); g.arc(8.6, 17.25, 3, -.95, .95); g.stroke(); g.beginPath(); g.arc(31.4, 17.25, 3, Math.PI - .95, Math.PI + .95); g.stroke();
+    g.fillStyle = "#ffffff"; for (const [x, y] of [[20, 17.25], [8.6, 17.25], [31.4, 17.25]]) { g.beginPath(); g.arc(x, y, .25, 0, 7); g.fill(); }
+    g.save(); g.globalAlpha = .18; g.font = "900 4px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#ffffff"; g.fillText("FAN ZONE", 20, 47); g.restore();
     // technical areas in front of the benches (dashed)
-    g.setLineDash([.5, .35]); g.lineWidth = .12;
-    g.strokeRect(5.2, 29.5, 1.6, 8); g.strokeRect(33.2, 29.5, 1.6, 8); g.setLineDash([]);
     // outside: concourse with painted stripes
     g.fillStyle = "#34383e"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
     g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = .12;
@@ -150,29 +144,13 @@ SCENES.estadio = {
     g.font = "900 3.6px Rubik, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "rgba(216,50,43,.92)"; g.fillRect(9, .4, 22, 4.2);
     g.fillStyle = "#ffffff"; g.fillText("TSUNAMI", 20, 2.6);
-    // stage with LED screen
-    g.fillStyle = "#16171b"; g.fillRect(8, 5, 24, 6);
-    const led = g.createLinearGradient(9, 0, 31, 0); led.addColorStop(0, "#7a2cff"); led.addColorStop(.5, "#ff3fa4"); led.addColorStop(1, "#22d3ee");
-    g.fillStyle = led; g.fillRect(9, 5.4, 22, 1.4);
-    g.fillStyle = "#2b2d33"; for (let x = 9; x < 31; x += 2.2) g.fillRect(x, 8, 1.4, .8);
-    g.fillStyle = "#101114"; for (const o of obs) if (o.kind === "speaker") g.fillRect(o.x0, o.y0, o.x1 - o.x0, o.y1 - o.y0);
     for (const o of obs) if (o.kind === "barrier") { g.lineWidth = o.th; g.strokeStyle = "#1c1d21"; g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke(); }
-    // goal: net seen from above
-    g.fillStyle = "rgba(255,255,255,.28)"; g.fillRect(17, 61, 6, 1);
-    g.strokeStyle = "rgba(255,255,255,.8)"; g.lineWidth = .04;
-    for (let x = 17; x <= 23.01; x += .25) { g.beginPath(); g.moveTo(x, 61); g.lineTo(x, 62); g.stroke(); }
-    for (let y = 61; y <= 62.01; y += .25) { g.beginPath(); g.moveTo(17, y); g.lineTo(23, y); g.stroke(); }
-    g.strokeStyle = "#ffffff"; g.lineWidth = .16; g.strokeRect(17.08, 61.08, 5.84, .84);
-    // stage floor: LED edge, monitor wedges, cable runs, set list tape
-    g.fillStyle = "#22d3ee"; g.fillRect(8.2, 10.7, 23.6, .16); g.fillStyle = "#ff3fa4"; g.fillRect(8.2, 5.1, .16, 5.6); g.fillRect(31.64, 5.1, .16, 5.6);
-    g.fillStyle = "#3a3d45"; for (let x = 10; x < 31; x += 3.3) { g.beginPath(); g.moveTo(x, 10.4); g.lineTo(x + 1.1, 10.4); g.lineTo(x + .9, 9.8); g.lineTo(x + .2, 9.8); g.fill(); }
-    g.strokeStyle = "rgba(255,210,58,.5)"; g.lineWidth = .06; g.beginPath(); g.moveTo(9, 9.4); g.bezierCurveTo(14, 8.6, 17, 9.9, 20, 9.2); g.bezierCurveTo(24, 8.4, 27, 9.8, 31, 9.1); g.stroke();
     g.fillStyle = "#1f4fa8"; for (const o of obs) if (o.kind === "bench") g.fillRect(o.x0, o.y0, o.x1 - o.x0, o.y1 - o.y0);
   },
-  bulbs: Array.from({ length: 16 }, (_, i) => [9 + i * 1.47, 11.3]),
+  bulbs: Array.from({ length: 16 }, (_, i) => [5 + i * 2, 30.1]),
   beams: [{ x: -7, y: -8, a: Math.atan2(44, 27), sweep: .22, h: 25, white: true }, { x: 47, y: -8, a: Math.atan2(44, -27), sweep: .22, h: 25, white: true },
           { x: -6, y: 69, a: Math.atan2(-33, 26), sweep: .22, h: 25, white: true }, { x: 46, y: 69, a: Math.atan2(-33, -26), sweep: .22, h: 25, white: true },
-          { x: 14, y: 11, a: Math.PI / 2, sweep: .6, h: 9 }, { x: 26, y: 11, a: Math.PI / 2, sweep: .6, h: 9 }],
+          { x: 14, y: 30, a: Math.PI / 2, sweep: .6, h: 9 }, { x: 26, y: 30, a: Math.PI / 2, sweep: .6, h: 9 }],
   extra3D(grp) {
     const E = ESTADIO; E.fx = [];
     const steel = mat("#9aa0a8", { metalness: .6, roughness: .4 }), dark = mat("#1b1d22", { roughness: .8 }), lamp = basic("#fffbe8");
@@ -197,14 +175,17 @@ SCENES.estadio = {
       part(tilt, "box", dark, 6.4, 4.2, .5, 0, 0, 0);
       for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) part(tilt, "sph", lamp, .5, .5, .3, (c - 2) * 1.2, (r - 1) * 1.25, .3);
     }
-    // ---- goal with a net (inside its own obstacle)
+    // ---- the two goals at the ends of the pitch, mouths facing the centre spot
     const white = mat("#ffffff", { roughness: .3 });
-    for (const x of [17.1, 22.9]) { part(grp, "cyl", white, .1, 2.44, .1, x, 1.22, 61.1); part(grp, "cyl", white, .05, 1.9, .05, x, .95, 61.92); const st = part(grp, "cyl", white, .05, 1, .05, x, 2.17, 61.5); st.rotation.x = -.95; }
-    const bar = part(grp, "cyl", white, .1, 5.9, .1, 20, 2.44, 61.1); bar.rotation.z = Math.PI / 2;
     const netM = E.netMat || (E.netMat = new THREE.MeshBasicMaterial({ map: ESTADIO_netTex(), transparent: true, side: THREE.DoubleSide, depthWrite: false, toneMapped: false, color: 0xb0b0b0 }));
-    const net = (w, h, x, y, z, rx, ry) => { const g = new THREE.PlaneGeometry(w, h); g.attributes.uv.array.forEach((v, i, a) => { a[i] = v * (i % 2 ? h : w) * 2; }); const m = new THREE.Mesh(g, netM); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); grp.add(m); };
-    net(5.8, 1.9, 20, .95, 61.92, 0, 0); net(5.8, 1, 20, 2.17, 61.5, -Math.PI / 2 + .6, 0);
-    for (const x of [17.1, 22.9]) net(.82, 1.9, x, .95, 61.51, 0, Math.PI / 2);
+    const net = (w, h, x, y, z, rx, ry) => { const g = new THREE.PlaneGeometry(w, h); g.attributes.uv.array.forEach((v, i, a) => { a[i] = v * (i % 2 ? h : w) * 2; }); const m = new THREE.Mesh(g, netM); m.position.set(x, y, z); m.rotation.set(rx, ry, 0, "YXZ"); grp.add(m); };
+    for (const s of [-1, 1]) {
+      const gx = s < 0 ? 4.5 : 35.5, back = gx + s * .9;
+      for (const y of [15.05, 19.45]) { part(grp, "cyl", white, .1, 2.44, .1, gx, 1.22, y); part(grp, "cyl", white, .05, 1.9, .05, back, .95, y); }
+      const bar = part(grp, "cyl", white, .1, 4.5, .1, gx, 2.44, 17.25); bar.rotation.x = Math.PI / 2;
+      net(4.4, 1.9, back, .95, 17.25, 0, Math.PI / 2); net(4.4, 1.1, (gx + back) / 2, 2.2, 17.25, -Math.PI / 2, Math.PI / 2 + s * .6);
+      for (const y of [15.05, 19.45]) net(.9, 1.9, (gx + back) / 2, .95, y, 0, 0);
+    }
     // ---- dugouts on the benches, with stewards in yellow sitting in them
     const glass = mat("#9fd8ff", { transparent: true, opacity: .35, roughness: .15 });
     for (const s of [-1, 1]) {
@@ -216,28 +197,6 @@ SCENES.estadio = {
         part(grp, "box", "#22252b", .5, .12, .5, wallX + s * -.45, .56, y);
         part(grp, "box", basic(vest, { color: lin(vest).multiplyScalar(.75) }), .34, .5, .46, wallX - s * .45, .9, y); part(grp, "sph", "#e9b98f", .24, .24, .24, wallX - s * .47, 1.3, y);
         part(grp, "box", "#22252b", .4, .16, .4, wallX - s * .75, .62, y);
-      }
-    }
-    // ---- concert stage: truss, LED wall, lamp bar, taller speaker stacks
-    const truss = mat("#c9ced6", { metalness: .7, roughness: .35 });
-    for (const x of [8.5, 31.5]) for (const y of [5.5, 10.5]) { part(grp, "box", truss, .45, 8.4, .45, x, 6, y); part(grp, "box", dark, .8, .3, .8, x, 1.95, y); }
-    for (const y of [5.5, 10.5]) { part(grp, "box", truss, 23.5, .45, .45, 20, 10.2, y); for (let x = 9.5; x < 31; x += 1.5) { const d = part(grp, "box", truss, .08, .62, .08, x, 10.2, y); d.rotation.z = (Math.round(x / 1.5) % 2 ? 1 : -1) * .6; } }
-    for (const x of [8.5, 20, 31.5]) part(grp, "box", truss, .45, .45, 5.4, x, 10.2, 8);
-    part(grp, "box", dark, 22.6, 6.4, .35, 20, 5.9, 5.55);
-    const scr = ESTADIO_screen(), sm = new THREE.Mesh(new THREE.PlaneGeometry(22, 5.8), E.scrMat || (E.scrMat = new THREE.MeshBasicMaterial({ map: scr.tex, toneMapped: false })));
-    sm.position.set(20, 5.9, 5.74); grp.add(sm); E.fx.push(scr.draw);
-    const cans = [];
-    for (let i = 0; i < 12; i++) {
-      const x = 10 + i * 1.82, hue = ["#ff3fa4", "#22d3ee", "#ffd23a", "#7a2cff"][i % 4];
-      part(grp, "cyl", dark, .34, .5, .34, x, 9.7, 10.5); cans.push(part(grp, "sph", new THREE.MeshBasicMaterial({ color: lin(hue), toneMapped: false }), .3, .16, .3, x, 9.42, 10.5));
-    }
-    E.fx.push(tt => cans.forEach((c, i) => { const k = .45 + 1.1 * Math.max(0, Math.sin(tt * 5 + i * 1.3)); c.material.color.copy(lin(["#ff3fa4", "#22d3ee", "#ffd23a", "#7a2cff"][i % 4])).multiplyScalar(k); }));
-    for (const o of obs) if (o.kind === "speaker") {
-      const cx = (o.x0 + o.x1) / 2;
-      for (let k = 0; k < 2; k++) { part(grp, "box", "#17181c", 2.5 - k * .3, 1.5, 3.4 - k * .4, cx, 3.95 + k * 1.5, 8); part(grp, "box", "#3a3d45", 2.52 - k * .3, .06, 3.42 - k * .4, cx, 3.2 + k * 1.5, 8); }
-      for (let k = 0; k < 4; k++) for (const dx of [-.6, .6]) {
-        const c = part(grp, "cyl", "#2d3038", .5, .06, .5, cx + dx * (k > 1 ? .85 : 1), .8 + k * 1.52, k < 2 ? 10.02 : 9.72 + (k === 3 ? -.2 : 0)); c.rotation.x = Math.PI / 2;
-        const d = part(grp, "cyl", "#0c0d10", .24, .08, .24, c.position.x, c.position.y, c.position.z + .01); d.rotation.x = Math.PI / 2;
       }
     }
     // ---- big waving flags up in the stands
@@ -252,5 +211,177 @@ SCENES.estadio = {
     [[18, RW], [29, YB], [44, RR], [56, RW]].forEach(([y, c], i) => { flagAt(-2.6, y, 5.9, Math.PI / 2, c, i * 1.9); flagAt(42.6, y + 4, 5.9, -Math.PI / 2, [RW, RR, YB, RW][i], i * 2.3 + 1); });
     flagAt(3, -1.6, 5.9, 0, YB, .7); flagAt(33, -1.6, 5.9, 0, RR, 2.9);
   },
-  performers: () => [{ kind: "estadio_fx", orbit: [20, 8, 0, 0, 0], h: 1, x: 0, y: 0, ang: 0, t: 0 }, { kind: "dj", orbit: [20, 8.4, .01, 0, 0], h: 1.8, x: 0, y: 0, ang: Math.PI / 2, t: 0 }],
+  performers: () => [{ kind: "estadio_fx", orbit: [20, 8, 0, 0, 0], h: 1, x: 0, y: 0, ang: 0, t: 0 }],
 };
+
+// ---------- the cup final: a real (tiny, silly) football match behind the barrier ----------
+const TEAMS = [
+  { name: "DEPORTIVO CHANCLA", short: "CHA", shirt: "#d8322b", shorts: "#ffffff", gk: "#35d07f", logo: "chancla", fans: "#ff4a3a" },
+  { name: "REAL BURRITO", short: "BUR", shirt: "#1f4fa8", shorts: "#ffd23a", gk: "#ff9a3c", logo: "burrito", fans: "#3a7bff" },
+];
+const PITCH = { x0: 4.5, x1: 35.5, y0: 6, y1: 28.5, cy: 17.25, m0: 15.25, m1: 19.25 };
+const MATCH = { score: [0, 0], ball: null, players: [], reset: 0, kickT: 0, last: -1, goals: 0 };
+// comic crests, drawn on the scoreboard and (simplified) on the fans' chests
+function teamLogo(g, team, x, y, r) {
+  g.save(); g.translate(x, y);
+  g.fillStyle = team.shirt; g.beginPath(); g.moveTo(-r, -r); g.lineTo(r, -r); g.lineTo(r, r * .2); g.quadraticCurveTo(0, r * 1.5, -r, r * .2); g.closePath(); g.fill();
+  g.strokeStyle = "#ffffff"; g.lineWidth = r * .12; g.stroke();
+  if (team.logo === "chancla") {   // a flip-flop, the most feared weapon in the country
+    g.fillStyle = "#ffd23a"; g.beginPath(); g.ellipse(0, r * .05, r * .38, r * .7, -.35, 0, 7); g.fill();
+    g.strokeStyle = "#1b1d22"; g.lineWidth = r * .12; g.beginPath(); g.moveTo(-r * .3, -r * .1); g.lineTo(r * .05, -r * .45); g.lineTo(r * .32, -r * .05); g.stroke();
+  } else {                         // a burrito with a face
+    g.fillStyle = "#f2d39a"; g.beginPath(); g.ellipse(0, 0, r * .75, r * .42, -.25, 0, 7); g.fill();
+    g.fillStyle = "#7ac943"; g.fillRect(-r * .6, -r * .08, r * .25, r * .16);
+    g.fillStyle = "#1b1d22"; for (const s of [-1, 1]) { g.beginPath(); g.arc(s * r * .18, -r * .08, r * .07, 0, 7); g.fill(); }
+    g.beginPath(); g.arc(0, r * .08, r * .16, .2, Math.PI - .2); g.lineWidth = r * .07; g.strokeStyle = "#1b1d22"; g.stroke();
+  }
+  g.restore();
+}
+for (const [i, T] of TEAMS.entries()) {
+  SCENE_PERSONS["est_p" + i] = { body: T.shirt, legs: T.shorts, hat: "hair", hatCol: i ? "#2b1d14" : "#e3b23c", shoes: "#151617",
+    extra(g, u, b) { part(b, "box", "#ffffff", .05, .18, .14, .26, 1.05, 0); } };   // shirt number patch
+  SCENE_PERSONS["est_gk" + i] = { body: T.gk, legs: "#151617", hat: "cap", hatCol: T.gk, shoes: "#151617",
+    extra(g, u, b) { for (const s of [-1, 1]) part(b, "sph", "#ffffff", .1, .1, .1, .05, .78, s * .3); } };
+  SCENE_PERSONS["est_fan" + i] = { body: T.fans, legs: "#2b2f35", hat: "hair", hatCol: T.fans, skin: "#e9b98f",
+    extra(g, u, b) {   // scarf, face paint and the crest on the belly
+      part(b, "box", i ? "#ffd23a" : "#ffffff", .3, .1, .5, 0, 1.42, 0);
+      part(b, "cyl", "#ffffff", .2, .03, .2, .26, 1.0, 0).rotation.z = Math.PI / 2;
+      part(b, i ? "sph" : "box", i ? "#f2d39a" : "#ffd23a", .08, i ? .1 : .16, i ? .16 : .06, .29, 1.0, 0);
+      for (const s of [-1, 1]) part(b, "box", T.shirt, .02, .06, .1, .21, 1.6, s * .1);
+    } };
+}
+SCENE_MODELS.est_ball = (g, u) => {
+  const b = part(g, "sph", mat("#ffffff", { roughness: .4 }), .2, .2, .2, 0, .2, 0); u.ball = null; u.spinBall = b;
+  for (let k = 0; k < 5; k++) { const a = k * 1.257; part(b, "sph", "#151617", .35, .35, .35, Math.cos(a) * .82, Math.sin(a) * .82, 0); }
+  u.anim = (tt, m) => { b.rotation.z = -(m.roll || 0); g.position.y += m.bh || 0; };
+};
+function matchHome(team, k) {   // formation: keeper + 2 defenders + 2 forwards, sliding with the ball
+  const dir = team ? -1 : 1;
+  if (k === 0) return [team ? PITCH.x1 - .7 : PITCH.x0 + .7, PITCH.cy];
+  const shift = MATCH.ball ? (MATCH.ball.x - 20) * .45 : 0;
+  return [clamp(20 + dir * (k < 3 ? -8 : 3) + shift, PITCH.x0 + 1, PITCH.x1 - 1), [0, 11, 23.5, 13.5, 21][k]];
+}
+function matchKickoff() {
+  const b = MATCH.ball; b.x = 20; b.y = PITCH.cy; b.vx = b.vy = 0; b.bh = 0; b.vh = 0; MATCH.reset = 0; MATCH.kickT = .8;
+  for (const p of MATCH.players) { const [hx, hy] = matchHome(p.team, p.k); p.x = hx + (p.k ? (p.team ? 1.5 : -1.5) : 0); p.y = hy; }
+}
+function matchStart() {
+  MATCH.score = [0, 0]; MATCH.players = []; MATCH.goals = 0;
+  addMover({ kind: "est_ball", fixture: true, beh: "static", life: 1e9, x: 20, y: PITCH.cy, r: .2, push: 0, scare: 0, air: true, h: 0, vx: 0, vy: 0, roll: 0, tick: matchTick });
+  MATCH.ball = movers[movers.length - 1];
+  for (let team = 0; team < 2; team++) for (let k = 0; k < 5; k++) {
+    addMover({ kind: k ? "est_p" + team : "est_gk" + team, fixture: true, beh: "static", life: 1e9, x: 20, y: PITCH.cy, r: .35, push: 0, scare: 0, air: true, h: 0, team, k, ang: team ? Math.PI : 0, speed: k ? 4.6 + Math.random() * .8 : 3.6 });
+    MATCH.players.push(movers[movers.length - 1]);
+  }
+  matchKickoff();
+}
+function matchRun(p, tx, ty, sp) {
+  const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
+  if (d > .15) { const s = Math.min(sp * DT, d); p.x += dx / d * s; p.y += dy / d * s; p.ang = turnTo(p.ang, Math.atan2(dy, dx), DT * 9); }
+  else p.ang = turnTo(p.ang, Math.atan2(MATCH.ball.y - p.y, MATCH.ball.x - p.x), DT * 5);
+}
+function matchTick(b) {
+  if (MATCH.reset > 0) {   // celebrating: the scorer's team runs to the corner flag, everyone else sulks
+    MATCH.reset -= DT; b.vx *= .9; b.vy *= .9; b.x += b.vx * DT; b.y += b.vy * DT;
+    for (const p of MATCH.players) if (p.team === MATCH.last && p.k) matchRun(p, MATCH.last ? PITCH.x0 + 2 : PITCH.x1 - 2, PITCH.y1 - 1.5 - p.k * .6, 5);
+    if (MATCH.reset <= 0) matchKickoff(); return;
+  }
+  // ball physics: rolling friction, little hops, bounces off the touchlines
+  b.x += b.vx * DT; b.y += b.vy * DT; const f = Math.exp(-1.1 * DT); b.vx *= f; b.vy *= f;
+  b.vh = (b.vh || 0) - 14 * DT; b.bh = Math.max(0, (b.bh || 0) + b.vh * DT); if (b.bh === 0 && b.vh < 0) b.vh = -b.vh * .45;
+  b.roll += Math.hypot(b.vx, b.vy) * DT / .2;
+  if (b.y < PITCH.y0 + .2 && b.vy < 0 || b.y > PITCH.y1 - .2 && b.vy > 0) b.vy *= -.7;
+  const inMouth = b.y > PITCH.m0 && b.y < PITCH.m1;
+  if (b.x < PITCH.x0 || b.x > PITCH.x1) {
+    if (inMouth && b.bh < 2.3) { matchGoal(b.x > 20 ? 0 : 1); return; }
+    b.vx *= -.7; b.x = clamp(b.x, PITCH.x0, PITCH.x1);
+  }
+  MATCH.kickT -= DT;
+  const first = Math.random() < .5 ? 0 : 1;   // whoever reaches a loose ball first: no side always wins it
+  for (let tt = 0; tt < 2; tt++) {
+    const team = tt ? 1 - first : first, mates = MATCH.players.filter(p => p.team === team);
+    let chaser = null, cd = 1e9;
+    for (const p of mates) if (p.k) { const d = Math.hypot(p.x - b.x, p.y - b.y); if (d < cd) { cd = d; chaser = p; } }
+    for (const p of mates) {
+      if (p.k === 0) {   // keeper: slides along the line, dives at shots
+        const gy = clamp(b.y, PITCH.m0 + .3, PITCH.m1 - .3), near = Math.abs(b.x - p.x) < 4;
+        matchRun(p, p.team ? PITCH.x1 - .7 : PITCH.x0 + .7, near ? gy : PITCH.cy + (gy - PITCH.cy) * .5, near ? 5.5 : 3);
+        if (Math.hypot(p.x - b.x, p.y - b.y) < .75 && MATCH.kickT <= 0 && b.bh < 1.8) {
+          if (Math.random() < .72) { matchKick(p, b, team ? PITCH.x0 + 10 : PITCH.x1 - 10, rnd(PITCH.y0 + 2, PITCH.y1 - 2), 11, .5); pop(p.x, p.y - 1.4, ["SAVED!", "NOT TODAY!", "BOING!"][(Math.random() * 3) | 0]); }
+          else { MATCH.kickT = .5; pop(p.x, p.y - 1.4, "BUTTERFINGERS!"); }
+        }
+        continue;
+      }
+      if (p === chaser) matchRun(p, b.x - (team ? -.3 : .3), b.y, p.speed);
+      else { const [hx, hy] = matchHome(team, p.k); matchRun(p, hx, hy, p.speed * .7); }
+      if (Math.hypot(p.x - b.x, p.y - b.y) < .55 && MATCH.kickT <= 0 && b.bh < .8) {
+        const gx = team ? PITCH.x0 - .5 : PITCH.x1 + .5, dg = Math.abs(gx - p.x);
+        if (dg < 10 && Math.random() < .4) { matchKick(p, b, gx, PITCH.cy + rnd(-3.2, 3.2), 13 + Math.random() * 4, Math.random() < .3 ? 4 : 1.5); if (Math.random() < .4) pop(p.x, p.y - 1.4, ["SHOOOT!", "BANANA KICK!", "BICYCLE KICK!"][(Math.random() * 3) | 0]); }
+        else {
+          const ahead = mates.filter(q => q.k && q !== p && (team ? q.x < p.x : q.x > p.x));
+          const q = ahead[(Math.random() * ahead.length) | 0];
+          if (q && Math.random() < .6) matchKick(p, b, q.x + (team ? -1.5 : 1.5), q.y, 9, .6);
+          else matchKick(p, b, p.x + (team ? -5 : 5), clamp(p.y + rnd(-3, 3), PITCH.y0 + 1, PITCH.y1 - 1), 5.5, .2);
+        }
+      }
+    }
+  }
+}
+function matchKick(p, b, tx, ty, sp, lift) {
+  const dx = tx - b.x, dy = ty - b.y, d = Math.hypot(dx, dy) || 1; b.vx = dx / d * sp; b.vy = dy / d * sp; b.vh = lift * 3; MATCH.kickT = .35;
+}
+function matchGoal(team) {
+  MATCH.score[team]++; MATCH.goals++; MATCH.last = team; MATCH.reset = 4.5; const T = TEAMS[team], b = MATCH.ball;
+  b.vx *= .2; b.vy *= .2;
+  pop(b.x, b.y - 1.6, "GOOOOOL!"); caption(`GOAL! ${TEAMS[0].short} ${MATCH.score[0]} – ${MATCH.score[1]} ${TEAMS[1].short}`, true, 2600); sfx("cheer"); if (typeof eventLog !== "undefined") eventLog.add("gol");
+  if (demo || phase !== "show") return;
+  // the whole stadium jumps: stands bounce, the fan zone hops on the beat and leans on the barrier
+  cheerT = Math.max(cheerT, 5); surgeT = Math.max(surgeT, 2.2);
+  for (let k = 0; k < 8; k++) later(k * .42, () => {
+    shake = Math.min(1.2, shake + .3); windF = { x: (k % 2 ? 1 : -1) * .9, t: .35 };
+    for (let j = 0; j < 60 && ag.length; j++) { const a = ag[(Math.random() * ag.length) | 0]; if (a.ps < PCRIT * .5) toss(a, .45 + Math.random() * .4, .38); }
+  });
+  for (let k = 0; k < 6; k++) { const [x, y] = crowdPoint(); later(k * .3, () => pop(x, Math.max(34, y) - 1, ["GOOOL!", "OLE OLE OLE!", "WE ARE THE CHAMPIONS!", "I'M CRYING!", "HUG ME, STRANGER!", T.short + "! " + T.short + "!"][k])); }
+  if (Math.random() < .45) later(3, () => spawnEvent("pelea"));   // the losing gang takes it personally
+}
+Object.assign(SCENES.estadio, {
+  onStart() { matchStart(); },
+  quotes: ["“We lost 4–3 but our gang won the fight in the fan zone,” said a man with a flip-flop in his hand.", "“The burrito is a legitimate crest,” insisted the club president.", "“I jumped so hard my shoes are still in orbit,” said one fan."],
+  lines: {
+    gol: "Every goal made the whole stadium jump; seismologists filed a complaint.",
+    pelea: "The two fan gangs came down from the stands to settle things with flip-flops and burritos.",
+    mascot: "The mascot invaded the fan zone and was cheered louder than the players.",
+  },
+  hud(g, w) {   // scoreboard with both crests
+    const bw = 300, x = 18, y = 12;
+    g.fillStyle = "rgba(17,18,20,.85)"; g.beginPath(); g.roundRect(x, y, bw, 44, 10); g.fill();
+    teamLogo(g, TEAMS[0], x + 24, y + 21, 13); teamLogo(g, TEAMS[1], x + bw - 24, y + 21, 13);
+    g.font = "900 13px Rubik, system-ui, sans-serif"; g.textBaseline = "middle"; g.fillStyle = "#ffffff";
+    g.textAlign = "left"; g.fillText(TEAMS[0].short, x + 44, y + 22); g.textAlign = "right"; g.fillText(TEAMS[1].short, x + bw - 44, y + 22);
+    g.textAlign = "center"; g.font = "900 22px Rubik, system-ui, sans-serif"; g.fillStyle = MATCH.reset > 0 && Math.sin(performance.now() / 80) > 0 ? "#ffd23a" : "#ffffff";
+    g.fillText(phase === "plan" ? "VS" : `${MATCH.score[0]} – ${MATCH.score[1]}`, x + bw / 2, y + 23);
+  },
+  ev: {
+    pelea() {   // the two gangs come down from opposite stands and meet in the fan zone
+      const mx = rnd(12, 28), my = rnd(38, 56), gang = [];
+      for (let team = 0; team < 2; team++) for (let k = 0; k < 6; k++) {
+        const sx = team ? WW - 2 : 2, sy = my + rnd(-6, 6);
+        addMover({ kind: "est_fan" + team, beh: "static", life: 22, x: sx, y: sy, r: .42, push: 22, scare: 1.6, team, tx: mx + (team ? 1 : -1) * rnd(.5, 1.6), ty: my + rnd(-1.4, 1.4), say: k ? "" : team ? "BURRITO POWER!" : "CHANCLA ARMY!", sayEvery: 3,
+          tick(m) {
+            const fight = m.t > 4 && m.t < 15, away = m.t >= 15, tx = away ? (m.team ? WW + 3 : -3) : m.tx + (fight ? Math.sin(m.t * 7 + m.y) * .5 : 0), ty = away ? m.y : m.ty + (fight ? Math.cos(m.t * 6 + m.x) * .5 : 0);
+            const dx = tx - m.x, dy = ty - m.y, d = Math.hypot(dx, dy), sp = fight ? 3 : 4.2;
+            if (d > .1) { m.x += dx / d * Math.min(d, sp * DT); m.y += dy / d * Math.min(d, sp * DT); m.ang = Math.atan2(dy, dx); }
+            if (away && (m.x < -2 || m.x > WW + 2)) m.dead = true;
+            if (fight && m.say && Math.random() < .05) {   // the dust cloud of a proper cartoon fight
+              puff(mx + rnd(-1.5, 1.5), my + rnd(-1.2, 1.2), rnd(.3, 1.4), "#e8e2d0", rnd(.5, .9), 1, .3);
+              if (Math.random() < .5) pop(mx + rnd(-1.5, 1.5), my - 1.5, ["POW!", "BONK!", "SLAP!", "YOUR TEAM STINKS!", "THWACK!", "NOT THE HAIR!", "*FLIP-FLOP NOISES*"][(Math.random() * 7) | 0]);
+              for (const a of ag) { const ex = a.x - mx, ey = a.y - my, dd = Math.hypot(ex, ey); if (dd < 2.6 && dd > .01 && Math.random() < .08) { toss(a, 1 + Math.random() * 1.2, .8); a.vx += ex / dd * 2; a.vy += ey / dd * 2; } }
+            }
+          } });
+        gang.push(movers[movers.length - 1]);
+      }
+      gang[0].say = "CHANCLA ARMY!"; gang[6].say = "BURRITO POWER!";
+      caption("The fan gangs came down from the stands!", true, 2200);
+    },
+  },
+});

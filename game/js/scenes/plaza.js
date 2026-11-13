@@ -156,6 +156,8 @@ SCENES.plaza = {
   acts: ["They're playing the hit!", "Everybody to the front!", "Drop the bass!", "Shoving time!"],
   events: ["car", "dogs", "beachballs", "icecream", "ladron", "muestras", "carrito", "car", "ladron", "dogs", "muestras"],
   goal: o => o.kind === "barrier", goalMaxY: 30,
+  // the café facades outside the side walls: their doors open onto the square
+  shopDoors: () => { const d = []; for (let k = 1; k < 6; k++) { const y = 7 + k * 10.6 - 1.5; if (y > 14 && y < FENCE_Y - 2) d.push([.45, y, 1, 0], [WW - .45, y, -1, 0]); } return d; },
   build() {
     rect(6, 0, 34, 11, "stage");
     rect(2.6, 7.4, 4.8, 9.6, "speaker"); rect(35.2, 7.4, 37.4, 9.6, "speaker");

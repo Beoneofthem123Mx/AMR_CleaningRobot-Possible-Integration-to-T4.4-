@@ -571,6 +571,7 @@ function initPeople() {
   P.balloon = mk(new THREE.SphereGeometry(.2, 10, 8), std({ roughness: .25, metalness: .1 }), N);
   P.string = mk(new THREE.BoxGeometry(.012, .9, .012), std(), N * 2); P.string.castShadow = false;
   P.umb = mk(new THREE.ConeGeometry(.5, .2, 12), std({ roughness: .55, side: THREE.DoubleSide }), N);
+  P.bag = mk(new THREE.BoxGeometry(1, 1, 1), std({ roughness: .75 }), N * 3);   // shopping bags and the box tower on the head
   // sweat drops on the squeezed, cartoon stars circling the heads of the trampled
   P.drop = mk(new THREE.SphereGeometry(.035, 8, 6), new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: .05, metalness: .1, emissive: 0x1a4a6a }), N); P.drop.castShadow = false;
   const starG = new THREE.OctahedronGeometry(.11, 0); starG.scale(1, 1, .4);
@@ -602,7 +603,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { eyeW: 0, ear: 0, spike: 0, hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 }; COST_C = C;
+  const C = { eyeW: 0, ear: 0, spike: 0, hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0, bag: 0 }; COST_C = C;
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -644,6 +645,7 @@ function renderPeople(tt, dtR, vb) {
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
       if ((a.acc === 1 || a.acc === 3 || a.acc === 6) && !surging && a.ps < PCRIT * .55) armR = 2.7;  // holding the balloon / umbrella / sign up
       if (a.acc === 7) armL = 2.8 + Math.sin(tt * 7 + a.ph) * .25;   // waving a flag
+      if (a.bags && a.ps < PCRIT * .55) { armL = armR = .22 + Math.sin(tt * 9 + a.ph) * .05; bob *= .5; }   // arms dragged down by the shopping
       if (a.air > 0) {
         const q = 1 - a.air / (a.airD || 1), up = Math.sin(q * Math.PI) * (a.airH || 1.6);
         setPose(a.x, up + .02, a.y, a.h + q * (a.airYaw || 0), a.sc, q * Math.PI * 2 * (a.airSpin || 1), Math.sin(q * Math.PI) * .5 * (a.airSpin || 1), 1, 1 + Math.sin(q * Math.PI) * .12, 1);
@@ -747,6 +749,21 @@ function renderPeople(tt, dtR, vb) {
       } else if (a.acc === 5) { // wide sun hat
         emit(P.what, C.what, LOCAL.whatB); colW(P.what, C.what++, .78, .62, .32);
         emit(P.whatTop, C.whatTop, LOCAL.whatT); colW(P.whatTop, C.whatTop++, .74, .58, .3);
+      }
+    }
+    if (a.bags && !down && hh < .4 && C.bag < P.bag.instanceMatrix.count - 12) {   // overloaded shopper: bags on both hands, boxes on the head
+      const n = a.bags, sw = Math.sin(tt * 6 + a.ph) * .07, az2 = .22 * bw + .05;
+      for (let i = 0; i < Math.min(n, 4); i++) {
+        const side = i % 2 ? 1 : -1, j = i >> 1, bc = BAG_L[(a.bagC + i) % BAG_L.length];
+        LT.fill(0); LT[0] = .34; LT[4] = .44 + j * .04; LT[8] = .17;
+        LT[9] = .1 + sw * (j + 1) - j * .08; LT[10] = .48 - j * .04; LT[11] = side * (az2 + .14 + j * .13);
+        emit(P.bag, C.bag, LT); colW(P.bag, C.bag++, bc[0], bc[1], bc[2]);
+      }
+      for (let j = 0; j < n - 4; j++) {   // the tower of boxes, swaying more the higher it gets
+        const bc = BAG_L[(a.bagC + j + 3) % BAG_L.length], wob = Math.sin(tt * 3.1 + a.ph + j * .7) * .035 * (j + 1);
+        LT.fill(0); LT[0] = .4 - j * .035; LT[4] = .22; LT[8] = .36 - j * .03;
+        LT[9] = wob; LT[10] = 2.02 + j * .23; LT[11] = Math.cos(tt * 2.3 + a.ph + j) * .02 * (j + 1);
+        emit(P.bag, C.bag, LT); colW(P.bag, C.bag++, bc[0] * .9, bc[1] * .9, bc[2] * .9);
       }
     }
     if (!detail && !down) return;
@@ -1066,6 +1083,7 @@ function costume(a, down, k) {
     put(P.spike, C.spike++, partM(.24, 1.57, 0, -Math.PI / 2, .8, .8, .8), x2);
   }
 }
+const BAG_L = [[.95, .25, .45], [1, .8, .2], [.25, .65, .95], [.95, .95, .9], [.45, .85, .35], [.7, .45, .95], [.6, .42, .28]].map(c => c.map(v => v * v));
 let COST_C = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
