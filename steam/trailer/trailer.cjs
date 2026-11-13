@@ -64,7 +64,8 @@ async function captureClips() {
     const dir = path.join(WORK, "seg" + i); fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
     const t0 = await w.evaluate(g => {
       __game.reset(); __game.scene(g.clip); document.querySelector("#overlay").hidden = true;
-      __game.setP(g.hot ? 6.4 : 8.5); setDead(0, true);
+      __game.setP(g.hot ? 5.6 : 8.5); setDead(0, true); power = "mega";
+      document.querySelector("#caption").style.visibility = g.txt ? "hidden" : "visible";
       for (const sel of [".bar", "#ftypes"]) document.querySelectorAll(sel).forEach(e => e.style.visibility = g.bar ? "visible" : "hidden");
       if (g.bar && g.plan) { tool = "fence"; ui(); }
       document.querySelectorAll("#trtxt").forEach(e => e.remove());
