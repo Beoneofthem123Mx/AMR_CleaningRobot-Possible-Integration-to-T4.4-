@@ -150,6 +150,12 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 | **Grand Opening** | 30 ★ | Opening day at a bootleg theme park: a knock-off mascot giving hugs, a dinosaur parade, a coaster car that leaves the track, a runaway teacup, free churros and fireworks that go sideways. |
 | **Meltdown Open Day** | 32 ★ | A nuclear plant opens its doors. The glowing uranium core sits in the middle of the way and every person standing near it heats it up (CORE TEMP meter). At 100% it goes off: everyone nearby flies, the closest go down and the rest glow green. Rolling barrels, Glowie the mascot, a hazmat inspector, a surprise drill and a burst steam pipe. |
 | **Battle Reenactment Day** | 36 ★ | An old training field with trenches, sandbags, a bunker, barbed wire and a vintage tank. Three marked minefields and a few stray mines (faintly visible while you plan) go off when stepped on. A tank, a biplane promising free soup by the bunker, a cannon salute, a mine-sniffing dog and marching reenactors. |
+| **Factory Open Day** | 38 ★ | A rubber-duck factory: two conveyor belts drag anyone who steps on them sideways, three hot ovens push people away, robot arms swing and presses thump (the camera feels it). A runaway robot arm, a box avalanche, an oven blast, shift change and the red button. |
+| **The Procession** | 40 ★ | The float with the Saviour statue is carried slowly around the square on a sawdust carpet and two thirds of the crowd follow it everywhere; when they block it, it stops and the bearers shove. Brass band, incense, petals from the balconies, candle wax and rain. |
+| **The Protest March** | 42 ★ | Thousands march to City Hall for longer naps and three-day weekends; signs everywhere and chants that ripple through the crowd. Very polite riot police, water balloons, a news drone and a counter-protest in favour of Mondays. |
+| **Rush Hour Metro** | 44 ★ | A platform with two tracks: a train comes in, the crowd squeezes into its doors until it is full (boarding counts as getting home), it leaves and the next one arrives on the OTHER track, so everybody runs across. Buskers, rats, delays and giant backpacks. |
+| **The Market** | 46 ★ | Twelve stalls in three rows; people hop from stall to stall and come out with bags while the vendors yell "DEAL!" and "SPECIAL PRICE!". Flash deals, a fruit avalanche, loose chickens and a hand truck down the aisle. |
+| **Secret Lab Open House** | 48 ★ | Aliens floating in tubes, a teleporter that beams whoever stands on it somewhere random, scientists throwing chemicals (shrink, grow, glow, fly), an escaped alien, a slime blob, a laser sweep, a cloning accident and a three-metre chicken. |
 
 Fences and guards also work against the chaos: animals and vehicles that bump into them turn
 around.
@@ -192,6 +198,8 @@ around.
 - **Chaos powers** during the show: next to the megaphone, a bar with a meteor, a giant bowling ball,
   a cartoon anvil, a cow from the sky and banana peels, with limited charges per show. What they
   flatten counts as pancaked: they are for fun, not for stars.
+- **Gate sizes**: with the gates tool, pick narrow, normal or wide ($60) and click a gate to open or
+  resize it. Wide gates let people in and out much faster; narrow ones slow everything down.
 - **Moving entrances**: every visit to a venue shuffles the seven gates into a new, uneven layout (only
   spots that really work are used) and opens the venue's usual number of them at random. Turn it off
   in Options to get fixed gates and a plan saved per venue.

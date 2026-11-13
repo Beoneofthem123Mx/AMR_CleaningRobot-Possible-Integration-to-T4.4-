@@ -165,6 +165,8 @@ const VENUE_OUTFITS = {
   zoo: ["banana", "tourist", "cowboy"], cheese: ["chef", "cowboy", "knight"], zombie: ["zombie", "zombie", "ghost", "wizard"],
   beach: ["swimmer", "swimmer", "pirate", "sailor"], park: ["clown", "superhero", "banana", "wizard"], nuclear: ["hazmat", "hazmat", "astronaut"],
   guerra: ["soldier", "soldier", "knight", "viking"],
+  fabrica: ["hazmat", "chef", "tourist"], procesion: ["tux", "tourist", "king"], marcha: ["superhero", "clown", "duck", "tourist"],
+  metro: ["tux", "tourist", "astronaut"], mercado: ["chef", "banana", "hotdog", "cowboy"], laboratorio: ["hazmat", "astronaut", "zombie", "wizard"],
 };
 const WACKY = ["hotdog", "banana", "astronaut", "knight", "wizard", "viking", "duck", "ghost", "pirate", "superhero", "clown"];
 function looks() {
@@ -204,6 +206,7 @@ function looks() {
   if (L.gear === "bubble") L.springy = true;
   if (MOD && MOD.rain && Math.random() < .45) L.acc = 3;
   if (MOD && MOD.sizeMul) L.sc *= MOD.sizeMul;
+  if (scene && scene.look) scene.look(L);   // venue-specific touches (protest signs, metro backpacks)
   if (MOD && MOD.uniform) { L.c = L.ac = MOD.uc || 0; L.pc = 0; L.cos = 0; }
   return L;
 }
@@ -477,7 +480,7 @@ function canStart() {
 }
 // the button goes through the today's-twist roulette; tests call start() directly
 // share of the crowd that heads for the alternative goal (a twist like free wifi, or the player's big screen)
-const altShare = () => (MOD && MOD.altShare) || (props.some(p => p.type === "screen") ? .25 : 0);
+const altShare = () => (MOD && MOD.altShare) || (scene && scene.altShare) || (props.some(p => p.type === "screen") ? .25 : 0);
 let planFences = null;
 // where people fell in the last show of this venue: shown on the plan and explained in the paper
 let lastFalls = [], lastFallsScene = "", calmT = 0;
@@ -585,7 +588,7 @@ function backToPlan() {
 function shopStep() {
   shopT -= DT;
   if (shopT <= 0 && ag.length > 40) {
-    shopT = .35 + Math.random() * .5;
+    shopT = (.35 + Math.random() * .5) / (scene.shopRate || 1);
     for (let k = 0; k < 6; k++) {
       const a = ag[(Math.random() * ag.length) | 0];
       if (a.shop >= 0 || (a.bags || 0) > 5 || a.ps > PCRIT * .3 || a.air > 0 || a.lift > 0 || a.acc === 4) continue;
