@@ -5,10 +5,15 @@ const PM = { w: 40, h: 72, p: null, d: null, s: null, f: null, n: 0, key: "" };
 let ANALYSIS = null, analysisView = false;
 function pmReset() {
   PM.w = Math.ceil(WW); PM.h = Math.ceil(SH); const n = PM.w * PM.h;
-  PM.p = new Float32Array(n); PM.d = new Float32Array(n); PM.s = new Float32Array(n); PM.f = new Float32Array(n); PM.exits = new Array(SLOTS).fill(0); PM.side = 0; PM.times = []; PM.evacAt = null; PM.n = 0; PM.key = sceneKey; ANALYSIS = null; analysisView = false;
+  PM.p = new Float32Array(n); PM.d = new Float32Array(n); PM.s = new Float32Array(n); PM.f = new Float32Array(n); PM.exits = new Array(SLOTS).fill(0); PM.side = 0; PM.times = []; PM.evacAt = null; PM.snaps = []; PM.view = -1; PM.n = 0; PM.key = sceneKey; ANALYSIS = null; analysisView = false;
 }
 function pmSample() {   // every few steps: cheap
   if (!PM.p) return; ++PM.n; if (phase === "evac" && PM.evacAt === null) PM.evacAt = PM.n * DT;
+  if (PM.n % 120 === 0 && PM.snaps.length < 160) {   // every 2 s: a snapshot of where people were and how squeezed, for the timelapse
+    const n = PM.w * PM.h, d = new Uint8Array(n), p = new Uint8Array(n);
+    for (const a of ag) { const c = (Math.min(PM.h - 1, Math.max(0, a.y | 0))) * PM.w + Math.min(PM.w - 1, Math.max(0, a.x | 0)); if (d[c] < 255) d[c]++; const q = Math.min(255, a.ps / PCRIT * 200) | 0; if (q > p[c]) p[c] = q; }
+    PM.snaps.push({ t: PM.n * DT, d, p, f: PM.times.length });
+  }
   if (PM.n % 6) return;
   for (const a of ag) {
     const c = (Math.min(PM.h - 1, Math.max(0, a.y | 0))) * PM.w + Math.min(PM.w - 1, Math.max(0, a.x | 0));
@@ -70,15 +75,29 @@ function showAnalysis() {
   el.innerHTML = `<h3>What went wrong?</h3><p class="lg"><i class="h1"></i>pressure <i class="h2"></i>crush <b>✕</b> someone went down <b class="num">1</b> hotspot</p>` +
     (a && a.spots.length ? a.spots.map((s, i) => `<div class="spot"><b class="num">${i + 1}</b><div><b>${s.cause}</b>${s.falls ? ` · ${s.falls} down here` : ""}<small>${s.tip}</small></div></div>`).join("")
       : `<p>Nothing dramatic: no real hotspot. Whatever happened, it was spread out.</p>`) + fallTimeline() + exitFlow() +
+    (PM.snaps && PM.snaps.length > 3 ? `<div class="flow"><b>Replay the crowd</b><div class="scrub"><button id="anPlay">▶</button><input type="range" id="anT" min="0" max="${PM.snaps.length}" value="${PM.snaps.length}"><span id="anTL">all</span></div><small>Drag to watch the pressure build second by second. All the way right shows the whole show.</small></div>` : "") +
     `<div class="row"><button class="go" id="anRetry">Adjust the plan</button><button id="anBack">Back to the report</button></div>`;
-  el.querySelector("#anRetry").onclick = () => { el.hidden = true; paused = false; backToPlan(); };
-  el.querySelector("#anBack").onclick = () => { el.hidden = true; analysisView = false; if (window.__lastReport) window.__lastReport(); };
+  const sl = el.querySelector("#anT"), lab = el.querySelector("#anTL"), pl = el.querySelector("#anPlay"); let timer = null;
+  const setV = v => { PM.view = v >= PM.snaps.length ? -1 : v; sl.value = v; const s = PM.snaps[PM.view]; lab.textContent = PM.view < 0 ? "all" : `${Math.floor(s.t / 60)}:${String(Math.floor(s.t % 60)).padStart(2, "0")}${PM.evacAt !== null && s.t >= PM.evacAt ? " · exit" : ""}`; };
+  if (sl) {
+    sl.oninput = () => { clearInterval(timer); timer = null; pl.textContent = "▶"; setV(+sl.value); };
+    pl.onclick = () => { if (timer) { clearInterval(timer); timer = null; pl.textContent = "▶"; return; } let v = PM.view < 0 ? 0 : PM.view; pl.textContent = "❚❚"; timer = setInterval(() => { setV(v); if (++v > PM.snaps.length) { clearInterval(timer); timer = null; pl.textContent = "▶"; } }, 140); };
+    PM.stopScrub = () => { clearInterval(timer); timer = null; PM.view = -1; };
+  }
+  el.querySelector("#anRetry").onclick = () => { if (PM.stopScrub) PM.stopScrub(); el.hidden = true; paused = false; backToPlan(); };
+  el.querySelector("#anBack").onclick = () => { if (PM.stopScrub) PM.stopScrub(); el.hidden = true; analysisView = false; if (window.__lastReport) window.__lastReport(); };
 }
-function hideAnalysisPanel() { const el = document.querySelector("#analysis"); if (el) el.hidden = true; analysisView = false; }
+function hideAnalysisPanel() { const el = document.querySelector("#analysis"); if (el) el.hidden = true; analysisView = false; if (PM.stopScrub) PM.stopScrub(); }
 // drawn on the floor layer: during the analysis view, and faintly while planning the next attempt
 function drawAnalysis(g) {
   if (!PM.p || PM.key !== sceneKey || !(analysisView || (phase === "plan" && ANALYSIS))) return;
   const al = analysisView ? 1 : .45;
+  if (analysisView && PM.view >= 0 && PM.snaps[PM.view]) {   // timelapse frame: density as the cell's opacity, pressure as its colour
+    const s = PM.snaps[PM.view];
+    for (let i = 0; i < s.d.length; i++) { if (!s.d[i]) continue; const x = i % PM.w, y = (i / PM.w) | 0, q = Math.min(1, s.p[i] / 200), dd = Math.min(1, s.d[i] / 5);
+      g.fillStyle = q > .3 ? `rgba(255,${Math.round(220 - 190 * q)},${Math.round(60 - 40 * q)},${(.25 + .6 * dd).toFixed(2)})` : `rgba(79,184,255,${(.12 + .5 * dd).toFixed(2)})`; g.fillRect(x, y, 1, 1); }
+    return;
+  }
   for (let i = 0; i < PM.p.length; i++) {
     const v = PM.p[i] / PCRIT; if (v < .25) continue;
     const x = i % PM.w, y = (i / PM.w) | 0, q = Math.min(1, (v - .25) / .9);
