@@ -247,8 +247,8 @@ function freeCam() { if (camMode !== 3 || !camFree) { camFree = { z: Math.max(1,
 function clampFree() { const f = camFree, hw = WW / (2 * f.z), hh = WH / (2 * f.z); f.x = clamp(f.x, hw, WW - hw); f.y = clamp(f.y, hh, WH - hh); }
 cv.addEventListener("wheel", ev => {
   ev.preventDefault(); if (demo) return;
-  if (camMode === 4) { cineDist = clamp(cineDist * Math.exp(ev.deltaY * .0012), 4, 34); return; }   // street camera: the wheel moves it closer or farther
-  const [wx, wy] = toWorld(ev), f = freeCam(), z0 = f.z, z1 = clamp(z0 * Math.exp(-ev.deltaY * .0015), 1, 5);
+  if (camMode === 4) { cineDist = clamp(cineDist * Math.exp(ev.deltaY * .0012), CINE_MIN(), 34); return; }   // street camera: the wheel moves it closer or farther
+  const [wx, wy] = toWorld(ev), f = freeCam(), z0 = f.z, z1 = clamp(z0 * Math.exp(-ev.deltaY * .0015), 1, ZMAX());
   f.x = wx + (f.x - wx) * z0 / z1; f.y = wy + (f.y - wy) * z0 / z1; f.z = z1; clampFree();
   if (z1 <= 1.001 && phase === "plan") { camMode = 0; camFree = null; camLabel(); }   // fully zoomed out while planning: back to auto
 }, { passive: false });
@@ -273,11 +273,11 @@ function camKeys(dt) {
   const u = (keysDown.has("w") || keysDown.has("arrowup") ? 1 : 0) - (keysDown.has("s") || keysDown.has("arrowdown") ? 1 : 0);
   const zz = (keysDown.has("e") || keysDown.has("+") || keysDown.has("=") ? 1 : 0) - (keysDown.has("q") || keysDown.has("-") ? 1 : 0);
   if (!r && !u && !zz) return;
-  if (camMode === 4) { cineAng += r * dt * 1.2; cineDist = clamp(cineDist * Math.exp(-(u + zz) * 1.2 * dt), 4, 34); return; }
+  if (camMode === 4) { cineAng += r * dt * 1.2; cineDist = clamp(cineDist * Math.exp(-(u + zz) * 1.2 * dt), CINE_MIN(), 34); return; }
   const f = freeCam(), sp = 28 / f.z * dt;
   // screen right/up in world coordinates (the venue is rotated on wide screens)
   if (LAND) { f.y += r * sp * VIEW_FLIP; f.x += u * sp * VIEW_FLIP; } else { f.x += r * sp * VIEW_FLIP; f.y -= u * sp * VIEW_FLIP; }
-  f.z = clamp(f.z * Math.exp(zz * 1.6 * dt), 1, 5); clampFree();
+  f.z = clamp(f.z * Math.exp(zz * 1.6 * dt), 1, ZMAX()); clampFree();
 }
 $("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = speed + "×"; });
 $("#card").addEventListener("click", e => {

@@ -66,6 +66,10 @@ const slotX = i => SLOT_XS ? SLOT_XS[i] : WW * (i + .5) / SLOTS;
 // gate sizes: gates[i] is false (closed), true/1 (normal), .7 (narrow) or 1.45 (wide)
 const GATE_SIZES = { narrow: { k: .7, name: "Narrow gate", cost: 0, desc: "Slows the crowd at the entrance, but also at the exit" }, normal: { k: 1, name: "Normal gate", cost: 0, desc: "The standard size" }, wide: { k: 1.45, name: "Wide gate", cost: 60, desc: "Lets everyone in and out much faster. $60 from the budget" } };
 let gateSize = "normal";
+// big open venues: far more people, so the camera can't get as close (fewer details to draw up close)
+const BIG_VENUES = { plaza: 1, estadio: 1, ciudad: 1, marcha: 1, mitin: 1, guerra: 1, hipodromo: 1, beach: 1, park: 1, aeropuerto: 1, procesion: 1 };
+const isBig = () => typeof sceneKey !== "undefined" && !!BIG_VENUES[sceneKey];
+const BIG_CROWD = 1.65, ZMAX = () => isBig() ? 2.3 : 5, CINE_MIN = () => isBig() ? 11 : 4;
 const gateK = i => gates[i] === true ? 1 : +gates[i] || 1, gateW = i => SLOT_W * gateK(i);
 const badSlots = () => SLOT_XS ? SLOT_BAD : ((typeof scene !== "undefined" && scene && scene.noSlots) || []);
 let shuffleGates = (() => { try { return localStorage.getItem("mh.shuffle") !== "off"; } catch (e) { return true; } })();

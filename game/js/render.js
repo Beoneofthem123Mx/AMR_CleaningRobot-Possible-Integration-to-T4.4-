@@ -1271,7 +1271,7 @@ const SKY_TOP_D = new THREE.Color(0x3f8fe0), SKY_TOP_N = new THREE.Color(0x02040
 const CAM_T = new THREE.Vector3(), CAM_T2 = new THREE.Vector3(), CAM_V = new THREE.Vector3(), CAM_RC = { ray: new THREE.Raycaster() };
 function cineCamera(dt) {
   cineAng += dt * .11;
-  const night = !!scene.night, c = G3.camera, d = cineDist, h = cineH || 1.9 + d * .16;
+  const night = !!scene.night, c = G3.camera, d = Math.max(cineDist, CINE_MIN()), h = cineH || 1.9 + d * .16;
   const cx = cam.x + Math.sin(cineAng * .7) * 2, cy = cam.y;
   c.fov = 52; c.near = .3; c.far = 600; c.updateProjectionMatrix();
   c.up.set(0, 1, 0);
@@ -1311,7 +1311,7 @@ function updateCamera(dt) {
     G3.scene.fog = null; G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
   }
   G3.skirt.visible = false; if (G3.sky) G3.sky.visible = false; if (G3.horizon) G3.horizon.visible = false;
-  const base = ((LAND ? WW : WH) / 2) / Math.tan(15 * Math.PI / 180), z = cam.z, h = base / z;
+  const base = ((LAND ? WW : WH) / 2) / Math.tan(15 * Math.PI / 180), z = Math.min(cam.z, ZMAX()), h = base / z;
   const tilt = clamp((z - 1) * .5, 0, .42);
   const FL = VIEW_FLIP, dx = LAND ? -FL : 0, dz = LAND ? 0 : FL;   // the screen's "down" direction in the world (FL -1: the venue is seen from the other side)
   const sx = (Math.random() - .5) * shake, sy = (Math.random() - .5) * shake;

@@ -514,7 +514,7 @@ function start(mod) {
   planFences = fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type }));
   if (!demo) { lastFalls = []; lastFallsScene = sceneKey; }
   if (!canStart()) return;
-  MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
+  MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (isBig() && !demo ? BIG_CROWD : 1) * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3 + upg("battery"), active: [] }; megaUsed = false;
   LAZY = !demo && !sandbox && fences.length === 0 && guards.length === 0 && props.length === 0;
   UNM = demo || sandbox ? 0 : clamp(1 - planSafety() / 4, 0, 1);

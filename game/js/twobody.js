@@ -146,6 +146,8 @@ const TwoBody = (() => {
     if (!head) init(W, H);
     const n = ag.length; stats.near = stats.mid = stats.far = 0; stats.physics = 0;
     if (!n) return;
+    // huge crowds: fewer full-physics agents and a shorter mid range (the camera can't get close in big venues anyway)
+    const huge = n > 4000; CFG.budget = huge ? 380 : 700; CFG.midR = huge ? 48 : 70; CFG.nearR = huge ? 24 : 30;
     refreshLod(ag);
     // spatial hash over the agents that still have physics (near + mid)
     if (next.length < n) next = new Int32Array(n * 2);
