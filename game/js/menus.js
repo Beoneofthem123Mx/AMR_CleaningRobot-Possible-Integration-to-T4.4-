@@ -28,7 +28,7 @@ let atTitle = false;
 function titleScreen() {
   if ((phase === "show" || phase === "evac") && !demo) return;
   atTitle = true;
-  const total = totalStars(), max = Object.keys(SCENES).length * 3;
+  const total = totalStars(), max = realKeys().length * 3;
   showCard(`<div class="titlewrap">
       <div class="splat"></div>
       <h1 class="logo biglogo">${["HUMAN", "TSUNAMI"].map((w, j) => [...w].map((ch, i) => `<span class="lt" style="animation-delay:${((i + j * 5) * .09).toFixed(2)}s">${ch}</span>`).join("")).join("<br>")}</h1>
@@ -38,17 +38,18 @@ function titleScreen() {
         ${(() => { const d = dailyPick(), b = dailyBest(), sc = SCENES[d.key], m = MODS_BY_ID[d.mod];
           return `<button id="daily" class="daily">📅 Daily challenge<small>${sc.name} + ${m.name}${b.dead !== undefined ? ` · your best today: ${b.dead.toLocaleString("en")} pancaked${b.stars === 3 ? " ★★★" : ""}` : " · +100 tickets for 3 stars"}</small></button>`; })()}
         <button id="shop">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button>
+        <button id="customs">🛠 Custom venues & editor</button>
         <button id="options">Settings</button>
         ${window.steam ? '<button id="quit">Quit</button>' : ""}
       </div>
-      <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · ${Object.keys(SCENES).length} venues</p>
+      <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · ${realKeys().length} venues</p>
     </div>`, "menu title");
 }
 function chooser() {
   if ((phase === "show" || phase === "evac") && !demo) return;
   atTitle = false;
-  const best = loadBest(), total = totalStars(), max = Object.keys(SCENES).length * 3, medals = loadMedals(), st = loadStats();
-  const nMedals = Object.values(medals).reduce((n, m) => n + m.length, 0), maxMedals = Object.keys(SCENES).length * Object.keys(MEDALS).length;
+  const best = loadBest(), total = totalStars(), max = realKeys().length * 3, medals = loadMedals(), st = loadStats();
+  const nMedals = Object.values(medals).reduce((n, m) => n + m.length, 0), maxMedals = realKeys().length * Object.keys(MEDALS).length;
   showCard(`<div class="menuhead">
       <div class="title"><h1 class="logo">${["HUMAN", "TSUNAMI"].map((w, j) => [...w].map((ch, i) => `<span class="lt" style="animation-delay:${((i + j * 5) * .09).toFixed(2)}s">${ch}</span>`).join("")).join("<br>")}</h1></div>
       <div class="menuintro">
@@ -59,7 +60,7 @@ function chooser() {
         ${st.shows ? `<p class="career">Career: <b>${st.shows.toLocaleString("en")}</b> shows · <b>${st.trampled.toLocaleString("en")}</b> pancaked · <b>${st.saved.toLocaleString("en")}</b> got home fine · <b>${st.perfect}</b> flawless${st.abducted ? ` · <b>${st.abducted}</b> abducted` : ""} · worst day: <b>${st.worst.toLocaleString("en")}</b></p>` : ""}
       </div>
     </div>
-    <div class="scenes">${Object.entries(SCENES).map(([key, sc]) => {
+    <div class="scenes">${Object.entries(SCENES).filter(([key, sc]) => !sc.hidden).map(([key, sc]) => {
       const b = best[key], open = isUnlocked(key);
       return `<button class="scene ${open ? "" : "locked"}" data-scene="${key}" ${open ? "" : "disabled"} title="${open ? sc.intro.replace(/"/g, "&quot;") : ""}">
         <span class="thumb"><img src="${sceneThumb(key)}" alt="">${open ? (b !== undefined ? `<em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : `<em class="best new">NEW</em>`) : `<em class="lockbadge">LOCKED · ${sc.unlock} ★</em>`}</span>

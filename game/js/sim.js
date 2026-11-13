@@ -565,7 +565,7 @@ function finish() {
   // nothing placed at all = no stars, whatever happened: you have to plan something
   const stars = LAZY ? 0 : dead === 0 && stuck === 0 ? 3 : pct <= .015 ? 2 : pct <= .05 ? 1 : 0;
   LAST_EARN = 0;
-  if (sandbox) { showReport(stars, stuck, []); ui(); return; }   // sandbox: nothing is saved, nothing is earned
+  if (sandbox || sceneKey === "custom") { showReport(stars, stuck, []); ui(); return; }   // sandbox and custom venues: nothing is saved, nothing is earned
   const st = loadStats(); st.shows++; st.trampled += dead; st.abducted += abducted; st.saved += evacuated; if (stars === 3) st.perfect++; st.worst = Math.max(st.worst, dead); saveJSON("mh.stats", st);
   const fresh = awardMedals(stars, stuck, megaUsed);
   // tickets for the shop: something for showing up, more for everyone who got home, stars and new medals
@@ -583,8 +583,8 @@ function finish() {
   achieve("FIRST_SHOW");
   if (stars === 3) achieve("PERFECT_" + sceneKey.toUpperCase());
   const best = loadBest();
-  if (Object.keys(SCENES).every(k => (best[k] ?? 0) >= 1)) achieve("ALL_SCENES");
-  if (Object.keys(SCENES).every(k => best[k] === 3)) achieve("ALL_STARS");
+  if (realKeys().every(k => (best[k] ?? 0) >= 1)) achieve("ALL_SCENES");
+  if (realKeys().every(k => best[k] === 3)) achieve("ALL_STARS");
   if (dead >= 500) achieve("TRAGEDY");
   if (abducted >= 100) achieve("SPACE_TOURISM");
   if (dead === 0 && stuck === 0 && evacT < 12) unlockSecret("SPEEDRUN");

@@ -84,7 +84,7 @@ let DAILY = null;   // set while playing today's challenge
 function dailyPick() {
   const d = new Date(), day = d.getFullYear() * 1000 + Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
   let x = day * 2654435761 % 4294967296; const r = () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648;
-  const keys = Object.keys(SCENES), twists = MODS.filter(m => m.id !== "normal");
+  const keys = realKeys(), twists = MODS.filter(m => m.id !== "normal");
   return { day, key: keys[Math.floor(r() * keys.length)], mod: twists[Math.floor(r() * twists.length)].id };
 }
 const dailyBest = () => { try { const o = JSON.parse(localStorage.getItem("mh.daily") || "{}"); return o.day === dailyPick().day ? o : { day: dailyPick().day }; } catch (e) { return { day: dailyPick().day }; } };

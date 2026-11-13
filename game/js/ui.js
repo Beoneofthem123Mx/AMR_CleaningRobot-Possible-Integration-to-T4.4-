@@ -8,6 +8,7 @@ const fenceLeft = () => sandbox ? 1e9 : FENCE_BUDGET * 10 - fenceUsed();
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
   if (ev.button !== 0) return;   // right/middle button pans the camera
+  if (EDIT && phase === "plan") { const [x, y] = toWorld(ev); edDown(x, y); return; }
   // during the show, each click uses the megaphone (three times per show)
   if (phase === "show" || phase === "evac") {
     const [x, y] = toWorld(ev);
@@ -142,7 +143,7 @@ function showCard(html, kind) {
 function hideCard() { $("#overlay").hidden = true; $("#bar").style.visibility = ""; $("#ftypes").style.display = ""; }
 function ui() {
   { // crowd control meter while planning: barriers and gadgets fill it; below 100% the crowd is partly unmanaged
-    const pm = $("#planmeter"), show = phase === "plan" && !demo && !sandbox; pm.hidden = !show;
+    const pm = $("#planmeter"), show = phase === "plan" && !demo && !sandbox && !(typeof EDIT !== "undefined" && EDIT); pm.hidden = !show;
     if (show) { const v = clamp(planSafety() / PLAN_NEED(), 0, 1), col = v < .35 ? "#ff4d3d" : v < .7 ? "#ffb238" : v < 1 ? "#d7f53a" : "#2fd16a";
       $("#pmfill").style.width = (v * 100).toFixed(0) + "%"; $("#pmfill").style.background = col;
       $("#pmtxt").textContent = v < .05 ? "UNMANAGED" : v < .35 ? "CHAOTIC" : v < .7 ? "SHAKY" : v < 1 ? "ALMOST" : "SOLID"; $("#pmtxt").style.color = col; }
@@ -268,7 +269,7 @@ cv.addEventListener("pointermove", ev => {
   if (!panDrag || !camFree) return;
   const [x, y] = toWorld(ev); camFree.x += (panDrag.x - x) * .9; camFree.y += (panDrag.y - y) * .9; clampFree();
 });
-addEventListener("pointerup", () => { panDrag = null; });
+addEventListener("pointerup", ev => { panDrag = null; if (EDIT && edDrag && ev.target === cv) { const [x, y] = toWorld(ev); edUp(x, y); } });
 const keysDown = new Set();
 addEventListener("keydown", e => { if (!e.ctrlKey && !e.metaKey) keysDown.add(e.key.toLowerCase()); });
 addEventListener("keyup", e => keysDown.delete(e.key.toLowerCase()));
@@ -293,6 +294,7 @@ $("#card").addEventListener("click", e => {
   if (e.target.id === "pick") { if (atTitle) titleScreen(); else chooser(); }
   if (e.target.closest && e.target.closest("#start")) chooser();
   if (e.target.id === "title") titleScreen();
+  if (e.target.closest && e.target.closest("#customs")) customMenu();
   if (e.target.id === "whyBtn") showAnalysis();
   if (e.target.closest && e.target.closest("#daily")) { const d = dailyPick(); DAILY = d; loadScene(d.key); hideCard(); caption(`Daily challenge: ${SCENES[d.key].name} + ${MODS_BY_ID[d.mod].name}`, true, 2600); }
   if (sk) DAILY = null;
@@ -321,6 +323,7 @@ function pickerChrome(el, want) {
 }
 function renderPicker(plan) {
   const live = phase === "show" || phase === "evac";
+  if (EDIT && phase === "plan") { return; }
   const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard" || tool === "gate") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : live && !demo ? "powers" : sandbox && plan ? "sand" : "";
   if (want === "powers") {   // chaos powers: rebuilt every time, the charges change
     pickerFor = want;
