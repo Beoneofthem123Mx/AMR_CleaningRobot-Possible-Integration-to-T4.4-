@@ -1,4 +1,7 @@
 // Human Tsunami · venue, flow fields, crowd and phases
+// an unmanaged crowd: the less the player placed, the wilder people get (UNM 1 = nothing placed at all)
+let UNM = 0, LAZY = false;
+function planSafety() { return fences.reduce((s, f) => s + (f.len || 0), 0) / 10 + guards.length + props.length * 1.5; }
 let megaUsed = false, FOAM_K = .7, AID_DMG = .75, AID_HEAL = 1.4;   // whether the megaphone was used this show (for the Hands off medal)
 function buildWorld() {
   obs = [];
@@ -226,7 +229,7 @@ function step() {
     const useAtt = !leaving && attF && a.fol < attShare, useAlt = !useAtt && !leaving && a.alt && altF;
     const id = cellOf(a.x, a.y), f = leaving ? fExit : useAtt ? attF : useAlt ? altF : fStage, dir = leaving ? dirE : useAtt ? attDir : useAlt ? altDir : dirS;
     const surging = surgeT > 0 && !evac;
-    let want = leaving ? a.v0 * 1.25 : surging ? (f[id] > a.tol * SURGE[0] ? a.v0 * SURGE[1] : 0) : (f[id] > a.tol ? a.v0 : 0);
+    let want = leaving ? a.v0 * (1.25 + .45 * UNM) : surging ? (f[id] > a.tol * SURGE[0] ? a.v0 * SURGE[1] * (1 + .5 * UNM) : 0) : (f[id] > a.tol * (1 - .6 * UNM) ? a.v0 * (1 + .3 * UNM) : 0);   // nobody in charge: everyone pushes
     // people who already made it dance and never stop moving
     a.dance = phase === "show" && !leaving && fullAt > 0 && f[id] <= a.tol + 1;
     if (a.dance) { a.fx += Math.cos(t * 5.5 + a.ph) * .9; a.fy += Math.sin(t * 4.3 + a.ph * 1.7) * .9; a.h += Math.sin(t * 2.7 + a.ph) * .04; }
@@ -272,7 +275,7 @@ function step() {
     if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1; if (a.ps > pmax) pmax = a.ps;
     if (a.air > 0) a.air -= DT;
-    const pc = PCRIT * (MOD && MOD.pcritMul || 1);
+    const pc = PCRIT * (MOD && MOD.pcritMul || 1) * (1 - .3 * UNM);
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
     if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? AID_DMG : 1.6); else a.dmg = Math.max(0, a.dmg - DT * (aid ? AID_HEAL : .4));
@@ -393,6 +396,7 @@ function pickFall(a) {
   }
 }
 function fallTip() {
+  if (LAZY) return "You opened the gates without placing a single fence, guard or prop. An event with nothing in it gets zero stars, always. Draw barriers in front of the stage, put stewards by the exits, add water or first aid.";
   if (!lastFalls.length) return "";
   const evacN = lastFalls.filter(f => f[2]).length, nearGates = lastFalls.filter(f => f[1] > FENCE_Y - 6).length;
   let gi = 0, gb = -1; for (let i = 0; i < SLOTS; i++) { if (!gates[i]) continue; const n = lastFalls.filter(f => Math.abs(f[0] - slotX(i)) < SLOT_W * 1.6 && f[1] > FENCE_Y - 8).length; if (n > gb) { gb = n; gi = i; } }
@@ -408,6 +412,8 @@ function start(mod) {
   if (!canStart()) return;
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3 + upg("battery"), active: [] }; megaUsed = false;
+  LAZY = !demo && !sandbox && fences.length === 0 && guards.length === 0 && props.length === 0;
+  UNM = demo || sandbox ? 0 : clamp(1 - planSafety() / 4, 0, 1);
   FOAM_K = .7 - .1 * upg("foam"); AID_DMG = .75 - .15 * upg("medic"); AID_HEAL = 1.4 + .4 * upg("medic");
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; calmT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();
@@ -424,7 +430,8 @@ function finish() {
   if (demo) { startDemo(); return; }
   phase = "done";
   const stuck = ag.length, pct = (dead + stuck) / CROWD;
-  const stars = dead === 0 && stuck === 0 ? 3 : pct <= .015 ? 2 : pct <= .05 ? 1 : 0;
+  // nothing placed at all = no stars, whatever happened: you have to plan something
+  const stars = LAZY ? 0 : dead === 0 && stuck === 0 ? 3 : pct <= .015 ? 2 : pct <= .05 ? 1 : 0;
   LAST_EARN = 0;
   if (sandbox) { showReport(stars, stuck, []); ui(); return; }   // sandbox: nothing is saved, nothing is earned
   const st = loadStats(); st.shows++; st.trampled += dead; st.abducted += abducted; st.saved += evacuated; if (stars === 3) st.perfect++; st.worst = Math.max(st.worst, dead); saveJSON("mh.stats", st);

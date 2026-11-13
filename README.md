@@ -155,6 +155,10 @@ around.
 
 ## Upgrade shop, moving entrances and direction
 
+- **No plan, no stars**: a show started without a single fence, guard or prop always scores zero stars,
+  and an unmanaged crowd (little or nothing placed) shoves harder and goes down sooner. With an empty
+  plan every venue loses between a quarter and over half of its crowd.
+
 - Every show pays **tickets**: 10 for showing up, more for everyone who got home, 20 per star and 30 per
   new medal (sandbox pays nothing). Spend them in the **Upgrade shop** in the main menu: bigger budget,
   megaphone batteries and reach, steward training, extra security, charming guards, softer foam and

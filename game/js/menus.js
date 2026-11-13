@@ -96,6 +96,7 @@ function showHowTo() {
       <li><b>Everybody out.</b> When the show ends they all leave through the same gates. Most disasters happen here.</li>
     </ol>
     <p><b>Pressure</b> is what hurts people: watch the pressure view (H). Red means someone is about to go down. Narrow gaps, dead ends and too few gates are the usual suspects.</p>
+    <p><b>An empty plan always fails.</b> With no fences, guards or props nobody is in charge: the crowd shoves harder, goes down sooner, and the show gets zero stars no matter what.</p>
     <p><b>Zero trampled</b> earns three stars. Stars unlock venues. Each venue also has five optional medals.</p>
     <div class="row"><button class="go" id="pick">Got it</button></div>`, "options");
 }
@@ -117,6 +118,11 @@ const EVENT_NAMES = { car: "Lost driver", dogs: "Loose dogs", beachballs: "Beach
 const PLACE = { plaza: "THE PLAZA", circo: "THE CIRCUS", estadio: "THE STADIUM", crucero: "THE CRUISE", hipodromo: "THE RACETRACK", ciudad: "THE CITY",
   viernes: "THE MALL", boda: "THE WEDDING OF THE YEAR", trono: "THE GOLDEN BATHROOM", mitin: "THE DUCK RALLY", taco: "THE TACO FESTIVAL", ovni: "DON CHUY'S CORNFIELD", aeropuerto: "THE AIRPORT", arena: "THE ARENA" };
 const HEADLINES = {
+  lazy: [
+    "ORGANIZER OF {P} PLACES ZERO FENCES, ZERO GUARDS, ZERO ANYTHING; {D} TRAMPLED",
+    "\u201cI THOUGHT THEY WOULD ORGANIZE THEMSELVES\u201d: {P} SAFETY PLAN WAS A BLANK SHEET OF PAPER",
+    "{N} PEOPLE, ZERO BARRIERS: {P} LEARNS WHAT A CROWD DOES WHEN NOBODY IS IN CHARGE",
+  ],
   perfect: [
     "MIRACLE AT {P}: {N} GO IN, {N} COME OUT AND EVERYONE COMPLAINS ABOUT THE BATHROOMS",
     "NOBODY HURT AT {P}; EXPERTS BEG IT NEVER HAPPEN AGAIN BECAUSE IT RUINS THE STATISTICS",
@@ -181,7 +187,7 @@ const QUOTES = [
 ];
 function showReport(stars, stuck, fresh) {
   const p = PLACE[sceneKey] || scene.place || scene.name.toUpperCase(), v = { P: p, N: CROWD.toLocaleString("en"), D: dead.toLocaleString("en") };
-  const head = fill(pick(stars === 3 ? HEADLINES.perfect : stars ? HEADLINES.some : HEADLINES.bad), v);
+  const head = fill(pick(LAZY ? HEADLINES.lazy : stars === 3 ? HEADLINES.perfect : stars ? HEADLINES.some : HEADLINES.bad), v);
   const lines = [...new Set([...eventLog].map(k => (scene.lines && scene.lines[k]) || EVENT_LINES[k]).filter(Boolean))].sort(() => Math.random() - .5).slice(0, 2);
   if (MOD && MOD.id !== "normal") {
     const ml = MOD.id.split("+").map(k => MOD_LINES[k]).filter(Boolean);
