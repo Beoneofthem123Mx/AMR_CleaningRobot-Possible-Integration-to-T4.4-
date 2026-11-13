@@ -155,8 +155,8 @@ colors. Finishing with zero trampled earns three stars, and stars unlock new ven
 | **The Protest March** | 42 ★ | Thousands march down an avenue of balconies to City Hall for longer naps and three-day weekends; signs everywhere, chants that ripple through the crowd, sit-ins that suddenly block the street, a giant banner and a drum line. Very polite riot police, water balloons, a news drone and a counter-protest in favour of Mondays. |
 | **Rush Hour Metro** | 44 ★ | A platform with two tracks: a train comes in, the crowd squeezes into its doors until it is full (boarding counts as getting home), it leaves and the next one arrives on the OTHER track, so everybody runs across. Buskers, rats, delays and giant backpacks. |
 | **The Market** | 46 ★ | Twelve stalls in three rows; people hop from stall to stall and come out with bags while the vendors yell "DEAL!" and "SPECIAL PRICE!". Flash deals, a fruit avalanche, loose chickens and a hand truck down the aisle. |
-| **Secret Lab Open House** | 48 ★ | A laser grid that switches on and off, a zero-g room, containment breaches, portals, aliens floating in tubes, a teleporter that beams whoever stands on it somewhere random, scientists throwing chemicals (shrink, grow, glow, fly), an escaped alien, a slime blob, a laser sweep, a cloning accident and a three-metre chicken. |
-| **The Bus Terminal** | 50 ★ | Five bays; buses (AIRPORT, BEACH, GRANDMA'S HOUSE...) pull into random bays, take whoever reaches their door and leave, so the crowd keeps running to whichever doors are open. Departures board, a drivers' strike, double-deckers, runaway luggage carts and a lost dog. |
+| **Secret Lab Open House** | 48 ★ | A laser grid that switches on and off, a zero-g room, containment breaches, portals, aliens floating in tubes, a teleporter that beams whoever stands on it somewhere random, scientists throwing chemicals (shrink, grow, glow, fly), an escaped alien, a slime blob, a laser sweep, a cloning accident, a lockdown that drops blast doors across the hall with one gap in the middle, and a three-metre chicken. |
+| **The Bus Terminal** | 50 ★ | Five bays; buses (AIRPORT, BEACH, GRANDMA'S HOUSE...) pull into random bays, take whoever reaches their door and leave, so the crowd keeps running to whichever doors are open. Departures board, a drivers' strike, double-deckers, runaway luggage carts, a lost dog and last-second platform changes (a boarding bus moves bays and the crowd sprints after it). Glass canopy, bay screens in the route colour, a station clock. |
 
 Fences and guards also work against the chaos: animals and vehicles that bump into them turn
 around.
@@ -257,7 +257,16 @@ around.
   one plays while you plan, the music opens up at each drop and goes muffled during the evacuation.
   If the files are missing, the game falls back to its synthesized music.
 
+## Looks
+
+Daytime venues get a different light on every visit (morning, noon, afternoon, sunset or
+overcast), and the skyline around the venue matches it: downtown towers and cranes around the
+march, the metro and the bus terminal, a factory district with chimneys, silos and saw-tooth roofs
+around the factory and the reactor, hangars and a control tower around the airport and the launch
+pad. The live controls bar during the show is one slim row.
+
 ## Keyboard shortcuts
 
 **1–5** tools · **Space** opens the gates · **H** pressure · **C** camera · **V** speed ·
-**M** sound · **G** glow and focus effects (turn off on slow PCs) · **Esc** or **P** pause · **F11** fullscreen
+**M** sound · **G** glow and focus effects (turn off on slow PCs) · **Esc** or **P** pause · **F11** fullscreen ·
+**X** street camera · **O** photo mode (hides the HUD and freezes the show; the camera stays free) · **Ctrl+Z** undo
