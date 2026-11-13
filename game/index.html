@@ -334,6 +334,12 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .card.options .keys { color: #5d6266; }
 .ftypes button.live { border-color: #2fd16a; } .ftypes button.live.on { background: #2fd16a; color: #111214; }
 .ftypes .sep { width: 1px; background: #3a3d47; margin: 2px 4px; }
+/* during the show: one slim row; chaos powers show only their icon (the picked one shows its name) */
+.ftypes.compact { padding: 6px 34px 6px 8px; gap: 5px; flex-wrap: wrap; bottom: calc(var(--barh, 46px) + 12px); }
+.ftypes.compact .ptitle { display: none; } .ftypes.compact .pclose { top: 50%; transform: translateY(-50%); width: 22px; height: 22px; right: 6px; }
+.ftypes.compact button { padding: 4px 8px; font-size: .78rem; gap: 4px; white-space: nowrap; }
+.ftypes.compact button:not(.live):not(.on):not([data-pw="mega"]) .pn { display: none; }
+@media (max-width: 1250px) { .ftypes.compact button:not(.on):not([data-pw="mega"]) .pn { display: none; } }
 </style>
 </head>
 <body>

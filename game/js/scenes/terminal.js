@@ -37,23 +37,52 @@ SCENES.terminal = {
     rect(16, 44, 24, 47, "kiosk"); rect(3, 38, 9, 39.2, "bench"); rect(31, 38, 37, 39.2, "bench");
   },
   ground(g) {
-    g.fillStyle = "#b9bcc2"; g.fillRect(0, 0, WW, WH);
-    for (let y = 10; y < FENCE_Y; y += 2) for (let x = 0; x < WW; x += 2) { g.fillStyle = (x + y) % 4 ? "#b3b6bc" : "#c0c3c9"; g.fillRect(x + .04, y + .04, 1.92, 1.92); }
+    g.fillStyle = "#a4a7ad"; g.fillRect(0, 0, WW, WH);
+    for (let y = 10; y < FENCE_Y; y += 2) for (let x = 0; x < WW; x += 2) { g.fillStyle = (x + y) % 4 ? "#a2a5ab" : "#aaa9a4"; g.fillRect(x + .04, y + .04, 1.92, 1.92); }
     g.fillStyle = "#3e4148"; g.fillRect(0, 0, WW, 7.2);   // the road where buses dock
     g.fillStyle = "#f4f4f0"; for (let x = 1; x < WW; x += 3) g.fillRect(x, 3, 1.5, .2);
     TERM.bays.forEach((x, i) => { g.fillStyle = "#ffd23a"; g.fillRect(x - 1.6, 7.2, 3.2, .3); g.font = "900 1px Rubik, sans-serif"; g.textAlign = "center"; g.fillStyle = "#1b1d22"; g.fillText("BAY " + (i + 1), x, 8.6); });
     // painted queue lanes nobody uses
     g.strokeStyle = "rgba(47,127,214,.35)"; g.lineWidth = .15; g.setLineDash([.6, .4]); for (const x of TERM.bays) { g.beginPath(); g.moveTo(x - .8, 10); g.lineTo(x - .8, 22); g.moveTo(x + .8, 10); g.lineTo(x + .8, 22); g.stroke(); } g.setLineDash([]);
     g.fillStyle = "#6b6e74"; g.fillRect(0, FENCE_Y, WW, WH - FENCE_Y);
+    const r = rng(77);
+    // road: hatched no-stopping boxes between the bays, oil stains where the buses idle, a kerb
+    g.save(); g.beginPath(); g.rect(0, 0, WW, 7.2); g.clip();
+    for (let k = 0; k < TERM.bays.length - 1; k++) { const x0 = TERM.bays[k] + 2, x1 = TERM.bays[k + 1] - 2; g.strokeStyle = "rgba(255,210,58,.55)"; g.lineWidth = .14; g.strokeRect(x0, 4.4, x1 - x0, 2.4); for (let x = x0 - 2.4; x < x1; x += .8) { g.beginPath(); g.moveTo(x, 6.8); g.lineTo(x + 2.4, 4.4); g.stroke(); } }
+    for (const x of TERM.bays) for (let k = 0; k < 4; k++) { g.fillStyle = `rgba(10,10,14,${(.12 + r() * .14).toFixed(2)})`; g.beginPath(); g.ellipse(x + (r() - .5) * 3, 4.6 + r() * 1.6, .4 + r() * .7, .25 + r() * .4, r() * 3, 0, 7); g.fill(); }
+    g.restore();
+    g.fillStyle = "#d6d6d0"; g.fillRect(0, 7, WW, .2);
+    // tactile paving along the platform edge
+    g.fillStyle = "#e8b82a"; g.fillRect(0, 7.5, WW, .55); g.fillStyle = "rgba(0,0,0,.18)"; for (let x = .15; x < WW; x += .3) for (const y of [7.62, 7.9]) g.fillRect(x, y, .1, .1);
+    // tile grout and a few drains
+    g.strokeStyle = "rgba(60,62,68,.18)"; g.lineWidth = .04; g.beginPath(); for (let x = 0; x <= WW; x += 2) { g.moveTo(x, 10); g.lineTo(x, FENCE_Y); } for (let y = 10; y <= FENCE_Y; y += 2) { g.moveTo(0, y); g.lineTo(WW, y); } g.stroke();
+    for (const [x, y] of [[4, 26], [36, 26], [20, 36], [12, 50], [28, 50]]) { g.fillStyle = "#5a5d63"; g.fillRect(x - .5, y - .3, 1, .6); g.fillStyle = "#2c2e33"; for (let k = 0; k < 5; k++) g.fillRect(x - .44 + k * .2, y - .24, .1, .48); }
+    // painted wayfinding nobody reads
+    g.save(); g.font = "900 1.5px Rubik, sans-serif"; g.textAlign = "center"; g.fillStyle = "rgba(47,127,214,.28)"; g.fillText("← ALL BUSES THIS WAY", 20, 27.5); g.fillStyle = "rgba(216,50,43,.22)"; g.font = "900 1.1px Rubik, sans-serif"; g.fillText("PLEASE QUEUE · PLEASE QUEUE · PLEASE QUEUE", 20, 41.5); g.restore();
+    // bits of litter
+    for (let k = 0; k < 40; k++) { g.fillStyle = ["#f4f4f0", "#ffd23a", "#d8322b", "#2f7fd6"][k % 4]; g.globalAlpha = .55; g.fillRect(2 + r() * (WW - 4), 11 + r() * (FENCE_Y - 13), .18 + r() * .2, .12); } g.globalAlpha = 1;
   },
   decor(g) { for (const o of obs) if (o.kind === "barrier") { g.lineWidth = .3; g.strokeStyle = "#ffd23a"; g.beginPath(); g.moveTo(o.ax, o.ay); g.lineTo(o.bx, o.by); g.stroke(); } },
   bulbs: TERM.bays.map(x => [x, 10.1]),
   beams: [{ x: 20, y: 12, a: -Math.PI / 2, sweep: .4, h: 6, white: true }],
   extra3D(grp) {
     // a long canopy over the bays on columns, a departures board, a ticket kiosk
-    part(grp, "box", "#e8e2d4", WW, .3, 5, 20, 5, 8.5); for (let x = 2; x < WW; x += 6) part(grp, "cyl", "#8a8f99", .12, 5, .12, x, 2.5, 10.6);
+    { const glass = new THREE.MeshStandardMaterial({ color: lin("#bfe3ff"), roughness: .1, metalness: .2, transparent: true, opacity: .28, depthWrite: false }); const roof = part(grp, "box", glass, WW, .12, 5, 20, 5, 8.5); roof.castShadow = false; for (let x = 0; x <= WW; x += 4) part(grp, "box", "#8a8f99", .1, .16, 5, x, 5.02, 8.5); part(grp, "box", "#8a8f99", WW, .2, .12, 20, 5.02, 6); part(grp, "box", "#8a8f99", WW, .2, .12, 20, 5.02, 11); } for (let x = 2; x < WW; x += 6) part(grp, "cyl", "#8a8f99", .12, 5, .12, x, 2.5, 10.6);
     part(grp, "box", "#1b1d22", 9, 2.2, .3, 20, 6.4, 11); part(grp, "box", basic("#ffd23a", { color: lin("#ffd23a").multiplyScalar(.7) }), 8.6, .3, .32, 20, 7.2, 11);
     part(grp, "box", "#2f7fd6", 8, 2.6, 3, 20, 1.3, 45.5); part(grp, "box", "#f4f4f0", 8.2, .4, 3.2, 20, 2.8, 45.5);
+    // a screen hanging under the canopy over every bay: it lights up in the colour of the bus at that bay
+    TERM.signs = TERM.bays.map(x => {
+      part(grp, "box", "#3a3d45", .06, 1.1, .06, x, 4.3, 9.6); part(grp, "box", "#1b1d22", 2.4, .8, .18, x, 3.5, 9.6);
+      const mat = new THREE.MeshBasicMaterial({ color: lin("#30333a"), toneMapped: false }); part(grp, "box", mat, 2.2, .6, .2, x, 3.5, 9.6); return mat;
+    });
+    // a big station clock and some bins
+    part(grp, "cyl", "#f4f4f0", .9, .12, .9, 20, 8.6, 11.05).rotation.x = Math.PI / 2; part(grp, "box", "#1b1d22", .06, .7, .05, 20, 8.75, 11.15); TERM.hand = pivot(grp, 20, 8.6, 11.17); part(TERM.hand, "box", "#d8322b", .05, .75, .05, 0, .34, 0);
+    for (const [x, y] of [[1.2, 14], [WW - 1.2, 14], [1.2, 33], [WW - 1.2, 33]]) { part(grp, "cyl", "#2f7a4a", .32, .9, .32, x, .45, y); part(grp, "cyl", "#1d5434", .36, .1, .36, x, .92, y); }
+  },
+  frame3D(tt) {
+    if (!TERM.signs) return; const C = TERM.tmp || (TERM.tmp = new THREE.Color());
+    TERM.signs.forEach((mat, i) => { const b = TERM.buses.find(q => q.bay === i && q.state !== "out"); if (b) { C.set(b.col).convertSRGBToLinear(); if (b.state === "board" && Math.sin(tt * 6) > .6) C.multiplyScalar(1.6); mat.color.copy(C); } else mat.color.copy(lin("#30333a")); });
+    if (TERM.hand) TERM.hand.rotation.z = -tt * .5;
   },
   hud(g, w) {
     const x = 18, y = 12, bw = Math.min(280, w * .25);

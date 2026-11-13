@@ -326,10 +326,11 @@ function renderPicker(plan) {
   const live = phase === "show" || phase === "evac";
   if (EDIT && phase === "plan") { return; }
   const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard" || tool === "gate") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : live && !demo ? "powers" : sandbox && plan ? "sand" : "";
+  el.classList.toggle("compact", want === "powers");
   if (want === "powers") {   // chaos powers: rebuilt every time, the charges change
     pickerFor = want;
     el.innerHTML = Object.entries(POWERS).filter(([k, p]) => !p.bm || bm(k) || sandbox).map(([k, p]) => { const n = k === "mega" ? mega.n : charges[k] || 0;
-      return `${k === "meteor" ? '<span class="sep"></span>' : ""}<button data-pw="${k}" class="${power === k ? "on" : ""}${p.live ? " live" : ""}" title="${p.desc}" ${n <= 0 ? "disabled" : ""}>${p.icon} ${p.name}<span class="cnt">${n > 50 ? "" : "×" + n}</span></button>`; }).join("");
+      return `${k === "meteor" ? '<span class="sep"></span>' : ""}<button data-pw="${k}" class="${power === k ? "on" : ""}${p.live ? " live" : ""}" title="${p.name}: ${p.desc}" ${n <= 0 ? "disabled" : ""}>${p.icon}<b class="pn">${p.name}</b><span class="cnt">${n > 50 ? "" : "×" + n}</span></button>`; }).join("");
     pickerChrome(el, want); el.hidden = pickerClosed === want;
     el.querySelectorAll("button[data-pw]").forEach(b => b.addEventListener("click", () => { power = b.dataset.pw; ui(); if (power !== "mega") toast(`${POWERS[power].name}: ${POWERS[power].desc}. Click the venue.`); }));
     return;
