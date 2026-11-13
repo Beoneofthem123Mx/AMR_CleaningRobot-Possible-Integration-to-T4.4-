@@ -434,7 +434,7 @@ const Bm = new Float32Array(9), Bt = new Float32Array(3), LB = new Float32Array(
 const loc = (sx, sy, sz, x, y, z) => new Float32Array([sx, 0, 0, 0, sy, 0, 0, 0, sz, x, y, z]);
 const LOCAL = {
   torso: loc(1, 1, 1.05, 0, .98, 0), head: loc(1, 1, 1, .02, 1.6, 0), hair: loc(1.5, 1.35, 1.5, -.045, 1.655, 0),
-  eyeL: loc(1, 1.25, 1, .19, 1.64, -.07), eyeR: loc(1, 1.25, 1, .19, 1.64, .07), mouth: loc(.5, 1, 1, .205, 1.53, 0),
+  eyeL: loc(1, 1.25, 1, .19, 1.65, -.078), eyeR: loc(1, 1.25, 1, .19, 1.65, .078), mouth: loc(.5, 1, 1, .205, 1.53, 0),
   afro: loc(2.05, 1.9, 2.05, -.04, 1.69, 0), bun: loc(.5, .5, .5, -.1, 1.86, 0), tail: loc(.55, 1, .4, -.23, 1.5, 0),
   sign: loc(1, 1, 1, .08, 2.42, .27), signPole: loc(1.6, .55, 1.6, .08, 2.02, .27), flag: loc(1, .8, 1.25, .08, 2.5, -.2),
   cap: loc(1.45, 1.05, 1.45, -.02, 1.79, 0), brim: loc(1.25, 1, 1.15, .2, 1.765, 0), long: loc(1.3, 1, 1.4, -.17, 1.5, 0), pack: loc(1, 1, 1, -.2, 1.2, 0),
@@ -530,7 +530,7 @@ function initPeople() {
   const rimify = m => { m.onBeforeCompile = sh => { sh.uniforms.uRim = RIM; sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform float uRim;").replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
     float rimF = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
     totalEmissiveRadiance += diffuseColor.rgb * pow(rimF, 2.6) * uRim;`); }; m.customProgramCacheKey = () => "rim"; return m; };
-  const N = 6000, std = o => rimify(new THREE.MeshStandardMaterial(Object.assign({ roughness: .78 }, o || {})));
+  const N = 6000, std = o => rimify(new THREE.MeshStandardMaterial(Object.assign({ roughness: .78, flatShading: true }, o || {})));   // faceted, chunky toy look
   const mk = (geo, material, n) => {
     const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); m.instanceColor.setUsage(THREE.DynamicDrawUsage);
@@ -539,17 +539,18 @@ function initPeople() {
   // soft clay-figure people: a pill body, a big round head and rounded limbs
   // wobbly toy people: a pear-shaped body, a big round head sitting right on it, dot eyes, noodle arms, stubby legs
   const pear = [];
-  for (let i = 0; i <= 10; i++) { const q = i / 10, y = -.42 + q * .84, r = .05 + Math.sin(Math.PI * Math.pow(q, .82)) * (.27 - q * .1); pear.push(new THREE.Vector2(Math.max(.02, r), y)); }
-  const pearGeo = new THREE.LatheGeometry(pear, 12);
+  for (let i = 0; i <= 6; i++) { const q = i / 6, y = -.42 + q * .84, r = .05 + Math.sin(Math.PI * Math.pow(q, .82)) * (.27 - q * .1); pear.push(new THREE.Vector2(Math.max(.02, r), y)); }
+  const pearGeo = new THREE.LatheGeometry(pear, 7);
   P.torso = mk(pearGeo, std({ roughness: .58 }), N);
-  P.head = mk(new THREE.SphereGeometry(.2, 12, 8), std({ roughness: .5 }), N);
+  P.head = mk(new THREE.IcosahedronGeometry(.215, 1), std({ roughness: .5 }), N);   // a faceted ball
   P.eye = mk(new THREE.SphereGeometry(.034, 5, 4), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .25 }), N * 2); P.eye.castShadow = false;
+  P.eyeW = mk(new THREE.SphereGeometry(.034, 8, 6), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .3 }), N * 2); P.eyeW.castShadow = false;
   P.xbar = mk(new THREE.BoxGeometry(.02, .1, .022), new THREE.MeshStandardMaterial({ color: 0x111214, roughness: .4 }), N * 2); P.xbar.castShadow = false;   // X eyes of the trampled
   P.brow = mk(new THREE.BoxGeometry(.022, .02, .075), new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: .6 }), N * 2); P.brow.castShadow = false;   // worried eyebrows
   P.mouth = mk(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a1414, roughness: .5 }), N); P.mouth.castShadow = false;
-  P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
-  P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
-  P.hand = mk(new THREE.SphereGeometry(.062, 6, 4), std({ roughness: .55 }), N * 2); P.hand.castShadow = false;   // round mitten hands
+  P.arm = mk(new THREE.CapsuleGeometry(.05, .48, 1, 5), std({ roughness: .6 }), N * 2);
+  P.leg = mk(new THREE.CapsuleGeometry(.09, .42, 1, 5), std({ roughness: .7 }), N * 2);
+  P.hand = mk(new THREE.IcosahedronGeometry(.066, 0), std({ roughness: .55 }), N * 2); P.hand.castShadow = false;   // round mitten hands
   P.ear = mk(new THREE.SphereGeometry(.09, 8, 6), std({ roughness: .6 }), N); P.ear.castShadow = false;            // costume ears, combs
   P.spike = mk(new THREE.ConeGeometry(.075, .2, 6), std({ roughness: .5 }), N); P.spike.castShadow = false;        // dino spikes, beaks
   P.shoe = mk(new THREE.SphereGeometry(.075, 6, 4), std({ roughness: .45 }), N * 2); P.shoe.castShadow = false;   // chunky toy shoes
@@ -598,7 +599,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { ear: 0, spike: 0, hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 }; COST_C = C;
+  const C = { eyeW: 0, ear: 0, spike: 0, hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 }; COST_C = C;
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -640,7 +641,12 @@ function renderPeople(tt, dtR, vb) {
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
       if ((a.acc === 1 || a.acc === 3 || a.acc === 6) && !surging && a.ps < PCRIT * .55) armR = 2.7;  // holding the balloon / umbrella / sign up
       if (a.acc === 7) armL = 2.8 + Math.sin(tt * 7 + a.ph) * .25;   // waving a flag
-      setBase(a.x - Math.sin(a.h) * sway, bob, a.y + Math.cos(a.h) * sway, a.h, a.sc, false);
+      if (a.air > 0) {
+        const q = 1 - a.air / (a.airD || 1), up = Math.sin(q * Math.PI) * (a.airH || 1.6);
+        setPose(a.x, up + .02, a.y, a.h + q * (a.airYaw || 0), a.sc, q * Math.PI * 2 * (a.airSpin || 1), Math.sin(q * Math.PI) * .5 * (a.airSpin || 1), 1, 1 + Math.sin(q * Math.PI) * .12, 1);
+        const ph = tt * 20 + a.ph; armL = 2.6 + Math.sin(ph) * 1.1; armR = 2.4 + Math.cos(ph * 1.2) * 1.1; legL = Math.sin(ph * .9) * 1.1; legR = -Math.sin(ph * .9) * 1.1;
+        FACE.state = 1; FACE.open = 1;
+      } else setBase(a.x - Math.sin(a.h) * sway, bob, a.y + Math.cos(a.h) * sway, a.h, a.sc, false);
     }
     // clothes: blend into the pressure color; red when in danger
     const k = down ? .5 : 1, hq = HEAT_L[clamp(Math.floor(a.ps / PCRIT * HEAT_L.length), 0, HEAT_L.length - 1)];
@@ -673,7 +679,13 @@ function renderPeople(tt, dtR, vb) {
         for (const [ex, ez] of [[.19, -.07], [.19, .07]]) for (const r of [.8, -.8]) { XB[0] = 1; XB[1] = 0; XB[2] = 0; XB[3] = 0; XB[4] = Math.cos(r); XB[5] = Math.sin(r); XB[6] = 0; XB[7] = -Math.sin(r); XB[8] = Math.cos(r); XB[9] = ex + .01; XB[10] = 1.65; XB[11] = ez; emit(P.xbar, C.xbar, XB); colW(P.xbar, C.xbar++, .07, .07, .08); }
       } else for (const e of [LOCAL.eyeL, LOCAL.eyeR]) {
         LE.set(e); const big = FACE.state === 1 ? 1.55 : 1, squint = FACE.state === 2 ? .35 : FACE.state === 0 && (tt * .35 + a.ph * .37) % 1 < .035 ? .12 : 1;   // calm people blink now and then
-        LE[0] *= big; LE[4] *= big * squint; LE[8] *= big; emit(P.eye, C.eye, place(LE)); colW(P.eye, C.eye++, .07, .07, .08);
+        // googly eyes: a big white ball and a pupil that rattles around inside it (wilder when running or squeezed)
+        const jig = .012 + Math.min(.02, Math.hypot(a.vx, a.vy) * .008) + (FACE.state === 1 ? .014 : 0), side = e === LOCAL.eyeL ? 0 : 2.1;
+        const wy = LE[10], wz = LE[11];
+        LE[0] = 1.15 * big; LE[4] = 1.85 * big * squint; LE[8] = 1.85 * big; LE[9] = .175; emit(P.eyeW, C.eyeW, place(LE)); colW(P.eyeW, C.eyeW++, 1.1, 1.1, 1.1);
+        LE[0] = .9 * big; LE[4] = .95 * big * squint; LE[8] = .95 * big; LE[9] = .222;
+        LE[10] = wy + Math.sin(tt * 13 + a.ph * 3 + side) * jig * squint; LE[11] = wz + Math.cos(tt * 11 + a.ph * 2 + side * 1.7) * jig;
+        emit(P.eye, C.eye, place(LE)); colW(P.eye, C.eye++, .05, .05, .06);
       }
       if (FACE.state === 1 && C.brow < cap * 2 - 2) for (const sd of [-1, 1]) {   // squeezed: brows shoot up and tilt into a worried tent
         const r = -sd * .45, c0 = Math.cos(r), s0 = Math.sin(r);

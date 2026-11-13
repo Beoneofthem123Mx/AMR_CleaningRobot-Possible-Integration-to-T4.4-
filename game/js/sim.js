@@ -271,6 +271,7 @@ function step() {
     a.x = clamp(a.x, R, WW - R);
     if (!evac) a.y = Math.min(a.y, SH - R);
     a.ps += (a.p - a.ps) * .1; if (a.ps > pmax) pmax = a.ps;
+    if (a.air > 0) a.air -= DT;
     const pc = PCRIT * (MOD && MOD.pcritMul || 1);
     // first aid tents: people nearby get patched up, so squeezes hurt half as much and heal faster
     let aid = false; if (medics.length) for (const md of medics) if ((a.x - md.x) ** 2 + (a.y - md.y) ** 2 < 36) { aid = true; break; }
@@ -280,6 +281,7 @@ function step() {
     out.push(a);
   }
   ag = out;
+  if (surgeT > 0 && !demo && ag.length && Math.random() < .25) { const a = ag[(Math.random() * ag.length) | 0]; if (a.dance && toss(a, .9 + Math.random() * .9) && Math.random() < .3) pop(a.x, a.y - 1, ["WHEEE!", "YEET!", "WOOO!"][(Math.random() * 3) | 0]); }
   // a calm evacuation is boring to watch: after 2 s with nobody squeezed the clock runs fast
   calmT = evac && pmax < PCRIT * .4 ? calmT + DT : 0;
   // velvet ropes snap when the crowd leans on them too hard
@@ -356,6 +358,12 @@ function shuffleSlots() {
     gates = gates.map((_, i) => pick.includes(i)); buildWorld(); return true;
   }
   SLOT_XS = null; SLOT_BAD = []; gates = scene.gates.slice(); buildWorld(); return false;
+}
+// chaos: throw someone into the air (they somersault and land on their feet, unhurt)
+function toss(a, h, d) {
+  if (a.air > 0 || a.lift > 0) return false;
+  a.airD = a.air = d || .75 + Math.random() * .4; a.airH = h || 1.2 + Math.random() * 1.2;
+  a.airSpin = Math.random() < .5 ? -1 : 1; a.airYaw = (Math.random() - .5) * 4; return true;
 }
 function canStart() {
   for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {

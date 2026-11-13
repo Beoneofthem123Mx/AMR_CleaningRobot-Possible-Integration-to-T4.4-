@@ -175,7 +175,7 @@ function spawnEventRaw(kind) {
 function blast(x, y) {
   for (const a of ag) {
     const dx = a.x - x, dy = a.y - y, d = Math.hypot(dx, dy);
-    if (d < 3.4 && d > .01) { const s = (1 - d / 3.4) * 6; a.vx += dx / d * s; a.vy += dy / d * s; a.p += (1 - d / 3.4) * 3; }
+    if (d < 3.4 && d > .01) { const s = (1 - d / 3.4) * 6; a.vx += dx / d * s; a.vy += dy / d * s; a.p += (1 - d / 3.4) * 3; if (Math.random() < .6) toss(a, 1.6 + (1 - d / 3.4) * 2.5, 1 + Math.random() * .4); }   // explosions send people flying
   }
   pop(x, y - 1, "BOOM!"); burstAt(x, y, 90); shake = Math.min(1.2, shake + .8);
 }
@@ -301,7 +301,8 @@ function moverForces() {
       for (let j = hashHead[gy * GW + gx]; j !== -1; j = hashNext[j]) {
         const a = ag[j], ex = a.x - m.x, ey = a.y - m.y, d = Math.hypot(ex, ey) || .01, nx = ex / d, ny = ey / d;
         if (m.abduct && m.beamOn && d < m.abduct) a.beam = true;
-        if (d < m.r + R) { const ov = m.r + R - d, k = m.push * MPUSH / (1 + (m.lastHits || 0) * .12); a.fx += nx * ov * k; a.fy += ny * ov * k; a.p += ov / R * MPRES; m.hits++; }
+        if (d < m.r + R) { const ov = m.r + R - d, k = m.push * MPUSH / (1 + (m.lastHits || 0) * .12); a.fx += nx * ov * k; a.fy += ny * ov * k; a.p += ov / R * MPRES; m.hits++;
+          if (m.push >= 25 && !m.air && Math.random() < .5 && toss(a, 1.4 + Math.random() * 1.6, .8 + Math.random() * .5) && Math.random() < .25) pop(a.x, a.y - 1, ["BONK!", "WHEEE!", "NOT AGAIN!", "MY HIP!"][(Math.random() * 4) | 0]); }   // big things send people flying
         if (m.scare && d < m.scare) { const s = (1 - d / m.scare) * MSCARE; a.fx += nx * s; a.fy += ny * s; }
       }
   }
