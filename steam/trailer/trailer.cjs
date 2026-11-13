@@ -18,7 +18,7 @@ const SEG = [
   { card: "HUMAN<br>TSUNAMI", logo: true, dur: B * 4, bg: "arena" },
   { card: "STEP 1:<br>PLAN THE EVENT", dur: B * 3, bg: "plaza" },
   { clip: "plaza", plan: true, warm: 0, secs: B * 8, cam: 0, fences: [[.2, 10, 40, 18, 46, "steel"], [.7, 30, 40, 22, 46, "concrete"]],
-    shapes: [[1.2, "ring", 9, 30, 12, 32, "cones"], [1.8, "zigzag", 20, 47, 20, 58, "rope"], [2.4, "pen", 27, 50, 35, 56, "foam"]],
+    shapes: [[1.2, "ring", 9, 30, 12, 32, "cones"], [1.8, "funnel", 20, 58, 20, 48, "rope"], [2.4, "ring", 31, 52, 34, 54, "foam"]],
     stewards: [[3.0, 14.3, 62], [3.3, 25.7, 62], [3.6, 11, 59], [3.9, 29, 59]] },
   { card: "STEP 2:<br>OPEN THE GATES", dur: B * 3, bg: "plaza" },
   { clip: "plaza", warm: 2.5, secs: B * 7, cam: 2 },
@@ -26,24 +26,25 @@ const SEG = [
   // crane shot at the front of the crowd: people topple one by one (the game's own fall, just triggered on cue)
   { clip: "plaza", warm: 26, secs: B * 4, cam: 4, cine: [5.2, -1.75, 4.2], look: [14, 35.5], hot: true,
     ev: [[.1, "topple", 13, 35, 1], [.45, "topple", 15, 35.5, 2], [.8, "topple", 12, 36, 2], [1.1, "topple", 16, 36, 2], [1.4, "topple", 14, 36.5, 3]] },
-  { clip: "circo", warm: 28, secs: B * 4, cam: 4, cine: [9, 1.2], ev: [[-1.5, "elephants"], [-.4, "cannon"]], hot: true },
+  { clip: "circo", warm: 28, secs: B * 4, cam: 4, cine: [12, 1.2], ev: [[-3.5, "dragon"], [-2.2, "ballclowns"]], follow: "dragon", hot: true },
+  { clip: "estadio", warm: 28, secs: B * 4, cam: 4, cine: [10, 1.45], look: [20, 26], ev: [[.2, "goal", 0]], hot: true },
+  { clip: "crucero", warm: 24, secs: B * 4, cam: 4, cine: [15, 1.25], ev: [[-4.5, "piratas"]], follow: "pirate", hot: true },
+  { clip: "metro", warm: 30, secs: B * 4, cam: 1, hot: true },
+  { clip: "laboratorio", warm: 26, secs: B * 4, cam: 1, ev: [[-1.4, "pollo"], [-.6, "quimicos"]], hot: true },
+  { clip: "fabrica", warm: 26, secs: B * 4, cam: 4, cine: [11, 1.3], ev: [[-1.6, "robot"], [.3, "horno"]], follow: "fab_robot", hot: true },
   { clip: "ovni", warm: 26, secs: B * 4, cam: 0, ev: [[-2, "abduccion"]], hot: true },
+  { clip: "marcha", warm: 26, secs: B * 4, cam: 1, ev: [[-1.8, "policia"], [-.5, "contra"]], hot: true },
   { clip: "arena", warm: 26, secs: B * 4, cam: 1, ev: [[-1.3, "tope"], [-.4, "sillazo"]], hot: true },
-  { clip: "ciudad", warm: 26, secs: B * 4, cam: 4, cine: [5, 1.5708], ev: [[-.8, "fuegos"]], hot: true },
-  { clip: "crucero", warm: 26, secs: B * 4, cam: 4, cine: [16, 1.2], ev: [[-.8, "flamenco"]], hot: true },
-  { clip: "plaza", warm: 26, secs: B * 4, cam: 1, mod: "rain", ev: [[-.6, "dogs"]], hot: true },
   { clip: "zoo", warm: 26, secs: B * 4, cam: 1, ev: [[-1.6, "giraffe"], [-1.2, "penguins"]], hot: true },
   { clip: "rocket", warm: 26, secs: B * 4, cam: 0, ev: [[-2.2, "booster"], [-.3, "ceo"]], hot: true },
-  { clip: "cheese", warm: 26, secs: B * 4, cam: 1, ev: [[-1.4, "wheel"], [-.4, "tumble"]], hot: true },
-  { clip: "zombie", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "horde"]], hot: true },
-  { clip: "beach", warm: 26, secs: B * 4, cam: 1, ev: [[-1.6, "whale"], [-1.2, "shark"]], hot: true },
-  { clip: "park", warm: 26, secs: B * 4, cam: 1, ev: [[-1.5, "dinos"], [-.6, "coaster"]], hot: true },
   { card: "28 VENUES", dur: B * 2, bg: "circo" },
-  { card: "FENCES OF<br>ANY SHAPE", dur: B * 2, bg: "ciudad" },
+  { card: "METEORS. COWS.<br>ANVILS.", dur: B * 2, style: "yellow" },
+  { clip: "viernes", warm: 22, secs: B * 5, cam: 4, cine: [13, 1.3], look: [20, 46], ev: [[.1, "power", "meteor", 20, 46]], hot: true },
+  { clip: "mercado", warm: 24, secs: B * 4, cam: 4, cine: [12, 1.2], look: [20, 40], ev: [[.1, "power", "cow", 20, 40], [1.2, "power", "anvil", 16, 44]], hot: true },
   { card: "FLOPPY<br>RAG DOLLS", dur: B * 2, style: "yellow" },
-  { card: "SANDBOX MODE", dur: B * 2, bg: "arena" },
+  { clip: "zombie", warm: 26, secs: B * 4, cam: 1, ev: [[-1.2, "horde"]], hot: true },
   { card: "1 MEGAPHONE", dur: B * 2, style: "yellow" },
-  { clip: "estadio", warm: 28, secs: B * 6, cam: 1, ev: [[.3, "mega", 20, 34], [1.2, "mega", 14, 42]] },
+  { clip: "estadio", warm: 28, secs: B * 6, cam: 1, ev: [[.3, "mega", 20, 40], [1.2, "mega", 14, 46]] },
   { card: "TOMORROW'S<br>HEADLINES", dur: B * 3, bg: "mitin" },
   { clip: "arena", warm: 0, secs: B * 7, cam: 0, report: true, zoom: 1.75 },
   { card: "HUMAN<br>TSUNAMI", sub: "Coming soon to Steam · cheaper than a coffee", dur: B * 9, bg: "arena", end: true },
@@ -59,7 +60,7 @@ async function captureClips() {
   await app.evaluate(({ BrowserWindow }) => { const b = BrowserWindow.getAllWindows()[0]; b.setContentSize(1920, 1080); b.center(); });
   await w.waitForTimeout(2500);
   await w.evaluate(() => { __game.manual(true); __game.unlockAll(); window.__sfxLog = []; document.querySelector("#overlay").hidden = true;
-    for (const s of ["#status", ".bar", "#mod"]) document.querySelectorAll(s).forEach(e => e.style.visibility = "hidden"); });
+    for (const s of ["#status", ".bar", "#mod", "#ftypes"]) document.querySelectorAll(s).forEach(e => e.style.visibility = "hidden"); });
   const frame = w.locator("#frame"), sfxFile = path.join(WORK, "sfx.json");
   // when only some shots are re-recorded, keep the sound effects of the others
   const sfx = ONLY && fs.existsSync(sfxFile) ? JSON.parse(fs.readFileSync(sfxFile)).filter(e => !ONLY.includes(e.seg)) : [];
@@ -97,6 +98,8 @@ async function captureClips() {
       for (let k = 0; k < 20; k++) __game.tick(1 / 60); // let the camera settle
       window.__pending = evs.filter(e => e[0] >= 0);
       if (g.look) { cam.x = g.look[0]; cam.y = g.look[1]; for (let k = 0; k < 4; k++) __game.tick(1 / 60); }
+      window.__follow = g.follow || null;
+      if (g.follow) { const m = movers.find(q => q.kind === g.follow); if (m) { cam.x = m.x; cam.y = m.y; for (let k = 0; k < 4; k++) __game.tick(1 / 60); } }
       return vnow / 1000;
     }, g);
     const n = Math.round(g.secs * FPS);
@@ -108,10 +111,14 @@ async function captureClips() {
           else if (e[1] === "shape") { for (const [x0, y0, x1, y1] of shapeSegs(e[2].shape, e[2].ax, e[2].ay, e[2].bx, e[2].by)) fences.push({ ax: x0, ay: y0, bx: x1, by: y1, len: Math.hypot(x1 - x0, y1 - y0), type: e[2].type }); buildWorld(); sfx("drop"); }
           else if (e[1] === "steward") { guards.push({ kind: "guard", role: "slow", x: e[2], y: e[3], ang: -Math.PI / 2, t: 0 }); buildWorld(); sfx("drop"); }
           else if (e[1] === "topple") { ag.filter(a => !a.dmg || a.dmg < 1).sort((p, q) => Math.hypot(p.x - e[2], p.y - e[3]) - Math.hypot(q.x - e[2], q.y - e[3])).slice(0, e[4]).forEach(a => { a.dmg = 1.2; }); }
+          else if (e[1] === "power") { power = e[2]; charges[e[2]] = 9; usePower(e[3], e[4]); }
+          else if (e[1] === "goal") { matchGoal(e[2]); }
           else if (e[1] === "mega") { mega.active.push({ x: e[2], y: e[3], t: 3.5 }); rings.push({ x: e[2], y: e[3], t: 0, mega: true }); sfx("whistle"); }
           else __game.event(e[1]);
         }
-        window.__pending = window.__pending.filter(e => e[0] > tt); __game.tick(1 / fps);
+        window.__pending = window.__pending.filter(e => e[0] > tt);
+        if (window.__follow) { const m = movers.find(q => q.kind === window.__follow); if (m) { cam.x += (m.x - cam.x) * .25; cam.y += (m.y - cam.y) * .25; } }
+        __game.tick(1 / fps);
       }, [f, FPS]);
       await frame.screenshot({ path: path.join(dir, String(f).padStart(5, "0") + ".png") });
     }
