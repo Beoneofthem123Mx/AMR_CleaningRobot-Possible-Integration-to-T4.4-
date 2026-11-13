@@ -280,6 +280,9 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .secretpop i { font-style: normal; font-size: 2.4em; } .secretpop small { display: block; color: #ffd23a; font-weight: 900; letter-spacing: .08em; font-size: .7em; } .secretpop b { display: block; font-size: 1.2em; } .secretpop span { font-size: .8em; color: #ddd; }
 @keyframes secretin { from { transform: translate(-50%, -30px) scale(.6); opacity: 0; } } @keyframes secretout { to { transform: translate(-50%, -20px); opacity: 0; } }
 #badge { cursor: pointer; }
+.planmeter { position: absolute; left: 12px; bottom: 12px; z-index: 20; display: flex; align-items: center; gap: 8px; padding: 7px 11px; border-radius: 12px; background: rgba(18,19,26,.85); color: #fff; font-size: .62em; font-weight: 900; letter-spacing: .06em; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+.planmeter i { width: 9em; height: .9em; border-radius: .45em; background: #33363d; overflow: hidden; display: block; } .planmeter b { display: block; height: 100%; width: 0; transition: width .25s, background .25s; }
+.planmeter em { font-style: normal; min-width: 6.5em; }
 .upg .pips em { display: inline-block; width: 18px; height: 6px; border-radius: 3px; background: #d6d1c4; margin: 4px 3px 0 0; } .upg .pips em.on { background: #2fae5a; }
 .upg button { min-width: 64px; } .upg button:disabled { opacity: .45; }
 .paper .earn { font-family: var(--font); margin: 8px 0 0; font-weight: 700; font-size: .9rem; }
@@ -324,6 +327,7 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
       </div>
       <div class="caption" id="caption">You plan it</div>
       <div class="status" id="status" hidden><canvas id="hourglass" width="9" height="13"></canvas><span id="statusTxt"></span></div>
+      <div class="planmeter" id="planmeter" hidden><span>CROWD CONTROL</span><i><b id="pmfill"></b></i><em id="pmtxt"></em></div>
       <div class="modchip" id="mod" hidden></div>
       <div class="abdchip" id="abd" hidden></div>
       <div class="overlay" id="overlay"><div class="card" id="card"></div></div>

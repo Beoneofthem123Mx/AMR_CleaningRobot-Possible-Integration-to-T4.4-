@@ -141,6 +141,12 @@ function showCard(html, kind) {
 }
 function hideCard() { $("#overlay").hidden = true; $("#bar").style.visibility = ""; $("#ftypes").style.display = ""; }
 function ui() {
+  { // crowd control meter while planning: barriers and gadgets fill it; below 100% the crowd is partly unmanaged
+    const pm = $("#planmeter"), show = phase === "plan" && !demo && !sandbox; pm.hidden = !show;
+    if (show) { const v = clamp(planSafety() / PLAN_NEED(), 0, 1), col = v < .35 ? "#ff4d3d" : v < .7 ? "#ffb238" : v < 1 ? "#d7f53a" : "#2fd16a";
+      $("#pmfill").style.width = (v * 100).toFixed(0) + "%"; $("#pmfill").style.background = col;
+      $("#pmtxt").textContent = v < .05 ? "UNMANAGED" : v < .35 ? "CHAOTIC" : v < .7 ? "SHAKY" : v < 1 ? "ALMOST" : "SOLID"; $("#pmtxt").style.color = col; }
+  }
   const plan = phase === "plan";
   $("#cFence").textContent = sandbox ? "∞" : `$${Math.round(fenceLeft())}`;
   $("#tFence").firstChild.textContent = FENCE_TYPES[fenceType].name + " ";

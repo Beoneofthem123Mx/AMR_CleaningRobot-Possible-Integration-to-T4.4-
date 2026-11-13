@@ -702,6 +702,7 @@ function renderPeople(tt, dtR, vb) {
       if (a.lift > 0) { bob = a.lift * 6; armL = armR = 2.9 + Math.sin(tt * 12 + a.ph) * .3; legL = Math.sin(tt * 9 + a.ph) * .6; legR = -legL; }
       if ((a.acc === 1 || a.acc === 3 || a.acc === 6) && !surging && a.ps < PCRIT * .55) armR = 2.7;  // holding the balloon / umbrella / sign up
       if (a.acc === 7) armL = 2.8 + Math.sin(tt * 7 + a.ph) * .25;   // waving a flag
+      if (a.sit > t) { bob = -.42; legL = legR = 1.5; armL = 2.6 + Math.sin(tt * 3 + a.ph) * .2; armR = .4; }   // sitting on the ground, one fist up
       if ((a.cos === 13 || a.cos === 20) && a.ps < PCRIT * .55) { armL = 1.45 + Math.sin(tt * 3 + a.ph) * .12; armR = 1.5 + Math.cos(tt * 3 + a.ph) * .12; }   // zombies and ghosts: arms out front
       if (a.bags && a.ps < PCRIT * .55) { armL = armR = .22 + Math.sin(tt * 9 + a.ph) * .05; bob *= .5; }   // arms dragged down by the shopping
       if (a.air > 0) {

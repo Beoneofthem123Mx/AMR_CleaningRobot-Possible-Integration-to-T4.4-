@@ -7,7 +7,7 @@ function planSafety() {
   return fences.reduce((s, f) => s + (f.len || 0), 0) / 12 + guards.filter(g => g.role !== "slow").length * .3 + guards.filter(g => g.role === "slow").length * .5
     + props.reduce((s, p) => s + (PROP_TYPES[p.type] && PROP_TYPES[p.type].gadget ? 1.6 : 1.2), 0) + gates.reduce((s, g) => s + (g === GATE_SIZES.wide.k ? .5 : 0), 0);
 }
-const PLAN_NEED = () => 4.5 + (CROWD || scene.crowd || 3000) / 1000;
+const PLAN_NEED = () => 4.5 + Math.min(5800, (scene.crowd || 3000) * (isBig() ? BIG_CROWD : 1)) / 1000;
 let megaUsed = false, FOAM_K = .7, AID_DMG = .75, AID_HEAL = 1.4;   // whether the megaphone was used this show (for the Hands off medal)
 function buildWorld() {
   obs = [];
@@ -306,6 +306,7 @@ function step() {
     if (a.beam) a.lift += DT * .75; else if (a.lift > 0) a.lift = Math.max(0, a.lift - DT * 1.5);
     for (const sw of stewards) if ((a.x - sw.x) ** 2 + (a.y - sw.y) ** 2 < STEWARD_R * STEWARD_R) { want *= .5; break; }
     if (freezeT > 0) { want = 0; a.vx *= .85; a.vy *= .85; a.p *= .6; }   // the pause remote
+    if (a.sit > t) { want = 0; a.vx *= .9; a.vy *= .9; }   // sitting on the floor (sit-ins)
     if (a.tb && a.tb.st > 0) want *= .45;   // stumbling (twobody.js): busy not falling over
     if (a.gear) {   // crowd gear from the shop: every piece helps and hurts
       const gr = a.gear;
