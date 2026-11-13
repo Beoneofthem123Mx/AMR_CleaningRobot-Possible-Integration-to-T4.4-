@@ -128,7 +128,7 @@ function caption(text, yellow, ms) {
 function toast(text) { caption(text, true, 2600); }
 function setDead(n, quiet) {
   const first = dead === 0 && n > 0;
-  dead = n; $("#dead").textContent = n;
+  dead = n; $("#dead").textContent = n + (window.__deadOffset || 0);   // trailer recordings keep one running total
   if (!quiet) { const b = $("#badge"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   if (first && !quiet) caption("And we don't like that.", true, 2600);
   const ms = MILESTONES[n]; if (ms && !quiet) { caption(ms, true, 2600); { const el = $("#caption"); el.classList.remove("slam"); void el.offsetWidth; el.classList.add("slam"); setTimeout(() => el.classList.remove("slam"), 2700); } flash = Math.max(flash, .8); slowT = Math.max(slowT, .5); sfx("boom"); shake = Math.min(1, shake + .5); announce(n >= 500 ? "game_over" : "war_call_for_backup"); }
