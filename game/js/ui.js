@@ -222,7 +222,14 @@ document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click"
   if (tool === "guard") toast("Tap the venue to place security. Guards calm people; stewards slow them down before a bottleneck.");
   if (tool === "prop") toast("Tap the venue to place the selected prop. It's paid from the same budget as fences.");
 }));
-$("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : backToPlan());
+// Stop doesn't throw the show away: it pauses and asks whether to keep going, start over or go back to planning
+$("#bGo").addEventListener("click", () => phase === "plan" ? startWithRoulette() : phase === "done" ? backToPlan() : stopMenu());
+function stopMenu() {
+  if ((phase !== "show" && phase !== "evac") || demo) return;
+  paused = true;
+  showCard(`<h2>Stopped</h2><p>The show is frozen right where it was. ${dead ? `${dead.toLocaleString("en")} trampled so far.` : "Nobody hurt so far."}</p>
+    <div class="row"><button class="go" id="resume">Keep going</button><button id="again">Start this show over</button><button id="retry">Back to planning</button></div>`);
+}
 let heat = false, speed = 1;
 $("#bHeat").addEventListener("click", () => { heat = !heat; $("#bHeat").classList.toggle("on", heat); });
 const camLabel = () => { $("#bCam").textContent = "Camera: " + ["auto", "close", "far", "free", "street"][camMode]; };

@@ -203,7 +203,23 @@ const AMBIENT = [
   { kind: "selfie", say: "DON'T MIND ME, I'M LIVE!", speed: 1 },
 ];
 let ambientT = 6;
+// someone with a jetpack buzzes over the crowd; now and then the jetpack sputters and they drop in
+function spawnJetpack() {
+  const side = Math.random() < .5, y = rnd(18, 56), y2 = y + rnd(-14, 14), dud = Math.random() < .35;
+  addMover({ kind: "jetpacker", ambient: true, air: true, h: 7, x: side ? -4 : WW + 4, y, pts: [[side ? WW + 6 : -6, y2]], speed: rnd(4, 6), r: .5, push: 0, scare: 0, say: dud ? "UH OH" : ["WHEEEEE!", "LOOK MA!", "FREE DELIVERY!", "BEST SEAT IN THE HOUSE!"][(Math.random() * 4) | 0], sayEvery: 3,
+    tick(m) {
+      if (Math.random() < .5) puff(m.x - Math.cos(m.ang) * .6, m.y - Math.sin(m.ang) * .6, m.h - .3, "#d9d4c4", .25, 1.2, -.4);
+      if (!m.falling) { m.h = 7 + Math.sin(m.t * 2.3) * .8; if (dud && m.t > 1.8 && m.x > 6 && m.x < WW - 6) { m.falling = true; m.vh = 0; pop(m.x, m.y - 1.6, "MAYDAY!"); } return; }
+      m.vh -= 18 * DT; m.h += m.vh * DT; m.speed *= .985;
+      if (m.h <= 0) {   // splat onto the crowd: everyone around goes flying
+        m.dead = true; pop(m.x, m.y - 1, "OOF!"); shake = Math.min(1, shake + .4); sfx("boom");
+        for (const a of ag) { const dx = a.x - m.x, dy = a.y - m.y, d = Math.hypot(dx, dy); if (d < 2.6 && d > .01) { toss(a, 1 + (1 - d / 2.6) * 1.6, .9); a.vx += dx / d * 2; a.vy += dy / d * 2; a.p += .8; } }
+        for (let k = 0; k < 8; k++) puff(m.x + rnd(-1, 1), m.y + rnd(-1, 1), .3, "#d9ccb0", .5, 1.4, .5);
+      }
+    } });
+}
 function spawnAmbient() {
+  if (Math.random() < .3) { spawnJetpack(); return; }
   const a = AMBIENT[(Math.random() * AMBIENT.length) | 0], gx = openGateX();
   const pts = [crowdPoint(), crowdPoint(), crowdPoint(), [openGateX(), SH + 3]];
   addMover({ kind: a.kind, ambient: true, x: gx, y: SH, pts, speed: a.speed, r: .45, push: 8, scare: 0, say: a.say, sayEvery: 7 + Math.random() * 4,

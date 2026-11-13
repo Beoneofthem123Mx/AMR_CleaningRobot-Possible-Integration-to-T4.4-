@@ -87,6 +87,22 @@ function puff(x, y, h, col, r, life, vh) {
   if (puffs.length > 700) return;
   puffs.push({ x, y, h, col, r, life, max: life, vh: vh ?? 1.2, vx: (Math.random() - .5) * .6, vy: (Math.random() - .5) * .6, grow: .7 });
 }
+// pixel-art hourglass next to the show clock: sand runs while people enter and during the show, flips for the way out
+const HG_COLS = { wood: "#8a5a34", woodHi: "#c08a52", glass: "#cfe8ff", sand: "#ffd23a", sandDk: "#e09a1c" };
+function drawHourglass() {
+  const c = $("#hourglass"); if (!c) return; const g = c.getContext("2d");
+  const p = phase === "evac" ? clamp(evacuated / Math.max(1, CROWD - dead), 0, 1) : spawned < CROWD ? .15 * spawned / CROWD : clamp(.15 + .85 * (t - fullAt) / SHOW_TIME, 0, 1);
+  g.clearRect(0, 0, 9, 13);
+  g.fillStyle = HG_COLS.wood; g.fillRect(0, 0, 9, 1); g.fillRect(0, 12, 9, 1); g.fillStyle = HG_COLS.woodHi; g.fillRect(1, 0, 7, 1);
+  const rows = [[1, 7], [1, 7], [2, 5], [3, 3], [4, 1], [3, 3], [2, 5], [1, 7], [1, 7]];   // inside width of each glass row (top to bottom, rows 2..10)
+  for (let i = 0; i < rows.length; i++) { const [x, w] = rows[i]; g.fillStyle = HG_COLS.glass; g.globalAlpha = .35; g.fillRect(x, 2 + i, w, 1); }
+  g.globalAlpha = 1; g.fillStyle = HG_COLS.glass; g.fillRect(0, 1, 1, 11); g.fillRect(8, 1, 1, 11);
+  const topRows = Math.round((1 - p) * 4), botRows = Math.round(p * 4);
+  for (let i = 0; i < topRows; i++) { const [x, w] = rows[3 - i]; g.fillStyle = i ? HG_COLS.sand : HG_COLS.sandDk; g.fillRect(x, 5 - i, w, 1); }
+  for (let i = 0; i < botRows; i++) { const [x, w] = rows[8 - i]; g.fillStyle = i ? HG_COLS.sand : HG_COLS.sandDk; g.fillRect(x, 10 - i, w, 1); }
+  if (p < 1 && !paused && (performance.now() / 120 | 0) % 2) { g.fillStyle = HG_COLS.sand; g.fillRect(4, 6, 1, 1); g.fillRect(4, 7 + ((performance.now() / 120 | 0) % 3 === 0 ? 1 : 0), 1, 1); }
+  c.style.transform = phase === "evac" ? "rotate(180deg)" : "";
+}
 // ===== Loop =====
 const perf = { n: 0, sum: 0, level: 0 }, live3d = () => phase === "show" || phase === "evac";
 let last = performance.now();
@@ -102,7 +118,8 @@ function frame(now, fixed) {
     acc += real / DT * sp; const n = Math.min(10, Math.floor(acc)); acc -= n; if (acc > 10) acc = 0;
     for (let i = 0; i < n && (phase === "show" || phase === "evac"); i++) step();
     const ab = $("#abd"); ab.hidden = !abducted; if (abducted) ab.textContent = `Abducted ${abducted}`;
-    $("#status").textContent = phase === "show"
+    drawHourglass();
+    $("#statusTxt").textContent = phase === "show"
       ? (spawned < CROWD ? `Entering ${spawned} / ${CROWD}` : `Show on · ends in ${Math.max(0, Math.ceil(fullAt + SHOW_TIME - t))} s`) + ` · Megaphone ${mega.n}`
       : `Evacuating · ${ag.length} left` + (ff ? ` · ▶▶ all calm, fast-forward` : ` · Megaphone ${mega.n}`);
   } else if (phase === "plan") stepPreview(real);

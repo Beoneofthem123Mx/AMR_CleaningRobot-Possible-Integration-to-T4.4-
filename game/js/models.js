@@ -4,6 +4,11 @@
 // ---------- people with style ----------
 // body: clothes, legs: pants, skin, hat: hat type, extra(g, u, bodyG): accessories
 const PERSONS = {
+  jetpacker: { body: "#ff7a1a", legs: "#2b3a55", hat: "cap", hatCol: "#c9ced6",
+    extra(g, u, b) {
+      for (const s of [-1, 1]) { part(b, "cyl", "#c9ced6", .11, .55, .11, -.32, 1.15, s * .13); part(b, "cone", basic("#ffb23a"), .1, .4, .1, -.32, .7, s * .13).rotation.x = Math.PI; part(b, "cone", basic("#fff3a0"), .05, .22, .05, -.32, .74, s * .13).rotation.x = Math.PI; }
+      part(b, "sph", mat("#bfe3ff", { roughness: .05, transparent: true, opacity: .55 }), .15, .09, .2, .2, 1.68, 0);   // goggles
+    } },
   abuela: { body: "#8a4fbf", legs: "#5d3a7a", hat: "bun", hatCol: "#d9d9d9", scale: .9,
     extra(g, u, b) { for (const s of [-1, 1]) part(b, "box", s > 0 ? "#ff6fb1" : "#ffd23a", .25, .3, .1, .05, .95, s * .38); part(b, "sph", "#c9ced6", .05, .05, .05, .16, 1.68, .07); } },
   suegra: { body: "#2b2f35", legs: "#2b2f35", hat: "bun", hatCol: "#3b2a20", extra(g, u, b) { part(b, "box", "#d8322b", .22, .25, .12, .1, 1.0, .35); } },

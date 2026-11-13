@@ -98,18 +98,19 @@ function inst0(geo, material, n, sc) {
 // a small flock of birds circling high over day venues (their shadows cross the crowd)
 function birds(tt, on) {
   if (!G3.birds) {
-    G3.birds = []; const m = mat("#2b2d33", { roughness: .8 });
-    for (let i = 0; i < 7; i++) {
-      const b = new THREE.Group(); part(b, "sph", m, .16, .1, .1, 0, 0, 0);
+    G3.birds = []; const cols = ["#2b2d33", "#8a8f99", "#f4f4f2", "#6b4a2b"];   // crows, pigeons, gulls, sparrows
+    for (let i = 0; i < 16; i++) {
+      const m = mat(cols[i % 4], { roughness: .8 }), sz = i % 4 === 2 ? 1.35 : i % 4 === 3 ? .7 : 1;
+      const b = new THREE.Group(); b.scale.setScalar(sz); part(b, "sph", m, .16, .1, .1, 0, 0, 0); part(b, "cone", "#e8a020", .03, .08, .03, .19, 0, 0).rotation.z = -Math.PI / 2;
       const wl = pivot(b, 0, 0, -.06), wr = pivot(b, 0, 0, .06); part(wl, "box", m, .2, .02, .55, 0, 0, -.27); part(wr, "box", m, .2, .02, .55, 0, 0, .27);
-      b.userData = { wl, wr, ph: i * .9, r: 9 + (i % 3) * 3, off: [(i % 4) * 1.3, (i % 3) * 1.1] }; b.traverse(o => { o.castShadow = true; }); G3.scene.add(b); G3.birds.push(b);
+      b.userData = { wl, wr, ph: i * .9, r: 7 + (i % 5) * 3, off: [(i % 4) * 1.3 - 2, (i % 3) * 1.1], hh: 9 + (i % 4) * 2.2, sp: .12 + (i % 3) * .05, dir: i % 2 ? 1 : -1 }; b.traverse(o => { o.castShadow = true; }); G3.scene.add(b); G3.birds.push(b);
     }
   }
   for (const b of G3.birds) {
     b.visible = on; if (!on) continue;
-    const u = b.userData, a = tt * .16 + u.ph * .12;
-    b.position.set(WW / 2 + Math.cos(a) * u.r + u.off[0], 13 + Math.sin(tt * .7 + u.ph) * .6, SH * .45 + Math.sin(a) * u.r * 1.3 + u.off[1]);
-    b.rotation.y = -a - Math.PI / 2; const f = Math.sin(tt * 9 + u.ph * 4) * .7; u.wl.rotation.x = f; u.wr.rotation.x = -f;
+    const u = b.userData, a = (tt * u.sp + u.ph * .12) * u.dir;
+    b.position.set(WW / 2 + Math.cos(a) * u.r + u.off[0], u.hh + Math.sin(tt * .7 + u.ph) * .6, SH * .45 + Math.sin(a) * u.r * 1.3 + u.off[1]);
+    b.rotation.y = -a - Math.PI / 2 * u.dir; const f = Math.sin(tt * 9 + u.ph * 4) * .7; u.wl.rotation.x = f; u.wr.rotation.x = -f;
   }
 }
 function updateAmbient(tt, dtR) {
@@ -1111,6 +1112,16 @@ function buildHorizon() {
       M.compose(V.set(x, s2 * .8, z), Q.identity(), S3.set(s2, s2 * 1.6, s2)); trunk.setMatrixAt(i, M);
       M.compose(V.set(x, s2 * 2.1, z), Q.identity(), S3.set(s2 * 1.3, s2 * 1.4, s2 * 1.3)); top.setMatrixAt(i, M); top.setColorAt(i, C.setHSL(.27 + r() * .08, .5, .3 + r() * .12)); }
     grp.add(trunk, top);
+    if (!["beach", "crucero", "ovni", "guerra", "hipodromo", "cheese"].includes(sceneKey)) {   // a colorful town around town venues
+      const nh = 70, house = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: .8 }), nh), roof = new THREE.InstancedMesh(new THREE.ConeGeometry(.75, 1, 4), new THREE.MeshStandardMaterial({ roughness: .8 }), nh);
+      const HC = ["#f2c57c", "#a9cfe0", "#f0a6a0", "#cfe3b0", "#e8d6f0", "#ffe08a", "#f4f4f2"];
+      for (let i = 0; i < nh; i++) {
+        const a = r() * 6.283, d = 62 + r() * 40, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, w = 4 + r() * 5, h = 4 + r() * (r() < .2 ? 16 : 7), Q2 = Q.clone().setFromAxisAngle(new THREE.Vector3(0, 1, 0), r() * 3);
+        M.compose(V.set(x, h / 2, z), Q2, S3.set(w, h, w * (.7 + r() * .5))); house.setMatrixAt(i, M); house.setColorAt(i, C.set(HC[(r() * HC.length) | 0]));
+        M.compose(V.set(x, h + w * .3, z), Q2.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4)), S3.set(w * 1.05, w * .6, w * 1.05)); roof.setMatrixAt(i, M); roof.setColorAt(i, C.set(["#c0583b", "#8a2f3b", "#4f5a6a"][i % 3]));
+      }
+      grp.add(house, roof);
+    }
     if (scene.night) for (const o of [hill, trunk, top]) o.material = o.material.clone(), o.material.color.setScalar(.25);   // moonlit countryside
   }
   grp.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.frustumCulled = false; } });
