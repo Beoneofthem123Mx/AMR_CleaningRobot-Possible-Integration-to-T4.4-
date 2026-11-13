@@ -73,6 +73,19 @@ El juego ya los activa. Créalos en *Stats & Achievements* con estos nombres de 
 | `LOUD_AND_SAFE`      | A gritos pero a salvo     | Tres estrellas usando los tres megáfonos |
 | `MOD_COLLECTOR`      | Ya lo vi todo             | Terminar shows con seis condiciones del día distintas |
 | `MEDAL_COLLECTOR`    | Condecorado               | Ganar 20 medallas entre todos los escenarios            |
+| `PERFECT_GUERRA`     | Tratado de paz           | Battle Reenactment Day con cero aplastados y nadie atrapado |
+| `PERFECT_NUCLEAR`    | Núcleo estable           | Meltdown Open Day con cero aplastados y nadie atrapado |
+| `PERFECT_FABRICA`    | Cero accidentes desde hoy| Factory Open Day con cero aplastados y nadie atrapado |
+| `PERFECT_PROCESION`  | Evacuación bendita       | The Procession con cero aplastados y nadie atrapado |
+| `PERFECT_MARCHA`     | Protesta pacífica        | The Protest March con cero aplastados y nadie atrapado |
+| `PERFECT_METRO`      | Cuidado con el hueco     | Rush Hour Metro con cero aplastados y nadie atrapado |
+| `PERFECT_MERCADO`    | Sin regatear             | The Market con cero aplastados y nadie atrapado |
+| `PERFECT_LABORATORIO`| Experimento controlado   | Secret Lab Open House con cero aplastados y nadie atrapado |
+| `PERFECT_TERMINAL`   | Puntual                  | The Bus Terminal con cero aplastados y nadie atrapado |
+| `TOUR_COMPLETE`      | Roadie                   | Terminar una Gira Mundial sin que la cancelen |
+| `TOUR_FLAWLESS`      | Gira legendaria          | Terminar una Gira Mundial con tres estrellas en cada show |
+
+Logros secretos (ocultos hasta desbloquearlos; márcalos como *Hidden* en Steamworks). El juego envía `SECRET_<ID>` con estos IDs: `SECRET_COW_STRIKE`, `SECRET_ORBIT`, `SECRET_DOMINO`, `SECRET_SPEEDRUN`, `SECRET_PATIENT_ZERO`, `SECRET_WRONG_SPORT`, `SECRET_TILT`, `SECRET_LUCKY`, `SECRET_SHOPAHOLIC`, `SECRET_PANCAKE_FAN`.
 
 Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
 

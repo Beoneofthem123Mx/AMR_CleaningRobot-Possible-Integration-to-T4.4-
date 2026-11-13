@@ -66,7 +66,7 @@ function tourTakePerk(k) {
 function tourEnd() {
   const T = TOUR, score = tourScore(), b = tourBest(), fresh = !(b.score >= score);
   if (fresh) { try { localStorage.setItem("mh.tour", JSON.stringify({ score, won: T.won, dead: T.dead, shows: T.stars.length })); } catch (e) { /* no storage */ } }
-  let bonus = 0; if (T.won) { bonus = 50 * T.keys.length; loadShop(); TIX += bonus; saveShop(); }
+  let bonus = 0; if (T.won) { bonus = 50 * T.keys.length; loadShop(); TIX += bonus; saveShop(); achieve("TOUR_COMPLETE"); if (T.stars.every(x => x === 3)) achieve("TOUR_FLAWLESS"); }
   showCard(`<div class="tour"><small class="tkick">World Tour · ${T.won ? "complete" : "cancelled"}</small>
     <h2>${T.won ? "What a tour. Mostly unflattened." : tourLeft() < 0 ? "The insurers pulled the plug" : "The promoter has stopped answering"}</h2>
     <div class="tstops">${T.keys.map((k, j) => `<span class="${j < T.stars.length ? "done" : ""}">${j < T.stars.length ? "★".repeat(T.stars[j] || 0) || "✗" : "–"}<i>${SCENES[k].name}</i></span>`).join("")}</div>

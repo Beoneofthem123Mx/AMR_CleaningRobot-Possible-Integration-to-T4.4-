@@ -52,7 +52,7 @@ The game already unlocks them. Create them under *Stats & Achievements* with the
 | `PERFECT_HIPODROMO`  | Photo Finish             | The Racetrack with zero trampled and nobody stuck        |
 | `PERFECT_CIUDAD`     | City That Never Tramples | The City with zero trampled and nobody stuck             |
 | `GUARDIAN`           | Halt!                    | A guard stops an animal or a vehicle                     |
-| `ALL_SCENES`         | World Tour               | Earn at least one star in every venue                    |
+| `ALL_SCENES`         | Been Everywhere          | Earn at least one star in every venue                    |
 | `ALL_STARS`          | Flawless Security        | Three stars in every venue                               |
 | `PERFECT_VIERNES`    | Doorbuster Survivor      | Black Friday with zero trampled and nobody stuck         |
 | `PERFECT_BODA`       | Happily Ever After       | Wedding of the Year with zero trampled and nobody stuck  |
@@ -72,6 +72,32 @@ The game already unlocks them. Create them under *Stats & Achievements* with the
 | `LOUD_AND_SAFE`      | Loud but Safe            | Three stars using all three megaphones                   |
 | `MOD_COLLECTOR`      | Seen It All              | Finish shows under six different "today's twists"        |
 | `MEDAL_COLLECTOR`    | Decorated                | Earn 20 medals across all venues                         |
+| `PERFECT_GUERRA`     | Peace Treaty             | Battle Reenactment Day with zero pancaked and nobody stuck |
+| `PERFECT_NUCLEAR`    | Stable Core              | Meltdown Open Day with zero pancaked and nobody stuck |
+| `PERFECT_FABRICA`    | Zero Accidents Since Today| Factory Open Day with zero pancaked and nobody stuck |
+| `PERFECT_PROCESION`  | Blessed Evacuation       | The Procession with zero pancaked and nobody stuck |
+| `PERFECT_MARCHA`     | Peaceful Protest         | The Protest March with zero pancaked and nobody stuck |
+| `PERFECT_METRO`      | Mind the Gap             | Rush Hour Metro with zero pancaked and nobody stuck |
+| `PERFECT_MERCADO`    | No Haggling Needed       | The Market with zero pancaked and nobody stuck |
+| `PERFECT_LABORATORIO`| Controlled Experiment    | Secret Lab Open House with zero pancaked and nobody stuck |
+| `PERFECT_TERMINAL`   | On Schedule              | The Bus Terminal with zero pancaked and nobody stuck |
+| `TOUR_COMPLETE`      | Roadie                   | Finish a World Tour without it being cancelled |
+| `TOUR_FLAWLESS`      | Legendary Tour           | Finish a World Tour with three stars in every show |
+
+Secret achievements (hidden until unlocked; mark them *Hidden* in Steamworks). The game sends `SECRET_<ID>`:
+
+| API name | Name | How it is earned |
+|---|---|---|
+| `SECRET_COW_STRIKE` | Udderly Ridiculous | A single cow bounce knocked over 10 people. |
+| `SECRET_ORBIT` | Houston, We Have a Fan | 20 people launched into orbit in one show. |
+| `SECRET_DOMINO` | Domino Theory | A stumble chain of 60 people in one show. |
+| `SECRET_SPEEDRUN` | Express Evacuation | Everyone out in under 12 seconds, nobody pancaked. |
+| `SECRET_PATIENT_ZERO` | Patient Zero | 1,000 zombies at the same time. |
+| `SECRET_WRONG_SPORT` | Wrong Sport | A goal was scored while a dragon was in the stadium. |
+| `SECRET_TILT` | TILT! | 50 pinball falls in one show. |
+| `SECRET_LUCKY` | Lucky Bastards | A meteor hit the venue and pancaked nobody. |
+| `SECRET_SHOPAHOLIC` | Retail Therapy | Someone carried nine shopping bags at once. |
+| `SECRET_PANCAKE_FAN` | Pancake Enthusiast | You clicked the PANCAKED counter 25 times. Why? |
 
 Each achievement needs a 64×64 icon (achieved and unachieved versions).
 
