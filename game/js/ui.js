@@ -287,6 +287,7 @@ $("#card").addEventListener("click", e => {
   if (e.target.id === "pick") { if (atTitle) titleScreen(); else chooser(); }
   if (e.target.closest && e.target.closest("#start")) chooser();
   if (e.target.id === "title") titleScreen();
+  if (e.target.closest && e.target.closest("#secrets")) showSecrets();
   if (e.target.id === "options") showOptions();
   if (e.target.closest && e.target.closest("#shop")) showShop();
   if (e.target.id === "howto") showHowTo();

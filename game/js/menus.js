@@ -63,7 +63,7 @@ function chooser() {
         <span class="thumb"><img src="${sceneThumb(key)}" alt="">${open ? (b !== undefined ? `<em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : `<em class="best new">NEW</em>`) : `<em class="lockbadge">LOCKED · ${sc.unlock} ★</em>`}</span>
         <span class="txt"><b>${sc.name}</b><span>${sc.tag}</span><small>${Math.min(5800, Math.round(sc.crowd * (BIG_VENUES[key] ? BIG_CROWD : 1))).toLocaleString("en")} people${BIG_VENUES[key] ? " · <b class=\"bigtag\">BIG VENUE</b>" : ""}</small>
         ${open ? `<span class="medals">${Object.entries(MEDALS).map(([m, d]) => `<i class="${(medals[key] || []).includes(m) ? "got" : ""}" title="${d.name}: ${d.desc}">${d.icon}</i>`).join("")}</span>` : ""}</span></button>`; }).join("")}</div>
-    <div class="row"><button id="title">◀ Title</button><button id="shop" class="go">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button><button id="options">Options</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
+    <div class="row"><button id="title">◀ Title</button><button id="secrets">🏆 Secrets ${loadSecrets().length}/10</button><button id="shop" class="go">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button><button id="options">Options</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
   const b = $("#card .scene:not(:disabled)"); if (b) b.focus();
 }
 

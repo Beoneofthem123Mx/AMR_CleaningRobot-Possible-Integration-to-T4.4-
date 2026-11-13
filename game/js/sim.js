@@ -1,7 +1,13 @@
 // Human Tsunami · venue, flow fields, crowd and phases
 // an unmanaged crowd: the less the player placed, the wilder people get (UNM 1 = nothing placed at all)
 let UNM = 0, LAZY = false;
-function planSafety() { return fences.reduce((s, f) => s + (f.len || 0), 0) / 10 + guards.length + props.length * 1.5; }
+// how "managed" the crowd feels: barriers and gadgets count, the free guards only a little.
+// Below PLAN_NEED the crowd is partly unmanaged (shoves harder, goes down sooner); bigger crowds need more
+function planSafety() {
+  return fences.reduce((s, f) => s + (f.len || 0), 0) / 12 + guards.filter(g => g.role !== "slow").length * .3 + guards.filter(g => g.role === "slow").length * .5
+    + props.reduce((s, p) => s + (PROP_TYPES[p.type] && PROP_TYPES[p.type].gadget ? 1.6 : 1.2), 0) + gates.reduce((s, g) => s + (g === GATE_SIZES.wide.k ? .5 : 0), 0);
+}
+const PLAN_NEED = () => 4.5 + (CROWD || scene.crowd || 3000) / 1000;
 let megaUsed = false, FOAM_K = .7, AID_DMG = .75, AID_HEAL = 1.4;   // whether the megaphone was used this show (for the Hands off medal)
 function buildWorld() {
   obs = [];
@@ -470,6 +476,7 @@ function yeet(a, dx, dy) {
   a.airD = a.air = 1.7 + Math.random() * 1.1; a.airH = 6 + Math.random() * 7; a.yeet = 1;
   a.airSpin = (Math.random() < .5 ? -1 : 1) * (2 + Math.random() * 3); a.airYaw = (Math.random() - .5) * 16;
   if (dx !== undefined) { const l = Math.hypot(dx, dy) || 1; a.vx = dx / l * 2.6; a.vy = dy / l * 2.6; }
+  if (!demo && ++SEC.yeets >= 20) unlockSecret("ORBIT");
   if (!demo) { pop(a.x, a.y - 1.4, YEET_CRIES[(Math.random() * YEET_CRIES.length) | 0]); sfx("fiu"); }
   return true;
 }
@@ -494,6 +501,7 @@ let lastFalls = [], lastFallsScene = "", calmT = 0;
 // rag-doll styles: 0 backflop, 1 faceplant, 2 spinning top, 3 launched by the crowd, 4 pancake then plank
 function pickFall(a) {
   const forced = a.forceFall, r = Math.random(); a.forceFall = undefined;   // powers (anvil, meteor) pick the fall
+  if (!demo) setTimeout(() => { if (a.fallType === 5 && ++SEC.pinball >= 50) unlockSecret("TILT"); }, 0);
   a.fallType = forced !== undefined ? forced : r < .14 ? 0 : r < .27 ? 1 : r < .38 ? 2 : r < .5 ? 3 : r < .6 ? 4 : r < .7 ? 5 : r < .8 ? 6 : r < .9 ? 7 : 8;
   a.fx0 = a.x; a.fy0 = a.y;
   if (a.fallType === 3 || a.fallType === 5 || a.fallType === 8) {   // thrown along the push (or anywhere), but only onto free floor
@@ -523,7 +531,7 @@ function start(mod) {
   MOD = mod || MODS_BY_ID.normal; CROWD = Math.min(5800, Math.round(scene.crowd * (isBig() && !demo ? BIG_CROWD : 1) * (MOD.crowdMul || 1) * (sandbox && !demo ? sandCrowd : 1)));
   clearAttractor(); clearAlt(); abducted = 0; slipT = 0; timers = []; attrT = 0; eventLog = new Set(); mega = { n: 3 + upg("battery"), active: [] }; megaUsed = false;
   LAZY = !demo && !sandbox && fences.length === 0 && guards.length === 0 && props.length === 0;
-  UNM = demo || sandbox ? 0 : clamp(1 - planSafety() / 4, 0, 1);
+  UNM = demo || sandbox ? 0 : clamp(1 - planSafety() / PLAN_NEED(), 0, 1);
   ROUTE.done = false;
   FOAM_K = .7 - .1 * upg("foam"); AID_DMG = .75 - .15 * upg("medic"); AID_HEAL = 1.4 + .4 * upg("medic");
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; calmT = 0; setDead(0, true); resetFx();
@@ -535,7 +543,7 @@ function start(mod) {
   if (scr && !MOD.altShare) setAlt(scr.x, scr.y, PROP_TYPES.screen.r + 2.2);
   if (scene.onStart) scene.onStart();
   TwoBody.init(WW, WH); TwoBody.onStumble = (a, depth) => { if (a.springy && !depth && Math.random() < .35 && yeet(a)) return; if (!demo && Math.random() < (depth ? .02 : .06)) pop(a.x, a.y - 1.1, depth ? ["DOMINO!", "NOT ME TOO!", "WHOA-OA!"][(Math.random() * 3) | 0] : ["WHOA!", "OOPS!", "WATCH IT!", "MY BALANCE!"][(Math.random() * 4) | 0]); };
-  SHOPPERS = []; shopT = 0; shoutT = 3; insured = 0; resetPowers(); CRATERS = []; POWER_USED = false; SHOW_LUCKY = false;
+  SHOPPERS = []; shopT = 0; shoutT = 3; insured = 0; resetPowers(); resetSecretCounters(); CRATERS = []; POWER_USED = false; SHOW_LUCKY = false;
   if (!demo && !window.__manual && (NEXT.meteor || NEXT.cow || NEXT.mega || NEXT.lucky)) {   // the deals bought for this show
     charges.meteor += NEXT.meteor || 0; charges.cow += NEXT.cow || 0; mega.n += NEXT.mega || 0; SHOW_LUCKY = !!NEXT.lucky;
     delete NEXT.meteor; delete NEXT.cow; delete NEXT.mega; delete NEXT.lucky; saveShop();
@@ -566,6 +574,8 @@ function finish() {
   if (Object.keys(SCENES).every(k => best[k] === 3)) achieve("ALL_STARS");
   if (dead >= 500) achieve("TRAGEDY");
   if (abducted >= 100) achieve("SPACE_TOURISM");
+  if (dead === 0 && stuck === 0 && evacT < 12) unlockSecret("SPEEDRUN");
+  if (TwoBody.stats.chain >= 60) unlockSecret("DOMINO");
   if (stars === 3 && mega.n === 0) achieve("LOUD_AND_SAFE");
   try { const seen = new Set(JSON.parse(localStorage.getItem("mh.mods") || "[]")); seen.add(MOD.id); localStorage.setItem("mh.mods", JSON.stringify([...seen])); if (seen.size >= 6) achieve("MOD_COLLECTOR"); } catch (e) { /* no storage */ }
   showReport(stars, stuck, fresh); ui(); return;
@@ -613,7 +623,7 @@ function shopOut(a) {
   const d = SHOP_DOORS[a.shop] || SHOP_DOORS[0];
   a.x = d[0] + d[2] * .5 + (Math.random() - .5) * .4; a.y = d[1] + d[3] * .5 + (Math.random() - .5) * .4;
   a.vx = d[2] * .8; a.vy = d[3] * .8; a.h = Math.atan2(a.vy, a.vx);
-  const was = a.bags || 0; a.bags = Math.min(9, was + 2 + ((Math.random() * 3) | 0)); a.lastShop = a.shop; a.shop = -1;
+  const was = a.bags || 0; a.bags = Math.min(9, was + 2 + ((Math.random() * 3) | 0)); if (a.bags >= 9) unlockSecret("SHOPAHOLIC"); a.lastShop = a.shop; a.shop = -1;
   a.v0 *= .86; a.bagC = a.bagC || ((Math.random() * 6) | 0);
   ag.push(a);
   if (Math.random() < .3) { pop(a.x, a.y - 1, SHOP_CRIES[(Math.random() * SHOP_CRIES.length) | 0]); }

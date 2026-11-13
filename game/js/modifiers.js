@@ -64,7 +64,7 @@ MODS.push(
   { id: "outbreak", icon: "🧟", name: "Zombie outbreak", desc: "A few guests are… not well. Anyone they bump into turns green and starts shambling.", w: 1,
     start() { MOD.zt = 0; }, step() {
       if (phase !== "show") return; MOD.zt = (MOD.zt || 0) - DT; if (MOD.zt > 0) return; MOD.zt = .25;
-      const zid = OUTFIT_ID.zombie, zs = ag.filter(a => a.cos === zid);
+      const zid = OUTFIT_ID.zombie, zs = ag.filter(a => a.cos === zid); if (zs.length >= 1000) unlockSecret("PATIENT_ZERO");
       if (zs.length < 12 && fullAt === 0 && ag.length > 200) { const a = ag[(Math.random() * ag.length) | 0]; a.cos = zid; a.hs = 4; a.v0 *= .8; }
       const cells = new Set(zs.map(z => ((z.x | 0) << 8) | (z.y | 0)));   // every square metre with a zombie in it
       let bitten = 0;

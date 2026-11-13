@@ -331,6 +331,7 @@ function matchKick(p, b, tx, ty, sp, lift) {
   const dx = tx - b.x, dy = ty - b.y, d = Math.hypot(dx, dy) || 1; b.vx = dx / d * sp; b.vy = dy / d * sp; b.vh = lift * 3; MATCH.kickT = .35;
 }
 function matchGoal(team) {
+  if (movers.some(m => m.kind === "dragon")) unlockSecret("WRONG_SPORT");
   MATCH.score[team]++; MATCH.goals++; MATCH.last = team; MATCH.reset = 4.5; const T = TEAMS[team], b = MATCH.ball;
   b.vx *= .2; b.vy *= .2;
   pop(b.x, b.y - 1.6, "GOOOOOL!"); caption(`GOAL! ${TEAMS[0].short} ${MATCH.score[0]} – ${MATCH.score[1]} ${TEAMS[1].short}`, true, 2600); sfx("cheer"); if (typeof eventLog !== "undefined") eventLog.add("gol");

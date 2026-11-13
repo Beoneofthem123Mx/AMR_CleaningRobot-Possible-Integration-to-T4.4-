@@ -275,6 +275,11 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .bmcard { background: #14161c !important; color: #d8ffd0 !important; border-color: #7dff6a !important; box-shadow: 0 0 30px rgba(125,255,106,.3) !important; }
 .bmcard .shopbal, .bmcard h2 { color: #7dff6a; } .bmcard .upg { background: #1d2028; border-color: #3a3d45; color: #e8ffe0; } .bmcard .upg small { color: #a7b8a0; } .bmcard .upg > i { background: #7dff6a; color: #111214; }
 .bmcard .upg.worn { background: #24321f; } .bmhead { grid-column: 1 / -1; font-size: .95rem; color: #7dff6a; padding: 4px 2px; } .ab { font-weight: 900; }
+.secretpop { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); z-index: 80; display: flex; gap: 12px; align-items: center; padding: 12px 18px; border-radius: 16px;
+  background: linear-gradient(135deg, #2b1458, #111214); color: #fff; border: 3px solid #ffd23a; box-shadow: 0 0 30px rgba(255,210,58,.5); animation: secretin .5s cubic-bezier(.3,1.6,.5,1), secretout .5s 4.6s forwards; }
+.secretpop i { font-style: normal; font-size: 2.4em; } .secretpop small { display: block; color: #ffd23a; font-weight: 900; letter-spacing: .08em; font-size: .7em; } .secretpop b { display: block; font-size: 1.2em; } .secretpop span { font-size: .8em; color: #ddd; }
+@keyframes secretin { from { transform: translate(-50%, -30px) scale(.6); opacity: 0; } } @keyframes secretout { to { transform: translate(-50%, -20px); opacity: 0; } }
+#badge { cursor: pointer; }
 .upg .pips em { display: inline-block; width: 18px; height: 6px; border-radius: 3px; background: #d6d1c4; margin: 4px 3px 0 0; } .upg .pips em.on { background: #2fae5a; }
 .upg button { min-width: 64px; } .upg button:disabled { opacity: .45; }
 .paper .earn { font-family: var(--font); margin: 8px 0 0; font-weight: 700; font-size: .9rem; }
@@ -375,6 +380,7 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
   <script src="js/audio.js"></script>
 <script src="js/movers.js"></script>
   <script src="js/powers.js"></script>
+  <script src="js/secrets.js"></script>
 <script src="js/twobody.js"></script>
   <script src="js/sim.js"></script>
 <script src="js/ui.js"></script>
