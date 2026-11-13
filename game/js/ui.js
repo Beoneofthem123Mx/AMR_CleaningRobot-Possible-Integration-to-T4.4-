@@ -225,7 +225,7 @@ addEventListener("keydown", e => {
   }
 });
 document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => {
-  tool = b.dataset.tool; ui();
+  tool = b.dataset.tool; pickerClosed = ""; ui();
   if (tool === "gate") toast("Pick a gate size, then tap a gate at the bottom to open, resize or close it.");
   if (tool === "guard") toast("Tap the venue to place security. Guards calm people; stewards slow them down before a bottleneck.");
   if (tool === "prop") toast("Tap the venue to place the selected prop. It's paid from the same budget as fences.");
@@ -279,7 +279,7 @@ function camKeys(dt) {
   if (LAND) { f.y += r * sp * VIEW_FLIP; f.x += u * sp * VIEW_FLIP; } else { f.x += r * sp * VIEW_FLIP; f.y -= u * sp * VIEW_FLIP; }
   f.z = clamp(f.z * Math.exp(zz * 1.6 * dt), 1, ZMAX()); clampFree();
 }
-$("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = speed + "×"; });
+$("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : speed === 4 ? .5 : 1; $("#bSpeed").textContent = (speed === .5 ? "0.5" : speed) + "×"; });
 $("#card").addEventListener("click", e => {
   const sk = e.target.closest("[data-scene]");
   if (sk) { loadScene(sk.dataset.scene); hideCard(); caption(!SLOT_XS ? "You plan it" : ROUTE.side && ROUTE.b ? "New route: B-stage mid-show, and they leave by the side exit" : ROUTE.side ? "New route: after the show they leave by the side exit" : ROUTE.b ? "New route: halfway through, the show moves to the B-stage" : "The entrances moved! You plan it", false, 0); }
@@ -301,18 +301,26 @@ function pickFence(type) { fenceType = type; tool = "fence"; ui(); toast(`${FENC
 function pickProp(type) { propType = type; tool = "prop"; ui(); toast(`${PROP_TYPES[type].name} · $${PROP_TYPES[type].cost} — ${PROP_TYPES[type].desc}`); }
 function pickShape(k) { fenceShape = k; tool = "fence"; ui(); toast(`${FENCE_SHAPES[k].name} — ${FENCE_SHAPES[k].desc}`); }
 function pickRole(k) { guardRole = k; tool = "guard"; ui(); toast(`${GUARD_ROLES[k].name} — ${GUARD_ROLES[k].desc}`); }
-let pickerFor = "";
+let pickerFor = "", pickerClosed = "";
+const PICK_TITLE = { fence: "Barrier type & shape", prop: "Props", guard: "Security", gate: "Gate size", powers: "Megaphone & chaos powers", sand: "Sandbox" };
+// every picker gets a title and a close button; it pops back up when its tool is picked again
+function pickerChrome(el, want) {
+  const k = want.startsWith("mayhem") ? "Mayhem" : PICK_TITLE[want] || "";
+  el.insertAdjacentHTML("afterbegin", `<div class="ptitle">${k}</div><button class="pclose" title="Hide">✕</button>`);
+  el.querySelector(".pclose").addEventListener("click", ev => { ev.stopPropagation(); pickerClosed = want; el.hidden = true; });
+}
 function renderPicker(plan) {
   const live = phase === "show" || phase === "evac";
   const el = $("#ftypes"), want = plan && (tool === "fence" || tool === "prop" || tool === "guard" || tool === "gate") ? tool : sandbox && live && !demo ? "mayhem:" + sceneKey : live && !demo ? "powers" : sandbox && plan ? "sand" : "";
   if (want === "powers") {   // chaos powers: rebuilt every time, the charges change
-    pickerFor = want; el.hidden = false;
+    pickerFor = want;
     el.innerHTML = Object.entries(POWERS).map(([k, p]) => { const n = k === "mega" ? mega.n : charges[k] || 0;
       return `<button data-pw="${k}" class="${power === k ? "on" : ""}" title="${p.desc}" ${n <= 0 ? "disabled" : ""}>${p.icon} ${p.name}<span class="cnt">×${n}</span></button>`; }).join("");
+    pickerChrome(el, want); el.hidden = pickerClosed === want;
     el.querySelectorAll("button[data-pw]").forEach(b => b.addEventListener("click", () => { power = b.dataset.pw; ui(); if (power !== "mega") toast(`${POWERS[power].name}: ${POWERS[power].desc}. Click the venue.`); }));
     return;
   }
-  el.hidden = !want;
+  el.hidden = !want || pickerClosed === want;
   if (want && want !== pickerFor) {
     pickerFor = want;
     if (want.startsWith("mayhem")) {
@@ -339,7 +347,8 @@ function renderPicker(plan) {
       el.querySelectorAll("button[data-shape]").forEach(b => b.addEventListener("click", () => pickShape(b.dataset.shape)));
     }
   }
-  if (want === "sand") el.querySelector("button").textContent = `Crowd size: ×${sandCrowd} (${Math.min(5800, Math.round(scene.crowd * sandCrowd)).toLocaleString("en")})`;
+  if (want && !el.querySelector(".pclose")) pickerChrome(el, want);
+  if (want === "sand") el.querySelector("button[data-sand]").textContent = `Crowd size: ×${sandCrowd} (${Math.min(5800, Math.round(scene.crowd * sandCrowd)).toLocaleString("en")})`;
   const cur = want === "fence" ? fenceType : want === "guard" ? guardRole : want === "gate" ? gateSize : propType;
   el.querySelectorAll("button[data-shape]").forEach(b => b.classList.toggle("on", b.dataset.shape === fenceShape));
   el.querySelectorAll("button[data-k]").forEach(b => b.classList.toggle("on", b.dataset.k === cur));

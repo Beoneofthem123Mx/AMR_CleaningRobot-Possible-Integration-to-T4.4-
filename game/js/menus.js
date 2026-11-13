@@ -37,7 +37,6 @@ function titleScreen() {
         <button class="go big" id="start">▶ START</button>
         <button id="shop">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button>
         <button id="options">Settings</button>
-        <button id="howto">How to play</button>
         ${window.steam ? '<button id="quit">Quit</button>' : ""}
       </div>
       <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · ${Object.keys(SCENES).length} venues</p>
@@ -53,7 +52,6 @@ function chooser() {
       <div class="title"><h1 class="logo">${["HUMAN", "TSUNAMI"].map((w, j) => [...w].map((ch, i) => `<span class="lt" style="animation-delay:${((i + j * 5) * .09).toFixed(2)}s">${ch}</span>`).join("")).join("<br>")}</h1></div>
       <div class="menuintro">
         <p class="tag">A safety simulator for events that go horribly wrong</p>
-        <p>Place the fences, the gates and the guards. Then the people pour in and absolutely everything happens. During the show, <b>click</b> to use the megaphone, or pick a chaos power in the bar (meteor, anvil, a cow...). Too much pressure and people go down — and get pancaked.</p>
         <div class="row chaosrow"><button id="chaos" class="${chaosMode ? "go" : ""}">Total Chaos: ${chaosMode ? "ON" : "off"}</button><small>Events from every venue anywhere, plus two of today's twists at once.</small></div>
         <div class="row chaosrow"><button id="sandbox" class="${sandbox ? "go" : ""}">Sandbox: ${sandbox ? "ON" : "off"}</button><small>Every venue open, no budget, bigger crowds, and a button for every disaster. Nothing counts.</small></div>
         <p class="starline"><span class="starbig">★ ${total}</span> / ${max} stars · <span class="starbig medalcount">◆ ${nMedals}</span> / ${maxMedals} medals · stars unlock new venues</p>
@@ -66,8 +64,7 @@ function chooser() {
         <span class="thumb"><img src="${sceneThumb(key)}" alt="">${open ? (b !== undefined ? `<em class="best">${"★".repeat(b)}${"☆".repeat(3 - b)}</em>` : `<em class="best new">NEW</em>`) : `<em class="lockbadge">LOCKED · ${sc.unlock} ★</em>`}</span>
         <span class="txt"><b>${sc.name}</b><span>${sc.tag}</span><small>${Math.min(5800, Math.round(sc.crowd * (BIG_VENUES[key] ? BIG_CROWD : 1))).toLocaleString("en")} people${BIG_VENUES[key] ? " · <b class=\"bigtag\">BIG VENUE</b>" : ""}</small>
         ${open ? `<span class="medals">${Object.entries(MEDALS).map(([m, d]) => `<i class="${(medals[key] || []).includes(m) ? "got" : ""}" title="${d.name}: ${d.desc}">${d.icon}</i>`).join("")}</span>` : ""}</span></button>`; }).join("")}</div>
-    <p class="keys">Shortcuts: <b>1–5</b> tools (press again to switch fence/prop type) · <b>Space</b> opens gates · <b>H</b> pressure · <b>C</b> camera · <b>X</b> street view · <b>Wheel</b> zoom · <b>WASD</b>/right-drag pan · <b>V</b> speed · <b>M</b> sound · <b>G</b> effects · <b>Esc</b> pause</p>
-    <div class="row"><button id="title">◀ Title</button><button id="shop" class="go">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button><button id="options">Options</button><button id="howto">How to play</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
+    <div class="row"><button id="title">◀ Title</button><button id="shop" class="go">Shop <span class="tix">${TIX.toLocaleString("en")}</span></button><button id="options">Options</button>${window.steam ? '<button id="fs">Full screen (F11)</button><button id="quit">Quit game</button>' : ""}</div>`, "menu");
   const b = $("#card .scene:not(:disabled)"); if (b) b.focus();
 }
 
@@ -137,7 +134,7 @@ function showOptions() {
     <p class="keys">Glow, focus blur and contact shading. Turn them off if the game runs slowly (shortcut: G).</p>
     <div class="row"><button id="optShuffle">Moving entrances: ${shuffleGates ? "on" : "off"}</button></div>
     <p class="keys">On: the gates sit somewhere new every time you enter a venue. Off: fixed gates, and your plan is saved per venue.</p>
-    <div class="row"><button id="optReset">Erase all progress</button></div>
+    <div class="row"><button id="howto">How to play</button><button id="optReset">Erase all progress</button></div>
     <div class="row"><button class="go" id="pick">Back</button></div>`, "options");
   $("#volM").oninput = e => { setVolume("m", e.target.value / 100); $("#volMv").textContent = e.target.value + "%"; };
   $("#volS").oninput = e => { setVolume("s", e.target.value / 100); $("#volSv").textContent = e.target.value + "%"; sfx("tick"); };

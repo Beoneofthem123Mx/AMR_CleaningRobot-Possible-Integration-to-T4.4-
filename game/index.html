@@ -128,6 +128,20 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .roulette .bulbs span { width: 10px; height: 10px; border-radius: 50%; background: #ffd23a; box-shadow: 0 0 8px #ffd23a; animation: bulb .5s steps(2) infinite; }
 .roulette .bulbs span:nth-child(2n) { background: #ff3fa4; box-shadow: 0 0 8px #ff3fa4; }
 @keyframes bulb { 50% { opacity: .25; } }
+.card.twist { margin: auto; padding: 0; width: min(440px, 92%); max-width: 440px; color: #fff; text-align: center; overflow: visible;
+  background: radial-gradient(circle at 50% 0%, #6b2fd6 0%, #34135f 55%, #1a0b33 100%); border: 4px solid #ffd23a; border-radius: 22px;
+  box-shadow: 0 0 0 4px #111214, 0 0 40px rgba(255,63,164,.55), 0 18px 50px rgba(0,0,0,.6); animation: twistin .45s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes twistin { from { transform: scale(.6) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.card.twist .roulette.slot { padding: 22px 54px 18px 22px; min-width: 0; max-width: none; margin: 0; }
+.card.twist .roulette small { color: #ffd23a; font-size: .95rem; letter-spacing: .2em; text-shadow: 0 0 10px rgba(255,210,58,.6); }
+.card.twist .reelbox { margin: 12px auto 8px; border-color: #ffd23a; box-shadow: 0 0 0 4px #111214, inset 0 0 18px rgba(0,0,0,.6); }
+.card.twist .lever { right: 14px; top: 92px; }
+.card.twist .reelbox { background: #f4f1ea; } .card.twist .reelbox::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 26px 22px -10px rgba(20,8,40,.55), inset 0 -26px 22px -10px rgba(20,8,40,.55); }
+.card.twist .rcell b { color: #111214; }
+.card.twist #rl { color: #fff; margin: 14px 0 4px; min-height: 2.6rem; }
+.card.twist .roulette .stamp { background: linear-gradient(#ffe66b, #ffc21a); color: #111214; transform-origin: 50% 60%; }
+.card.twist #rld { color: #e9ddff; font-weight: 600; font-size: .98rem; min-height: 2.6em; }
+.card.twist .bulbs { inset: 8px; }
 .reelbox { position: relative; height: 192px; overflow: hidden; margin: 10px auto 4px; width: 300px; border: 4px solid #111214; border-radius: 14px; background: linear-gradient(#111214, #2a2c34 18%, #f4f1ea 30%, #f4f1ea 70%, #2a2c34 82%, #111214); }
 .reel { will-change: transform; }
 .rcell { height: 64px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 2px dashed rgba(0,0,0,.15); }
@@ -178,7 +192,7 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 @keyframes fadein { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 .titlewrap .presskey { font-size: .85rem; color: #c9ccd2; animation: blink 1.6s steps(2) infinite; }
 @keyframes blink { 50% { opacity: .25; } }
-.bigtag { color: #ffd23a; font-size: .9em; }
+.scene .bigtag, .bigtag { color: #ffd23a !important; font-size: .9em; }
 .card.menu .menuhead { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
 .card.menu .title { flex: none; padding: 6px 10px 10px; }
 .card.menu .logo { font-size: clamp(2.8rem, 7vw, 5.2rem); animation: logobob 3.2s ease-in-out infinite; }
@@ -212,8 +226,15 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .card.menu button.scene:disabled { opacity: .8; }
 .card.menu button:not(.scene) { background: #2b2d36; color: #f4f4f2; border-color: #464955; }
 .card.menu button.go { background: var(--caution); color: var(--ink); border-color: var(--caution); }
-.ftypes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 6px; }
-.ftypes[hidden] { display: flex; visibility: hidden; }  /* keep its space so the game view never jumps */
+/* the picker for fence types, props, gate sizes, guards and powers: a popup floating over the bottom of the map */
+.app { position: relative; }
+.ftypes { position: absolute; left: 50%; bottom: calc(var(--barh, 46px) + 20px); transform: translateX(-50%); z-index: 30; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center;
+  width: max-content; max-width: min(94vw, 1100px); box-sizing: border-box; padding: 10px 40px 10px 12px; border-radius: 16px; background: rgba(18,19,26,.9); border: 2px solid rgba(255,255,255,.14);
+  box-shadow: 0 14px 34px rgba(0,0,0,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: pickerpop .22s cubic-bezier(.3,1.4,.5,1); }
+.ftypes[hidden] { display: none; }
+@keyframes pickerpop { from { opacity: 0; transform: translate(-50%, 14px) scale(.96); } to { opacity: 1; transform: translate(-50%, 0); } }
+.ftypes .ptitle { width: 100%; text-align: center; font-size: .72rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #ffd23a; margin-bottom: 2px; }
+.ftypes .pclose { position: absolute; right: 8px; top: 8px; width: 26px; height: 26px; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: .9rem; }
 .ftypes button { display: flex; align-items: center; gap: 6px; font-size: .82rem; padding: 5px 10px; }
 .ftypes button i { width: 14px; height: 14px; border-radius: 4px; border: 2px solid rgba(0,0,0,.5); display: inline-block; }
 .ftypes .sandnote { align-self: center; font-size: .8rem; color: #9ea3ab; }

@@ -90,8 +90,6 @@ const FENCE_SHAPES = {
   free:   { name: "Freehand", desc: "Drag any curve you like." },
   ring:   { name: "Ring", desc: "Drag from the center outwards. The opening faces where you let go." },
   funnel: { name: "Funnel", desc: "Drag from the narrow end to the wide end. Feeds people in gently." },
-  zigzag: { name: "Zigzag queue", desc: "Drag along the way people walk. The switchbacks slow everyone down." },
-  pen:    { name: "Pen", desc: "Drag a box. The door is on the side where you let go." },
 };
 // builds the list of straight pieces [ax, ay, bx, by] for a shape dragged from a to b (pts: freehand points)
 function shapeSegs(shape, ax, ay, bx, by, pts) {

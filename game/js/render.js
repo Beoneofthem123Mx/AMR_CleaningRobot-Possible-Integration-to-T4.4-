@@ -14,6 +14,7 @@ const toLin = arr => arr.map(h => { const c = lin(h); return [c.r, c.g, c.b]; })
 let SHIRT_L, HEAT_L, SKIN_L, PANTS_L, HAIR_L, GLOW_L;
 
 function resize() {
+  const bar = $("#bar"); if (bar) document.documentElement.style.setProperty("--barh", bar.offsetHeight + "px");
   const r = $("#wrap").getBoundingClientRect();
   // on landscape screens (PC) the venue is rotated: the stage ends up on the left
   LAND = r.width > r.height;

@@ -73,7 +73,7 @@ function startWithRoulette() {
       <div class="reelbox"><div class="reel" id="reel">${[MODS[0]].concat(strip).map(cell).join("")}</div><div class="payline"></div></div>
       <div class="lever" id="lever"><span></span></div>
       <h2 id="rl">&nbsp;</h2><p id="rld">&nbsp;</p><div class="rconf" id="rconf"></div>
-    </div>`);
+    </div>`, "twist");
   let done = false, k = 0;
   const reel = $("#reel"), CH = 64, target = (strip.length - 2) * CH;   // land the pick on the payline (second visible row)
   requestAnimationFrame(() => { reel.style.transition = "transform 1.9s cubic-bezier(.12,.75,.18,1.04)"; reel.style.transform = `translateY(${-target}px)`; $("#lever").classList.add("pulled"); });
