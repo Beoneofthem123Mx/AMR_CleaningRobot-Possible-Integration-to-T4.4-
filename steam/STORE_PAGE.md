@@ -111,7 +111,7 @@ exit-flow chart shows which gate took everybody. The map stays on the floor whil
 [list]
 [*]29 venues, a daily challenge with a new venue and twist every day, Total Chaos mode and Sandbox.
 [*]World Tour: five random shows in a row, a perk after each one, one pancake allowance and no retries.
-[*]A level editor: build your own venue, test it and share it as a code.
+[*]A level editor: build your own venue, test it and share it on the Steam Workshop (or as a code).
 [/list]
 
 [h2]Floppy little people[/h2]
