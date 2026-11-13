@@ -1267,10 +1267,56 @@ function buildHorizon() {
       }
       grp.add(house, roof);
     }
+    themedHorizon(grp, HORIZON_THEME[sceneKey], r, cx, cz, wet);
     if (scene.night) for (const o of [hill, trunk, top]) o.material = o.material.clone(), o.material.color.setScalar(.25);   // moonlit countryside
   }
   grp.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.frustumCulled = false; } });
   grp.visible = false; G3.scene.add(grp);
+}
+// what stands behind the venue: downtown towers, a factory district, an airfield
+const HORIZON_THEME = { marcha: "city", metro: "city", terminal: "city", mitin: "city", viernes: "city", mercado: "city", trono: "city", fabrica: "industry", rocket: "airfield", aeropuerto: "airfield", nuclear: "industry" };
+function themedHorizon(grp, theme, r, cx, cz, wet) {
+  if (!theme) return;
+  const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), C = new THREE.Color(), UP = new THREE.Vector3(0, 1, 0);
+  const ring = (d0, d1) => { for (let k = 0; k < 20; k++) { const a = r() * 6.283, d = d0 + r() * (d1 - d0), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d; if (!wet(x)) return [x, z, a]; } return [cx, cz + d0, 0]; };
+  if (theme === "city") {   // glass and concrete towers with lit windows, a couple of cranes
+    const n = 46, tower = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ map: G3.winTex || (G3.winTex = windowTex()), roughness: .5, metalness: .1 }), n);
+    const TC = ["#c9d3de", "#9fb3c8", "#d8d2c4", "#b8c4cf", "#e4e0d6", "#8fa3b8"];
+    for (let i = 0; i < n; i++) { const [x, z, a] = ring(72, 120), w = 8 + r() * 10, h = 18 + r() * r() * 60;
+      M.compose(V.set(x, h / 2, z), Q.setFromAxisAngle(UP, -a), S3.set(w, h, w * (.7 + r() * .5))); tower.setMatrixAt(i, M); tower.setColorAt(i, C.set(TC[(r() * TC.length) | 0])); }
+    grp.add(tower);
+    const cr = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mat("#e8b631"), 6);
+    for (let i = 0; i < 3; i++) { const [x, z, a] = ring(68, 92), h = 34 + r() * 14;
+      M.compose(V.set(x, h / 2, z), Q.identity(), S3.set(1.2, h, 1.2)); cr.setMatrixAt(i * 2, M);
+      M.compose(V.set(x, h, z), Q.setFromAxisAngle(UP, r() * 6), S3.set(22, 1, 1)); M.multiply(new THREE.Matrix4().makeTranslation(.3, 0, 0)); cr.setMatrixAt(i * 2 + 1, M); }
+    grp.add(cr);
+  } else if (theme === "industry") {   // chimneys with red bands, silos, saw-tooth warehouses
+    const nc = 9, ch = new THREE.InstancedMesh(new THREE.CylinderGeometry(.8, 1, 1, 12), mat("#a29a92"), nc), band = new THREE.InstancedMesh(new THREE.CylinderGeometry(.82, .82, 1, 12), mat("#d8322b"), nc * 2);
+    for (let i = 0; i < nc; i++) { const [x, z] = ring(70, 105), s2 = 1.4 + r() * 1.2, h = 26 + r() * 22;
+      M.compose(V.set(x, h / 2, z), Q.identity(), S3.set(s2, h, s2)); ch.setMatrixAt(i, M);
+      for (const [k, f] of [[0, .92], [1, .78]]) { M.compose(V.set(x, h * f, z), Q.identity(), S3.set(s2 * (.82 + .14 * f), 2, s2 * (.82 + .14 * f))); band.setMatrixAt(i * 2 + k, M); } }
+    const ns = 14, silo = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 16), new THREE.MeshStandardMaterial({ roughness: .4, metalness: .5 }), ns), dome = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 8, 0, 6.283, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ roughness: .4, metalness: .5 }), ns);
+    for (let i = 0; i < ns; i++) { const [x, z] = ring(62, 92), rr = 3 + r() * 2.5, h = 9 + r() * 10;
+      M.compose(V.set(x, h / 2, z), Q.identity(), S3.set(rr, h, rr)); silo.setMatrixAt(i, M); silo.setColorAt(i, C.set(["#d9dde2", "#c3c9cf", "#e8e4da"][i % 3]));
+      M.compose(V.set(x, h, z), Q.identity(), S3.set(rr, rr * .5, rr)); dome.setMatrixAt(i, M); dome.setColorAt(i, C.set("#bfc5cc")); }
+    const nw = 16, wh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: .8 }), nw), tooth = new THREE.InstancedMesh(new THREE.CylinderGeometry(.6, .6, 1, 3), new THREE.MeshStandardMaterial({ roughness: .7 }), nw * 4);
+    for (let i = 0; i < nw; i++) { const [x, z, a] = ring(56, 84), w = 14 + r() * 12, d = 9 + r() * 6, h = 6 + r() * 4, q = Q.clone().setFromAxisAngle(UP, -a + Math.PI / 2);
+      M.compose(V.set(x, h / 2, z), q, S3.set(w, h, d)); wh.setMatrixAt(i, M); wh.setColorAt(i, C.set(["#8a6f5a", "#6f7a84", "#a8916f", "#7d8a6a"][i % 4]));
+      for (let k = 0; k < 4; k++) { const off = new THREE.Vector3((k - 1.5) * w / 4, 0, 0).applyQuaternion(q); const q2 = q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2));
+        M.compose(V.set(x + off.x, h + 1, z + off.z), q2, S3.set(2, d, 2.2)); tooth.setMatrixAt(i * 4 + k, M); tooth.setColorAt(i * 4 + k, C.set("#9fb7c9")); } }
+    grp.add(ch, band, silo, dome, wh, tooth);
+  } else if (theme === "airfield") {   // hangars with curved roofs, a control tower, a windsock
+    const nh = 7, hg = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 18, 1, false, 0, Math.PI), new THREE.MeshStandardMaterial({ roughness: .5, metalness: .4 }), nh);
+    for (let i = 0; i < nh; i++) { const [x, z, a] = ring(60, 88), s2 = 9 + r() * 5;
+      M.compose(V.set(x, 0, z), Q.setFromAxisAngle(UP, -a).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2)).multiply(new THREE.Quaternion().setFromAxisAngle(UP, -Math.PI / 2)), S3.set(s2, s2 * 2.4, s2 * .9)); hg.setMatrixAt(i, M); hg.setColorAt(i, C.set(["#c9ced4", "#e6e2d8", "#aeb7c0"][i % 3])); }
+    grp.add(hg);
+    const [tx, tz] = ring(70, 80);
+    const t1 = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.2, 28, 14), mat("#e6e2d8")); t1.position.set(tx, 14, tz);
+    const t2 = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 3.2, 3.6, 10), new THREE.MeshStandardMaterial({ color: lin("#2a4a66"), roughness: .15, metalness: .6 })); t2.position.set(tx, 29.6, tz);
+    const t3 = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, .6, 10), mat("#f4f4f0")); t3.position.set(tx, 31.6, tz);
+    const t4 = new THREE.Mesh(new THREE.ConeGeometry(.5, 2.4, 6), mat("#d8322b")); t4.position.set(tx, 33.2, tz);
+    grp.add(t1, t2, t3, t4);
+  }
 }
 // sky dome for the street camera: gradient, sun glow, drifting clouds by day, stars and a moon by night
 function skyDome() {
