@@ -659,7 +659,10 @@ function renderPeople(tt, dtR, vb) {
   const C = { eyeW: 0, ear: 0, spike: 0, hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0, bag: 0 }; COST_C = C;
   if (typeof TwoBody !== "undefined") { const cp = G3.camera.position; TwoBody.setViewer(cp.x, cp.z, cp.y); }
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
+  PLOD.n = 0;
   const draw = (a, down) => {
+    // level of detail: only the people nearest the camera get faces, limbs, costumes and gear (the budget keeps the FPS up)
+    const full = down || ((a.x - ccx) ** 2 + (a.y - ccz) ** 2 < PLOD.r2 && PLOD.n++ < PLOD.max);
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
     if (down) {
       // rag-doll fall: topple backwards with a bounce, limbs flailing, then lie spread-eagled
@@ -738,7 +741,7 @@ function renderPeople(tt, dtR, vb) {
     emit(P.torso, C.torso, LT); colW(P.torso, C.torso++, r, g, b);
     const skn = OU ? (OU.s ? lc(OU.s) : SKIN_L[a.sk]) : a.cos ? COS_L[a.cos] : SKIN_L[a.sk];
     const HD = down ? LOCAL.head : wobPt(lifted(LOCAL.head)); emit(P.head, C.head, HD); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
-    if (detail) {
+    if (detail && full) {
       // expressions: 0 calm, 1 squeezed (wide eyes, O mouth), 2 cheering (squint, big grin), 3 trampled (X eyes)
       if (!down && FACE.state !== 2) { const sq = a.ps / PCRIT; FACE.state = sq > .55 ? 1 : (surging || cheerT > 0) && a.dance ? 2 : 0; FACE.open = sq > .55 ? Math.min(1, (sq - .4) * 1.6) : FACE.state === 2 ? .6 : 0; }
       const place = L => down ? L : wobPt(lifted(L));
@@ -770,8 +773,8 @@ function renderPeople(tt, dtR, vb) {
       }
     }
     FACE.state = 0; FACE.open = 0;
-    if (a.cos && C.spike < cap * 3 - 8 && C.ear < cap * 3 - 8 && C.bag < cap * 3 - 8) costume(a, down, k);
-    if (a.gear && hm < .7 && C.spike < cap * 3 - 8 && C.ear < cap * 3 - 8 && C.bag < cap * 3 - 8) gearParts(a, down, k, tt);
+    if (full && a.cos && C.spike < cap * 3 - 8 && C.ear < cap * 3 - 8 && C.bag < cap * 3 - 8) costume(a, down, k);
+    if (full && a.gear && hm < .7 && C.spike < cap * 3 - 8 && C.ear < cap * 3 - 8 && C.bag < cap * 3 - 8) gearParts(a, down, k, tt);
     const hc0 = a.old ? GREY_L : HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
     // pressure view: hair and caps take the pressure color too, so the map reads from above
     const hh = clamp((hm - .5) * 2, 0, 1);   // only the real pressure view (H), not the warning tint during a drop
@@ -813,7 +816,7 @@ function renderPeople(tt, dtR, vb) {
         emit(P.whatTop, C.whatTop, LOCAL.whatT); colW(P.whatTop, C.whatTop++, .74, .58, .3);
       }
     }
-    if (a.bags && !down && hh < .4 && C.bag < P.bag.instanceMatrix.count - 12) {   // overloaded shopper: bags on both hands, boxes on the head
+    if (full && a.bags && !down && hh < .4 && C.bag < P.bag.instanceMatrix.count - 12) {   // overloaded shopper: bags on both hands, boxes on the head
       const n = a.bags, sw = Math.sin(tt * 6 + a.ph) * .07, az2 = .22 * bw + .05;
       for (let i = 0; i < Math.min(n, 4); i++) {
         const side = i % 2 ? 1 : -1, j = i >> 1, bc = BAG_L[((a.bagC | 0) + i) % BAG_L.length];
@@ -828,7 +831,7 @@ function renderPeople(tt, dtR, vb) {
         emit(P.bag, C.bag, LT); colW(P.bag, C.bag++, bc[0] * .9, bc[1] * .9, bc[2] * .9);
       }
     }
-    if (!detail && !down) return;
+    if ((!detail || !full) && !down) return;
     const az = .22 * bw + .05, bare = a.cl === 1 || a.cl === 3;   // short sleeves show skin
     const ar = bare ? skn[0] * k : r, agc = bare ? skn[1] * k : g, ab = bare ? skn[2] * k : b;
     emit(P.arm, C.arm, limb(0, 1.28, -az, armL, .56)); colW(P.arm, C.arm++, ar, agc, ab);
@@ -856,6 +859,8 @@ function renderPeople(tt, dtR, vb) {
   // street camera: nobody stands in front of the lens
   const ccx = G3.camera.position.x, ccz = G3.camera.position.z, near = cine > .01 ? 2.4 * 2.4 : -1;
   for (const a of ag) { if (a.x < vb[0] || a.x > vb[1] || a.y < vb[2] || a.y > vb[3]) continue; if ((a.x - ccx) ** 2 + (a.y - ccz) ** 2 < near) continue; draw(a, false); }
+  // grow or shrink the full-detail circle so about PLOD.max people get it
+  PLOD.r2 = clamp(PLOD.r2 * (PLOD.n >= PLOD.max ? .88 : PLOD.n < PLOD.max * .8 ? 1.08 : 1), 9, 40000);
   for (const a of fallen) {
     if (C.torso >= cap - 1) break; draw(a, true);
     const age = t - (a.fallAt ?? -99);
@@ -1196,6 +1201,7 @@ const OUTFITS = [null, null, null, null,
   { n: "wizard", b: "#5f3d8a", l: "#3a2a5a", p(pt) { pt("c", -.02, 2.08, 0, 2.2, 3.4, 2.2, "#5f3d8a"); pt("b", -.02, 1.84, 0, .5, .03, .5, "#5f3d8a"); pt("s", .2, 1.42, 0, 1.3, 2.4, 1.6, "#e8e8e8"); for (let i = 0; i < 3; i++) pt("s", .05, 2.0 + i * .14, .13 - i * .04, .35, .35, .35, "#ffd23a"); } },
 ];
 const OUTFIT_ID = Object.fromEntries(OUTFITS.map((o, i) => o && [o.n, i]).filter(Boolean));
+const PLOD = { r2: 900, n: 0, max: 1100 };   // people drawn with full detail per frame
 let COST_C = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
