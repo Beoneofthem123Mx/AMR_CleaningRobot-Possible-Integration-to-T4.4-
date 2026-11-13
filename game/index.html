@@ -64,6 +64,8 @@ canvas.ov { position: absolute; left: 0; top: 0; pointer-events: none; }
 }
 .status #hourglass { display: inline-block; height: 1.45em; width: auto; image-rendering: pixelated; vertical-align: -.38em; margin-right: .45em; }
 .overlay { position: absolute; inset: 0; display: flex; overflow: auto; padding: 14px; background: rgba(10,10,12,.42); }
+.overlay, .card { scrollbar-width: none; } .overlay::-webkit-scrollbar, .card::-webkit-scrollbar { display: none; }   /* menus still scroll with the wheel, without a bar */
+.overlay:has(.card.title) { overflow: hidden; }
 .card {
   margin: auto; max-width: 340px; position: relative; box-sizing: border-box; background: var(--paper); color: var(--ink);
   border: 4px solid var(--ink); border-radius: 16px; box-shadow: 0 6px 0 rgba(0,0,0,.4);
@@ -180,14 +182,14 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
   backdrop-filter: blur(10px); box-shadow: 0 24px 60px rgba(0,0,0,.55); padding: 22px 24px 16px; gap: 14px; }
 .frame:has(.overlay:not([hidden]) .card.title) .badge, .frame:has(.overlay:not([hidden]) .card.title) .status, .frame:has(.overlay:not([hidden]) .card.title) .caption { display: none !important; }
 .card.menu.title { max-width: 720px; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; margin: auto; text-align: center; }
-.titlewrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 10px; }
+.titlewrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: min(14px, 1.6vh); padding: min(24px, 2.5vh) 10px; }
 .titlewrap .splat { position: absolute; inset: 0 8%; background: radial-gradient(closest-side, rgba(18,19,26,.82), rgba(18,19,26,.55) 70%, transparent); border-radius: 50%; z-index: -1; }
-.card.menu .biglogo { font-size: clamp(3.4rem, 11vw, 7.6rem); text-shadow: .06em .06em 0 #d8322b, .1em .1em 0 #111214; animation: logodrop .9s cubic-bezier(.3,1.5,.5,1) both, logobob 3.2s 1s ease-in-out infinite; }
+.card.menu .biglogo { font-size: clamp(2.4rem, min(11vw, 13vh), 7.6rem); text-shadow: .06em .06em 0 #d8322b, .1em .1em 0 #111214; animation: logodrop .9s cubic-bezier(.3,1.5,.5,1) both, logobob 3.2s 1s ease-in-out infinite; }
 @keyframes logodrop { 0% { transform: translateY(-120%) rotate(-12deg) scale(1.3); opacity: 0; } 100% { transform: translateY(0) rotate(-3deg) scale(1); opacity: 1; } }
 .titlewrap .tag { font-weight: 800; color: #ffd23a; font-size: 1.05rem; animation: fadein .6s .7s both; }
 .titlebtns { display: flex; flex-direction: column; gap: 10px; width: min(320px, 90%); animation: fadein .6s .9s both; }
-.titlebtns button { font-size: 1.05rem; padding: 10px 16px; justify-content: center; }
-.titlebtns button.big { font-size: 1.6rem; padding: 14px 18px; letter-spacing: .06em; animation: startpulse 1.4s 1.6s ease-in-out infinite; }
+.titlebtns button { font-size: 1.05rem; padding: min(10px, 1.2vh) 16px; justify-content: center; }
+.titlebtns button.big { font-size: 1.6rem; padding: min(14px, 1.6vh) 18px; letter-spacing: .06em; animation: startpulse 1.4s 1.6s ease-in-out infinite; }
 @keyframes startpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 @keyframes fadein { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 .titlewrap .presskey { font-size: .85rem; color: #c9ccd2; animation: blink 1.6s steps(2) infinite; }
