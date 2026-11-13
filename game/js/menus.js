@@ -178,6 +178,7 @@ function showHowTo() {
     </ol>
     <p><b>Pressure</b> is what hurts people: watch the pressure view (H). Red means someone is about to go down. Narrow gaps, dead ends and too few gates are the usual suspects.</p>
     <p><b>An empty plan always fails.</b> With no fences, guards or props nobody is in charge: the crowd shoves harder, goes down sooner, and the show gets zero stars no matter what.</p>
+    <p class="keys">Keys: 1–5 tools · Space start · H pressure · C camera · X street camera · V speed · P pause · Ctrl+Z undo · <b>O photo mode</b> (no HUD, everything frozen).</p>
     <p><b>Zero pancaked</b> earns three stars. Stars unlock venues. Each venue also has five optional medals.</p>
     <div class="row"><button class="go" id="pick">Got it</button></div>`, "options");
 }

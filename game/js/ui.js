@@ -196,6 +196,15 @@ function clearPlan() {
   if (phase !== "plan") return;
   gates = scene.gates.slice(); fences = []; guards = []; props = []; buildWorld(); ui(); toast("Plan cleared. Ctrl+Z brings it back.");
 }
+// photo mode: no HUD, the crowd frozen mid-air, the camera still free (C / X / drag / wheel)
+let PHOTO = false, photoWasPaused = false;
+function togglePhoto() {
+  PHOTO = !PHOTO; document.body.classList.toggle("photo", PHOTO);
+  const live = phase === "show" || phase === "evac";
+  if (PHOTO) { photoWasPaused = paused; if (live) paused = true; } else if (live) paused = photoWasPaused;
+  let h = $("#photohint"); if (!h) { h = document.createElement("div"); h.id = "photohint"; h.className = "photohint"; $("#frame").appendChild(h); }
+  h.textContent = "PHOTO MODE · C / X change camera · drag & wheel to frame · O to exit"; h.classList.remove("fade"); void h.offsetWidth; h.classList.add("fade");
+}
 // pause and keyboard shortcuts for playing on PC
 function togglePause() {
   if ((phase !== "show" && phase !== "evac") || demo) return;
@@ -208,6 +217,8 @@ addEventListener("keydown", e => {
   if (e.target && e.target.tagName === "INPUT") return;
   const k = e.key.toLowerCase(), cardOpen = !$("#overlay").hidden;
   if (k === "enter" && atTitle && !$("#overlay").hidden && $("#card").classList.contains("title")) { chooser(); return; }
+  if (PHOTO && (k === "o" || k === "escape")) { togglePhoto(); return; }
+  if (k === "o" && !cardOpen && !demo) { togglePhoto(); return; }
   if (k === "escape" || k === "p") { if (phase === "show" || phase === "evac") togglePause(); else if (phase === "plan" && !cardOpen) chooser(); return; }
   if (cardOpen) return;
   if (phase === "plan" && k === "z" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undoPlan(); return; }
