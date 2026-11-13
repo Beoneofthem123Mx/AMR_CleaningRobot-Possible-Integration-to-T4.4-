@@ -282,6 +282,12 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 .secretpop i { font-style: normal; font-size: 2.4em; } .secretpop small { display: block; color: #ffd23a; font-weight: 900; letter-spacing: .08em; font-size: .7em; } .secretpop b { display: block; font-size: 1.2em; } .secretpop span { font-size: .8em; color: #ddd; }
 @keyframes secretin { from { transform: translate(-50%, -30px) scale(.6); opacity: 0; } } @keyframes secretout { to { transform: translate(-50%, -20px); opacity: 0; } }
 #badge { cursor: pointer; }
+.analysis { position: absolute; right: 12px; top: 12px; z-index: 40; width: min(360px, 44%); max-height: calc(100% - 24px); overflow: auto; scrollbar-width: none; padding: 12px 14px; border-radius: 14px; background: rgba(18,19,26,.92); color: #fff; font-size: .62em; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.analysis h3 { margin: 0 0 4px; font-weight: 900; text-transform: uppercase; color: #ffd23a; } .analysis .lg { color: #c9ccd2; margin: 0 0 8px; }
+.analysis .lg i { display: inline-block; width: 1em; height: 1em; vertical-align: -.15em; margin: 0 .3em 0 .6em; border-radius: 2px; } .analysis .lg .h1 { background: #ffb238; } .analysis .lg .h2 { background: #ff3b2f; }
+.analysis .spot { display: flex; gap: 8px; margin: 8px 0; } .analysis .spot small { display: block; color: #d8dbe0; margin-top: 2px; line-height: 1.3; }
+.analysis .num { display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; border-radius: 50%; background: #111214; color: #ffd23a; border: 2px solid #fff; font-weight: 900; }
+.analysis .row button { font-size: 1em; }
 .planmeter { position: absolute; left: 12px; bottom: 12px; z-index: 20; display: flex; align-items: center; gap: 8px; padding: 7px 11px; border-radius: 12px; background: rgba(18,19,26,.85); color: #fff; font-size: .62em; font-weight: 900; letter-spacing: .06em; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
 .planmeter i { width: 9em; height: .9em; border-radius: .45em; background: #33363d; overflow: hidden; display: block; } .planmeter b { display: block; height: 100%; width: 0; transition: width .25s, background .25s; }
 .planmeter em { font-style: normal; min-width: 6.5em; }
@@ -389,6 +395,7 @@ button.go { background: var(--go); color: var(--ink); border-color: var(--go); f
 <script src="js/movers.js"></script>
   <script src="js/powers.js"></script>
   <script src="js/secrets.js"></script>
+  <script src="js/analysis.js"></script>
 <script src="js/twobody.js"></script>
   <script src="js/sim.js"></script>
 <script src="js/ui.js"></script>

@@ -1438,6 +1438,7 @@ function updateFxLayer(live) {
     for (let k2 = 0; k2 < 18; k2++) { const an = rot + k2 * Math.PI / 9, rr = (k2 % 2 ? .55 : 1) * r * 1.15; g.lineTo(a.x + Math.cos(an) * rr, a.y + Math.sin(an) * rr); }
     g.fill(); g.fillStyle = "rgba(200,30,30,.3)"; g.beginPath(); g.arc(a.x, a.y, r * .55, 0, 7); g.fill();
   }
+  drawAnalysis(g);
   if (phase === "plan" && lastFalls.length && lastFallsScene === sceneKey) {
     // where people fell last time: soft red stains with an X on the worst spots
     g.fillStyle = "rgba(229,50,41,.16)";

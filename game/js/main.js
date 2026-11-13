@@ -47,6 +47,7 @@ function updateFx(dt) {
   if (free) { tz = camFree.z; tx = camFree.x; ty = camFree.y; }
   // slow motion, zoomed in on the first person trampled
   if (slowT > 0 && focus) { tz = Math.min(2.7, ZMAX()); ty = focus.y; tx = focus.x; }
+  if (typeof analysisView !== "undefined" && analysisView) { tz = 1; tx = WW / 2; ty = WH / 2; }   // the analysis shows the whole venue
   const kz = free && slowT <= 0 ? 1 - Math.pow(.0005, Math.max(dt, .016)) : 1 - Math.pow(slowT > 0 ? .02 : .3, Math.max(dt, slowT > 0 ? .016 : 0));
   cam.z += (tz - cam.z) * kz; cam.y += (ty - cam.y) * kz * (slowT > 0 || free ? 1 : .6); cam.x += (tx - cam.x) * kz;
   const hw = WW / (2 * cam.z), hh = WH / (2 * cam.z);

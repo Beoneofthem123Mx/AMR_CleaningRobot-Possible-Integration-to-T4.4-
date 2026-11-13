@@ -354,7 +354,7 @@ function step() {
     if (a.gear === "ducks") a.p *= .8;
     if (a.p > pc) a.dmg += (a.p - pc) * DT * (aid ? AID_DMG : 1.6) * (a.gear === "helmet" ? .75 : a.gear === "bubble" ? .7 : 1); else a.dmg = Math.max(0, a.dmg - DT * (aid ? AID_HEAL : .4));
     if (a.dmg >= 1 && bm("insurance") && insured < 20 && !demo) { insured++; abducted++; for (let k = 0; k < 4; k++) puff(a.x, a.y, 1 + k, "#7dff6a", .4, .8, 1.5); if (Math.random() < .5) pop(a.x, a.y - 1, "BEAMED UP!"); continue; }   // mothership insurance
-    if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; pickFall(a); fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); setDead(dead + 1); continue; }
+    if (a.dmg >= 1) { a.fallAt = t; a.fallSpin = (Math.random() - .5) * 2.4; a.fallLimb = Math.random() * 6.28; pickFall(a); fallen.push(a); if (!demo) lastFalls.push([a.x, a.y, evac ? 1 : 0]); onFall(a.x, a.y); pmFall(a.x, a.y); setDead(dead + 1); continue; }
     if (evac && (a.y > SH - .6 || a.x < -.4 || a.x > WW + .4 || (ROUTE.side && leaving && a.y > ROUTE.ey0 - .6 && a.y < ROUTE.ey1 + .6 && (ROUTE.side < 0 ? a.x < .55 : a.x > WW - .55)))) { evacuated++; continue; }
     out.push(a);
   }
@@ -362,6 +362,7 @@ function step() {
   TwoBody.update(ag, DT);   // torsos on elastic joints, stumbles and domino chains (twobody.js)
   if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
   if (props.length) gadgetStep();
+  if (!demo) pmSample();
   for (const gd of guards) if (gd.tx !== undefined) {   // a steward sent somewhere mid-show runs there
     const dx = gd.tx - gd.x, dy = gd.ty - gd.y, d = Math.hypot(dx, dy);
     if (d < .2) { gd.tx = undefined; buildWorld(); } else { gd.x += dx / d * Math.min(d, 3.2 * DT); gd.y += dy / d * Math.min(d, 3.2 * DT); gd.ang = Math.atan2(dy, dx); }
@@ -530,6 +531,7 @@ function fallTip() {
   return `Most got pancaked ${where}, ${when}. ${fix} The red marks on the plan show exactly where.`;
 }   // the plan as drawn, so fences broken during a show come back afterwards
 function start(mod) {
+  hideAnalysisPanel();
   planFences = fences.map(f => ({ ax: f.ax, ay: f.ay, bx: f.bx, by: f.by, len: f.len, type: f.type }));
   if (!demo) { lastFalls = []; lastFallsScene = sceneKey; }
   if (!canStart()) return;
@@ -548,7 +550,7 @@ function start(mod) {
   if (scr && !MOD.altShare) setAlt(scr.x, scr.y, PROP_TYPES.screen.r + 2.2);
   if (scene.onStart) scene.onStart();
   TwoBody.init(WW, WH); TwoBody.onStumble = (a, depth) => { if (a.springy && !depth && Math.random() < .35 && yeet(a)) return; if (!demo && Math.random() < (depth ? .02 : .06)) pop(a.x, a.y - 1.1, depth ? ["DOMINO!", "NOT ME TOO!", "WHOA-OA!"][(Math.random() * 3) | 0] : ["WHOA!", "OOPS!", "WATCH IT!", "MY BALANCE!"][(Math.random() * 4) | 0]); };
-  SHOPPERS = []; shopT = 0; shoutT = 3; insured = 0; resetPowers(); resetSecretCounters(); CRATERS = []; POWER_USED = false; SHOW_LUCKY = false;
+  SHOPPERS = []; shopT = 0; shoutT = 3; insured = 0; resetPowers(); resetSecretCounters(); if (!demo) pmReset(); CRATERS = []; POWER_USED = false; SHOW_LUCKY = false;
   if (!demo && !window.__manual && (NEXT.meteor || NEXT.cow || NEXT.mega || NEXT.lucky)) {   // the deals bought for this show
     charges.meteor += NEXT.meteor || 0; charges.cow += NEXT.cow || 0; mega.n += NEXT.mega || 0; SHOW_LUCKY = !!NEXT.lucky;
     delete NEXT.meteor; delete NEXT.cow; delete NEXT.mega; delete NEXT.lucky; saveShop();
@@ -571,6 +573,7 @@ function finish() {
   setTimeout(() => announce(dead >= 500 ? "game_over" : stars === 3 ? (Math.random() < .5 ? "mission_completed" : "congratulations") : stars ? "objective_achieved" : "mission_failed"), 700);
   if (fresh.length) setTimeout(() => announce("new_highscore"), 2300);
   if (Object.values(loadMedals()).reduce((n, m) => n + m.length, 0) >= 20) achieve("MEDAL_COLLECTOR");
+  if (!demo && dead > 0) ANALYSIS = analyze();
   saveBest(sceneKey, stars);
   if (DAILY && DAILY.key === sceneKey && MOD && MOD.id === DAILY.mod) {   // today's challenge
     const b = dailyBest(), better = b.dead === undefined || dead < b.dead;
