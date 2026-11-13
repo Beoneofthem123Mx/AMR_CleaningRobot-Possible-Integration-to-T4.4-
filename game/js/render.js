@@ -196,6 +196,7 @@ function init3D() {
   G3.ghostHalo = inst(new THREE.TorusGeometry(.17, .03, 6, 16), new THREE.MeshBasicMaterial({ toneMapped: false }), 260);
   G3.puff = inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: .3, depthWrite: false }), 800);
   SHOE_L = toLin(["#1c1c20", "#f2f2f2", "#d8322b", "#2f6fc4", "#6b4a2b", "#1c1c20", "#e8b631"]);
+  COS_L = [null].concat(toLin(["#8a5a34", "#4caf50", "#f4f4f0"])); COS_X = [null].concat(toLin(["#5e3a20", "#ffd23a", "#f2a52b", "#e53935"]));
   SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
   initPeople();
   initPost();
@@ -549,6 +550,8 @@ function initPeople() {
   P.arm = mk(new THREE.CapsuleGeometry(.045, .48, 3, 6), std({ roughness: .6 }), N * 2);
   P.leg = mk(new THREE.CapsuleGeometry(.085, .42, 3, 6), std({ roughness: .7 }), N * 2);
   P.hand = mk(new THREE.SphereGeometry(.062, 6, 4), std({ roughness: .55 }), N * 2); P.hand.castShadow = false;   // round mitten hands
+  P.ear = mk(new THREE.SphereGeometry(.09, 8, 6), std({ roughness: .6 }), N); P.ear.castShadow = false;            // costume ears, combs
+  P.spike = mk(new THREE.ConeGeometry(.075, .2, 6), std({ roughness: .5 }), N); P.spike.castShadow = false;        // dino spikes, beaks
   P.shoe = mk(new THREE.SphereGeometry(.075, 6, 4), std({ roughness: .45 }), N * 2); P.shoe.castShadow = false;   // chunky toy shoes
   P.sign = mk(new THREE.BoxGeometry(.035, .42, .58), std({ roughness: .8 }), N);
   P.hair = mk(new THREE.SphereGeometry(.138, 8, 4, 0, Math.PI * 2, 0, Math.PI * .56), std({ roughness: .9 }), N);
@@ -595,7 +598,7 @@ function limb(px, py, pz, th, len, extra) {
 function colW(mesh, idx, r, g, b) { const a = mesh.instanceColor.array; a[idx * 3] = r; a[idx * 3 + 1] = g; a[idx * 3 + 2] = b; }
 
 function renderPeople(tt, dtR, vb) {
-  const C = { hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 };
+  const C = { ear: 0, spike: 0, hand: 0, brow: 0, shoe: 0, drop: 0, star: 0, eye: 0, xbar: 0, mouth: 0, sign: 0, torso: 0, head: 0, arm: 0, leg: 0, hair: 0, cap: 0, brim: 0, long: 0, pack: 0, glow: 0, phat: 0, what: 0, whatTop: 0, balloon: 0, string: 0, umb: 0 }; COST_C = C;
   const hm = heatMix, surging = surgeT > 0, red = HEAT_L[HEAT_L.length - 1], detail = cam.z > 1.3 || cine > .01, cap = P.torso.instanceMatrix.count;
   const draw = (a, down) => {
     let bob = 0, armL = 0, armR = 0, legL = 0, legR = 0, sway = 0;
@@ -641,7 +644,7 @@ function renderPeople(tt, dtR, vb) {
     }
     // clothes: blend into the pressure color; red when in danger
     const k = down ? .5 : 1, hq = HEAT_L[clamp(Math.floor(a.ps / PCRIT * HEAT_L.length), 0, HEAT_L.length - 1)];
-    const sh = SHIRT_L[a.c], pa = PANTS_L[a.pc];
+    const sh = a.cos ? COS_L[a.cos] : SHIRT_L[a.c], pa = a.cos ? COS_L[a.cos] : PANTS_L[a.pc];   // costumes are one color head to toe
     let r, g, b;
     if (!down && a.dmg > .45) { r = red[0]; g = red[1]; b = red[2]; }
     else { r = sh[0] + (hq[0] - sh[0]) * hm; g = sh[1] + (hq[1] - sh[1]) * hm; b = sh[2] + (hq[2] - sh[2]) * hm; }
@@ -656,11 +659,11 @@ function renderPeople(tt, dtR, vb) {
       if (sqz > 0) { const nx = 1 - .2 * sqz, ny = 1 + .12 * sqz; LT[0] *= nx; LT[1] *= nx; LT[2] *= nx; LT[3] *= ny; LT[4] *= ny; LT[5] *= ny; LT[6] *= nx; LT[7] *= nx; LT[8] *= nx; FACE.lift += .1 * sqz; }
     } else FACE.lift = 0;
     if (!down) {   // wobble: lean forward with speed and rock from foot to foot, the head follows
-      const spd = Math.min(1.4, Math.hypot(a.vx, a.vy)), lean = spd * .16 + (a.ps > PCRIT * .55 ? .12 : 0), rock = Math.sin(a.wp) * .11 * Math.min(1, spd + .3);
+      const spd = Math.min(1.4, Math.hypot(a.vx, a.vy)), lean = spd * .16 + (a.ps > PCRIT * .55 ? .12 : 0) + (a.old ? .2 : 0), rock = Math.sin(a.wp) * .11 * Math.min(1, spd + .3);
       wob(LT, lean, rock); WOB.lean = lean; WOB.rock = rock;
     }
     emit(P.torso, C.torso, LT); colW(P.torso, C.torso++, r, g, b);
-    const skn = SKIN_L[a.sk];
+    const skn = a.cos ? COS_L[a.cos] : SKIN_L[a.sk];
     const HD = down ? LOCAL.head : wobPt(lifted(LOCAL.head)); emit(P.head, C.head, HD); colW(P.head, C.head++, skn[0] * k, skn[1] * k, skn[2] * k);
     if (detail) {
       // expressions: 0 calm, 1 squeezed (wide eyes, O mouth), 2 cheering (squint, big grin), 3 trampled (X eyes)
@@ -688,7 +691,8 @@ function renderPeople(tt, dtR, vb) {
       }
     }
     FACE.state = 0; FACE.open = 0;
-    const hc0 = HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
+    if (a.cos && C.spike < cap - 6) costume(a, down, k);
+    const hc0 = a.old ? GREY_L : HAIR_L[a.hc], hs = a.hs || 0;   // hair: 0 short, 1 afro, 2 bun, 3 ponytail, 4 bald
     // pressure view: hair and caps take the pressure color too, so the map reads from above
     const hh = clamp((hm - .5) * 2, 0, 1);   // only the real pressure view (H), not the warning tint during a drop
     const hc = hh > .01 ? HC.set(hc0[0] + (hq[0] - hc0[0]) * hh, hc0[1] + (hq[1] - hc0[1]) * hh, hc0[2] + (hq[2] - hc0[2]) * hh) : hc0;
@@ -1029,7 +1033,24 @@ FAN_MAT.onBeforeCompile = sh => {
 };
 FAN_MAT.customProgramCacheKey = () => "fans";
 const RIM = { value: .42 }, DROP_SEEN = new Set(); let prints = [];
-let SHOE_L = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
+let SHOE_L = null, COS_L = null, COS_X = null; const GREY_L = [.72, .72, .74];
+// costume extras, in body space: bear ears, dino back spikes, chicken comb and beak
+function partM(x, y, z, rz, sx, sy, sz) {
+  const c = Math.cos(rz), s = Math.sin(rz);
+  LE[0] = c * sx; LE[1] = -s * sy; LE[2] = 0; LE[3] = s * sx; LE[4] = c * sy; LE[5] = 0; LE[6] = 0; LE[7] = 0; LE[8] = sz; LE[9] = x; LE[10] = y; LE[11] = z; return LE;
+}
+function costume(a, down, k) {
+  const C = COST_C, put = (mesh, idx, L, col) => { emit(mesh, idx, down ? L : wobPt(lifted(L))); colW(mesh, idx, col[0] * k, col[1] * k, col[2] * k); }, x2 = COS_X[a.cos];
+  if (a.cos === 1) for (const sd of [-1, 1]) put(P.ear, C.ear++, partM(-.02, 1.78, sd * .14, 0, 1, 1, .7), x2);
+  else if (a.cos === 2) {
+    put(P.ear, C.ear++, partM(.17, 1.58, 0, 0, .8, .55, 1.1), x2);   // a big snout
+    for (const [x, y, r] of [[-.12, 1.8, .5], [-.2, 1.62, .9], [-.27, 1.3, 1.25], [-.28, 1.05, 1.4], [-.24, .8, 1.5]]) put(P.spike, C.spike++, partM(x, y, 0, r, 1, 1, .5), x2);
+  } else {
+    for (const [x, y] of [[.06, 1.8], [-.03, 1.83], [-.11, 1.79]]) put(P.ear, C.ear++, partM(x, y, 0, 0, .55, .6, .4), COS_X[4]);
+    put(P.spike, C.spike++, partM(.24, 1.57, 0, -Math.PI / 2, .8, .8, .8), x2);
+  }
+}
+let COST_C = null; const HC = { 0: 0, 1: 0, 2: 0, set(r, g, b) { this[0] = r; this[1] = g; this[2] = b; return this; } };   // rim light strength on people (stronger at night so the crowd reads in the dark)
 const WATER = { time: { value: 0 }, sky: { value: new THREE.Color(0x9fdcff) } };
 function waterify(m, scale) {
   m.onBeforeCompile = sh => {

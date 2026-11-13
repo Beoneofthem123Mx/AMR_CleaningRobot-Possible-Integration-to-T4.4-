@@ -155,9 +155,16 @@ function looks() {
   const r3 = Math.random(), r4 = Math.random(), r5 = Math.random();
   L.bw = .82 + Math.random() * .5; L.ws = r3 < .45 ? 0 : r3 < .58 ? 1 : r3 < .7 ? 2 : r3 < .82 ? 3 : r3 < .92 ? 4 : 5;
   L.hs = r4 < .5 ? 0 : r4 < .64 ? 1 : r4 < .78 ? 2 : r4 < .92 ? 3 : 4; L.cl = r5 < .4 ? 0 : r5 < .7 ? 1 : r5 < .85 ? 2 : 3;
+  // body types: kids, tall people, big round people, grandparents, and fans in full costume (bear, dino, chicken)
+  const rt = Math.random();
+  if (rt < .08) { L.sc = .56 + Math.random() * .1; L.bw = .85; L.ws = Math.random() < .6 ? 1 : 2; L.v0m = 1.12; L.m = L.m === 3 ? 0 : L.m; if (Math.random() < .25) L.acc = 1; L.kid = 1; }
+  else if (rt < .14) { L.sc = 1.15 + Math.random() * .12; L.bw = .76 + Math.random() * .12; L.tall = 1; }
+  else if (rt < .22) { L.sc = 1 + Math.random() * .08; L.bw = 1.45 + Math.random() * .25; L.ws = 4; L.v0m = .9; }
+  else if (rt < .27) { L.sc = .86 + Math.random() * .08; L.ws = 5; L.v0m = .78; L.old = 1; L.hs = Math.random() < .4 ? 4 : 0; L.m = L.m === 4 ? 0 : L.m; if (Math.random() < .35) L.acc = 5; }
+  else if (rt < .31) { L.cos = 1 + ((Math.random() * 3) | 0); L.sc = 1 + Math.random() * .12; L.bw = 1.15; L.m = 0; L.hs = 4; L.acc = 0; L.cl = 0; }
   if (MOD && MOD.rain && Math.random() < .45) L.acc = 3;
   if (MOD && MOD.sizeMul) L.sc *= MOD.sizeMul;
-  if (MOD && MOD.uniform) { L.c = L.ac = MOD.uc || 0; L.pc = 0; }
+  if (MOD && MOD.uniform) { L.c = L.ac = MOD.uc || 0; L.pc = 0; L.cos = 0; }
   return L;
 }
 function spawn() {
@@ -166,6 +173,7 @@ function spawn() {
   const e = Math.random();
   ag.push({ x, y, vx: 0, vy: -.5, h: -Math.PI / 2, v0: (1.35 + Math.random() * .5) * (MOD && MOD.speed || 1), alt: Math.random() < altShare(), fol: Math.random(), lift: 0, beam: false, tol: .8 + e * e * 26,
     leave: Math.random() * 16, ph: Math.random() * 6.28, dance: false, p: 0, ...looks(), ps: 0, dmg: 0, fx: 0, fy: 0 });
+  { const a = ag[ag.length - 1]; if (a.v0m) a.v0 *= a.v0m; }   // kids run, grandparents stroll
   spawned++;
 }
 
@@ -322,6 +330,33 @@ function saveBest(key, stars) {
 }
 
 // ===== Phases =====
+// a fresh uneven layout: seven gates with random gaps between them (never overlapping)
+function slotLayout() {
+  const min = SLOT_W + 1.2, lo = SLOT_W / 2 + .5, hi = WW - SLOT_W / 2 - .5, slack = hi - lo - (SLOTS - 1) * min;
+  const w = Array.from({ length: SLOTS + 1 }, () => Math.pow(Math.random(), 1.6) + .05), sum = w.reduce((s, v) => s + v, 0);
+  const xs = []; let x = lo + slack * w[0] / sum;
+  for (let i = 0; i < SLOTS; i++) { if (i) x += min + slack * w[i] / sum; xs.push(x); }
+  return xs;
+}
+// a gate works if nothing of the venue stands right behind or in front of it and the stage can be reached from it
+function slotOK(i) {
+  const x = slotX(i), yin = FENCE_Y - 1.2, yout = FENCE_Y + 1.2;
+  for (const dx of [-.8, 0, .8]) if (blockedC[cellOf(x + dx, yin)] || blockedC[cellOf(x + dx, yout)]) return false;
+  return isFinite(fStage[cellOf(x, yin)]);
+}
+// moves the entrances: new positions, and the venue's usual number of open gates picked among the ones that work
+function shuffleSlots() {
+  const want = scene.gates.filter(Boolean).length, need = Math.max(want, Math.min(SLOTS, scene.maxGates || want));
+  for (let tries = 0; tries < 12; tries++) {
+    SLOT_XS = slotLayout(); SLOT_BAD = []; gates = Array(SLOTS).fill(false); buildWorld();
+    const ok = [...Array(SLOTS).keys()].filter(slotOK);
+    if (ok.length < need) continue;
+    SLOT_BAD = [...Array(SLOTS).keys()].filter(i => !ok.includes(i));
+    const pick = ok.slice().sort(() => Math.random() - .5).slice(0, want);
+    gates = gates.map((_, i) => pick.includes(i)); buildWorld(); return true;
+  }
+  SLOT_XS = null; SLOT_BAD = []; gates = scene.gates.slice(); buildWorld(); return false;
+}
 function canStart() {
   for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {
     toast("A fence leaves a gate with no path to the stage. Clear the way."); return false;

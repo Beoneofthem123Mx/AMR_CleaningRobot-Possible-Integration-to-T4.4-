@@ -8,7 +8,11 @@ let PCRIT = 8.5;
 let CROWD = 3200, FENCE_BUDGET = 60, MAX_GATES = 5;
 const SHOW_TIME = 40;
 const FENCE_Y = 66, SLOTS = 7, SLOT_W = 2.6;
-const slotX = i => WW * (i + .5) / SLOTS;
+// gate positions: evenly spaced by default; each visit to a venue can shuffle them into a new, uneven layout
+let SLOT_XS = null, SLOT_BAD = [];
+const slotX = i => SLOT_XS ? SLOT_XS[i] : WW * (i + .5) / SLOTS;
+const badSlots = () => SLOT_XS ? SLOT_BAD : ((typeof scene !== "undefined" && scene && scene.noSlots) || []);
+let shuffleGates = (() => { try { return localStorage.getItem("mh.shuffle") !== "off"; } catch (e) { return true; } })();
 let gates = [false, false, true, false, true, false, false], scene;
 let fences = [];           // player fences {ax,ay,bx,by,len,type}
 // fence materials the player can buy (cost per meter; the budget is FENCE_BUDGET * 10 dollars)

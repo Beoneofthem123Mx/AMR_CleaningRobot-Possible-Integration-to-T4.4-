@@ -57,11 +57,14 @@ function showOptions() {
     <label class="opt">Sound effects <input type="range" id="volS" min="0" max="100" value="${pct(AU.sfxVol)}"><span id="volSv">${pct(AU.sfxVol)}%</span></label>
     <div class="row"><button id="optFx">Fancy effects: ${POST.on ? "on" : "off"}</button>${window.steam ? '<button id="fs">Full screen (F11)</button>' : ""}</div>
     <p class="keys">Glow, focus blur and contact shading. Turn them off if the game runs slowly (shortcut: G).</p>
+    <div class="row"><button id="optShuffle">Moving entrances: ${shuffleGates ? "on" : "off"}</button></div>
+    <p class="keys">On: the gates sit somewhere new every time you enter a venue. Off: fixed gates, and your plan is saved per venue.</p>
     <div class="row"><button id="optReset">Erase all progress</button></div>
     <div class="row"><button class="go" id="pick">Back</button></div>`, "options");
   $("#volM").oninput = e => { setVolume("m", e.target.value / 100); $("#volMv").textContent = e.target.value + "%"; };
   $("#volS").oninput = e => { setVolume("s", e.target.value / 100); $("#volSv").textContent = e.target.value + "%"; sfx("tick"); };
   $("#optFx").onclick = () => { POST.on = !POST.on; try { localStorage.setItem("mh.fx", POST.on ? "on" : "off"); } catch (er) { /* no storage */ } $("#optFx").textContent = "Fancy effects: " + (POST.on ? "on" : "off"); };
+  $("#optShuffle").onclick = () => { shuffleGates = !shuffleGates; try { localStorage.setItem("mh.shuffle", shuffleGates ? "on" : "off"); } catch (er) { /* no storage */ } $("#optShuffle").textContent = "Moving entrances: " + (shuffleGates ? "on" : "off"); };
   let armed = false;
   $("#optReset").onclick = () => {
     if (!armed) { armed = true; $("#optReset").textContent = "Really? Click again to erase stars, medals, stats and plans"; return; }

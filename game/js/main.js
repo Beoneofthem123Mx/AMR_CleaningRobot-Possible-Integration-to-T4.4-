@@ -135,14 +135,18 @@ function startDemo() {
   // the menu backdrop shows a venue the player has unlocked (the first two for new players)
   const open = Object.keys(SCENES).filter(key => typeof isUnlocked === "function" && isUnlocked(key) && !SCENES[key].night);
   demo = true; const keys = open.length > 2 ? open : ["plaza", "circo"], k = keys[(Math.random() * keys.length) | 0];
-  sceneKey = k; scene = SCENES[k]; CROWD = scene.crowd; gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
+  sceneKey = k; scene = SCENES[k]; CROWD = scene.crowd; SLOT_XS = null; SLOT_BAD = []; gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
   buildWorld(); phase = "plan"; start(MODS_BY_ID.normal); camMode = 0;
 }
 function loadScene(key) {
   demo = false; if (camMode === 3) { camMode = 0; camFree = null; if (typeof camLabel === "function") camLabel(); }
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = scene.fenceBudget; MAX_GATES = sandbox ? SLOTS : scene.maxGates;
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
-  buildWorld(); if (typeof loadPlan === "function") loadPlan(); backToPlan();
+  SLOT_XS = null; SLOT_BAD = []; buildWorld();
+  // entrances move on every visit (unless turned off in Options); a saved plan only fits the fixed layout
+  const moved = !window.__manual && shuffleGates && shuffleSlots();
+  if (moved) { planHistory = []; lastPlan = null; } else if (typeof loadPlan === "function") loadPlan();
+  backToPlan();
   if (!window.__manual) { cam.z = 1.35; cam.y = WH * .6; }   // arriving at a venue: start close to the gates and pull back to the whole plan
 }
 $("#bScene").addEventListener("click", chooser);

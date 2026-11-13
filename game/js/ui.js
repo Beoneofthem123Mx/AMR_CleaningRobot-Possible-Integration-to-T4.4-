@@ -20,7 +20,7 @@ cv.addEventListener("pointerdown", ev => {
   if (tool === "gate") {
     if (Math.abs(y - FENCE_Y) > 3) { toast("Tap a gate on the fence at the bottom."); return; }
     const i = clamp(Math.floor(x / (WW / SLOTS)), 0, SLOTS - 1), open = gates.filter(Boolean).length;
-    if ((scene.noSlots || []).includes(i)) { toast(`${scene.slotWhy}: that gate can't be opened.`); return; }
+    if (badSlots().includes(i)) { toast(`${SLOT_XS ? "Something is in the way" : scene.slotWhy}: that gate can't be opened.`); return; }
     if (gates[i] && open <= 1) { toast("You need at least one open gate."); return; }
     if (!gates[i] && open >= MAX_GATES) { toast(`There's only enough staff for ${MAX_GATES} gates.`); return; }
     gates[i] = !gates[i]; buildWorld(); ui(); sfx("select"); return;
@@ -155,7 +155,7 @@ function applyPlan(json) {
   try {
     const o = JSON.parse(json);
     if (!Array.isArray(o.gates) || o.gates.length !== SLOTS || !o.gates.some(Boolean)) return false;
-    gates = o.gates.map((g, i) => !!g && !(scene.noSlots || []).includes(i)); if (!gates.some(Boolean)) gates = scene.gates.slice();
+    gates = o.gates.map((g, i) => !!g && !badSlots().includes(i)); if (!gates.some(Boolean)) gates = scene.gates.slice();
     fences = (o.fences || []).filter(f => FENCE_TYPES[f.type] && [f.ax, f.ay, f.bx, f.by, f.len].every(Number.isFinite)).map(f => ({ ...f }));
     guards = (o.guards || []).filter(g => Number.isFinite(g[0]) && Number.isFinite(g[1])).map(([x, y, role]) => ({ kind: "guard", role: GUARD_ROLES[role] ? role : "calm", x, y, ang: -Math.PI / 2, t: 0 }));
     props = (o.props || []).filter(p => PROP_TYPES[p.type] && Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => ({ type: p.type, x: p.x, y: p.y }));
@@ -267,7 +267,7 @@ function camKeys(dt) {
 $("#bSpeed").addEventListener("click", () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $("#bSpeed").textContent = speed + "×"; });
 $("#card").addEventListener("click", e => {
   const sk = e.target.closest("[data-scene]");
-  if (sk) { loadScene(sk.dataset.scene); hideCard(); caption("You plan it", false, 0); }
+  if (sk) { loadScene(sk.dataset.scene); hideCard(); caption(SLOT_XS ? "The entrances moved! You plan it" : "You plan it", false, 0); }
   if (e.target.id === "retry") { paused = false; backToPlan(); }
   if (e.target.id === "pick") chooser();
   if (e.target.id === "options") showOptions();
