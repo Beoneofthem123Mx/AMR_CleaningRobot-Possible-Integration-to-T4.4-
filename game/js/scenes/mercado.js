@@ -16,10 +16,11 @@ SCENES.mercado = {
   gates: [F, T, F, T, F, T, F], unlock: 46, shopRate: 3,
   intro: "Saturday market: twelve stalls in three rows and a mango stand at the back giving away free samples. Everyone wanders from stall to stall, the vendors shout their deals and the aisles are exactly one person too narrow.",
   acts: ["Free mango samples!", "Last ones!", "Two for one!", "Special price!"],
-  events: ["oferta", "frutas", "gallinas", "diablito", "oferta", "frutas"],
+  events: ["oferta", "frutas", "gallinas", "diablito", "oferta", "frutas", "derrame", "derrame"],
   goal: o => o.kind === "barrier", goalMaxY: 12,
   heights: { stall: 1.1, mango: 1.3, crates: .9 },
   lines: {
+    derrame: "The fish stall's tank burst. For twelve seconds one aisle was an ice rink that smelled of tuna.",
     oferta: "A flash deal at one stall moved half the market in eleven seconds.",
     frutas: "A pyramid of oranges collapsed and rolled down every aisle.",
     gallinas: "The chickens from the poultry stall went shopping on their own.",
@@ -68,9 +69,14 @@ SCENES.mercado = {
   onStart() {
     for (const s of MKT.stalls) { const back = s.y0 === 32 ? s.y0 + .9 : s.y1 - .9;
       addMover({ kind: "mkt_vendor", fixture: true, beh: "static", life: 1e9, x: (s.x0 + s.x1) / 2, y: back, ang: s.y0 === 32 ? Math.PI / 2 : -Math.PI / 2, r: .3, push: 0, scare: 0, air: true, h: 1.1, stall: s }); }
-    MKT.t = 1;
+    MKT.t = 1; MKT.spill = null;
   },
   step() {
+    if (MKT.spill && (phase === "show" || phase === "evac")) {   // the slippery aisle: anyone running through it may go down
+      const S = MKT.spill; S.t -= DT; if (S.t <= 0) MKT.spill = null;
+      else { if (Math.random() < .25) puff(S.x + rnd(-S.r, S.r), S.y + rnd(-.8, .8), .3, "#7fd3ff", .35, .8, .4);
+        for (const a of ag) if (Math.abs(a.x - S.x) < S.r && Math.abs(a.y - S.y) < 1.4 && a.air <= 0 && Math.hypot(a.vx, a.vy) > .7 && Math.random() < .012) { toss(a, .35, .25); if (!demo && Math.random() < .2) pop(a.x, a.y - 1, ["WHOA!", "SLIPPERY!", "MY BACK!", "IT SMELLS LIKE TUNA!"][(Math.random() * 4) | 0]); } }
+    }
     if (phase !== "show" || demo) return;
     MKT.t -= DT; if (MKT.t > 0) return; MKT.t = .45 + Math.random() * .5;
     const vs = movers.filter(m => m.kind === "mkt_vendor"), v = vs[(Math.random() * vs.length) | 0]; if (!v) return;
@@ -78,6 +84,11 @@ SCENES.mercado = {
     if (near > 2 || Math.random() < .2) pop(v.x, v.y - 1.4, MKT_YELLS[(Math.random() * MKT_YELLS.length) | 0]);
   },
   ev: {
+    derrame() {   // the fish tank bursts: one aisle turns into an ice rink for twelve seconds
+      const y = [17, 31, 45][(Math.random() * 3) | 0] - .4; MKT.spill = { x: 20, y, r: 14, t: 12 };
+      for (let k = 0; k < 14; k++) puff(rnd(6, 34), y + rnd(-1, 1), .5, "#7fd3ff", .5, 1.4, .6);
+      pop(20, y - 1.5, "SPLOOSH! WET FLOOR!"); caption("The fish tank burst: slippery aisle!", true, 2000); sfx("splash");
+    },
     oferta() {
       const s = MKT.stalls[(Math.random() * MKT.stalls.length) | 0], x = (s.x0 + s.x1) / 2, y = s.y0 === 32 ? s.y1 + 1 : s.y0 - 1;
       tempAttract(x, y, 2.5, 6, .45); pop(x, y - 1.5, `${s.g[0]}: 90% OFF!`); sfx("jingle"); caption(`Flash deal at the ${s.g[0].toLowerCase()} stall!`, true, 2000);
