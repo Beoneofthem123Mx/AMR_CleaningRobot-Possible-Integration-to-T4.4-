@@ -26,10 +26,11 @@ SCENES.procesion = {
   gates: [F, T, F, T, F, T, F], unlock: 40, altShare: .62,
   intro: "The town's big procession: the float with the Saviour is carried around the square, and two thirds of the crowd follow it everywhere, pushing for a better look. Keep a path open for the float and the bearers.",
   acts: ["Make way for the float!", "Candles up!", "The band strikes up!", "Petals!"],
-  events: ["banda", "incienso", "petalos", "velas", "banda", "petalos", "lluvia"],
+  events: ["banda", "incienso", "petalos", "velas", "banda", "petalos", "lluvia", "reversa", "reversa"],
   goal: o => o.kind === "barrier", goalMaxY: 12,
   heights: { church: 6, balcony: 3, kiosk: 1.6 },
   lines: {
+    reversa: "The bearers took a wrong turn and reversed the float for ten seconds into the people following it. Nobody has ever said 'sorry' so many times.",
     banda: "The brass band played the same march fourteen times and nobody complained (out loud).",
     incienso: "So much incense that half the procession walked into the other half.",
     petalos: "Grandmas on the balconies threw so many petals that the float briefly disappeared.",
@@ -70,12 +71,12 @@ SCENES.procesion = {
     }
     for (let i = 0; i < 26; i++) { const [x, y] = procPoint(i / 26); for (const s of [-1, 1]) part(grp, "cyl", basic("#fff2c0"), .04, .22, .04, x + s * 2.2, .11, y + s * .4); }   // candles along the carpet
   },
-  onStart() { PROC.q = 0; PROC.alt = 0; },
+  onStart() { PROC.q = 0; PROC.alt = 0; PROC.rev = 0; },
   step() {
     if (phase !== "show" && phase !== "evac") return;
     // the float advances slowly, but stops when people block it (and the bearers complain)
     let blocked = 0; for (const a of ag) if ((a.x - PROC.x) ** 2 + (a.y - PROC.y) ** 2 < 4.4) blocked++;
-    const sp = fullAt ? (blocked > 6 ? .0012 : .0042) : .002; PROC.q = (PROC.q + sp * DT * 10) % 1;
+    const sp = fullAt ? (blocked > 6 ? .0012 : .0042) : .002; if (PROC.rev > 0) PROC.rev -= DT; PROC.q = (PROC.q + (PROC.rev > 0 ? -.8 : 1) * sp * DT * 10 + 1) % 1;
     const [x, y, an] = procPoint(PROC.q); PROC.x = x; PROC.y = y; PROC.ang = an;
     for (const a of ag) { const dx = a.x - x, dy = a.y - y, d2 = dx * dx + dy * dy; if (d2 < 5 && d2 > .01) { const d = Math.sqrt(d2); a.vx += dx / d * 3 * DT * 8; a.vy += dy / d * 3 * DT * 8; a.p += .25; } }   // bearers shove
     PROC.alt -= DT; if (PROC.alt <= 0 && phase === "show") { PROC.alt = 1.2; setAlt(x, y, 3.4); }
@@ -84,6 +85,10 @@ SCENES.procesion = {
     for (const m of movers) if (m.bearer !== undefined) { const off = m.bearer, c = Math.cos(an), s = Math.sin(an); m.x = x + c * off[0] - s * off[1]; m.y = y + s * off[0] + c * off[1]; m.ang = an; }
   },
   ev: {
+    reversa() {   // wrong turn: the float backs up along its route into the people following it
+      if (PROC.rev > 0) return; PROC.rev = 10; caption("Wrong turn! The float is reversing", true, 2200); pop(PROC.x, PROC.y - 2.5, "BACK UP! BACK UP!"); sfx("beep");
+      later(.6, () => { for (let k = 0; k < 4; k++) { const [x, y] = crowdPoint(); pop(x, y - 1, ["IT'S COMING BACK!", "SORRY! SORRY!", "MY TOES!", "WHICH WAY?!"][k]); } });
+    },
     banda(side) {
       for (let n = 0; n < 6; n++) { const q = (PROC.q - .04 - n * .008 + 1) % 1, [x, y] = procPoint(q);
         addMover({ kind: "proc_band", beh: "static", life: 18, x: x + rnd(-1, 1), y: y + rnd(-1, 1), r: .45, push: 15, scare: 1, q, say: n ? "" : "♪ TA-RA-RAAA ♪", sayEvery: 3,
