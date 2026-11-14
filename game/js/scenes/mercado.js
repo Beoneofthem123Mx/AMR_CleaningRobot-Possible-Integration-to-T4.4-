@@ -75,7 +75,7 @@ SCENES.mercado = {
     if (MKT.spill && (phase === "show" || phase === "evac")) {   // the slippery aisle: anyone running through it may go down
       const S = MKT.spill; S.t -= DT; if (S.t <= 0) MKT.spill = null;
       else { if (Math.random() < .25) puff(S.x + rnd(-S.r, S.r), S.y + rnd(-.8, .8), .3, "#7fd3ff", .35, .8, .4);
-        for (const a of ag) if (Math.abs(a.x - S.x) < S.r && Math.abs(a.y - S.y) < 1.4 && a.air <= 0 && Math.hypot(a.vx, a.vy) > .7 && Math.random() < .012) { toss(a, .35, .25); if (!demo && Math.random() < .2) pop(a.x, a.y - 1, ["WHOA!", "SLIPPERY!", "MY BACK!", "IT SMELLS LIKE TUNA!"][(Math.random() * 4) | 0]); } }
+        for (const a of ag) if (Math.abs(a.x - S.x) < S.r && Math.abs(a.y - S.y) < 1.4 && a.air <= 0 && Math.hypot(a.vx, a.vy) > .7 && Math.random() < .0003) { toss(a, .35, .25); if (!demo && Math.random() < .3) pop(a.x, a.y - 1, ["WHOA!", "SLIPPERY!", "MY BACK!", "IT SMELLS LIKE TUNA!"][(Math.random() * 4) | 0]); } }
     }
     if (phase !== "show" || demo) return;
     MKT.t -= DT; if (MKT.t > 0) return; MKT.t = .45 + Math.random() * .5;
