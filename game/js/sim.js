@@ -499,6 +499,11 @@ function toss(a, h, d) {
   a.airD = a.air = d || .75 + Math.random() * .4; a.airH = h || 1.2 + Math.random() * 1.2;
   a.airSpin = Math.random() < .5 ? -1 : 1; a.airYaw = (Math.random() - .5) * 4; return true;
 }
+// an empty plan always scores zero: the Open gates button says so once, then lets them go ahead if they insist
+function emptyPlanWarn() {
+  if (sandbox || demo || window.__manual || fences.length + guards.length + props.length > 0 || emptyPlanWarn.k === sceneKey) return false;
+  emptyPlanWarn.k = sceneKey; toast("Nothing placed: an empty plan always gets zero stars. Open the gates again to go anyway."); return true;
+}
 function canStart() {
   for (let i = 0; i < SLOTS; i++) if (gates[i] && !isFinite(fStage[cellOf(slotX(i), FENCE_Y + 1.5)])) {
     toast("A fence leaves a gate with no path to the stage. Clear the way."); return false;

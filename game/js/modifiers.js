@@ -106,7 +106,7 @@ function rollMod() {
 }
 // the roulette: flips through names fast, stops and starts the show
 function startWithRoulette() {
-  if (phase !== "plan" || !canStart()) return;
+  if (phase !== "plan" || !canStart() || emptyPlanWarn()) return;
   audioInit();
   let pick = window.__forceMod ? MODS_BY_ID[window.__forceMod] : tourMod() ? MODS_BY_ID[tourMod()] : DAILY && DAILY.key === sceneKey ? MODS_BY_ID[DAILY.mod] : rollMod();
   if (chaosMode && !window.__forceMod && !tourMod() && !(DAILY && DAILY.key === sceneKey)) { let b = rollMod(), n = 0; while (b.id === pick.id && n++ < 5) b = rollMod(); pick = comboMod(pick.id === "normal" ? rollMod() : pick, b); }
