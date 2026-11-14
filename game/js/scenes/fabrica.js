@@ -17,21 +17,23 @@ SCENES.fabrica = {
   gates: [F, T, F, T, F, T, F], unlock: 38,
   intro: "The rubber-duck factory opens its doors. The free samples are at the back, behind two conveyor belts that carry anyone who steps on them sideways, and three ovens nobody should hug.",
   acts: ["Samples for everyone!", "Watch the belts!", "Hard hats on!", "Fresh from the oven!"],
-  events: ["robot", "cajas", "horno", "turno", "robot", "cajas", "sirena"],
+  events: ["robot", "cajas", "horno", "turno", "robot", "cajas", "sirena", "turbo", "turbo"],
   goal: o => o.kind === "barrier", goalMaxY: 13,
   heights: { counter: 1.2, oven: 2.6, belt: .35, machine: 3, silo: 5 },
   lines: {
+    turbo: "Someone leaned on a lever and both conveyor belts ran backwards at triple speed. The ducks were fine.",
     robot: "A robot arm escaped the line and hugged visitors at an industrial pace.",
     cajas: "An avalanche of rubber-duck boxes rolled through the open day.",
     horno: "An oven door blew open and gave half the crowd an instant tan.",
     turno: "Shift change: three hundred workers crossed the crowd to clock out on time.",
     sirena: "Someone pressed the red button. The siren was 'just a test', apparently.",
   },
+  onStart() { FAB.turbo = 0; },
   quotes: ["“The belts are a feature,” said the plant manager.", "“I came for a duck and left on a conveyor belt,” said a visitor.", "“Next year, a fence,” promised the safety officer."],
   build() {
     rect(9, 0, 31, 6.5, "counter");
     seg(5, 9, WW - 5, 9, .4, "barrier");
-    for (const [x0, y0, x1, y1] of FAB.belts) rect(x0, y0, x1, y1, "belt");
+    // the belts are floor, not walls: whoever steps on one gets carried sideways (see step)
     for (const [x, y, r] of FAB.ovens) circ(x, y, r, "oven");
     rect(0, 14, 3, 20, "machine"); rect(WW - 3, 14, WW, 20, "machine"); circ(4, 58, 2, "silo"); circ(WW - 4, 58, 2, "silo");
   },
@@ -62,7 +64,7 @@ SCENES.fabrica = {
     const steel = mat("#9aa0a8", { metalness: .6, roughness: .4 }), dark = mat("#2b2d33", { roughness: .8 });
     // conveyor belts: rollers, side rails and boxes riding along
     for (const [x0, y0, x1, y1, d] of FAB.belts) {
-      for (const z of [y0 - .05, y1 + .05]) part(grp, "box", steel, x1 - x0, .12, .1, (x0 + x1) / 2, .5, z);
+      for (const z of [y0 - .05, y1 + .05]) part(grp, "box", steel, x1 - x0, .08, .1, (x0 + x1) / 2, .12, z);
       for (let x = x0 + .5; x < x1; x += 3) for (const z of [y0, y1]) part(grp, "cyl", dark, .08, .5, .08, x, .25, z);
       for (let k = 0; k < 6; k++) { const b = part(grp, "box", mat(["#c8a06a", "#ffd23a", "#d8322b"][k % 3]), .7, .55, .7, x0 + k * 5.4, .65, (y0 + y1) / 2); FAB.boxes.push([b, x0, x1, d, k * 5.4]); }
     }
@@ -96,9 +98,9 @@ SCENES.fabrica = {
   bounce: tt => Math.max(0, Math.sin(tt * 2.2) - .96) * 2.2,
   step() {
     if (phase !== "show" && phase !== "evac") return;
-    FAB.t -= DT;
+    FAB.t -= DT; if (FAB.turbo > 0) FAB.turbo -= DT; const bk = FAB.turbo > 0 ? -3 : 1;   // turbo: the belts run backwards at triple speed
     for (const a of ag) {
-      for (const [x0, y0, x1, y1, d] of FAB.belts) if (a.x > x0 && a.x < x1 && a.y > y0 - .2 && a.y < y1 + .2) { a.vx += d * 6 * DT; a.vx = clamp(a.vx, -3.2, 3.2); }   // the belt drags you sideways
+      for (const [x0, y0, x1, y1, d] of FAB.belts) if (a.x > x0 && a.x < x1 && a.y > y0 - .2 && a.y < y1 + .2) { a.vx += d * bk * 6 * DT; a.vx = clamp(a.vx, FAB.turbo > 0 ? -6 : -3.2, FAB.turbo > 0 ? 6 : 3.2); }   // the belt drags you sideways
       for (const [x, y, r] of FAB.ovens) { const dx = a.x - x, dy = a.y - y, d = Math.hypot(dx, dy); if (d < r + 1.1 && d > .01) { a.vx += dx / d * 1.8 * DT * 10; a.vy += dy / d * 1.8 * DT * 10; a.p += .12; if (Math.random() < .002 && !demo) pop(a.x, a.y - 1, ["HOT HOT HOT!", "MY EYEBROWS!", "OUCH!"][(Math.random() * 3) | 0]); } }
     }
     if (FAB.t <= 0 && fullAt) { FAB.t = 5 + Math.random() * 4; const a = ag[(Math.random() * ag.length) | 0]; if (a && a.x > 4 && a.x < 36 && a.y > 21 && a.y < 44) pop(a.x, a.y - 1.1, ["WHEEE, A RIDE!", "I'M A PRODUCT NOW!", "THIS IS NOT THE EXIT!"][(Math.random() * 3) | 0]); }
@@ -124,6 +126,9 @@ SCENES.fabrica = {
       for (let n = 0; n < 8; n++) { const y = rnd(28, 60); addMover({ kind: n === 0 ? "fab_boss" : "fab_worker", x: side ? -1 - n : WW + 1 + n, y, pts: [[side ? WW + 3 : -3, y + rnd(-6, 6)]], speed: 3.2 + Math.random(), r: .45, push: 18, scare: 1, say: n ? "" : "CLOCK OUT TIME!", sayEvery: 2.5,
         tick(m) { if (Math.random() < .004) pop(m.x, m.y - 1.4, FAB_SAYS[(Math.random() * FAB_SAYS.length) | 0]); } }); }
       caption("Shift change! The workers are crossing", false, 1800);
+    },
+    turbo() {   // someone leaned on the lever: both belts run backwards at triple speed
+      FAB.turbo = 8; caption("The belts are running backwards. Fast.", true, 2200); pop(20, 23, "TURBO MODE!"); pop(20, 41, "WRONG WAY!"); sfx("siren"); shake = Math.min(1, shake + .3);
     },
     sirena() { blackT = 3; sfx("siren"); flash = .6; caption("Someone pressed the red button", true, 2000); pop(20, 12, "WEEE-OOOO!"); later(4, () => caption("It was just a test. Probably.", false, 1800)); },
   },
