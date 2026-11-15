@@ -111,6 +111,7 @@ exit-flow chart shows which gate took everybody. Scrub the replay to watch the c
 [list]
 [*]29 venues, a daily challenge with a new venue and twist every day, Total Chaos mode and Sandbox.
 [*]World Tour: five random shows in a row, a perk after each one, one pancake allowance and no retries.
+[*]Photo mode (hide the HUD, freeze the chaos, frame the shot), a colour-blind pressure palette and automatic quality that keeps big crowds smooth on modest PCs.
 [*]A level editor: build your own venue, test it and share it on the Steam Workshop (or as a code).
 [/list]
 
