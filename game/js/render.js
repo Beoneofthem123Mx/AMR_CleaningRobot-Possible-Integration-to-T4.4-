@@ -277,7 +277,7 @@ function buildStatic3D() {
     else { const len = Math.hypot(o.bx - o.ax, o.by - o.ay); geo = new THREE.BoxGeometry(len + o.th * .5, h, o.th); geo.rotateY(-Math.atan2(o.by - o.ay, o.bx - o.ax)); geo.translate((o.ax + o.bx) / 2, h / 2, (o.ay + o.by) / 2); }
     if (o.kind !== "tent") worldUV(geo);
     if (o.kind === "tent" && !G3.tentMat) G3.tentMat = new THREE.MeshStandardMaterial({ map: stripeTex(["#d8322b", "#f6f1e7"], 8, false), roughness: .7 });   // clean candy stripes
-    const mesh = new THREE.Mesh(geo, o.kind === "tent" ? G3.tentMat : o.kind === "player" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
+    const mesh = new THREE.Mesh(geo, o.kind === "tent" ? G3.tentMat : o.kind === "player" || o.kind === "blast" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
     mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
     if ((o.kind === "stands" || o.kind === "grandstand" || (o.kind === "bench" && sceneKey === "boda")) && o.t === "r" && !scene.noFans) {   // seated toy fans / guests that bounce during the show
       const spots = [], r = rng(Math.round(o.x0 * 31 + o.y0 * 17)), rows = (a0, a1) => a1 - a0 < 1.2 ? [(a0 + a1) / 2] : Array.from({ length: Math.floor((a1 - a0 - .75) / .62) + 1 }, (_, i) => a0 + .45 + i * .62);
