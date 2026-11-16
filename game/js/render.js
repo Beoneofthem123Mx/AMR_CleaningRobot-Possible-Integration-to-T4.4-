@@ -269,7 +269,7 @@ function buildStatic3D() {
   // low-poly venues: a faceted floor (it only dips, so the markings and the heat map stay on top) and faceted ground outside
   if (!G3.flatGeo) { G3.flatGeo = G3.ground.geometry; G3.flatSkirt = G3.skirt.geometry; G3.polyGeos = {}; }
   const pv = isPoly(), gk = WW + "x" + SH;
-  if (pv && !G3.polyGeos[gk]) G3.polyGeos[gk] = [facetPlane(WW, SH, 1.5, .09, false), facetPlane(900, 900, 16, 2.4, true)];
+  if (pv && !G3.polyGeos[gk]) G3.polyGeos[gk] = [facetPlane(WW, SH, 1.5, .045, false), facetPlane(900, 900, 16, 2.4, true)];
   G3.ground.geometry = pv ? G3.polyGeos[gk][0] : G3.flatGeo; G3.skirt.geometry = pv ? G3.polyGeos[gk][1] : G3.flatSkirt;
   G3.ground.material.flatShading = pv; G3.skirt.material.flatShading = pv; G3.skirt.material.needsUpdate = true;
   const m = new THREE.MeshStandardMaterial({ map: tex, roughness: .85 });
