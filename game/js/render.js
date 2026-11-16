@@ -80,8 +80,24 @@ const MATS = {};
 function mat(hex, o) { const key = hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshStandardMaterial(Object.assign({ color: lin(hex), roughness: .7 }, o || {}))); }
 function basic(hex, o) { const key = "b" + hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshBasicMaterial(Object.assign({ color: lin(hex), toneMapped: false }, o || {}))); }
 let GEO;
+// low-poly look (first venues): chamfered, rounded boxes and faceted columns instead of plain boxes and smooth cylinders
+const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes"]);
+const isPoly = () => POLY_VENUES.has(sceneKey);
+function polyBox(w, h, d, r) {   // a box with rounded corners (few segments, so it stays faceted) and a chamfered top edge
+  r = Math.max(.02, Math.min(r, w / 2 - .01, d / 2 - .01)); const b = Math.min(.12, h * .25, r * .8), x0 = -w / 2 + r, x1 = w / 2 - r, z0 = -d / 2 + r, z1 = d / 2 - r, sh = new THREE.Shape();
+  sh.moveTo(x0, -d / 2); sh.lineTo(x1, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, z0); sh.lineTo(w / 2, z1); sh.quadraticCurveTo(w / 2, d / 2, x1, d / 2);
+  sh.lineTo(x0, d / 2); sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, z1); sh.lineTo(-w / 2, z0); sh.quadraticCurveTo(-w / 2, -d / 2, x0, -d / 2);
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: Math.max(.02, h - 2 * b), bevelEnabled: true, bevelThickness: b, bevelSize: b * .9, bevelSegments: 1, curveSegments: 2 });
+  geo.rotateX(-Math.PI / 2); geo.translate(0, b, 0); return geo;   // the shape is symmetric, so no flip is needed
+}
 function part(parent, geo, m, sx, sy, sz, x, y, z) {
-  const mesh = new THREE.Mesh(GEO[geo], typeof m === "string" ? mat(m) : m);
+  // in the low-poly venues, untextured boxes get chamfered edges and columns become faceted prisms
+  if (isPoly() && (typeof m === "string" || !m.map)) {
+    if (geo === "box") { if (!GEO.pbox) { GEO.pbox = polyBox(1, 1, 1, .16); GEO.pbox.translate(0, -.5, 0); } geo = "pbox"; }
+    else if (geo === "cyl") { if (!GEO.pcyl) GEO.pcyl = new THREE.CylinderGeometry(1, 1, 1, 8); geo = "pcyl"; }
+    else if (geo === "sph") { if (!GEO.psph) GEO.psph = new THREE.IcosahedronGeometry(1, 1); geo = "psph"; }
+  }
+  const mesh = new THREE.Mesh(GEO[geo], typeof m === "string" ? mat(m, isPoly() ? { flatShading: true } : undefined) : m);
   mesh.scale.set(sx, sy, sz); mesh.position.set(x, y, z); mesh.castShadow = true; parent.add(mesh); return mesh;
 }
 function pivot(parent, x, y, z) { const p = new THREE.Group(); p.position.set(x, y, z); parent.add(p); return p; }
@@ -256,6 +272,7 @@ function buildStatic3D() {
   G3.fxPlane.material.color.setScalar(scene.night ? .5 : 1);  // keep floor markings under the bloom threshold at night
   if (!G3.winTex) G3.winTex = windowTex();
   const side = new THREE.MeshStandardMaterial({ map: G3.winTex, roughness: .7, emissiveMap: G3.winTex, emissive: new THREE.Color(scene.night ? 0xffffff : 0x000000), emissiveIntensity: scene.night ? .8 : 0 });
+  const poly = isPoly(), polyM = poly ? Object.assign(m.clone(), { flatShading: true }) : m;
   for (const o of obs) {
     if (o.kind === "building") {
       const geo = new THREE.BoxGeometry(o.x1 - o.x0, o.hb, o.y1 - o.y0); geo.translate((o.x0 + o.x1) / 2, o.hb / 2, (o.y0 + o.y1) / 2); buildingUV(geo);
@@ -272,12 +289,12 @@ function buildStatic3D() {
     const h = HEIGHTS[o.kind] || (scene.heights && scene.heights[o.kind]); if (!h && o.kind !== "tent") continue;
     let geo;
     if (o.kind === "tent") { geo = new THREE.ConeGeometry(Math.SQRT2 * 2.5, 3.4, 4, 1); geo.rotateY(Math.PI / 4); geo.translate((o.x0 + o.x1) / 2, 1.7, (o.y0 + o.y1) / 2); }
-    else if (o.t === "r") { geo = new THREE.BoxGeometry(o.x1 - o.x0, h, o.y1 - o.y0); geo.translate((o.x0 + o.x1) / 2, h / 2, (o.y0 + o.y1) / 2); }
-    else if (o.t === "c") { geo = new THREE.CylinderGeometry(o.kind === "pole" ? o.r * .7 : o.r, o.r, h, 24); geo.translate(o.x, h / 2, o.y); }
-    else { const len = Math.hypot(o.bx - o.ax, o.by - o.ay); geo = new THREE.BoxGeometry(len + o.th * .5, h, o.th); geo.rotateY(-Math.atan2(o.by - o.ay, o.bx - o.ax)); geo.translate((o.ax + o.bx) / 2, h / 2, (o.ay + o.by) / 2); }
+    else if (o.t === "r") { const w = o.x1 - o.x0, d = o.y1 - o.y0; geo = poly ? polyBox(w, h, d, Math.min(.45, Math.min(w, d) * .18)) : new THREE.BoxGeometry(w, h, d); if (!poly) geo.translate(0, h / 2, 0); geo.translate((o.x0 + o.x1) / 2, poly ? 0 : 0, (o.y0 + o.y1) / 2); if (!poly) { /* box already centred at h/2 */ } }
+    else if (o.t === "c") { geo = new THREE.CylinderGeometry(o.kind === "pole" ? o.r * .7 : poly ? o.r * .88 : o.r, o.r, h, poly ? (o.r > 1.5 ? 12 : 8) : 24); geo.translate(o.x, h / 2, o.y); }
+    else { const len = Math.hypot(o.bx - o.ax, o.by - o.ay); geo = poly ? polyBox(len + o.th * .5, h, o.th, o.th * .45) : new THREE.BoxGeometry(len + o.th * .5, h, o.th); if (!poly) geo.translate(0, h / 2, 0); geo.rotateY(-Math.atan2(o.by - o.ay, o.bx - o.ax)); geo.translate((o.ax + o.bx) / 2, 0, (o.ay + o.by) / 2); }
     if (o.kind !== "tent") worldUV(geo);
     if (o.kind === "tent" && !G3.tentMat) G3.tentMat = new THREE.MeshStandardMaterial({ map: stripeTex(["#d8322b", "#f6f1e7"], 8, false), roughness: .7 });   // clean candy stripes
-    const mesh = new THREE.Mesh(geo, o.kind === "tent" ? G3.tentMat : o.kind === "player" || o.kind === "blast" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35 }) : m);
+    const mesh = new THREE.Mesh(geo, o.kind === "tent" ? G3.tentMat : o.kind === "player" || o.kind === "blast" ? G3.fenceMat : o.kind === "pole" ? mat("#c9a14a", { metalness: .5, roughness: .35, flatShading: poly }) : poly ? polyM : m);
     mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
     if ((o.kind === "stands" || o.kind === "grandstand" || (o.kind === "bench" && sceneKey === "boda")) && o.t === "r" && !scene.noFans) {   // seated toy fans / guests that bounce during the show
       const spots = [], r = rng(Math.round(o.x0 * 31 + o.y0 * 17)), rows = (a0, a1) => a1 - a0 < 1.2 ? [(a0 + a1) / 2] : Array.from({ length: Math.floor((a1 - a0 - .75) / .62) + 1 }, (_, i) => a0 + .45 + i * .62);
@@ -1252,19 +1269,19 @@ function buildHorizon() {
       if (wet(cx + Math.cos(a) * d)) { M.makeScale(0, 0, 0); hill.setMatrixAt(i, M); continue; }
       M.compose(V.set(cx + Math.cos(a) * d, -1, cz + Math.sin(a) * d), Q.identity(), S3.set(w, h, w * .8)); hill.setMatrixAt(i, M); hill.setColorAt(i, C.setRGB(.36 + r() * .1, .55 + r() * .12, .3 + r() * .08).lerp(base, .25)); }
     grp.add(hill);
-    const nt = 120, trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(.25, .3, 1, 6), mat("#6b4a2b"), nt), top = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: .9 }), nt);
+    const nt = 120, trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(.25, .3, 1, 6), mat("#6b4a2b"), nt), top = new THREE.InstancedMesh(isPoly() ? new THREE.IcosahedronGeometry(1, 0) : new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: .9, flatShading: isPoly() }), nt);
     for (let i = 0; i < nt; i++) { const a = r() * 6.283, d = 70 + r() * 70, s2 = 1.6 + r() * 1.8, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
       if (wet(x)) { M.makeScale(0, 0, 0); trunk.setMatrixAt(i, M); top.setMatrixAt(i, M); continue; }
       M.compose(V.set(x, s2 * .8, z), Q.identity(), S3.set(s2, s2 * 1.6, s2)); trunk.setMatrixAt(i, M);
       M.compose(V.set(x, s2 * 2.1, z), Q.identity(), S3.set(s2 * 1.3, s2 * 1.4, s2 * 1.3)); top.setMatrixAt(i, M); top.setColorAt(i, C.setHSL(.27 + r() * .08, .5, .3 + r() * .12)); }
     grp.add(trunk, top);
     if (!["beach", "crucero", "ovni", "guerra", "hipodromo", "cheese"].includes(sceneKey)) {   // a colorful town around town venues
-      const nh = 70, house = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: .8 }), nh), roof = new THREE.InstancedMesh(new THREE.ConeGeometry(.75, 1, 4), new THREE.MeshStandardMaterial({ roughness: .8 }), nh);
+      const nh = 70, house = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: .8 }), nh), roof = new THREE.InstancedMesh(isPoly() ? gableGeo() : new THREE.ConeGeometry(.75, 1, 4), new THREE.MeshStandardMaterial({ roughness: .8, flatShading: isPoly() }), nh);
       const HC = ["#f2c57c", "#a9cfe0", "#f0a6a0", "#cfe3b0", "#e8d6f0", "#ffe08a", "#f4f4f2"];
       for (let i = 0; i < nh; i++) {
         const a = r() * 6.283, d = 62 + r() * 40, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, w = 4 + r() * 5, h = 4 + r() * (r() < .2 ? 16 : 7), Q2 = Q.clone().setFromAxisAngle(new THREE.Vector3(0, 1, 0), r() * 3);
-        M.compose(V.set(x, h / 2, z), Q2, S3.set(w, h, w * (.7 + r() * .5))); house.setMatrixAt(i, M); house.setColorAt(i, C.set(HC[(r() * HC.length) | 0]));
-        M.compose(V.set(x, h + w * .3, z), Q2.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4)), S3.set(w * 1.05, w * .6, w * 1.05)); roof.setMatrixAt(i, M); roof.setColorAt(i, C.set(["#c0583b", "#8a2f3b", "#4f5a6a"][i % 3]));
+        house.__d = w * (.7 + r() * .5); M.compose(V.set(x, h / 2, z), Q2, S3.set(w, h, house.__d)); house.setMatrixAt(i, M); house.setColorAt(i, C.set(HC[(r() * HC.length) | 0]));
+        if (isPoly()) { const dk = house.__d; M.compose(V.set(x, h, z), Q2, S3.set(w * 1.12, w * .5, dk * 1.12)); } else M.compose(V.set(x, h + w * .3, z), Q2.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4)), S3.set(w * 1.05, w * .6, w * 1.05)); roof.setMatrixAt(i, M); roof.setColorAt(i, C.set(["#c0583b", "#8a2f3b", "#4f5a6a"][i % 3]));
       }
       grp.add(house, roof);
     }
@@ -1318,6 +1335,11 @@ function themedHorizon(grp, theme, r, cx, cz, wet) {
     const t4 = new THREE.Mesh(new THREE.ConeGeometry(.5, 2.4, 6), mat("#d8322b")); t4.position.set(tx, 33.2, tz);
     grp.add(t1, t2, t3, t4);
   }
+}
+// a triangular prism (gable roof): 1 long on x, 1 wide on z, 1 high, sitting on y = 0
+function gableGeo() {
+  const sh = new THREE.Shape([new THREE.Vector2(-.5, 0), new THREE.Vector2(.5, 0), new THREE.Vector2(0, 1)]), g = new THREE.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false });
+  g.translate(0, 0, -.5); g.rotateY(Math.PI / 2); return g;
 }
 // sky dome for the street camera: gradient, sun glow, drifting clouds by day, stars and a moon by night
 function skyDome() {
