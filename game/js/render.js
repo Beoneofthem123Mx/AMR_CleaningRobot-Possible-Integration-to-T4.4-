@@ -81,7 +81,7 @@ function mat(hex, o) { const key = hex + JSON.stringify(o || {}); return MATS[ke
 function basic(hex, o) { const key = "b" + hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshBasicMaterial(Object.assign({ color: lin(hex), toneMapped: false }, o || {}))); }
 let GEO;
 // low-poly look (first venues): chamfered, rounded boxes and faceted columns instead of plain boxes and smooth cylinders
-const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes"]);
+const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono"]);
 const isPoly = () => POLY_VENUES.has(sceneKey);
 function polyBox(w, h, d, r) {   // a box with rounded corners (few segments, so it stays faceted) and a chamfered top edge
   r = Math.max(.02, Math.min(r, w / 2 - .01, d / 2 - .01)); const b = Math.min(.12, h * .25, r * .8), x0 = -w / 2 + r, x1 = w / 2 - r, z0 = -d / 2 + r, z1 = d / 2 - r, sh = new THREE.Shape();
@@ -266,6 +266,12 @@ function buildStatic3D() {
   if (G3.groundTex) G3.groundTex.dispose();
   const tex = G3.groundTex = new THREE.CanvasTexture(staticLayer); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
   G3.ground.material.map = tex; G3.ground.material.needsUpdate = true;
+  // low-poly venues: a faceted floor (it only dips, so the markings and the heat map stay on top) and faceted ground outside
+  if (!G3.flatGeo) { G3.flatGeo = G3.ground.geometry; G3.flatSkirt = G3.skirt.geometry; G3.polyGeos = {}; }
+  const pv = isPoly(), gk = WW + "x" + SH;
+  if (pv && !G3.polyGeos[gk]) G3.polyGeos[gk] = [facetPlane(WW, SH, 1.5, .09, false), facetPlane(900, 900, 16, 2.4, true)];
+  G3.ground.geometry = pv ? G3.polyGeos[gk][0] : G3.flatGeo; G3.skirt.geometry = pv ? G3.polyGeos[gk][1] : G3.flatSkirt;
+  G3.ground.material.flatShading = pv; G3.skirt.material.flatShading = pv; G3.skirt.material.needsUpdate = true;
   const m = new THREE.MeshStandardMaterial({ map: tex, roughness: .85 });
   G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
   G3.skirt.material.color.set(scene.outside).multiplyScalar(.8);
@@ -1335,6 +1341,22 @@ function themedHorizon(grp, theme, r, cx, cz, wet) {
     const t4 = new THREE.Mesh(new THREE.ConeGeometry(.5, 2.4, 6), mat("#d8322b")); t4.position.set(tx, 33.2, tz);
     grp.add(t1, t2, t3, t4);
   }
+}
+// a faceted plane: random dips per vertex (no bumps above 0) and, outside the venue, irregular triangles
+// that grow into soft hills further out. Non-indexed, so every triangle is shaded on its own (TABS-style)
+function facetPlane(w, h, cell, amp, outside) {
+  const g = new THREE.PlaneGeometry(w, h, Math.max(1, Math.round(w / cell)), Math.max(1, Math.round(h / cell))), P = g.attributes.position;
+  const hash = (x, y) => { const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; return s - Math.floor(s); };
+  for (let i = 0; i < P.count; i++) {
+    let x = P.getX(i), y = P.getY(i); const edge = Math.abs(Math.abs(x) - w / 2) < 1e-3 || Math.abs(Math.abs(y) - h / 2) < 1e-3;
+    let a = amp;
+    if (outside) {   // flat right next to the venue, rolling further out
+      const dx = Math.max(0, Math.abs(x) - WW / 2), dy = Math.max(0, Math.abs(y) - SH / 2), d = Math.hypot(dx, dy); a = amp * Math.min(1, Math.max(0, (d - 6) / 60));
+      if (!edge) { x += (hash(x + 3, y) - .5) * cell * .5; y += (hash(x, y + 7) - .5) * cell * .5; P.setX(i, x); P.setY(i, y); }
+    }
+    P.setZ(i, -hash(x, y) * a);
+  }
+  const ng = g.toNonIndexed(); ng.computeVertexNormals(); g.dispose(); return ng;
 }
 // a triangular prism (gable roof): 1 long on x, 1 wide on z, 1 high, sitting on y = 0
 function gableGeo() {
