@@ -133,6 +133,7 @@ function birds(tt, on) {
 function updateAmbient(tt, dtR) {
   const night = !!scene.night;
   birds(tt, !night && !(MOD && MOD.rain));
+  if (typeof faunaTick === "function") { faunaTick(tt); cameoTick(tt, dtR || 0); }   // more birds, and random things crossing the sky
   G3.clouds.visible = !night;
   if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
   G3.motes.visible = night;
@@ -269,9 +270,10 @@ function buildStatic3D() {
   // low-poly venues: a faceted floor (it only dips, so the markings and the heat map stay on top) and faceted ground outside
   if (!G3.flatGeo) { G3.flatGeo = G3.ground.geometry; G3.flatSkirt = G3.skirt.geometry; G3.polyGeos = {}; }
   const pv = isPoly(), gk = WW + "x" + SH;
-  if (pv && !G3.polyGeos[gk]) G3.polyGeos[gk] = [facetPlane(WW, SH, 1.5, .045, false), facetPlane(900, 900, 16, 2.4, true)];
+  if (pv && !G3.polyGeos[gk]) G3.polyGeos[gk] = [facetPlane(WW, SH, 1.5, .06, false), facetPlane(900, 900, 16, 2.4, true)];
   G3.ground.geometry = pv ? G3.polyGeos[gk][0] : G3.flatGeo; G3.skirt.geometry = pv ? G3.polyGeos[gk][1] : G3.flatSkirt;
   G3.ground.material.flatShading = pv; G3.skirt.material.flatShading = pv; G3.skirt.material.needsUpdate = true;
+  G3.fxPlane.position.y = pv ? .085 : .03;   // the floor markings sit just above the tallest facet
   const m = new THREE.MeshStandardMaterial({ map: tex, roughness: .85 });
   G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
   G3.skirt.material.color.set(scene.outside).multiplyScalar(.8);
@@ -1419,7 +1421,7 @@ function facetPlane(w, h, cell, amp, outside) {
       const dx = Math.max(0, Math.abs(x) - WW / 2), dy = Math.max(0, Math.abs(y) - SH / 2), d = Math.hypot(dx, dy); a = amp * Math.min(1, Math.max(0, (d - 6) / 60));
       if (!edge) { x += (hash(x + 3, y) - .5) * cell * .5; y += (hash(x, y + 7) - .5) * cell * .5; P.setX(i, x); P.setY(i, y); }
     }
-    P.setZ(i, -hash(x, y) * a);
+    P.setZ(i, outside ? -hash(x, y) * a : hash(x, y) * a);   // the venue floor only rises (whatever lies under it must never show through)
   }
   const ng = g.toNonIndexed(); ng.computeVertexNormals(); g.dispose(); return ng;
 }

@@ -216,6 +216,7 @@ function loadScene(key) {
   VIEW_FLIP = window.__manual ? 1 : shuffleGates ? (Math.random() < .5 ? -1 : 1) : (idx % 2 ? -1 : 1);
   if (moved || TOUR) { planHistory = []; lastPlan = null; } else if (typeof loadPlan === "function") loadPlan();
   if (typeof hazardsPick === "function") hazardsPick();   // TNT barrels and gas tanks somewhere new on every visit
+  if (typeof clearCameos === "function" && G3.scene) clearCameos();
   backToPlan();
   if (!window.__manual) { cam.z = 1.35; cam.y = WH * .6; }   // arriving at a venue: start close to the gates and pull back to the whole plan
 }
