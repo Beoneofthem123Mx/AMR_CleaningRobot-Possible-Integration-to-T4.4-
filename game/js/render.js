@@ -81,7 +81,7 @@ function mat(hex, o) { const key = hex + JSON.stringify(o || {}); return MATS[ke
 function basic(hex, o) { const key = "b" + hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshBasicMaterial(Object.assign({ color: lin(hex), toneMapped: false }, o || {}))); }
 let GEO;
 // low-poly look (first venues): chamfered, rounded boxes and faceted columns instead of plain boxes and smooth cylinders
-const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono", "ciudad", "mitin", "taco", "ovni", "aeropuerto", "arena", "rocket", "zoo", "cheese", "zombie", "beach", "park"]);
+const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono", "ciudad", "mitin", "taco", "ovni", "aeropuerto", "arena", "rocket", "zoo", "cheese", "zombie", "beach", "park", "nuclear", "guerra", "fabrica", "procesion"]);
 const isPoly = () => POLY_VENUES.has(sceneKey);
 function polyBox(w, h, d, r) {   // a box with rounded corners (few segments, so it stays faceted) and a chamfered top edge
   r = Math.max(.02, Math.min(r, w / 2 - .01, d / 2 - .01)); const b = Math.min(.12, h * .25, r * .8), x0 = -w / 2 + r, x1 = w / 2 - r, z0 = -d / 2 + r, z1 = d / 2 - r, sh = new THREE.Shape();
