@@ -99,6 +99,41 @@ Secret achievements (hidden until unlocked; mark them *Hidden* in Steamworks). T
 | `SECRET_SHOPAHOLIC` | Retail Therapy | Someone carried nine shopping bags at once. |
 | `SECRET_PANCAKE_FAN` | Pancake Enthusiast | You clicked the PANCAKED counter 25 times. Why? |
 
+
+Easter eggs (one hidden object per venue, double-click it; also *Hidden*). The game sends `SECRET_EGG_<VENUE>`:
+
+| API name | Name | Where |
+|---|---|---|
+| `SECRET_EGG_PLAZA` | Safety Theatre | plaza |
+| `SECRET_EGG_CIRCO` | Clown Car Parking Ticket | circo |
+| `SECRET_EGG_ESTADIO` | VAR Check | estadio |
+| `SECRET_EGG_VIERNES` | Receipt Mountain | viernes |
+| `SECRET_EGG_CRUCERO` | Shareholders First | crucero |
+| `SECRET_EGG_BODA` | The Seventh Toaster | boda |
+| `SECRET_EGG_HIPODROMO` | Insider Trading | hipodromo |
+| `SECRET_EGG_TRONO` | Luxury, Out of Order | trono |
+| `SECRET_EGG_CIUDAD` | Last-Mile Mobility | ciudad |
+| `SECRET_EGG_MITIN` | Promises, Recycled | mitin |
+| `SECRET_EGG_TACO` | Guac Is Extra | taco |
+| `SECRET_EGG_OVNI` | Rate Your Abduction | ovni |
+| `SECRET_EGG_AEROPUERTO` | The 100 ml Rule | aeropuerto |
+| `SECRET_EGG_ARENA` | Tax Season | arena |
+| `SECRET_EGG_ROCKET` | Plan B(illionaire) | rocket |
+| `SECRET_EGG_ZOO` | Influencer Penguin | zoo |
+| `SECRET_EGG_CHEESE` | The Saddest Cheese | cheese |
+| `SECRET_EGG_ZOMBIE` | Undead Job Market | zombie |
+| `SECRET_EGG_BEACH` | Beachfront Property | beach |
+| `SECRET_EGG_PARK` | Fast Pass to a Bench | park |
+| `SECRET_EGG_NUCLEAR` | Radioactive Duck | nuclear |
+| `SECRET_EGG_GUERRA` | Armed Dove | guerra |
+| `SECRET_EGG_FABRICA` | Employee of the Month | fabrica |
+| `SECRET_EGG_PROCESION` | Blessed Wi-Fi | procesion |
+| `SECRET_EGG_MARCHA` | Meta Protest | marcha |
+| `SECRET_EGG_METRO` | Arriving Soon™ | metro |
+| `SECRET_EGG_MERCADO` | Totally Original | mercado |
+| `SECRET_EGG_LABORATORIO` | Do Not Drink | laboratorio |
+| `SECRET_EGG_TERMINAL` | Schedule Valid Since 1987 | terminal |
+
 Each achievement needs a 64×64 icon (achieved and unachieved versions).
 
 ### Steam Workshop (custom venues)

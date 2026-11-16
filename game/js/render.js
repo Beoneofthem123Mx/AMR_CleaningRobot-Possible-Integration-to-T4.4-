@@ -333,6 +333,7 @@ function buildStatic3D() {
   }
   G3.trompo = null;
   if (scene.extra3D) scene.extra3D(grp);
+  if (typeof eggs3D === "function") eggs3D(grp);   // the venue's hidden easter egg
   grp.traverse(o => { if (o.isMesh && GEO && Object.values(GEO).includes(o.geometry)) o.userData.shared = true; });
   // stage spotlights and light beams
   G3.dyn.clear();

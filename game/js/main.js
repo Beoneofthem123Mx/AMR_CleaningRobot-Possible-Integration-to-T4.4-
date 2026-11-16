@@ -58,7 +58,7 @@ function updateFx(dt) {
     if (evCam.t <= 0 || phase !== "show" || camMode === 2 || !movers.includes(evCam.m)) evCam = null;
     else { const k = Math.min(1, evCam.t / .8) * .6, m = evCam.m; tx += (clamp(m.x, 0, WW) - tx) * k; ty += (clamp(m.y, 0, WH) - ty) * k; }
   }
-  fxClock += dt;
+  fxClock += dt; if (typeof eggTick === "function") eggTick(dt);
   if (deathCam && (fxClock - deathCam.t > 4 || (phase !== "show" && phase !== "evac"))) deathCam = null;   // nobody fell there for a while: back to the normal camera
   if (deathCam && FOLLOW_FALLS && !demo && camMode !== 2 && camMode !== 3) { tz = Math.max(tz, Math.min(2.2, ZMAX())); tx = deathCam.x; ty = deathCam.y; }
   // free camera: the player zoomed or panned by hand

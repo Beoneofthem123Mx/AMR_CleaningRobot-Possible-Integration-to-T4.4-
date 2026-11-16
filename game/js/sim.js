@@ -623,6 +623,7 @@ function finish() {
   ui();
 }
 function backToPlan() {
+  guards = guards.filter(g => !g.live); props = props.filter(p => !p.live); RUSH.extra = 0;   // whatever was rushed in during the show goes home
   if (planFences && fences.length !== planFences.length) { fences = planFences.map(f => ({ ...f })); buildWorld(); }
   planFences = null;
   phase = "plan"; paused = false; slowT = 0; ag = []; fallen = []; movers = []; pops = []; MOD = null; $("#abd").hidden = true; showModChip(null); clearAttractor(); clearAlt(); spawned = 0; t = 0; evacT = 0; surgeT = 0; setDead(0, true); resetFx();

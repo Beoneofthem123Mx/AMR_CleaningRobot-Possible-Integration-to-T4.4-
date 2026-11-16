@@ -87,6 +87,9 @@ El juego ya los activa. Créalos en *Stats & Achievements* con estos nombres de 
 
 Logros secretos (ocultos hasta desbloquearlos; márcalos como *Hidden* en Steamworks). El juego envía `SECRET_<ID>` con estos IDs: `SECRET_COW_STRIKE`, `SECRET_ORBIT`, `SECRET_DOMINO`, `SECRET_SPEEDRUN`, `SECRET_PATIENT_ZERO`, `SECRET_WRONG_SPORT`, `SECRET_TILT`, `SECRET_LUCKY`, `SECRET_SHOPAHOLIC`, `SECRET_PANCAKE_FAN`.
 
+
+Easter eggs (un objeto escondido por escenario, doble clic; también *Hidden*): `SECRET_EGG_PLAZA`, `SECRET_EGG_CIRCO`, `SECRET_EGG_ESTADIO`, `SECRET_EGG_VIERNES`, `SECRET_EGG_CRUCERO`, `SECRET_EGG_BODA`, `SECRET_EGG_HIPODROMO`, `SECRET_EGG_TRONO`, `SECRET_EGG_CIUDAD`, `SECRET_EGG_MITIN`, `SECRET_EGG_TACO`, `SECRET_EGG_OVNI`, `SECRET_EGG_AEROPUERTO`, `SECRET_EGG_ARENA`, `SECRET_EGG_ROCKET`, `SECRET_EGG_ZOO`, `SECRET_EGG_CHEESE`, `SECRET_EGG_ZOMBIE`, `SECRET_EGG_BEACH`, `SECRET_EGG_PARK`, `SECRET_EGG_NUCLEAR`, `SECRET_EGG_GUERRA`, `SECRET_EGG_FABRICA`, `SECRET_EGG_PROCESION`, `SECRET_EGG_MARCHA`, `SECRET_EGG_METRO`, `SECRET_EGG_MERCADO`, `SECRET_EGG_LABORATORIO`, `SECRET_EGG_TERMINAL`.
+
 Necesitas un icono de 64×64 por logro (versión ganado y no ganado).
 
 ### Steam Workshop (escenarios personalizados)

@@ -280,6 +280,15 @@ squeezes them, when another explosion is close (chain reactions) or when a kid w
 finds them; a TNT barrel blows up after a short fuse, a gas tank shoots across the venue like a
 rocket first. A guard standing next to one keeps the sparklers away and makes it harder to set off.
 
+**Rush orders during the show** (live controls bar): with whatever budget is left, drop a line of
+cones (up to 8 m, double price, and squeezed people step right over them), call a guard who runs
+in from the nearest gate (free while you have guards left, then $40) or get a water station
+delivered at +50%. Rushed items go home when you go back to planning.
+
+**Easter eggs**: every venue hides one small satirical object (a "wet floor" sign in a dry plaza,
+the factory's robot Employee of the Month, a horse reading the betting odds...). It glints now and
+then; double-click it for a joke and a secret achievement. They are listed in the Secrets screen.
+
 **Death cam** (Options → Camera follows the falls): when people go down the camera zooms in there,
 and every 20 pancaked it cuts to another spot where people are falling ("MEANWHILE..."). It leaves
 the free camera and the whole-venue view alone.

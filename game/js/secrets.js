@@ -19,17 +19,20 @@ function unlockSecret(id) {
   got.push(id); try { localStorage.setItem("mh.secrets", JSON.stringify(got)); } catch (e) { /* no storage */ }
   achieve("SECRET_" + id);
   const s = SECRETS[id], el = document.createElement("div"); el.className = "secretpop";
-  el.innerHTML = `<i>${s.icon}</i><div><small>🏆 SECRET ACHIEVEMENT · ${got.length}/10</small><b>${s.name}</b><span>${s.desc}</span></div>`;
+  const ofKind = Object.keys(SECRETS).filter(k => !!SECRETS[k].egg === !!s.egg), n = got.filter(k => ofKind.includes(k)).length;
+  el.innerHTML = `<i>${s.icon}</i><div><small>${s.egg ? "🥚 EASTER EGG" : "🏆 SECRET ACHIEVEMENT"} · ${n}/${ofKind.length}</small><b>${s.name}</b><span>${s.desc}</span></div>`;
   document.querySelector("#frame").appendChild(el); setTimeout(() => el.remove(), 5200);
   sfx("cheer"); if (typeof burstAt === "function") burstAt(WW / 2, 20, 60);
 }
 function resetSecretCounters() { SEC.yeets = 0; SEC.pinball = 0; }
 function showSecrets() {
   const got = loadSecrets();
-  showCard(`<h2>Secret achievements · ${got.length}/10</h2><p class="keys">Nobody tells you how to get these. That's the point.</p>
-    <div class="shop">${Object.entries(SECRETS).map(([id, s]) => got.includes(id)
-      ? `<div class="upg worn"><i>${s.icon}</i><div><b>${s.name}</b><small>${s.desc}</small></div></div>`
-      : `<div class="upg"><i>?</i><div><b>???</b><small>${s.hint}</small></div></div>`).join("")}</div>
+  const all = Object.entries(SECRETS), sec = all.filter(([, s]) => !s.egg), eggs = all.filter(([, s]) => s.egg), has = l => l.filter(([id]) => got.includes(id)).length;
+  const card = ([id, s]) => got.includes(id) ? `<div class="upg worn"><i>${s.icon}</i><div><b>${s.name}</b><small>${s.desc}</small></div></div>` : `<div class="upg"><i>?</i><div><b>???</b><small>${s.hint}</small></div></div>`;
+  showCard(`<h2>Secret achievements · ${has(sec)}/${sec.length}</h2><p class="keys">Nobody tells you how to get these. That's the point.</p>
+    <div class="shop">${sec.map(card).join("")}</div>
+    <h2>Easter eggs · ${has(eggs)}/${eggs.length}</h2><p class="keys">Every venue hides one odd little thing. Watch for a glint, then double-click it.</p>
+    <div class="shop">${eggs.map(card).join("")}</div>
     <div class="row"><button class="go" id="pick">Back</button></div>`, "options shopcard");
 }
 // the pancake counter is clickable, for no reason at all

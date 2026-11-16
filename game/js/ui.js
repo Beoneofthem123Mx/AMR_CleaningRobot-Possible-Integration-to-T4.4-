@@ -4,7 +4,7 @@ let tool = "fence", drag = null;
 const maxGuards = () => sandbox ? 16 : (scene.guards || 3) + upg("guards") + 2 * tourN("guards");
 const nStewards = () => guards.filter(g => g.role === "slow").length, nGuards = () => guards.length - nStewards();
 const fenceUsed = () => gates.reduce((s, g) => s + (g === GATE_SIZES.wide.k ? GATE_SIZES.wide.cost : 0), 0) + fences.reduce((s, f) => s + fenceCost(f), 0) + props.reduce((s, p) => s + PROP_TYPES[p.type].cost, 0) + nStewards() * GUARD_ROLES.slow.cost;   // dollars spent
-const fenceLeft = () => sandbox ? 1e9 : FENCE_BUDGET * 10 - fenceUsed();
+const fenceLeft = () => sandbox ? 1e9 : FENCE_BUDGET * 10 - fenceUsed() - (typeof RUSH !== "undefined" ? RUSH.extra : 0);   // rush orders during the show cost extra
 const snap = v => Math.round(v * 2) / 2;
 cv.addEventListener("pointerdown", ev => {
   if (ev.button !== 0) return;   // right/middle button pans the camera
