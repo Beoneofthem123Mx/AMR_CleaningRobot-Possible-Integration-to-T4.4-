@@ -4,7 +4,7 @@ const CONF = ["#ff6fb1", "#5fd8ff", "#ffe066", "#a98bff", "#ff9a5c", "#ffffff", 
 const TRAIL = Array.from({ length: 12 }, (_, i) => { const q = i / 11; return `rgba(${Math.round(255 - 55 * q)},${Math.round(140 + 95 * q)},${Math.round(50 + 205 * q)},.6)`; });
 let camFree = null;   // {z, x, y} while the player controls the camera (camMode 3)
 let cam = { z: 1, x: WW / 2, y: WH / 2 }, shake = 0, heatMix = 0, flash = 0, rings = [], confetti = [];
-function resetFx() { chunks = []; hitT = 0; cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; prints = []; litter = []; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
+function resetFx() { chunks = []; hitT = 0; cam = { z: 1, x: WW / 2, y: WH / 2 }; evCam = null; deathCam = null; recentFalls = []; blackT = 0; black = 0; shake = 0; flash = 0; rings = []; ghosts = []; confetti = []; puffs = []; sparks = []; rockets = []; ola = null; windF = { x: 0, t: 0 }; prints = []; litter = []; if (G3.tctx) G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height); }
 function confettiAt(x, y, h, n, spread) {
   for (let i = 0; i < n && confetti.length < 1400; i++) {
     const a = Math.random() * 6.283, v = Math.random() * spread;
@@ -23,10 +23,26 @@ function onFall(x, y) {
   voice(Math.random() < .04 ? "pig" : Math.random() < .25 ? "splat" : "ouch", .55 + Math.random() * .25, .18);
   if (dead === 0) announce("war_medic");
   if (ghosts.length < 260 && (dead < 40 || Math.random() < .45)) ghosts.push({ x, y, t: 0, life: 4.2 + Math.random() * 1.5, ph: Math.random() * 6.28, s: 1.15 + Math.random() * .35 });
-  rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream"); if (!demo) debris(x, y, .2, 5, 2.4, scene.night ? ["#55525a", "#3e3a40"] : ["#e6dcc4", "#c9bfa6"]);
+  rings.push({ x, y, t: 0 }); shake = Math.min(.9, shake + .35); sfx("scream"); sfx("thud"); if (!demo) debris(x, y, .2, 5, 2.4, scene.night ? ["#55525a", "#3e3a40"] : ["#e6dcc4", "#c9bfa6"]);
   if (Math.random() < .35) { const an = Math.random() * 6.28, d = .8 + Math.random() * 1.2; litter.push([x + Math.cos(an) * d, y + Math.sin(an) * d, (Math.random() * 7) | 0, Math.random() * 6.28, 1]); }   // a lost shoe
   for (let k = 0; k < 4; k++) puff(x + (Math.random() - .5) * .6, y + (Math.random() - .5) * .6, .15, scene.night ? "#6a6870" : "#e6dcc4", .18 + Math.random() * .1, .8, .35);   // dust where they hit the floor
   if (dead === 0) { G3.wantPhoto = true; slowT = 1.8; focus = { x, y }; caption("Ouch!", true, 1500); }
+  if (!demo) fallCam(x, y);
+}
+// death cam: the camera goes where people are falling, and every 20 pancaked cuts to another spot where it's happening too
+let deathCam = null, recentFalls = [], fxClock = 0, FOLLOW_FALLS = true;
+try { FOLLOW_FALLS = localStorage.getItem("mh.follow") !== "off"; } catch (e) { /* no storage */ }
+function fallCam(x, y) {
+  recentFalls.push({ x, y, k: fxClock }); if (recentFalls.length > 80) recentFalls.shift();
+  const n = dead + 1;
+  if (deathCam && n % 20 === 0) {   // cut: the most distant recent fall, if there is one far enough away
+    let best = null, bd = 64;
+    for (const f of recentFalls) { if (fxClock - f.k > 6) continue; const d = (f.x - deathCam.x) ** 2 + (f.y - deathCam.y) ** 2; if (d > bd) { bd = d; best = f; } }
+    if (best) { deathCam = { x: best.x, y: best.y, t: fxClock, cut: fxClock }; if (!window.__manual) pop(best.x, best.y - 1.6, ["MEANWHILE...", "OVER HERE TOO!", "ALSO HERE!", "AND HERE!"][(n / 20) % 4 | 0]); return; }
+  }
+  if (!deathCam) { deathCam = { x, y, t: fxClock, cut: fxClock }; return; }
+  if ((x - deathCam.x) ** 2 + (y - deathCam.y) ** 2 > 36) return;   // somewhere else: it gets its turn at the next cut
+  deathCam.x += (x - deathCam.x) * .25; deathCam.y += (y - deathCam.y) * .25; deathCam.t = fxClock;   // more falls nearby: stay and drift with them
 }
 function updateFx(dt) {
   let tz = 1, ty = WH / 2, tx = WW / 2;
@@ -42,6 +58,9 @@ function updateFx(dt) {
     if (evCam.t <= 0 || phase !== "show" || camMode === 2 || !movers.includes(evCam.m)) evCam = null;
     else { const k = Math.min(1, evCam.t / .8) * .6, m = evCam.m; tx += (clamp(m.x, 0, WW) - tx) * k; ty += (clamp(m.y, 0, WH) - ty) * k; }
   }
+  fxClock += dt;
+  if (deathCam && (fxClock - deathCam.t > 4 || (phase !== "show" && phase !== "evac"))) deathCam = null;   // nobody fell there for a while: back to the normal camera
+  if (deathCam && FOLLOW_FALLS && !demo && camMode !== 2 && camMode !== 3) { tz = Math.max(tz, Math.min(2.2, ZMAX())); tx = deathCam.x; ty = deathCam.y; }
   // free camera: the player zoomed or panned by hand
   const free = camMode === 3 && camFree && !demo;
   if (free) { tz = camFree.z; tx = camFree.x; ty = camFree.y; }
@@ -183,7 +202,8 @@ function startDemo() {
 function loadScene(key) {
   demo = false; if (camMode === 3) { camMode = 0; camFree = null; if (typeof camLabel === "function") camLabel(); }
   loadShop(); STEWARD_R = 3 + .7 * upg("steward"); GUARD_CALM = 3.6 * (1 + .15 * upg("calm"));
-  TOD = TODS[(Math.random() * TODS.length) | 0];   // a different light on every visit
+  TOD = TODS[(Math.random() * TODS.length) | 0];
+  if (typeof TRACK_PICK !== "undefined") TRACK_PICK.key = "";   // and maybe the other song   // a different light on every visit
   sceneKey = key; scene = SCENES[key]; CROWD = scene.crowd; FENCE_BUDGET = Math.round(scene.fenceBudget * (isBig() ? 1.35 : 1) * (1 + .15 * upg("budget"))); MAX_GATES = sandbox ? SLOTS : scene.maxGates;
   if (TOUR) { FENCE_BUDGET = Math.round(FENCE_BUDGET * (1 + .2 * tourN("budget"))); MAX_GATES += tourN("gate"); }
   gates = scene.gates.slice(); fences = []; planFences = null; guards = []; props = []; performers = scene.performers();
@@ -195,6 +215,7 @@ function loadScene(key) {
   const idx = Object.keys(SCENES).indexOf(key);
   VIEW_FLIP = window.__manual ? 1 : shuffleGates ? (Math.random() < .5 ? -1 : 1) : (idx % 2 ? -1 : 1);
   if (moved || TOUR) { planHistory = []; lastPlan = null; } else if (typeof loadPlan === "function") loadPlan();
+  if (typeof hazardsPick === "function") hazardsPick();   // TNT barrels and gas tanks somewhere new on every visit
   backToPlan();
   if (!window.__manual) { cam.z = 1.35; cam.y = WH * .6; }   // arriving at a venue: start close to the gates and pull back to the whole plan
 }

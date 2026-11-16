@@ -116,9 +116,21 @@ Object.assign(STYLES, {
   } },
 });
 // ---------- recorded music (CC0, see game/music/CREDITS.md); the synthesized music is the fallback ----------
-const TRACKS = { plaza: "party_1", circo: "silly_1", estadio: "dance_1", viernes: "funk_1", crucero: "party_3", boda: "jazz_1", hipodromo: "dnb_1",
-  trono: "funk_2", ciudad: "party_2", mitin: "silly_2", taco: "funk_1", ovni: "space_1", aeropuerto: "party_4", arena: "action_1", rocket: "chip_2",
-  zoo: "silly_1", cheese: "chip_1", zombie: "spooky_1", beach: "party_3", park: "chip_1", nuclear: "action_1", guerra: "dnb_1", fabrica: "action_1", procesion: "jazz_1", marcha: "party_2", metro: "dnb_1", mercado: "funk_2", laboratorio: "space_1", terminal: "funk_1" };
+// every venue has its own pair of songs; one of the two is picked on each visit
+const TRACKS = {
+  plaza: ["party_1", "party_5"], circo: ["silly_1", "silly_3"], estadio: ["dance_1", "dance_2"], viernes: ["funk_1", "funk_4"], crucero: ["party_3", "jazz_4"],
+  boda: ["jazz_1", "jazz_2"], hipodromo: ["dnb_1", "dnb_3"], trono: ["funk_2", "silly_5"], ciudad: ["party_2", "party_8"], mitin: ["silly_2", "silly_4"],
+  taco: ["desert_1", "funk_3"], ovni: ["space_1", "mystery_1"], aeropuerto: ["party_4", "dance_3"], arena: ["action_1", "dnb_2"], rocket: ["chip_2", "chip_4"],
+  zoo: ["silly_4", "silly_1"], cheese: ["chip_1", "chip_3"], zombie: ["spooky_1", "spooky_2"], beach: ["party_6", "party_3"], park: ["chip_3", "silly_5"],
+  nuclear: ["action_1", "spooky_3"], guerra: ["dnb_3", "action_1"], fabrica: ["funk_3", "chip_4"], procesion: ["jazz_3", "jazz_1"], marcha: ["party_7", "party_2"],
+  metro: ["dnb_2", "dnb_1"], mercado: ["funk_4", "desert_1"], laboratorio: ["mystery_1", "spooky_3"], terminal: ["jazz_4", "funk_1"],
+};
+let TRACK_PICK = { key: "", name: "" };
+function venueTrack() {   // the song for this visit (picked once per visit to a venue)
+  const v = TRACKS[sceneKey] || "party_1";
+  if (TRACK_PICK.key !== sceneKey) TRACK_PICK = { key: sceneKey, name: Array.isArray(v) ? v[(Math.random() * v.length) | 0] : v };
+  return TRACK_PICK.name;
+}
 const MUS = { bufs: {}, loading: {}, cur: null, name: "" };
 function musicBuffer(name) {
   const c = AU.ctx; if (MUS.bufs[name] || MUS.loading[name] || !c || typeof fetch !== "function" || c.constructor.name === "OfflineAudioContext") return MUS.bufs[name];
@@ -143,8 +155,8 @@ function audioTick() {
   const c = AU.ctx; if (!c || !AU.on) return;
   {
     // recorded music: calm track while planning, the venue's track in the show, muffled and quiet during the evacuation
-    const ph = phase, want = ph === "plan" || ph === "done" ? "plan_1" : TRACKS[sceneKey] || "party_1";
-    musicBuffer(TRACKS[sceneKey] || "party_1");
+    const ph = phase, want = ph === "plan" || ph === "done" ? "plan_1" : venueTrack();
+    musicBuffer(venueTrack());
     const vol = ph === "show" ? (fullAt ? .85 : .6) : ph === "evac" ? .35 : .45;
     if (musicTrack(want, vol) && MUS.cur) {
       MUS.cur.f.frequency.setTargetAtTime(ph === "evac" ? 900 : ph === "show" && surgeT > 0 ? 20000 : ph === "show" ? 9000 : 2500, c.currentTime, .3);
@@ -187,12 +199,14 @@ const SAMPLE_FILES = ["crowd_loop", "panic_loop", "rain_loop", "roar_1", "roar_2
   "ui_click", "ui_select", "ui_drop", "ui_error", "ui_confirm", "ui_back", "ui_erase", "ui_toggle", "jingle_win", "jingle_lose"];
 // which recordings stand in for each synthesized effect: [names, volume, minimum seconds between plays]
 const SAMPLE_FOR = {
-  roar: [["beast_1", "beast_2"], .8, .4], bark: [["bark_1", "bark_2"], .6, .25], boom: [["explosion", "bang_1", "bang_2"], .8, .3], crash: [["crash_1", "crash_2", "hit_1", "hit_2"], .7, .2],
+  roar: [["beast_1", "beast_2"], .8, .4], bark: [["bark_1", "bark_2", "bark_3", "bark_4"], .6, .25], boom: [["explosion", "bang_1", "bang_2"], .8, .3], crash: [["crash_1", "crash_2", "hit_1", "hit_2", "pot_1", "pot_2", "punch_1", "punch_2", "tin_1", "plate_1"], .7, .2],
   splash: [["splash_1", "splash_2"], .8, .3], cheer: [["cheer_1", "cheer_2", "cheer_3"], .6, 1.5], scream: [["scream_1", "scream_2", "scream_3", "scream_4"], .45, 1.1],
   moo: [["moo"], .8, .5], bleat: [["baa"], .8, .5], neigh: [["trot"], .7, .8], crowdroar: [["roar_1", "roar_2", "roar_3"], .7, 2], ooh: [["ooh"], .5, 3], surge: [["surge"], .5, 4],
   tick: [["ui_toggle"], .35, .03], click: [["ui_click"], .5, .03], select: [["ui_select"], .5, .05], drop: [["ui_drop"], .6, .05], error: [["ui_error"], .5, .2], confirm: [["ui_confirm"], .6, .2],
-  back: [["ui_back"], .5, .1], erase: [["ui_erase"], .5, .05], win: [["jingle_win"], .7, 1], lose: [["jingle_lose"], .7, 1], gong: [["gong"], .6, 1], bell: [["bell"], .5, .5], spring: [["spring"], .6, .3], glass: [["glass"], .6, .3],
+  back: [["ui_back"], .5, .1], erase: [["ui_erase"], .5, .05], win: [["jingle_win"], .7, 1], lose: [["jingle_lose"], .7, 1], gong: [["gong"], .6, 1], bell: [["bell", "bell_2"], .5, .5], spring: [["spring"], .6, .3], glass: [["glass", "glass_2"], .6, .3],
   howl: [["howl"], .7, 1], oink: [["oink"], .7, .5], cluck: [["cluck"], .7, .3],
+  siren: [["siren_1", "siren_2"], .45, 1.5], ufo: [["ufo_1", "ufo_2"], .5, 1.5], beep: [["chime_1", "chime_2"], .5, .6], jingle: [["coins_1", "coins_2"], .6, .3],
+  fiu: [["yeet_1", "yeet_2"], .45, .15], flash: [["zap_1", "zap_2"], .45, .3], thud: [["thud_1", "thud_2", "punch_1"], .55, .08],
 };
 // ---------- voices (CC0, see game/audio/CREDITS.md): people, the announcer and creatures ----------
 const VOICE_FILES = ["ann_female_1", "ann_female_2", "ann_female_3", "ann_female_congratulations", "ann_female_correct", "ann_female_game_over", "ann_female_go", "ann_female_hurry_up", "ann_female_mission_completed", "ann_female_mission_failed", "ann_female_new_highscore", "ann_female_objective_achieved", "ann_female_ready", "ann_female_time_over", "ann_female_war_call_for_backup", "ann_female_war_get_down", "ann_female_war_look_out", "ann_female_war_medic", "ann_female_wrong", "ann_male_1", "ann_male_2", "ann_male_3", "ann_male_congratulations", "ann_male_correct", "ann_male_game_over", "ann_male_go", "ann_male_hurry_up", "ann_male_mission_completed", "ann_male_mission_failed", "ann_male_new_highscore", "ann_male_objective_achieved", "ann_male_ready", "ann_male_time_over", "ann_male_war_call_for_backup", "ann_male_war_get_down", "ann_male_war_look_out", "ann_male_war_medic", "ann_male_wrong", "cr_alien_01", "cr_alien_03", "cr_alien_05", "cr_bug_01", "cr_bug_03", "cr_burp_01", "cr_cough_01", "cr_cute_01", "cr_cute_03", "cr_cute_05", "cr_cute_07", "cr_cute_09", "cr_die_01", "cr_die_03", "cr_eat_01", "cr_eat_03", "cr_grunt_01", "cr_grunt_03", "cr_howl", "cr_human_01", "cr_human_03", "cr_human_05", "cr_human_07", "cr_hurt_01", "cr_hurt_03", "cr_monster_01", "cr_monster_03", "cr_monster_05", "cr_monster_08", "cr_monster_12", "cr_ooh", "cr_snore", "female_falldeath", "female_gasp", "female_jump_1", "female_jump_2", "female_pain100", "female_pain25", "female_pain50", "female_pain75", "male_falldeath", "male_gasp", "male_jump_1", "male_jump_2", "male_pain100", "male_pain25", "male_pain50", "male_pain75", "pig_death", "pig_gasp", "pig_pain100", "pig_pain50"];
@@ -270,6 +284,7 @@ const SFX = {
     o.type = "sawtooth"; o.frequency.setValueAtTime(420, t); o.frequency.linearRampToValueAtTime(380, t + .6); l.frequency.value = 11; lg.gain.value = 40; l.connect(lg); lg.connect(o.frequency);
     f.type = "bandpass"; f.frequency.value = 1100; f.Q.value = 1.5; env(g, t, .03, .2, .6); o.connect(f); f.connect(g); g.connect(AU.sfx); o.start(t); l.start(t); o.stop(t + .7); l.stop(t + .7); },
   tick(t) { osc("square", 1200, t, .02, .05); },
+  thud(t) { osc("sine", 120, t, .18, .5, null, 50); noise(t, .12, .25, "lowpass", 500, .7); },
   moo(t) { const c = AU.ctx, o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(140, t); o.frequency.linearRampToValueAtTime(110, t + .9); f.type = "lowpass"; f.frequency.value = 700; env(g, t, .1, .3, .9); o.connect(f); f.connect(g); g.connect(AU.sfx); o.start(t); o.stop(t + 1.1); },
   ufo(t) { const c = AU.ctx, o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.type = "sine"; o.frequency.value = 500; l.frequency.value = 7; lg.gain.value = 260; l.connect(lg); lg.connect(o.frequency); env(g, t, .2, .14, 1.4); o.connect(g); g.connect(AU.sfx); o.start(t); l.start(t); o.stop(t + 1.6); l.stop(t + 1.6); },
   beep(t) { [0, .18, .36].forEach(d => osc("square", 1000, t + d, .08, .1)); },

@@ -370,6 +370,7 @@ function step() {
   TwoBody.update(ag, DT);   // torsos on elastic joints, stumbles and domino chains (twobody.js)
   if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
   if (props.length) gadgetStep();
+  if (HAZ.length) hazardStep();
   if (!demo) pmSample();
   for (const gd of guards) if (gd.tx !== undefined) {   // a steward sent somewhere mid-show runs there
     const dx = gd.tx - gd.x, dy = gd.ty - gd.y, d = Math.hypot(dx, dy);
@@ -568,6 +569,7 @@ function start(mod) {
     charges.meteor += NEXT.meteor || 0; charges.cow += NEXT.cow || 0; mega.n += NEXT.mega || 0; SHOW_LUCKY = !!NEXT.lucky;
     delete NEXT.meteor; delete NEXT.cow; delete NEXT.mega; delete NEXT.lucky; saveShop();
   } SHOP_DOORS = scene.shopDoors ? scene.shopDoors() : [];
+  HAZ = []; if (!demo) hazardsStart();
   G3.photo = null;
 }
 function startEvac() { for (const a of SHOPPERS) shopOut(a); SHOPPERS = []; if (!demo) announce("time_over"); phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }

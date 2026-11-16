@@ -179,6 +179,7 @@ function blast(x, y) {
   }
   pop(x, y - 1, "BOOM!"); burstAt(x, y, 90); shake = Math.min(1.2, shake + .8);
   debris(x, y, .3, 46, 7); shockwave(x, y, true); hitStop(.28);
+  hazardChain(x, y);   // barrels and tanks nearby go off too
 }
 // temporary goal: everyone rushes to one spot for a few seconds (a sale, the bouquet, free tacos)
 let attrT = 0, timers = [];

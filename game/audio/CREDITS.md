@@ -12,6 +12,12 @@ repository; check the original pages before shipping if you need certainty.
 | `bark_*`, `beast_*`, `howl`, `explosion`, `bang_*`, `crash_*`, `glass`, `hit_*`, `splash_*`, `spring`, `gong`, `bell`, `rain_loop` | github.com/lavenderdotpet/CC0-Public-Domain-Sounds (CC0 SFX packs) | CC0 1.0 |
 | `ui_*` | Kenney "Interface Sounds" (kenney.nl), via github.com/Calinou/kenney-interface-sounds | CC0 1.0 |
 | `jingle_win`, `jingle_lose` | Kenney "Music Jingles" (kenney.nl) | CC0 1.0 |
+| `chime_*`, `yeet_*`, `zap_*` | Kenney "Digital Audio" (kenney.nl), via github.com/lavenderdotpet/CC0-Public-Domain-Sounds | CC0 1.0 |
+| `coins_*`, `pot_*` | Kenney "RPG Audio" (kenney.nl), via the same collection | CC0 1.0 |
+| `punch_*`, `thud_*`, `plate_1`, `tin_1`, `glass_2`, `bell_2` | Kenney "Impact Sounds" (kenney.nl), via the same collection | CC0 1.0 |
+| `ufo_*` | Kenney "Sci-fi Sounds" (kenney.nl), via the same collection | CC0 1.0 |
+| `siren_*` | "30 CC0 SFX loops" (alarms), via the same collection | CC0 1.0 |
+| `bark_3`, `bark_4` | "MissLavs Sounds" (angry dog), via the same collection | CC0 1.0 |
 
 | `voice/male_*`, `voice/female_*`, `voice/pig_*` (ouches, gasps, falls, jumps) | Warfork player voices by Team Forbidden, via github.com/lavenderdotpet/CC0-Public-Domain-Sounds (`warfork-cc0`, whose notice states CC0 1.0) | CC0 1.0 |
 | `voice/ann_*` (the announcer: go, time over, medic, mission completed/failed, game over...) | Kenney "Voiceover Pack" (kenney.nl), voices by Jeffrey M. Smith (male) and the pack's female voice actor, via the same collection | CC0 1.0 |

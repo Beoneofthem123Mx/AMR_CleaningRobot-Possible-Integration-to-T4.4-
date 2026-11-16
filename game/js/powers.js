@@ -56,7 +56,7 @@ function usePower(x, y) {
         let crushed = 0; for (const a of ag) { const d = Math.hypot(a.x - x, a.y - y); if (d < 1.2) { crushed++; a.dmg = 1.6; a.forceFall = [3, 5, 6, 8][(Math.random() * 4) | 0]; } else if (d < 3.6 && Math.random() < .35) yeet(a, a.x - x, a.y - y); }
         if (!crushed && phase === "show" && ag.length > 300) unlockSecret("LUCKY");
         for (let k = 0; k < 24; k++) { const an = k / 24 * 6.283; puff(x + Math.cos(an) * 2, y + Math.sin(an) * 2, .3, "#6a6058", .9, 2, .6); }
-        pop(x, y - 2, "KA-THOOOM!"); CRATERS.push([x, y, 2.6]); debris(x, y, .4, 90, 10, ["#5a5560", "#3e3a40", "#ff9a3c", "#ffd23a", "#8a7f6a"]); hitStop(.45);
+        pop(x, y - 2, "KA-THOOOM!"); CRATERS.push([x, y, 2.6]); hazardChain(x, y, 5); debris(x, y, .4, 90, 10, ["#5a5560", "#3e3a40", "#ff9a3c", "#ffd23a", "#8a7f6a"]); hitStop(.45);
       } } });
   } else if (kind === "bowl") {
     const from = y > SH / 2 ? [x + (Math.random() - .5) * 6, SH + 2] : [-2, y], d = Math.hypot(x - from[0], y - from[1]) || 1;

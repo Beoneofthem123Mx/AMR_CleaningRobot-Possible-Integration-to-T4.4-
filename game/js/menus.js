@@ -153,6 +153,8 @@ function showOptions() {
     <label class="opt">Sound effects <input type="range" id="volS" min="0" max="100" value="${pct(AU.sfxVol)}"><span id="volSv">${pct(AU.sfxVol)}%</span></label>
     <div class="row"><button id="optFx">Fancy effects: ${POST.on ? "on" : "off"}</button>${window.steam ? '<button id="fs">Full screen (F11)</button>' : ""}</div>
     <p class="keys">Glow, focus blur and contact shading. Turn them off if the game runs slowly (shortcut: G).</p>
+    <div class="row"><button id="optFollow">Camera follows the falls: ${FOLLOW_FALLS ? "on" : "off"}</button></div>
+    <p class="keys">The camera zooms in where people go down, and every 20 pancaked cuts to another spot where it's happening.</p>
     <div class="row"><button id="optCB">Colour-blind palette: ${CB ? "on" : "off"}</button></div>
     <p class="keys">Pressure colours from dark blue to yellow instead of green to red.</p>
     <div class="row"><button id="optShuffle">Moving entrances: ${shuffleGates ? "on" : "off"}</button></div>
@@ -162,6 +164,7 @@ function showOptions() {
   $("#volM").oninput = e => { setVolume("m", e.target.value / 100); $("#volMv").textContent = e.target.value + "%"; };
   $("#volS").oninput = e => { setVolume("s", e.target.value / 100); $("#volSv").textContent = e.target.value + "%"; sfx("tick"); };
   $("#optFx").onclick = () => { POST.on = !POST.on; try { localStorage.setItem("mh.fx", POST.on ? "on" : "off"); } catch (er) { /* no storage */ } $("#optFx").textContent = "Fancy effects: " + (POST.on ? "on" : "off"); };
+  $("#optFollow").onclick = () => { FOLLOW_FALLS = !FOLLOW_FALLS; try { localStorage.setItem("mh.follow", FOLLOW_FALLS ? "on" : "off"); } catch (er) { /* no storage */ } $("#optFollow").textContent = "Camera follows the falls: " + (FOLLOW_FALLS ? "on" : "off"); };
   $("#optCB").onclick = () => { CB = !CB; try { localStorage.setItem("mh.cb", CB ? "on" : "off"); } catch (er) { /* no storage */ } applyCB(); staticDirty = true; $("#optCB").textContent = "Colour-blind palette: " + (CB ? "on" : "off"); };
   $("#optShuffle").onclick = () => { shuffleGates = !shuffleGates; try { localStorage.setItem("mh.shuffle", shuffleGates ? "on" : "off"); } catch (er) { /* no storage */ } $("#optShuffle").textContent = "Moving entrances: " + (shuffleGates ? "on" : "off"); };
   let armed = false;
@@ -228,6 +231,8 @@ const HEADLINES = {
   ],
 };
 const EVENT_LINES = {
+  hazard_tnt: "Nobody knows who left a barrel of TNT at a public event. Several attendees now know what flying feels like.",
+  hazard_gas: "A gas tank took off like a rocket, did a lap of the venue and exploded. The organisers called it 'an unplanned fireworks display'.",
   ropesnap: "A velvet rope snapped under the pressure; organizers insist it was “mostly decorative”.",
   fencesmash: "A vehicle flattened a barrier and kept going, as if barriers were a suggestion.",
   lion: "A lion toured the crowd and posed for selfies with several fans.",

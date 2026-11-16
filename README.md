@@ -257,7 +257,7 @@ around.
 - **Voices** (CC0): people yelp when trampled and gasp when squeezed, an announcer calls the
   gates, the first medic, time over and the verdict, and animals and monsters get their own voices
   (penguins, gorillas, zombies, aliens, bats, a werewolf, a snoring mayor).
-- **Music**: 17 recorded CC0 tracks (`game/music/CREDITS.md`): every venue has its own song, a calm
+- **Music**: 39 recorded CC0 tracks (`game/music/CREDITS.md`): every venue has two songs of its own and picks one per visit, a calm
   one plays while you plan, the music opens up at each drop and goes muffled during the evacuation.
   If the files are missing, the game falls back to its synthesized music.
 
@@ -273,6 +273,16 @@ Options → **Colour-blind palette** switches the pressure colours (pressure vie
 to a dark-blue-to-yellow scale with no red/green pairs.
 
 Opening the gates with nothing placed asks once first: an empty plan always scores zero stars.
+
+**TNT barrels and gas tanks** turn up somewhere new on every visit (2 or 3 of them, never in the
+front rows) and are marked with their blast radius while you plan. They go off when the crowd
+squeezes them, when another explosion is close (chain reactions) or when a kid with a sparkler
+finds them; a TNT barrel blows up after a short fuse, a gas tank shoots across the venue like a
+rocket first. A guard standing next to one keeps the sparklers away and makes it harder to set off.
+
+**Death cam** (Options → Camera follows the falls): when people go down the camera zooms in there,
+and every 20 pancaked it cuts to another spot where people are falling ("MEANWHILE..."). It leaves
+the free camera and the whole-venue view alone.
 Auto quality lowers the number of people drawn in full detail before it turns off shadows and effects.
 
 ## Keyboard shortcuts
