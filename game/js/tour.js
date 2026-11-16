@@ -18,9 +18,19 @@ const tourMod = () => tourHere() ? TOUR.mods[TOUR.i] : null;
 const tourLeft = () => TOUR ? TOUR.allow - TOUR.dead : 0;
 const tourBest = () => { try { return JSON.parse(localStorage.getItem("mh.tour") || "{}"); } catch (e) { return {}; } };
 function tourStart() {
-  if (sandbox) { toast("Turn Sandbox off first: the tour counts for real."); return; }
+  // the reasons it can't start get a proper card (the caption line is hidden behind the title screen)
+  if (sandbox) {
+    showCard(`<div class="tour"><small class="tkick">World Tour</small><h2>Sandbox is on</h2><p>The tour counts for real, so it can't run in Sandbox mode.</p>
+      <div class="row"><button class="go" id="tourNoSand">Turn Sandbox off and go on tour</button><button id="tourTitle">Back</button></div></div>`, "tourcard");
+    $("#tourNoSand").onclick = () => { sandbox = false; try { localStorage.setItem("mh.sandbox", "0"); } catch (er) { /* no storage */ } MAX_GATES = scene.maxGates; tourStart(); };
+    return;
+  }
   const open = realKeys().filter(k => isUnlocked(k)).sort(() => Math.random() - .5);
-  if (open.length < 3) { toast("Unlock at least 3 venues to go on tour."); return; }
+  if (open.length < 2) {
+    showCard(`<div class="tour"><small class="tkick">World Tour</small><h2>Not enough venues yet</h2><p>A tour needs at least two venues. Earn a few stars to unlock more (you have ${open.length}).</p>
+      <div class="row"><button class="go" id="start">▶ Play a venue</button><button id="tourTitle">Back</button></div></div>`, "tourcard");
+    return;
+  }
   const twists = MODS.filter(m => m.id !== "normal");
   const n = Math.min(5, open.length), keys = open.slice(0, n);
   TOUR = { keys, mods: keys.map(() => twists[(Math.random() * twists.length) | 0].id), i: 0, dead: 0, allow: 250 + 50 * n, stars: [], perks: {}, over: false, won: false, recorded: -1 };
