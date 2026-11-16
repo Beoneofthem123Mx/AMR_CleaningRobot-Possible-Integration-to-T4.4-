@@ -61,7 +61,7 @@ function tourPerkCard() {
 }
 function tourTakePerk(k) {
   TOUR.perks[k] = (TOUR.perks[k] || 0) + 1; if (k === "lives") TOUR.allow += 150;
-  TOUR.i++; sfx("confirm"); tourIntro();
+  TOUR.i++; sfx("confirm"); announce("level_up"); if (TOUR.i === TOUR.keys.length - 1) setTimeout(() => hype("final_round"), 900); tourIntro();
 }
 function tourEnd() {
   const T = TOUR, score = tourScore(), b = tourBest(), fresh = !(b.score >= score);

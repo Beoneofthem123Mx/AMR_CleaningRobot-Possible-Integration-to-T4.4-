@@ -487,7 +487,7 @@ const YEET_CRIES = ["AAAAAAAAH!", "WHEEEEEEEE!", "TO INFINITY!", "I CAN FLY!", "
 let yeetT = 0;
 function yeet(a, dx, dy) {
   if (a.air > 0 || a.lift > 0 || yeetT > 0) return false;
-  yeetT = .2;
+  yeetT = .2; if (!demo && Math.random() < .35) hype("midair", .7);
   a.airD = a.air = 1.7 + Math.random() * 1.1; a.airH = 6 + Math.random() * 7; a.yeet = 1;
   a.airSpin = (Math.random() < .5 ? -1 : 1) * (2 + Math.random() * 3); a.airYaw = (Math.random() - .5) * 16;
   if (dx !== undefined) { const l = Math.hypot(dx, dy) || 1; a.vx = dx / l * 2.6; a.vy = dy / l * 2.6; }
@@ -557,7 +557,7 @@ function start(mod) {
   FOAM_K = .7 - .1 * upg("foam"); AID_DMG = .75 - .15 * upg("medic"); AID_HEAL = 1.4 + .4 * upg("medic");
   phase = "show"; t = 0; spawned = 0; fullAt = 0; surgeT = 0; ag = []; fallen = []; movers = []; pops = []; eventT = 7; ambientT = 5; windF = { x: 0, t: 0 }; ola = null; rockets = []; sparks = []; puffs = []; cheerT = 0; evacuated = 0; evacT = 0; calmT = 0; setDead(0, true); resetFx();
   caption("The gates are open!", false, 2200); ui();
-  if (!demo) { VOICE.ann = Math.random() < .5 ? "male" : "female"; announce("go"); }
+  if (!demo) { VOICE.ann = Math.random() < .5 ? "male" : "female"; announce("go"); if (Math.random() < .6) setTimeout(() => hype("fight"), 1300); }
   if (MOD.uniform) MOD.uc = (Math.random() * SHIRTS.length) | 0;
   if (MOD.start) MOD.start();
   const scr = props.find(p => p.type === "screen");
@@ -572,7 +572,7 @@ function start(mod) {
   HAZ = []; if (!demo) hazardsStart();
   G3.photo = null;
 }
-function startEvac() { for (const a of SHOPPERS) shopOut(a); SHOPPERS = []; if (!demo) announce("time_over"); phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }
+function startEvac() { for (const a of SHOPPERS) shopOut(a); SHOPPERS = []; if (!demo) { announce("time_over"); setTimeout(() => announce(Math.random() < .6 ? "war_go_go_go" : "war_watch_my_back"), 1500); } phase = "evac"; evacT = 0; surgeT = 0; clearAttractor(); clearAlt(); if (!G3.photo) G3.wantPhoto = true; sfx("siren"); caption("Show's over. Everybody out!", false, 2600); ui(); }
 function finish() {
   if (demo) { startDemo(); return; }
   phase = "done";
@@ -585,6 +585,7 @@ function finish() {
   const fresh = awardMedals(stars, stuck, megaUsed);
   // tickets for the shop: something for showing up, more for everyone who got home, stars and new medals
   LAST_EARN = Math.round((10 + Math.floor(evacuated / 60) + stars * 20 + fresh.length * 30) * (gearOn("glasses") ? 1.2 : 1) * (SHOW_LUCKY ? 1.5 : 1)); loadShop(); TIX += LAST_EARN; saveShop();
+  setTimeout(() => stars === 3 ? hype(Math.random() < .5 ? "flawless_victory" : "winner") : dead >= 500 ? hype("loser") : null, 2600);
   setTimeout(() => announce(dead >= 500 ? "game_over" : stars === 3 ? (Math.random() < .5 ? "mission_completed" : "congratulations") : stars ? "objective_achieved" : "mission_failed"), 700);
   if (fresh.length) setTimeout(() => announce("new_highscore"), 2300);
   if (Object.values(loadMedals()).reduce((n, m) => n + m.length, 0) >= 20) achieve("MEDAL_COLLECTOR");

@@ -165,7 +165,7 @@ function frame(now, fixed) {
   } else if (phase === "plan") stepPreview(real);
   camKeys(real);
   updateFx(real * (phase === "show" || phase === "evac" ? sp : 1));
-  audioTick();
+  audioTick(); crowdChatter(real * (paused ? 0 : 1));
   render3D(now, real);
   // auto quality: if the machine can't keep up, drop crowd shadows and lower the resolution
   if (G3.renderer && live3d() && fixed === undefined) {

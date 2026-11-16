@@ -45,6 +45,7 @@ function hazardIgnite(h, fuse, why) {
   h.state = "lit"; h.t = fuse ?? HAZ_TYPES[h.kind].fuse; h.m.lit = 1;
   if (!demo) { pop(h.x, h.y - 1.4, why || (h.kind === "tnt" ? "TSSSSS..." : "HISSSSS!")); if (h.t > .6) caption(h.kind === "tnt" ? "A TNT barrel is lit!" : "A gas tank is leaking!", true, 1600); }
   sfx(h.kind === "tnt" ? "fiu" : "siren");
+  if (!demo) { if (why === "CHAIN REACTION!") hype("combo"); else announce(h.kind === "tnt" ? "war_fire_in_the_hole" : "war_look_out"); }
 }
 function hazardBoom(h) {
   h.state = "gone"; h.m.dead = true;
@@ -53,7 +54,7 @@ function hazardBoom(h) {
   pop(h.x, h.y - 1.2, h.kind === "tnt" ? "KABOOM!" : "WHOOOMPH!"); burstAt(h.x, h.y, 110); shake = Math.min(1.3, shake + .9); flash = Math.max(flash, .5);
   debris(h.x, h.y, .35, 60, 8, h.kind === "tnt" ? ["#c8261f", "#2b2d33", "#ff9a3c", "#ffd23a"] : ["#e8eef4", "#2f7fd6", "#ff9a3c", "#ffd23a"]);
   shockwave(h.x, h.y, true); hitStop(.3); sfx("boom"); if (typeof CRATERS !== "undefined") CRATERS.push([h.x, h.y, 1.8]);
-  eventLog.add("hazard_" + h.kind);
+  eventLog.add("hazard_" + h.kind); if (!demo) setTimeout(() => announce("war_target_destroyed"), 900);
   hazardChain(h.x, h.y, R + 1);
 }
 // explosions nearby light the fuse of other barrels and tanks
@@ -64,7 +65,7 @@ function hazardStep() {
     if (h.state === "gone") continue;
     if (h.state === "idle") {
       // a kid with a sparkler wanders by (unless a guard is standing right there)
-      if (fullAt && t > fullAt + h.spark) { if (guardedHaz(h)) { h.spark += 20; if (!demo) pop(h.x, h.y - 1.4, "NOT ON MY WATCH!"); } else hazardIgnite(h, null, "OOH, A SPARKLER!"); continue; }
+      if (fullAt && t > fullAt + h.spark) { if (guardedHaz(h)) { h.spark += 20; if (!demo) { pop(h.x, h.y - 1.4, "NOT ON MY WATCH!"); hype("defused"); } } else hazardIgnite(h, null, "OOH, A SPARKLER!"); continue; }
       // the crowd squeezing it
       if (++h.chk % 15) continue;
       let n = 0; const need = guardedHaz(h) ? 14 : 7; for (const a of ag) if ((a.x - h.x) ** 2 + (a.y - h.y) ** 2 < 1.7 && a.ps > PCRIT * .45) n++;

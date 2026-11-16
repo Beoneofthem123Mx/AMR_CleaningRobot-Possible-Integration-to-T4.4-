@@ -217,7 +217,13 @@ const VG = {   // voice groups
   munch: ["cr_eat_01", "cr_eat_03"], snore: ["cr_snore"], zombie: ["cr_monster_01", "cr_monster_03", "cr_monster_05", "cr_monster_08", "cr_monster_12"],
   alien: ["cr_alien_01", "cr_alien_03", "cr_alien_05"], bug: ["cr_bug_01", "cr_bug_03"], howl: ["cr_howl"], burp: ["cr_burp_01"], cough: ["cr_cough_01"],
   ooh: ["cr_ooh"], hurt: ["cr_hurt_01", "cr_hurt_03"], mumble: ["cr_human_01", "cr_human_03", "cr_human_05", "cr_human_07"], die: ["cr_die_01", "cr_die_03"],
+  say_chat: ["say_yes", "say_ok", "say_yeehaa", "say_thanks", "say_roger", "say_affirmative", "say_noproblem", "say_goodgame", "say_booo", "say_no", "say_oops", "say_shutup", "say_attack", "say_sorry"],
+  say_help: ["say_needhelp", "say_needhealth", "say_needbackup", "say_negative", "say_no"], say_leave: ["say_ok", "say_roger", "say_goodgame", "say_thanks", "say_sorry", "say_oops", "say_booo"],
+  hype_midair: ["hype_midair_1", "hype_midair_2"],
 };
+VOICE_FILES.push(...["affirmative", "attack", "booo", "defend", "goodgame", "needbackup", "needhealth", "needhelp", "negative", "no", "noproblem", "ok", "oops", "roger", "shutup", "sorry", "thanks", "yeehaa", "yes"].map(n => "say_" + n),
+  ...["combo", "combo_breaker", "defused", "fight", "final_round", "flawless_victory", "loser", "midair_1", "midair_2", "multi_kill", "planted", "prepare_yourself", "sudden_death", "winner"].map(n => "hype_" + n),
+  ...["male", "female"].flatMap(g => ["final_round", "level_up", "power_up", "war_cover_me", "war_fire_in_the_hole", "war_go_go_go", "war_hold", "war_target_destroyed", "war_target_engaged", "war_watch_my_back", "you_lose", "you_win"].map(l => `ann_${g}_${l}`)));
 // shouts that also get a voice
 const VOICE_BY_TEXT = { "BRAAAINS!": "zombie", "AWOOOO!": "howl", "OOK OOK!": "grunt", "MUNCH MUNCH!": "munch", "ZZZ...!": "snore", "WADDLE WADDLE!": "cute", "MWEEEH!": "cute",
   "MEEEH!": "cute", "AWWWWW!": "cute", "WIFI?": "alien", "VWOOOM!": "alien", "SCREEECH!": "bug", "ACHOO!": "cough", "PEE-YOO!": "cough", "NOOO!": "splat", "MY SPLEEN!": "ouch",
@@ -318,6 +324,27 @@ const SFX_BY_TEXT = { "AAAAAAAAH!": "scream", "TELL MY MOM...": "scream", "DING 
   "SAY CHEESE!": "flash", "HOT DOGS! TWO FOR TEN!": "honk", "BALLOONS! GET YOUR BALLOONS!": "jingle", "DON'T MIND ME, I'M LIVE!": "cheer" };
 function sfxFor(text) {
   const n = SFX_BY_TEXT[text] || (scene && scene.sfx && scene.sfx[text]); if (n) sfx(n);
-  const v = VOICE_BY_TEXT[text]; if (v) voice(v, .75, .6);
+  const v = VOICE_BY_TEXT[text] || sayFor(text); if (v) voice(v, .75, .6);
   if (text === "3!" || text === "2!" || text === "1!") announce(text[0], 1);
+}
+// people talking: shouts that contain these words get a recorded voice (CC0, Warfork "vsay")
+const SAY_WORDS = [[/SORRY/, "say_sorry"], [/OOPS|WHOOPS/, "say_oops"], [/HELP|MEDIC|NURSE/, "say_help"], [/THANK/, "say_thanks"], [/\bBO+O*\b|BOOO/, "say_booo"],
+  [/YEE+HA|YEEHAW|WOO+HOO|YAHOO/, "say_yeehaa"], [/SHUT UP|QUIET|SHH/, "say_shutup"], [/^NO[!.]|^NO+!|NOPE/, "say_no"], [/^YES|YEAH|YEP/, "say_yes"], [/^OK|OKAY/, "say_ok"],
+  [/BACKUP|BACK UP/, "say_needbackup"], [/ATTACK|CHARGE/, "say_attack"], [/GOOD GAME|GG/, "say_goodgame"], [/NO PROBLEM/, "say_noproblem"]];
+function sayFor(text) { for (const [re, g] of SAY_WORDS) if (re.test(text)) return g; return null; }
+// background chatter: every few seconds someone in the crowd says something (squeezed people ask for help)
+let chatT = 2;
+function crowdChatter(dt) {
+  if ((phase !== "show" && phase !== "evac") || demo || !ag.length) return;
+  chatT -= dt; if (chatT > 0) return; chatT = 2.2 + Math.random() * 3.5;
+  const a = ag[(Math.random() * ag.length) | 0]; if (!a) return;
+  voice(a.ps > PCRIT * .5 ? "say_help" : phase === "evac" ? "say_leave" : "say_chat", .32 + Math.random() * .12, 1.2);
+}
+// the hype voice: fighting-game style call-outs for the big moments
+function hype(line, vol) {
+  logVoice("h:" + line, 2);
+  const c = AU.ctx; if (!c || !AU.on) return;
+  const list = (VG["hype_" + line] || ["hype_" + line]).filter(n => SMP[n]); if (!list.length) return;
+  if (c.currentTime - (VOICE.last.hype || 0) < 2) return; VOICE.last.hype = c.currentTime;
+  playSample(list[(Math.random() * list.length) | 0], vol ?? .85, 1);
 }

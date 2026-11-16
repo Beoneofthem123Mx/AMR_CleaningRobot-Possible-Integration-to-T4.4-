@@ -14,7 +14,7 @@ cv.addEventListener("pointerdown", ev => {
     const [x, y] = toWorld(ev);
     if (power !== "mega") { usePower(x, y); return; }
     if (mega.n <= 0 && !sandbox) { caption("The megaphone is out of battery.", true, 1400); return; }
-    if (!sandbox) mega.n--; megaUsed = true; mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true }, { x, y, t: -.18, mega: true }, { x, y, t: -.36, mega: true });   // three sound waves
+    if (!sandbox) mega.n--; megaUsed = true; if (surgeT > 0) hype("combo_breaker"); mega.active.push({ x, y, t: 3.5 }); rings.push({ x, y, t: 0, mega: true }, { x, y, t: -.18, mega: true }, { x, y, t: -.36, mega: true });   // three sound waves
     shake = Math.min(1, shake + .25); pop(x, y, "CALM DOWN, PLEASE!"); sfx("whistle"); ui(); return;
   }
   if (phase !== "plan") return;
@@ -132,7 +132,7 @@ function setDead(n, quiet) {
   dead = n; $("#dead").textContent = n + (window.__deadOffset || 0);   // trailer recordings keep one running total
   if (!quiet) { const b = $("#badge"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   if (first && !quiet) caption("And we don't like that.", true, 2600);
-  const ms = MILESTONES[n]; if (ms && !quiet) { caption(ms, true, 2600); { const el = $("#caption"); el.classList.remove("slam"); void el.offsetWidth; el.classList.add("slam"); setTimeout(() => el.classList.remove("slam"), 2700); } flash = Math.max(flash, .8); slowT = Math.max(slowT, .5); sfx("boom"); shake = Math.min(1, shake + .5); announce(n >= 500 ? "game_over" : "war_call_for_backup"); }
+  const ms = MILESTONES[n]; if (ms && !quiet) { caption(ms, true, 2600); { const el = $("#caption"); el.classList.remove("slam"); void el.offsetWidth; el.classList.add("slam"); setTimeout(() => el.classList.remove("slam"), 2700); } flash = Math.max(flash, .8); slowT = Math.max(slowT, .5); sfx("boom"); shake = Math.min(1, shake + .5); announce(n >= 500 ? "game_over" : ["war_call_for_backup", "war_cover_me", "war_watch_my_back", "war_get_down"][(Math.random() * 4) | 0]); }
 }
 function showCard(html, kind) {
   const c = $("#card"); c.innerHTML = html; c.className = "card" + (kind ? " " + kind : ""); c.onclick = null;

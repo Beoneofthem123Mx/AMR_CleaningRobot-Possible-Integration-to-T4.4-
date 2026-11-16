@@ -21,6 +21,10 @@ repository; check the original pages before shipping if you need certainty.
 
 | `voice/male_*`, `voice/female_*`, `voice/pig_*` (ouches, gasps, falls, jumps) | Warfork player voices by Team Forbidden, via github.com/lavenderdotpet/CC0-Public-Domain-Sounds (`warfork-cc0`, whose notice states CC0 1.0) | CC0 1.0 |
 | `voice/ann_*` (the announcer: go, time over, medic, mission completed/failed, game over...) | Kenney "Voiceover Pack" (kenney.nl), voices by Jeffrey M. Smith (male) and the pack's female voice actor, via the same collection | CC0 1.0 |
+| `voice/say_*` (people in the crowd talking: yes, no, ok, oops, sorry, thanks, yeehaa, booo, shut up, need help, need a medic, good game...) | Warfork "vsay" voice lines by Team Forbidden, via github.com/lavenderdotpet/CC0-Public-Domain-Sounds (`warfork-cc0/sounds/vsay`) | CC0 1.0 |
+| `voice/hype_midair_*`, `voice/hype_planted`, `voice/hype_defused` | Warfork announcer by Team Forbidden, same collection (`warfork-cc0/sounds/announcer`) | CC0 1.0 |
+| `voice/hype_*` (fight, flawless victory, combo, combo breaker, winner, loser, final round...) | Kenney "Voiceover Pack: Fighter" (kenney.nl), via the same collection | CC0 1.0 |
+| `voice/ann_*_war_fire_in_the_hole`, `_war_go_go_go`, `_war_cover_me`, `_war_watch_my_back`, `_war_target_destroyed`, `_power_up`, `_level_up`, `_you_win`... | Kenney "Voiceover Pack" (kenney.nl), same voices as the announcer above | CC0 1.0 |
 | `voice/cr_*` (cute animals, grunts, munching, snoring, zombie groans, aliens, bugs, howls, burps, coughs, mumbles) | CC0 creature SFX packs in github.com/lavenderdotpet/CC0-Public-Domain-Sounds | CC0 1.0 |
 
 The game still works without these files: every effect has a synthesized fallback.
