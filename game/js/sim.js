@@ -522,11 +522,14 @@ let lastFalls = [], lastFallsScene = "", calmT = 0;
 function pickFall(a) {
   const forced = a.forceFall, r = Math.random(); a.forceFall = undefined;   // powers (anvil, meteor) pick the fall
   if (!demo) setTimeout(() => { if (a.fallType === 5 && ++SEC.pinball >= 50) unlockSecret("TILT"); }, 0);
-  a.fallType = forced !== undefined ? forced : r < .14 ? 0 : r < .27 ? 1 : r < .38 ? 2 : r < .5 ? 3 : r < .6 ? 4 : r < .7 ? 5 : r < .8 ? 6 : r < .9 ? 7 : 8;
-  a.fx0 = a.x; a.fy0 = a.y;
-  if (a.fallType === 3 || a.fallType === 5 || a.fallType === 8) {   // thrown along the push (or anywhere), but only onto free floor
+  // half the falls are the classic cartoon ones, the other half rag-doll glitches (noodle, clipping, jitter, T-pose, tumble, rubber ball, lag freeze)
+  const r2 = r * 2;
+  a.fallType = forced !== undefined ? forced : r < .5 ? (r2 < .14 ? 0 : r2 < .27 ? 1 : r2 < .38 ? 2 : r2 < .5 ? 3 : r2 < .6 ? 4 : r2 < .7 ? 5 : r2 < .8 ? 6 : r2 < .9 ? 7 : 8) : 9 + ((Math.random() * 7) | 0);
+  a.fx0 = a.x; a.fy0 = a.y; a.glpop = 0; a.landed = 0; a.boing = 0;
+  const TRAVEL = { 3: [2.2, 1.5, .9], 5: [3.4, 2.4, 1.5, .9], 8: [3.4, 2.4, 1.5, .9], 10: [5, 3.5, 2.2, 1.2], 11: [2.6, 1.6, .9], 12: [3, 2, 1.2], 13: [4.2, 3, 2, 1.2], 14: [4.6, 3.2, 2, 1.2] };
+  if (TRAVEL[a.fallType]) {   // thrown along the push (or anywhere), but only onto free floor
     const sp = Math.hypot(a.vx, a.vy), an = sp > .2 ? Math.atan2(a.vy, a.vx) + (Math.random() - .5) * .8 : Math.random() * 6.283;
-    for (const d of a.fallType === 3 ? [2.2, 1.5, .9] : [3.4, 2.4, 1.5, .9]) {
+    for (const d of TRAVEL[a.fallType]) {
       const x = a.x + Math.cos(an) * d, y = a.y + Math.sin(an) * d;
       if (x > R && x < WW - R && y > R && y < SH - R && !blockedC[cellOf(x, y)]) { a.x = x; a.y = y; a.h = an; return; }
     }

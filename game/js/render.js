@@ -81,7 +81,7 @@ function mat(hex, o) { const key = hex + JSON.stringify(o || {}); return MATS[ke
 function basic(hex, o) { const key = "b" + hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshBasicMaterial(Object.assign({ color: lin(hex), toneMapped: false }, o || {}))); }
 let GEO;
 // low-poly look (first venues): chamfered, rounded boxes and faceted columns instead of plain boxes and smooth cylinders
-const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono", "ciudad", "mitin", "taco", "ovni"]);
+const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono", "ciudad", "mitin", "taco", "ovni", "aeropuerto", "arena", "rocket", "zoo"]);
 const isPoly = () => POLY_VENUES.has(sceneKey);
 function polyBox(w, h, d, r) {   // a box with rounded corners (few segments, so it stays faceted) and a chamfered top edge
   r = Math.max(.02, Math.min(r, w / 2 - .01, d / 2 - .01)); const b = Math.min(.12, h * .25, r * .8), x0 = -w / 2 + r, x1 = w / 2 - r, z0 = -d / 2 + r, z1 = d / 2 - r, sh = new THREE.Shape();
@@ -585,6 +585,71 @@ function ragdoll(a, tt) {
     R.armL = R.armR = Math.PI * .8; R.legL = .7; R.legR = -.7; R.open = 1 - clamp(after, 0, 1);
     if (after > 0) { const j = jiggle(after, 28, 5) * .3; kS = 1 - j; kF = 1 + j * .3; kU = 1 + j * .3; }
     land = dur;
+  } else if (ty === 9) {     // NOODLE: the body stretches up like spaghetti, wobbles like jelly, then collapses into a puddle
+    const st = clamp(age / .45, 0, 1), tip = clamp((age - .45) / .35, 0, 1), after = age - .8;
+    kU = 1 + 1.3 * Math.sin(st * Math.PI / 2) * (1 - tip) + Math.sin(age * 31) * .18 * (1 - tip); if (after > 0) kU = .55 + jiggle(after, 22, 3.5) * .5; kF = kS = 1 / Math.sqrt(Math.max(.3, kU));
+    pitch = bounceOut(tip) * Math.PI / 2; roll = Math.sin(age * 9) * .4 * (1 - tip); y = .02 + .22 * tip;
+    R.armL = 2.8 + Math.sin(ph * 1.8) * 1.2; R.armR = 2.6 + Math.cos(ph * 1.6) * 1.2; R.legL = Math.sin(ph) * .9; R.legR = -Math.sin(ph * 1.2) * .9; R.open = 1; land = .8;
+  } else if (ty === 10) {    // CLIPPING: sinks into the floor, the "physics engine" spits them nine metres into the sky, lands far away
+    const sink = clamp(age / .35, 0, 1), fly = clamp((age - .35) / 1.2, 0, 1), after = age - 1.55;
+    if (age < .35) { pitch = 0; y = -sink * .95; R.armL = R.armR = Math.PI * .95 + Math.sin(ph) * .2; R.legL = R.legR = 0; R.open = 1; x += Math.sin(age * 90) * .03; }
+    else {
+      if (!a.glpop) { a.glpop = 1; pop(a.fx0, a.fy0 - .6, ["404 FLOOR NOT FOUND", "CLIPPING!", "PHYSICS!", "OUT OF BOUNDS!"][(a.fallLimb * 4 | 0) % 4]); puff(a.fx0, a.fy0, .1, "#ffffff", .5, .6, 1.5); }
+      x = a.fx0 + (a.x - a.fx0) * fly; z = a.fy0 + (a.y - a.fy0) * fly;
+      y = -.95 * (1 - fly) + .26 * fly + Math.sin(fly * Math.PI) * 9 + (after > 0 ? Math.abs(jiggle(after, 14, 5)) * .4 : 0);
+      pitch = fly * Math.PI * 7 + Math.PI / 2 * fly; roll = fly * Math.PI * 3 * (a.fallSpin > 0 ? 1 : -1); if (fly >= 1) { pitch = Math.PI / 2; roll = 0; }
+      R.armL = 2.6 + Math.sin(ph * 2) * 1.2 * (1 - fly); R.armR = 2.4 + Math.cos(ph * 2) * 1.2 * (1 - fly); R.legL = .9; R.legR = -.9; R.open = 1 - clamp(after, 0, 1);
+      if (after > 0) { const j = jiggle(after, 28, 4.5) * .45; kF = 1 - j; kU = 1 + j * .45; kS = 1 + j * .45; }
+      if (!a.landed && after >= 0) { a.landed = 1; shake = Math.min(1, shake + .3); pop(a.x, a.y - .5, "SPLAT!"); for (let k = 0; k < 6; k++) puff(a.x + (Math.random() - .5), a.y + (Math.random() - .5), .15, scene.night ? "#6a6870" : "#e6dcc4", .25, .9, .4); }
+    }
+    land = 1.55;
+  } else if (ty === 11) {    // JITTER: a physics glitch, vibrating like crazy on the spot, then flung sideways
+    const shakeT = 1, after = age - shakeT, h1 = Math.sin(age * 371 + a.fallLimb * 50), h2 = Math.sin(age * 293 + a.fallLimb * 31), h3 = Math.sin(age * 517);
+    if (age < shakeT) {
+      x = a.fx0 + h1 * .18; z = a.fy0 + h2 * .18; y = .05 + Math.abs(h3) * .35; pitch = h1 * .9 + .3; roll = h2 * .9; yaw = a.h + h3 * 3;
+      R.armL = 1.6 + h1 * 1.5; R.armR = 1.6 + h2 * 1.5; R.legL = h3 * 1.2; R.legR = -h1 * 1.2; R.open = h3 > 0 ? 1 : 0;
+      if (!a.glpop) { a.glpop = 1; pop(a.fx0, a.fy0 - .8, ["BZZZT!", "GLITCH!", "ERROR 418", "LAG SPIKE!"][(a.fallLimb * 4 | 0) % 4]); }
+    } else {
+      const q = clamp(after / .5, 0, 1); x = a.fx0 + (a.x - a.fx0) * q; z = a.fy0 + (a.y - a.fy0) * q;
+      y = .26 + Math.sin(q * Math.PI) * 1.4; pitch = Math.PI / 2 + (1 - q) * Math.PI * 2; roll = (1 - q) * 2.5;
+      R.armL = 2.5; R.armR = 2.3; R.legL = .7; R.legR = -.7; R.open = 1 - q;
+      if (q >= 1) { const j = jiggle(after - .5, 30, 5) * .35; kF = 1 - j; kU = 1 + j * .35; kS = 1 + j * .35; }
+    }
+    land = 1.5;
+  } else if (ty === 12) {    // T-POSE: the animation goes missing. Snaps into a T, slides away stiff as a board, tips over like a plank
+    const slide = clamp((age - .25) / 1.25, 0, 1), tip = clamp((age - 1.5) / .4, 0, 1), after = age - 1.9;
+    if (!a.glpop && age > .2) { a.glpop = 1; pop(a.fx0, a.fy0 - 1, ["T-POSE!", "ANIMATION NOT FOUND", "ASSERT DOMINANCE", "MISSING_ANIM.FBX"][(a.fallLimb * 4 | 0) % 4]); }
+    x = a.fx0 + (a.x - a.fx0) * slide; z = a.fy0 + (a.y - a.fy0) * slide; y = .06 + Math.sin(slide * Math.PI) * .08 + .2 * tip;
+    yaw = a.h + slide * 1.2 * (a.fallSpin > 0 ? 1 : -1); pitch = bounceOut(tip) * Math.PI / 2; roll = 0;
+    R.armL = R.armR = Math.PI / 2; R.legL = R.legR = 0; R.open = 0;
+    if (after > 0) { const j = jiggle(after, 30, 6) * .25; kF = 1 - j; kU = 1 + j * .3; }
+    land = 1.9;
+  } else if (ty === 13) {    // TUMBLE: hit like a car crash dummy, tumbling over every axis through the air, two bounces
+    const fly = .9, q = clamp(age / fly, 0, 1), b = clamp((age - fly) / .7, 0, 1), after = age - fly - .7, sg = a.fallSpin > 0 ? 1 : -1;
+    const e = q * .75 + b * .25; x = a.fx0 + (a.x - a.fx0) * e; z = a.fy0 + (a.y - a.fy0) * e;
+    y = .26 + Math.sin(q * Math.PI) * 2.6 + (q >= 1 ? Math.abs(Math.sin(b * Math.PI * 2)) * .7 * (1 - b) : 0);
+    pitch = Math.PI / 2 + (q * 5 + b * 1.5) * Math.PI * (1 - (after > 0 ? 1 : 0)); roll = sg * (q * 3 + b) * Math.PI * (after > 0 ? 0 : 1); yaw = a.h + q * 2 * sg;
+    if (after > 0) { pitch = Math.PI / 2; roll = 0; const j = jiggle(after, 26, 5) * .35; kF = 1 - j; kU = 1 + j * .4; kS = 1 + j * .4; }
+    R.armL = 2.2 + Math.sin(ph * 2.2) * 1.4 * (1 - b); R.armR = 2.4 + Math.cos(ph * 1.9) * 1.4 * (1 - b); R.legL = .6 + Math.sin(ph * 1.7) * 1 * (1 - b); R.legR = -.6 - Math.cos(ph * 1.5) * 1 * (1 - b); R.open = 1;
+    land = fly + .7;
+  } else if (ty === 14) {    // RUBBER BALL: curls up and bounces away five times, squashing flat on every bounce
+    const dur = 2, q = clamp(age / dur, 0, 1), after = age - dur, nb = 5, bq = (q * nb) % 1, bi = Math.min(nb - 1, Math.floor(q * nb)), hgt = 1.6 * Math.pow(.62, bi);
+    x = a.fx0 + (a.x - a.fx0) * q; z = a.fy0 + (a.y - a.fy0) * q;
+    y = .3 + Math.sin(bq * Math.PI) * hgt * (q < 1 ? 1 : 0);
+    const squash = q < 1 ? Math.max(0, 1 - Math.min(bq, 1 - bq) * 9) : 0;
+    kU = .75 - squash * .35; kF = kS = 1.15 + squash * .35; pitch = q * Math.PI * 6 * (a.fallSpin > 0 ? 1 : -1) + (q >= 1 ? Math.PI / 2 : 0); if (q >= 1) pitch = Math.PI / 2;
+    R.armL = R.armR = .9; R.legL = 1.7; R.legR = 1.6; R.open = 1;
+    if (after > 0) { const j = jiggle(after, 26, 5) * .35; kF = 1 - j; kU = 1 + j * .4; kS = 1 + j * .4; R.armL = 2.4; R.armR = 2.2; R.legL = .5; R.legR = -.5; }
+    if (squash > .5 && (a.boing || 0) <= bi && bi > 0 && q < 1) { a.boing = bi + 1; if (bi === 1) pop(x, z - .5, "BOING!"); }
+    land = dur;
+  } else if (ty === 15) {    // MIDAIR FREEZE: launched, then stuck perfectly still in the air (lag!), then drops like a rock
+    const up = clamp(age / .4, 0, 1), frozen = age >= .4 && age < 2.2, drop = clamp((age - 2.2) / .25, 0, 1), after = age - 2.45;
+    if (!a.glpop && age > .4) { a.glpop = 1; pop(a.x, a.y - 2.4, ["LAG!", "BUFFERING...", "PAUSED?", "CONNECTION LOST"][(a.fallLimb * 4 | 0) % 4]); }
+    y = .02 + Math.sin(up * Math.PI / 2) * 1.6 * (1 - drop) + .24 * drop + (after > 0 ? Math.abs(jiggle(after, 16, 6)) * .3 : 0) + (frozen ? Math.sin(age * 60) * .01 : 0);
+    pitch = up * 1.1 + drop * (Math.PI / 2 - 1.1); roll = up * .6 * (1 - drop); yaw = a.h + up * 1.4;
+    R.armL = 2.9; R.armR = .4; R.legL = 1.1; R.legR = -.2; R.open = 1;
+    if (after > 0) { const j = jiggle(after, 30, 5) * .4; kF = 1 - j; kU = 1 + j * .4; kS = 1 + j * .4; }
+    land = 2.45;
   } else {                   // PANCAKE: flattened like a cartoon, springs back BOING, then falls over like a plank
     const sq = clamp(age / .12, 0, 1), boing = age - .45, tip = clamp((age - .9) / .45, 0, 1);
     let k = 1 - .65 * sq;
@@ -897,7 +962,7 @@ function renderPeople(tt, dtR, vb) {
   for (const a of fallen) {
     if (C.torso >= cap - 1) break; draw(a, true);
     const age = t - (a.fallAt ?? -99);
-    if (age > [.45, .7, 1.1, .9, 1.45, 1.4, 1.5, .9, 1.25][a.fallType || 0] && age < 5.5 && C.star < 1797) {   // stars once they have landed   // dizzy stars over the head for a few seconds
+    if (age > [.45, .7, 1.1, .9, 1.45, 1.4, 1.5, .9, 1.25, .8, 1.55, 1.5, 1.9, 1.6, 2, 2.45][a.fallType || 0] && age < 5.5 && C.star < 1797) {   // stars once they have landed   // dizzy stars over the head for a few seconds
       const hx = Bm[1] * 1.62 + Bt[0], hy = Bm[4] * 1.62 + Bt[1], hz = Bm[7] * 1.62 + Bt[2], fade = Math.min(1, (5 - age) / .8);
       for (let k = 0; k < 3; k++) {
         const an = tt * 4.5 + k * 2.094 + a.ph, o = C.star * 16, s = .9 * fade * a.sc, A = P.star.instanceMatrix.array, ca = Math.cos(tt * 6 + k), sa = Math.sin(tt * 6 + k);
