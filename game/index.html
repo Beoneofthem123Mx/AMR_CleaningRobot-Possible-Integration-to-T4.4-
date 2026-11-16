@@ -306,6 +306,12 @@ body.photo .photohint.fade { animation: photofade 3.2s forwards; } @keyframes ph
 @keyframes secretin { from { transform: translate(-50%, -30px) scale(.6); opacity: 0; } } @keyframes secretout { to { transform: translate(-50%, -20px); opacity: 0; } }
 #badge { cursor: pointer; }
 .analysis { position: absolute; right: 12px; top: 12px; z-index: 40; width: min(360px, 44%); max-height: calc(100% - 24px); overflow: auto; scrollbar-width: none; padding: 12px 14px; border-radius: 14px; background: rgba(18,19,26,.92); color: #fff; font-size: .62em; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.analysis .anmin { position: absolute; right: 10px; top: 10px; width: 2em; height: 2em; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 1.1em; font-weight: 900; }
+.analysis h3 { padding-right: 2.4em; }
+/* minimized: just the title and the replay, the rest of the venue stays in view */
+.analysis.min { width: min(300px, 40%); padding: 8px 12px; background: rgba(18,19,26,.8); }
+.analysis.min > *:not(h3):not(.anmin):not(.replay) { display: none; }
+.analysis.min h3 { margin: 0; cursor: pointer; } .analysis.min .replay { margin: 6px 0 0; } .analysis.min .replay > b, .analysis.min .replay small { display: none; }
 .analysis h3 { margin: 0 0 4px; font-weight: 900; text-transform: uppercase; color: #ffd23a; } .analysis .lg { color: #c9ccd2; margin: 0 0 8px; }
 .analysis .lg i { display: inline-block; width: 1em; height: 1em; vertical-align: -.15em; margin: 0 .3em 0 .6em; border-radius: 2px; } .analysis .lg .h1 { background: #ffb238; } .analysis .lg .h2 { background: #ff3b2f; }
 .analysis .spot { display: flex; gap: 8px; margin: 8px 0; } .analysis .spot small { display: block; color: #d8dbe0; margin-top: 2px; line-height: 1.3; }

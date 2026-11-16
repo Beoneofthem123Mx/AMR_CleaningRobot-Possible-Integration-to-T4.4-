@@ -72,10 +72,10 @@ function showAnalysis() {
   camMode = 0; camFree = null; evCam = null; slowT = 0; cam.z = 1; cam.x = WW / 2; cam.y = WH / 2; if (typeof camLabel === "function") camLabel(); const st = document.querySelector("#status"); if (st) st.hidden = true;
   const a = ANALYSIS, el = document.querySelector("#analysis") || document.querySelector("#frame").appendChild(Object.assign(document.createElement("div"), { id: "analysis", className: "analysis" }));
   el.hidden = false;
-  el.innerHTML = `<h3>What went wrong?</h3><p class="lg"><i class="h1"></i>pressure <i class="h2"></i>crush <b>✕</b> someone went down <b class="num">1</b> hotspot</p>` +
+  el.innerHTML = `<button class="anmin" id="anMin" title="Minimize to see the whole venue">—</button><h3>What went wrong?</h3><p class="lg"><i class="h1"></i>pressure <i class="h2"></i>crush <b>✕</b> someone went down <b class="num">1</b> hotspot</p>` +
     (a && a.spots.length ? a.spots.map((s, i) => `<div class="spot"><b class="num">${i + 1}</b><div><b>${s.cause}</b>${s.falls ? ` · ${s.falls} down here` : ""}<small>${s.tip}</small></div></div>`).join("")
       : `<p>Nothing dramatic: no real hotspot. Whatever happened, it was spread out.</p>`) + fallTimeline() + exitFlow() +
-    (PM.snaps && PM.snaps.length > 3 ? `<div class="flow"><b>Replay the crowd</b><div class="scrub"><button id="anPlay">▶</button><input type="range" id="anT" min="0" max="${PM.snaps.length}" value="${PM.snaps.length}"><span id="anTL">all</span></div><small>Drag to watch the pressure build second by second. All the way right shows the whole show.</small></div>` : "") +
+    (PM.snaps && PM.snaps.length > 3 ? `<div class="flow replay"><b>Replay the crowd</b><div class="scrub"><button id="anPlay">▶</button><input type="range" id="anT" min="0" max="${PM.snaps.length}" value="${PM.snaps.length}"><span id="anTL">all</span></div><small>Drag to watch the pressure build second by second. All the way right shows the whole show.</small></div>` : "") +
     `<div class="row"><button class="go" id="anRetry">Adjust the plan</button><button id="anBack">Back to the report</button></div>`;
   const sl = el.querySelector("#anT"), lab = el.querySelector("#anTL"), pl = el.querySelector("#anPlay"); let timer = null;
   const setV = v => { PM.view = v >= PM.snaps.length ? -1 : v; sl.value = v; const s = PM.snaps[PM.view]; lab.textContent = PM.view < 0 ? "all" : `${Math.floor(s.t / 60)}:${String(Math.floor(s.t % 60)).padStart(2, "0")}${PM.evacAt !== null && s.t >= PM.evacAt ? " · exit" : ""}`; };
@@ -84,6 +84,10 @@ function showAnalysis() {
     pl.onclick = () => { if (timer) { clearInterval(timer); timer = null; pl.textContent = "▶"; return; } let v = PM.view < 0 ? 0 : PM.view; pl.textContent = "❚❚"; timer = setInterval(() => { setV(v); if (++v > PM.snaps.length) { clearInterval(timer); timer = null; pl.textContent = "▶"; } }, 140); };
     PM.stopScrub = () => { clearInterval(timer); timer = null; PM.view = -1; };
   }
+  // minimize: only the title bar and the replay stay, so the whole venue is visible
+  el.classList.remove("min");
+  const mn = el.querySelector("#anMin"); mn.onclick = ev => { ev.stopPropagation(); const m = el.classList.toggle("min"); mn.textContent = m ? "▢" : "—"; mn.title = m ? "Show the analysis" : "Minimize to see the whole venue"; };
+  el.querySelector("h3").onclick = () => { if (el.classList.contains("min")) mn.click(); };
   el.querySelector("#anRetry").onclick = () => { if (PM.stopScrub) PM.stopScrub(); el.hidden = true; paused = false; backToPlan(); };
   el.querySelector("#anBack").onclick = () => { if (PM.stopScrub) PM.stopScrub(); el.hidden = true; analysisView = false; if (window.__lastReport) window.__lastReport(); };
 }

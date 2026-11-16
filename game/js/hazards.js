@@ -3,7 +3,7 @@
 // During the show they go off when the crowd squeezes them, when another explosion is close (chain
 // reactions!) or when a kid with a sparkler finds them. A guard standing next to one keeps it safe.
 const HAZ_TYPES = {
-  tnt: { name: "TNT barrel", r: 3.4, col: "#d8322b", label: "TNT", fuse: 2 },
+  tnt: { name: "TNT barrel", r: 3, col: "#d8322b", label: "TNT", fuse: 2 },
   gas: { name: "Gas tank", r: 3.8, col: "#4fb8ff", label: "GAS", fuse: 1.6 },
 };
 let HAZ_SPOTS = [], HAZ = [];
@@ -36,7 +36,7 @@ function hazardsStart() {
   HAZ = [];
   for (const s of HAZ_SPOTS) {
     addMover({ kind: "haz_" + s.kind, fixture: true, beh: "static", life: 1e9, x: s.x, y: s.y, ang: Math.random() * 6, r: .45, push: 14, scare: 0, lit: 0 });
-    HAZ.push({ ...s, m: movers[movers.length - 1], state: "idle", t: 0, spark: 14 + Math.random() * 30, chk: 0 });
+    HAZ.push({ ...s, m: movers[movers.length - 1], state: "idle", t: 0, spark: Math.random() < .5 ? 14 + Math.random() * 30 : 1e9, chk: 0 });   // only some get found by a kid with a sparkler
   }
 }
 const guardedHaz = h => guards.some(g => (g.x - h.x) ** 2 + (g.y - h.y) ** 2 < 9);
@@ -49,7 +49,7 @@ function hazardIgnite(h, fuse, why) {
 function hazardBoom(h) {
   h.state = "gone"; h.m.dead = true;
   const R = HAZ_TYPES[h.kind].r;
-  for (const a of ag) { const dx = a.x - h.x, dy = a.y - h.y, d = Math.hypot(dx, dy); if (d < R && d > .01) { const k = 1 - d / R; a.vx += dx / d * k * 7; a.vy += dy / d * k * 7; a.p += k * 3.5; if (Math.random() < .75) toss(a, 2.2 + k * 3.5, 1.1 + Math.random() * .5); } }
+  for (const a of ag) { const dx = a.x - h.x, dy = a.y - h.y, d = Math.hypot(dx, dy); if (d < R && d > .01) { const k = 1 - d / R; a.vx += dx / d * k * 3.5; a.vy += dy / d * k * 3.5; a.p += k * 1.2; if (Math.random() < .6) toss(a, 2.2 + k * 3.5, 1.1 + Math.random() * .5); } }
   pop(h.x, h.y - 1.2, h.kind === "tnt" ? "KABOOM!" : "WHOOOMPH!"); burstAt(h.x, h.y, 110); shake = Math.min(1.3, shake + .9); flash = Math.max(flash, .5);
   debris(h.x, h.y, .35, 60, 8, h.kind === "tnt" ? ["#c8261f", "#2b2d33", "#ff9a3c", "#ffd23a"] : ["#e8eef4", "#2f7fd6", "#ff9a3c", "#ffd23a"]);
   shockwave(h.x, h.y, true); hitStop(.3); sfx("boom"); if (typeof CRATERS !== "undefined") CRATERS.push([h.x, h.y, 1.8]);
