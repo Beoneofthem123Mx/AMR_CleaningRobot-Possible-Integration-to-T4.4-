@@ -81,7 +81,7 @@ function mat(hex, o) { const key = hex + JSON.stringify(o || {}); return MATS[ke
 function basic(hex, o) { const key = "b" + hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshBasicMaterial(Object.assign({ color: lin(hex), toneMapped: false }, o || {}))); }
 let GEO;
 // low-poly look (first venues): chamfered, rounded boxes and faceted columns instead of plain boxes and smooth cylinders
-const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono", "ciudad", "mitin", "taco", "ovni", "aeropuerto", "arena", "rocket", "zoo"]);
+const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono", "ciudad", "mitin", "taco", "ovni", "aeropuerto", "arena", "rocket", "zoo", "cheese", "zombie", "beach", "park"]);
 const isPoly = () => POLY_VENUES.has(sceneKey);
 function polyBox(w, h, d, r) {   // a box with rounded corners (few segments, so it stays faceted) and a chamfered top edge
   r = Math.max(.02, Math.min(r, w / 2 - .01, d / 2 - .01)); const b = Math.min(.12, h * .25, r * .8), x0 = -w / 2 + r, x1 = w / 2 - r, z0 = -d / 2 + r, z1 = d / 2 - r, sh = new THREE.Shape();
@@ -661,6 +661,9 @@ function ragdoll(a, tt) {
     if (tip >= 1) { const j = jiggle(age - 1.35, 30, 6) * .3; kF = 1 - j; kU = 1 + j * .3; }
     R.armL = .3 + 2.4 * tip; R.armR = .3 + 2.2 * tip; R.legL = .1 + .4 * tip; R.legR = -.1 - .4 * tip; R.open = sq; land = 1.35;
   }
+  if (a.kickT !== undefined && age >= land) { const k = t - a.kickT; if (k >= 0 && k < .8) { const e = Math.exp(-k * 5);   // kicked while lying there: limbs flop, a little hop and a roll
+    R.armL += Math.sin(k * 31) * 1.2 * e; R.armR += Math.cos(k * 27) * 1.2 * e; R.legL += Math.sin(k * 25) * .9 * e; R.legR -= Math.cos(k * 23) * .9 * e;
+    y += Math.abs(Math.sin(k * 17)) * .18 * e; roll += Math.sin(k * 14) * .5 * e * (a.kickS || 1); const j = jiggle(k, 30, 6) * .25; kF *= 1 - j; kU *= 1 + j * .4; } }
   setPose(x, y, z, yaw, a.sc, pitch, roll, kF, kU, kS);
   return age >= land;
 }

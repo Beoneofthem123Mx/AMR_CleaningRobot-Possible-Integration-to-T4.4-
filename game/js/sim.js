@@ -371,6 +371,7 @@ function step() {
   if (SHOP_DOORS.length && !demo && phase === "show") shopStep();
   if (props.length) gadgetStep();
   if (HAZ.length) hazardStep();
+  if (fallen.length && ++kickN % 4 === 0) kickBodies();
   if (!demo) pmSample();
   for (const gd of guards) if (gd.tx !== undefined) {   // a steward sent somewhere mid-show runs there
     const dx = gd.tx - gd.x, dy = gd.ty - gd.y, d = Math.hypot(dx, dy);
@@ -495,9 +496,27 @@ function yeet(a, dx, dy) {
   if (!demo) { pop(a.x, a.y - 1.4, YEET_CRIES[(Math.random() * YEET_CRIES.length) | 0]); sfx("fiu"); }
   return true;
 }
+// bodies on the floor get kicked around by the crowd walking over them: they slide a little, turn and flop
+let kickN = 0; const KICK = new Map();
+function kickBodies() {
+  KICK.clear();
+  for (const f of fallen) { if (t - f.fallAt < 2.6 || (f.slid || 0) > 1.5) continue; const k = (f.y | 0) * 200 + (f.x | 0); let l = KICK.get(k); if (!l) KICK.set(k, l = []); l.push(f); }
+  if (!KICK.size) return;
+  for (const a of ag) {
+    const sp = a.vx * a.vx + a.vy * a.vy; if (sp < .5 || a.air > 0) continue;
+    const l = KICK.get((a.y | 0) * 200 + (a.x | 0)); if (!l) continue;
+    for (const f of l) {
+      const dx = f.x - a.x, dy = f.y - a.y; if (dx * dx + dy * dy > .3) continue;
+      const nx = f.x + a.vx * .035, ny = f.y + a.vy * .035; if (blockedC[cellOf(nx, ny)]) continue;
+      f.x = nx; f.y = ny; f.slid = (f.slid || 0) + Math.sqrt(sp) * .035; f.h += (Math.random() - .5) * .5;
+      if (t - (f.kickT || -9) > .5) { f.kickT = t; f.kickS = Math.random() < .5 ? -1 : 1; if (!demo && Math.random() < .03) pop(f.x, f.y - .6, ["OOF!", "STEP ON ME AGAIN", "RUDE!", "*SQUEAK*", "I'M FINE"][(Math.random() * 5) | 0]); }
+      break;
+    }
+  }
+}
 function toss(a, h, d) {
   if (a.air > 0 || a.lift > 0) return false;
-  a.airD = a.air = d || .75 + Math.random() * .4; a.airH = h || 1.2 + Math.random() * 1.2;
+  a.airD = a.air = d || .75 + Math.random() * .4; a.airH = h || 1.2 + Math.random() * 1.2; a.tossAt = t;
   a.airSpin = Math.random() < .5 ? -1 : 1; a.airYaw = (Math.random() - .5) * 4; return true;
 }
 // an empty plan always scores zero: the Open gates button says so once, then lets them go ahead if they insist
@@ -520,7 +539,8 @@ let lastFalls = [], lastFallsScene = "", calmT = 0;
 // one sentence telling the player where it went wrong
 // rag-doll styles: 0 backflop, 1 faceplant, 2 spinning top, 3 launched by the crowd, 4 pancake then plank
 function pickFall(a) {
-  const forced = a.forceFall, r = Math.random(); a.forceFall = undefined;   // powers (anvil, meteor) pick the fall
+  let forced = a.forceFall; const r = Math.random(); a.forceFall = undefined;
+  if (forced === undefined && a.tossAt !== undefined && t - a.tossAt < 2) forced = [3, 10, 13, 13, 14, 11][(Math.random() * 6) | 0];   // knocked flying first: tumble, bounce, clip...   // powers (anvil, meteor) pick the fall
   if (!demo) setTimeout(() => { if (a.fallType === 5 && ++SEC.pinball >= 50) unlockSecret("TILT"); }, 0);
   // half the falls are the classic cartoon ones, the other half rag-doll glitches (noodle, clipping, jitter, T-pose, tumble, rubber ball, lag freeze)
   const r2 = r * 2;
