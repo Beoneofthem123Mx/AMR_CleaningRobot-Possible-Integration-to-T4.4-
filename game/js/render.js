@@ -378,6 +378,7 @@ function buildStatic3D() {
   G3.trompo = null;
   if (scene.extra3D) scene.extra3D(grp);
   if (typeof eggs3D === "function") eggs3D(grp);   // the venue's hidden easter egg
+  grassTufts(grp);
   grp.traverse(o => { if (o.isMesh && GEO && Object.values(GEO).includes(o.geometry)) o.userData.shared = true; });
   // stage spotlights and light beams
   G3.dyn.clear();
@@ -1459,6 +1460,37 @@ function facetPlane(w, h, cell, amp, outside) {
     P.setZ(i, outside ? -hash(x, y) * a : hash(x, y) * a);   // the venue floor only rises (whatever lies under it must never show through)
   }
   const ng = g.toNonIndexed(); ng.computeVertexNormals(); g.dispose(); return ng;
+}
+// low-poly grass tufts and little flowers wherever the painted floor is green (read from the floor texture
+// itself, so every venue gets them where its lawns are); one instanced draw each, fewer on lower presets
+function grassTufts(grp) {
+  const N = gfx().plod >= 1100 ? 650 : gfx().plod >= 700 ? 350 : 0; if (!N || !staticLayer || !blockedC) return;
+  let img; try { img = staticLayer.getContext("2d").getImageData(0, 0, staticLayer.width, staticLayer.height).data; } catch (e) { return; }
+  const W = staticLayer.width, H = staticLayer.height, r = rng(sceneKey.length * 53 + 7), spots = [];
+  for (let k = 0; k < N * 8 && spots.length < N; k++) {
+    const x = .6 + r() * (WW - 1.2), y = .6 + r() * (SH - 1.2), px = Math.min(W - 1, x * TEXS | 0), py = Math.min(H - 1, y * TEXS | 0), i = (py * W + px) * 4;
+    const R = img[i], G = img[i + 1], B = img[i + 2]; if (!(G > R * 1.12 && G > B * 1.18 && G > 60)) continue;
+    if (blockedC[cellOf(x, y)]) continue; spots.push([x, y, r(), r(), r()]);
+  }
+  if (!spots.length) return;
+  const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), C = new THREE.Color(), E = new THREE.Euler();
+  const bm = new THREE.MeshLambertMaterial({ flatShading: true });
+  bm.onBeforeCompile = sh => {   // the tips sway in the wind, each tuft a little out of step with its neighbours
+    sh.uniforms.uTime = WATER.time;
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uTime;").replace("#include <begin_vertex>", `#include <begin_vertex>
+      { float tip = clamp((transformed.y + .21) / .42, 0.0, 1.0); vec3 ip = vec3(instanceMatrix[3]); float w = sin(uTime * 2.1 + ip.x * .7 + ip.z * .45) + .4 * sin(uTime * 4.3 + ip.z * 1.3);
+        transformed.x += w * .09 * tip * tip; transformed.z += w * .04 * tip * tip; }`);
+  };
+  bm.customProgramCacheKey = () => "grasssway";
+  const blades = new THREE.InstancedMesh(new THREE.ConeGeometry(.13, .42, 4), bm, spots.length * 3);
+  const flowers = spots.filter(s => s[4] < .18), fl = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.07, 0), new THREE.MeshLambertMaterial({ flatShading: true, emissive: 0x222222 }), Math.max(1, flowers.length));
+  const GR = ["#3f7a2a", "#4f8f34", "#5fa23c", "#2f6a24"], FL = ["#ffd23a", "#ff6fb1", "#f4f4f0", "#a98bff", "#d8322b"];
+  spots.forEach(([x, y, a, b], k) => { for (let j = 0; j < 3; j++) {
+    const s = .7 + b * .7; E.set((j - 1) * .45 + (a - .5) * .3, a * 6 + j * 2, (j - 1) * .2); Q.setFromEuler(E);
+    M.compose(V.set(x + (j - 1) * .08, .16 * s + .02, y + (a - .5) * .12), Q, S3.set(s, s, s)); blades.setMatrixAt(k * 3 + j, M); blades.setColorAt(k * 3 + j, C.set(GR[(k + j) % GR.length])); } });
+  flowers.forEach(([x, y, a, b], k) => { M.compose(V.set(x + .05, .34 + b * .1, y), Q.identity(), S3.set(1, 1, 1)); fl.setMatrixAt(k, M); fl.setColorAt(k, C.set(FL[(k * 7 + (a * 5 | 0)) % FL.length])); });
+  fl.count = flowers.length;
+  for (const m of [blades, fl]) { m.castShadow = false; m.receiveShadow = true; grp.add(m); }
 }
 // a triangular prism (gable roof): 1 long on x, 1 wide on z, 1 high, sitting on y = 0
 function gableGeo() {
