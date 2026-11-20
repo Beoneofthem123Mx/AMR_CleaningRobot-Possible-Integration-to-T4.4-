@@ -153,6 +153,7 @@ function updateAmbient(tt, dtR) {
   birds(tt, !night && !(MOD && MOD.rain));
   if (typeof faunaTick === "function" && gfx().sky) { faunaTick(tt); cameoTick(tt, dtR || 0); } else if (G3.fauna) G3.fauna.visible = false;   // more birds, and random things crossing the sky
   G3.clouds.visible = !night;
+  if (G3.cloud3d && G3.cloud3d.parent === G3.horizon) G3.cloud3d.rotation.y = tt * .004;   // the 3D clouds drift around the venue
   if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
   G3.motes.visible = night;
   if (night) {
@@ -1385,6 +1386,14 @@ function buildHorizon() {
       grp.add(house, roof);
     }
     themedHorizon(grp, HORIZON_THEME[sceneKey], r, cx, cz, wet);
+    // puffy low-poly clouds around the venue (only seen from the street camera, like the rest of the horizon)
+    { const nc = 18, puffs = 6, cl = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, flatShading: true, emissive: 0x8a95a8, emissiveIntensity: .35 }), nc * puffs);
+      const cg = G3.cloud3d = new THREE.Group(); cg.position.set(cx, 0, cz); grp.add(cg);
+      for (let i = 0; i < nc; i++) { const a = i / nc * 6.283 + r() * .3, d = 75 + r() * 60, hh = 15 + r() * 10, big = 3.5 + r() * 4;
+        for (let k = 0; k < puffs; k++) { const s = big * (.55 + r() * .6), ox = (k - puffs / 2) * big * .65 + (r() - .5) * big * .4;
+          M.compose(V.set(Math.cos(a) * d - Math.sin(a) * ox, hh + (r() - .3) * big * .5, Math.sin(a) * d + Math.cos(a) * ox), Q.setFromEuler(new THREE.Euler(r() * 3, r() * 3, r() * 3)), S3.set(s, s * (.6 + r() * .25), s));
+          cl.setMatrixAt(i * puffs + k, M); } }
+      cl.castShadow = false; cg.add(cl); }
     if (scene.night) for (const o of [hill, trunk, top]) o.material = o.material.clone(), o.material.color.setScalar(.25);   // moonlit countryside
   }
   grp.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.frustumCulled = false; } });
