@@ -379,6 +379,7 @@ function buildStatic3D() {
   if (scene.extra3D) scene.extra3D(grp);
   if (typeof eggs3D === "function") eggs3D(grp);   // the venue's hidden easter egg
   grassTufts(grp); wearMask();
+  swayTrees(grp);
   grp.traverse(o => { if (o.isMesh && GEO && Object.values(GEO).includes(o.geometry)) o.userData.shared = true; });
   // stage spotlights and light beams
   G3.dyn.clear();
@@ -1397,6 +1398,7 @@ function buildHorizon() {
           cl.setMatrixAt(i * puffs + k, M); } }
       cl.castShadow = false; cg.add(cl); }
     if (scene.night) for (const o of [hill, trunk, top]) o.material = o.material.clone(), o.material.color.setScalar(.25);   // moonlit countryside
+    swayMat(top.material, .07);
   }
   grp.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.frustumCulled = false; } });
   grp.visible = false; G3.scene.add(grp);
@@ -1524,6 +1526,36 @@ function drawWear(g, live) {
     m.drawImage(G3.wear, 0, 0); m.globalCompositeOperation = "destination-in"; m.drawImage(G3.grassM, 0, 0); m.globalCompositeOperation = "source-over";
   }
   g.globalAlpha = G3.wet ? .85 + .15 * G3.wet : .85; g.drawImage(G3.wearM, 0, 0, WW, SH); g.globalAlpha = 1;
+}
+// trees in the wind: the crowns lean and rock a little, each one out of step with its neighbours (vertex shader only)
+function swayMat(m, amp) {
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uTime = WATER.time;
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uTime;").replace("#include <begin_vertex>", `#include <begin_vertex>
+      { vec3 ip = vec3(modelMatrix[3]);
+        #ifdef USE_INSTANCING
+          ip += vec3(instanceMatrix[3]);
+        #endif
+        float w = sin(uTime * 1.3 + ip.x * .31 + ip.z * .23) + .35 * sin(uTime * 2.9 + ip.z * .7 + ip.x * .2), up = clamp(position.y + .6, 0., 1.6);
+        transformed.x += w * ${amp.toFixed(3)} * up; transformed.z += w * ${(amp * .5).toFixed(3)} * up; }`);
+  };
+  m.customProgramCacheKey = () => "sway" + amp;
+  return m;
+}
+// venue trees and bushes: any green, round crown standing well off the ground gets a swaying copy of its material
+function swayTrees(grp) {
+  if (!gfx().sky) return;
+  if (G3.swayCache) for (const m of G3.swayCache.values()) m.dispose();
+  const cache = G3.swayCache = new Map(), hsl = {};
+  grp.traverse(o => {
+    if (!o.isMesh || o.isInstancedMesh || !o.material || Array.isArray(o.material) || !o.material.color || o.material.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile) return;
+    const gt = o.geometry && o.geometry.type; if (!/Sphere|Icosahedron|Dodecahedron|Cone|Octahedron/.test(gt)) return;
+    o.updateWorldMatrix(true, false); if (o.matrixWorld.elements[13] < 1.8) return;
+    o.material.color.getHSL(hsl); if (hsl.h < .2 || hsl.h > .45 || hsl.s < .25) return;
+    let m = cache.get(o.material); if (!m) { m = swayMat(o.material.clone(), .05); cache.set(o.material, m); }
+    o.material = m;
+  });
+  return cache.size;
 }
 // a triangular prism (gable roof): 1 long on x, 1 wide on z, 1 high, sitting on y = 0
 function gableGeo() {
