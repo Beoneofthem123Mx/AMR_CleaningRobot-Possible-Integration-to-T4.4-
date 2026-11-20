@@ -151,6 +151,8 @@ function showOptions() {
   showCard(`<h2>Options</h2>
     <label class="opt">Music <input type="range" id="volM" min="0" max="100" value="${pct(AU.musicVol)}"><span id="volMv">${pct(AU.musicVol)}%</span></label>
     <label class="opt">Sound effects <input type="range" id="volS" min="0" max="100" value="${pct(AU.sfxVol)}"><span id="volSv">${pct(AU.sfxVol)}%</span></label>
+    <div class="row"><button id="optGfx">Graphics: ${gfx().name}</button><button id="optFps">FPS counter: ${SHOW_FPS ? "on" : "off"}</button></div>
+    <p class="keys" id="optGfxD">${gfx().desc}</p>
     <div class="row"><button id="optFx">Fancy effects: ${POST.on ? "on" : "off"}</button>${window.steam ? '<button id="fs">Full screen (F11)</button>' : ""}</div>
     <p class="keys">Glow, focus blur and contact shading. Turn them off if the game runs slowly (shortcut: G).</p>
     <div class="row"><button id="optFollow">Camera follows the falls: ${FOLLOW_FALLS ? "on" : "off"}</button></div>
@@ -163,6 +165,8 @@ function showOptions() {
     <div class="row"><button class="go" id="pick">Back</button></div>`, "options");
   $("#volM").oninput = e => { setVolume("m", e.target.value / 100); $("#volMv").textContent = e.target.value + "%"; };
   $("#volS").oninput = e => { setVolume("s", e.target.value / 100); $("#volSv").textContent = e.target.value + "%"; sfx("tick"); };
+  $("#optGfx").onclick = () => { const ks = Object.keys(GFX_LEVELS); GFX = ks[(ks.indexOf(GFX) + 1) % ks.length]; try { localStorage.setItem("mh.gfx", GFX); } catch (er) { /* no storage */ } applyGfx(); $("#optGfx").textContent = "Graphics: " + gfx().name; $("#optGfxD").textContent = gfx().desc; $("#optFx").textContent = "Fancy effects: " + (POST.on ? "on" : "off"); };
+  $("#optFps").onclick = () => { SHOW_FPS = !SHOW_FPS; try { localStorage.setItem("mh.fps", SHOW_FPS ? "on" : "off"); } catch (er) { /* no storage */ } const el = $("#fps"); if (el) el.remove(); $("#optFps").textContent = "FPS counter: " + (SHOW_FPS ? "on" : "off"); };
   $("#optFx").onclick = () => { POST.on = !POST.on; try { localStorage.setItem("mh.fx", POST.on ? "on" : "off"); } catch (er) { /* no storage */ } $("#optFx").textContent = "Fancy effects: " + (POST.on ? "on" : "off"); };
   $("#optFollow").onclick = () => { FOLLOW_FALLS = !FOLLOW_FALLS; try { localStorage.setItem("mh.follow", FOLLOW_FALLS ? "on" : "off"); } catch (er) { /* no storage */ } $("#optFollow").textContent = "Camera follows the falls: " + (FOLLOW_FALLS ? "on" : "off"); };
   $("#optCB").onclick = () => { CB = !CB; try { localStorage.setItem("mh.cb", CB ? "on" : "off"); } catch (er) { /* no storage */ } applyCB(); staticDirty = true; $("#optCB").textContent = "Colour-blind palette: " + (CB ? "on" : "off"); };
@@ -170,7 +174,7 @@ function showOptions() {
   let armed = false;
   $("#optReset").onclick = () => {
     if (!armed) { armed = true; $("#optReset").textContent = "Really? Click again to erase stars, medals, stats and plans"; return; }
-    try { Object.keys(localStorage).filter(k => k.startsWith("mh.") && !["mh.vol", "mh.sound", "mh.fx", "mh.cb"].includes(k)).forEach(k => localStorage.removeItem(k)); } catch (er) { /* no storage */ }
+    try { Object.keys(localStorage).filter(k => k.startsWith("mh.") && !["mh.vol", "mh.sound", "mh.fx", "mh.cb", "mh.gfx", "mh.fps", "mh.follow"].includes(k)).forEach(k => localStorage.removeItem(k)); } catch (er) { /* no storage */ }
     sandbox = false; chaosMode = false; loadScene("plaza"); startDemo(); chooser();
   };
 }

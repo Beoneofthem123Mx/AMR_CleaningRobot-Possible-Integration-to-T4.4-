@@ -3,6 +3,15 @@
 const TEXS = 16, FXS = 10;                 // pixels per meter: ground texture and effects layer
 // VIEW_FLIP -1 turns the top view around: the stage sits on the other side and the crowd flows the other way
 let VIEW_FLIP = 1;
+// graphics quality presets (Options): resolution, how many people get full detail, shadows, post effects, sky life
+const GFX_LEVELS = {
+  low:    { name: "Low",    dpr: 1,    plod: 300,  shadow: 1024, post: false, people: false, sky: false, desc: "For older PCs: no glow or blur, simpler crowd shadows, no birds." },
+  medium: { name: "Medium", dpr: 1.25, plod: 700,  shadow: 2048, post: true,  people: true,  sky: true,  desc: "Effects on, fewer people in full detail." },
+  high:   { name: "High",   dpr: 1.75, plod: 1100, shadow: 2048, post: true,  people: true,  sky: true,  desc: "The intended look." },
+  ultra:  { name: "Ultra",  dpr: 2,    plod: 1800, shadow: 4096, post: true,  people: true,  sky: true,  desc: "Sharper image, sharper shadows, more people in full detail." },
+};
+let GFX = "high"; try { GFX = localStorage.getItem("mh.gfx") || "high"; } catch (e) { /* no storage */ } if (!GFX_LEVELS[GFX]) GFX = "high";
+const gfx = () => GFX_LEVELS[GFX];
 let S = 10, dpr = 1, staticLayer = null, staticDirty = true, camMode = 0, LAND = false;  // LAND: landscape monitor
 const G3 = {};
 const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
@@ -20,7 +29,7 @@ function resize() {
   LAND = r.width > r.height;
   const ar = LAND ? WH / WW : WW / WH;
   const w = Math.min(r.width, r.height * ar), h = w / ar;
-  dpr = Math.min(1.75, window.devicePixelRatio || 1); S = w / WW;
+  dpr = Math.min(gfx().dpr, Math.max(1, window.devicePixelRatio || 1)); S = w / WW;
   if (G3.camera) { G3.camera.aspect = ar; G3.camera.updateProjectionMatrix(); }
   for (const c of [cv, ov]) { c.style.width = w + "px"; c.style.height = h + "px"; }
   ov.width = Math.round(w * dpr); ov.height = Math.round(h * dpr);
@@ -130,10 +139,19 @@ function birds(tt, on) {
     b.rotation.y = -a - Math.PI / 2 * u.dir; const f = Math.sin(tt * 9 + u.ph * 4) * .7; u.wl.rotation.x = f; u.wr.rotation.x = -f;
   }
 }
+function applyGfx() {   // called at start-up and whenever the preset changes
+  const g = gfx(); PLOD.base = g.plod; PLOD.max = g.plod;
+  let fx = true; try { fx = localStorage.getItem("mh.fx") !== "off"; } catch (e) { /* no storage */ } POST.on = g.post && fx;
+  if (G3.sun) { G3.sun.shadow.mapSize.set(g.shadow, g.shadow); if (G3.sun.shadow.map) { G3.sun.shadow.map.dispose(); G3.sun.shadow.map = null; } }
+  if (typeof P !== "undefined" && P) for (const k in P) if (P[k] && P[k].isMesh) P[k].castShadow = g.people;
+  if (G3.fauna) G3.fauna.visible = g.sky; if (!g.sky && typeof clearCameos === "function" && G3.scene) clearCameos();
+  if (typeof perf !== "undefined") perf.level = 0;
+  resize();
+}
 function updateAmbient(tt, dtR) {
   const night = !!scene.night;
   birds(tt, !night && !(MOD && MOD.rain));
-  if (typeof faunaTick === "function") { faunaTick(tt); cameoTick(tt, dtR || 0); }   // more birds, and random things crossing the sky
+  if (typeof faunaTick === "function" && gfx().sky) { faunaTick(tt); cameoTick(tt, dtR || 0); } else if (G3.fauna) G3.fauna.visible = false;   // more birds, and random things crossing the sky
   G3.clouds.visible = !night;
   if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
   G3.motes.visible = night;

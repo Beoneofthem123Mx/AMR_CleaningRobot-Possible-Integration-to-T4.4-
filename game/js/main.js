@@ -146,6 +146,7 @@ function drawHourglass() {
 const perf = { n: 0, sum: 0, level: 0 }, live3d = () => phase === "show" || phase === "evac";
 let last = performance.now();
 let paused = false, slowT = 0, focus = null, acc = 0;
+let SHOW_FPS = false; const fpsC = { n: 0, t: 0 }; try { SHOW_FPS = localStorage.getItem("mh.fps") === "on"; } catch (e) { /* no storage */ }
 function frame(now, fixed) {
   // recording mode (tests/trailer only): frames advance by hand with __game.tick
   if (window.__manual && fixed === undefined) { requestAnimationFrame(frame); return; }
@@ -167,6 +168,7 @@ function frame(now, fixed) {
   updateFx(real * (phase === "show" || phase === "evac" ? sp : 1));
   audioTick(); crowdChatter(real * (paused ? 0 : 1));
   render3D(now, real);
+  if (SHOW_FPS && fixed === undefined) { fpsC.n++; fpsC.t += real; if (fpsC.t >= .5) { const el = $("#fps") || $("#frame").appendChild(Object.assign(document.createElement("div"), { id: "fps", className: "fpsbox" })); el.textContent = Math.round(fpsC.n / fpsC.t) + " FPS · " + gfx().name + (PLOD.max < PLOD.base ? " · auto −" : ""); fpsC.n = 0; fpsC.t = 0; } }
   // auto quality: if the machine can't keep up, drop crowd shadows and lower the resolution
   if (G3.renderer && live3d() && fixed === undefined) {
     perf.n++; perf.sum += real;
@@ -238,3 +240,4 @@ resize(); loadScene("plaza"); startDemo(); titleScreen();
 try { if (!localStorage.getItem("mh.seen") && !window.__manual) { localStorage.setItem("mh.seen", "1"); showHowTo(); } } catch (er) { /* no storage */ }
 requestAnimationFrame(frame);
 try { if (localStorage.getItem("mh.fx") === "off") POST.on = false; } catch (er) { /* no storage */ }
+if (typeof applyGfx === "function") setTimeout(applyGfx, 0);   // the graphics preset, once the renderer exists
