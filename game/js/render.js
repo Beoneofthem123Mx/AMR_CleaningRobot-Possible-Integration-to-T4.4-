@@ -2053,7 +2053,7 @@ function render3D(now, dtR) {
     if (wl) { wl.position.copy(mesh.position); wl.target.position.set(bm.x + Math.cos(ang) * 20, 0, bm.y + Math.sin(ang) * 20); wl.color.copy(mesh.material.color); wl.intensity = scene.night && inten > 0 ? Math.min(3.2, 1.3 * inten) * (1 - .7 * black) : 0; }
   });
   for (let i = scene.beams.length; i < G3.washL.length; i++) G3.washL[i].intensity = 0;
-  for (const wl of G3.washL) wl.visible = gfx().sky;   // Low preset: no extra lights
+  for (const wl of G3.washL) wl.visible = gfx().sky && !!scene.night && scene.beams.length > 0;   // only night venues with beams pay for them (never on Low)
   // stage smoke machines puff during the drop at night venues
   if (scene.night && live && surgeT > 0 && scene.beams.length && Math.random() < .5) {
     const bm = scene.beams[(Math.random() * scene.beams.length) | 0];
