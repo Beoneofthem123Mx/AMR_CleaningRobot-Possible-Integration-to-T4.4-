@@ -1977,6 +1977,7 @@ function renderLoose(dt) {
       G3.lB.setColorAt(nb, C.setRGB(o.col[0] * 1.15, o.col[1] * 1.15, o.col[2] * 1.15)); G3.lS.setColorAt(nb, C.setRGB(.8, .8, .8)); nb++;
       continue;
     }
+    if (o.rest && windF.t > 0 && Math.random() < dt * 1.5) { o.rest = 0; o.vh = 1.2 + Math.random() * 1.5; o.vx = windF.x * (3 + Math.random() * 3); o.vy = (Math.random() - .5) * 2; o.sx = (Math.random() - .5) * 12; o.sz = (Math.random() - .5) * 12; o.h = .1; }   // a gust picks lost hats up again
     if (!o.rest) {   // a hat tumbles through the air and lands flat (party hats roll onto their side)
       o.vh -= 9.8 * dt; o.h += o.vh * dt; o.x += o.vx * dt; o.y += o.vy * dt; o.rx += o.sx * dt; o.rz += o.sz * dt;
       if (o.h <= .03 && o.vh < 0) { if (o.vh < -3) { o.vh *= -.3; o.vx *= .5; o.vy *= .5; o.h = .03; } else { o.rest = 1; o.h = o.k === 2 ? .1 : .02; o.rx = o.k === 2 ? Math.PI / 2 : 0; o.rz = 0; o.sx = Math.random() * 6.28; } }
