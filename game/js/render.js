@@ -1329,20 +1329,25 @@ function waterify(m, scale) {
   m.onBeforeCompile = sh => {
     sh.uniforms.uTime = WATER.time; sh.uniforms.uSky = WATER.sky;
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWP;").replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;");
-    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vWP; uniform float uTime; uniform vec3 uSky;")
+    // low-poly water: the surface is cut into a grid of virtual triangles; each one takes the normal of the
+    // wave heights at its three corners, so the water is faceted and animated without any extra geometry
+    const C = (2.4 / scale).toFixed(2);
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", `#include <common>\nvarying vec3 vWP; uniform float uTime; uniform vec3 uSky;
+      float wv(vec2 q) { float a = uTime; return sin(q.x * .55 + a * 1.1) * .5 + sin(q.y * .63 - a * .9) * .45 + sin((q.x + q.y) * 1.1 + a * 1.6) * .25 + sin((q.x - q.y) * 1.7 - a * 2.2) * .12; }
+      vec3 wc(vec2 c) { return vec3(c.x * ${C}, wv(c * ${C}) * ${C} * .38, c.y * ${C}); }`)
       .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
-      { vec2 p = vWP.xz * ${scale.toFixed(2)}; float a = uTime;
-        vec3 wn = vec3(sin(p.x * .9 + a * 1.3) * .5 + sin(p.x * 2.3 + p.y * 1.7 - a * 2.1) * .3 + sin(p.y * 5.1 + a * 2.9) * .18,
-                       6.0,
-                       cos(p.y * .8 - a * 1.1) * .5 + sin(p.x * 1.9 - p.y * 2.6 + a * 1.7) * .3 + cos(p.x * 4.7 - a * 3.3) * .18);
-        normal = normalize((viewMatrix * vec4(normalize(wn), 0.0)).xyz); }`)
+      { vec2 g = vWP.xz / ${C}, c = floor(g), f = fract(g); vec3 p0, p1, p2;
+        if (f.x + f.y < 1.0) { p0 = wc(c); p1 = wc(c + vec2(0.0, 1.0)); p2 = wc(c + vec2(1.0, 0.0)); }
+        else { p0 = wc(c + vec2(1.0, 1.0)); p1 = wc(c + vec2(1.0, 0.0)); p2 = wc(c + vec2(0.0, 1.0)); }
+        vec3 wn = normalize(cross(p1 - p0, p2 - p0)); if (wn.y < 0.0) wn = -wn;
+        normal = normalize((viewMatrix * vec4(wn, 0.0)).xyz); }`)
       .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
       totalEmissiveRadiance += uSky * pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 5.0) * .3;
       { vec2 q = vWP.xz * ${(scale * .6).toFixed(2)}; float a = uTime;   // dancing light ripples, readable from above
         float w = sin(q.x * 3.1 + sin(q.y * 2.3 + a * 1.4) * 1.6) + sin(q.y * 2.7 + sin(q.x * 1.9 - a * 1.1) * 1.6);
         totalEmissiveRadiance += vec3(.55, .85, 1.0) * smoothstep(1.25, 1.85, w) * .28; }`);
   };
-  m.customProgramCacheKey = () => "water" + scale; return m;
+  m.customProgramCacheKey = () => "lpwater" + scale; return m;
 }
 // far-away scenery for the street camera: rolling hills and toy trees by day, a city skyline at night
 function buildHorizon() {
