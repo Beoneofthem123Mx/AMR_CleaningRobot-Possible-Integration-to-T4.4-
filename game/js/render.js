@@ -378,7 +378,7 @@ function buildStatic3D() {
   G3.trompo = null;
   if (scene.extra3D) scene.extra3D(grp);
   if (typeof eggs3D === "function") eggs3D(grp);   // the venue's hidden easter egg
-  grassTufts(grp);
+  grassTufts(grp); wearMask();
   grp.traverse(o => { if (o.isMesh && GEO && Object.values(GEO).includes(o.geometry)) o.userData.shared = true; });
   // stage spotlights and light beams
   G3.dyn.clear();
@@ -1492,6 +1492,38 @@ function grassTufts(grp) {
   fl.count = flowers.length;
   for (const m of [blades, fl]) { m.castShadow = false; m.receiveShadow = true; grp.add(m); }
 }
+// worn paths: wherever the crowd keeps walking over a lawn the grass turns to trampled mud during the show.
+// WEAR px per meter; the mask holds the green, walkable floor (read from the painted floor like the tufts)
+const WEAR = 4;
+function wearMask() {
+  G3.wearOn = false; if (!staticLayer || !blockedC) return;
+  const w = WW * WEAR, h = SH * WEAR;
+  if (!G3.wear || G3.wear.width !== w || G3.wear.height !== h) for (const k of ["wear", "wearM", "grassM"]) { G3[k] = document.createElement("canvas"); G3[k].width = w; G3[k].height = h; }
+  G3.wear.getContext("2d").clearRect(0, 0, w, h);
+  let src; try { src = staticLayer.getContext("2d").getImageData(0, 0, staticLayer.width, staticLayer.height).data; } catch (e) { return; }
+  const mc = G3.grassM.getContext("2d"), md = mc.createImageData(w, h), SW = staticLayer.width, SHp = staticLayer.height; let n = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const px = Math.min(SW - 1, (x + .5) / WEAR * TEXS | 0), py = Math.min(SHp - 1, (y + .5) / WEAR * TEXS | 0), i = (py * SW + px) * 4;
+    const R = src[i], G = src[i + 1], B = src[i + 2]; if (!(G > R * 1.12 && G > B * 1.18 && G > 60)) continue;
+    if (blockedC[cellOf((x + .5) / WEAR, (y + .5) / WEAR)]) continue;
+    md.data[(y * w + x) * 4 + 3] = 255; n++;
+  }
+  mc.putImageData(md, 0, 0); G3.wearOn = n > 200; G3.wearF = 0;
+}
+function drawWear(g, live) {
+  if (!G3.wearOn) return;
+  const wc = G3.wear.getContext("2d");
+  if (phase === "plan") { if (G3.wearF) { wc.clearRect(0, 0, G3.wear.width, G3.wear.height); G3.wearM.getContext("2d").clearRect(0, 0, G3.wear.width, G3.wear.height); G3.wearF = 0; } return; }
+  if (live) {   // every moving foot scuffs the lawn a little
+    wc.fillStyle = "rgba(104,68,30,.055)"; let n = 0;
+    for (const a of ag) { if (a.vx * a.vx + a.vy * a.vy < .2) continue; if (++n > 2500) break; wc.fillRect(a.x * WEAR - 1, a.y * WEAR - 1, 2, 2); }
+  }
+  if (live && G3.wearF++ % 12 === 0) {   // clip the scuffs to the grass now and then (not every frame)
+    const m = G3.wearM.getContext("2d"); m.globalCompositeOperation = "source-over"; m.clearRect(0, 0, G3.wear.width, G3.wear.height);
+    m.drawImage(G3.wear, 0, 0); m.globalCompositeOperation = "destination-in"; m.drawImage(G3.grassM, 0, 0); m.globalCompositeOperation = "source-over";
+  }
+  g.globalAlpha = G3.wet ? .85 + .15 * G3.wet : .85; g.drawImage(G3.wearM, 0, 0, WW, SH); g.globalAlpha = 1;
+}
 // a triangular prism (gable roof): 1 long on x, 1 wide on z, 1 high, sitting on y = 0
 function gableGeo() {
   const sh = new THREE.Shape([new THREE.Vector2(-.5, 0), new THREE.Vector2(.5, 0), new THREE.Vector2(0, 1)]), g = new THREE.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false });
@@ -1608,6 +1640,7 @@ function updateFxLayer(live) {
     g.globalAlpha = .9; g.drawImage(G3.trail, 0, 0); g.globalAlpha = 1;
   } else if (phase === "plan") G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height);
   g.scale(k, k);
+  drawWear(g, live);
   // red shadow under those who fell
   // blackout: every phone flashlight throws a small pool of light ahead of its owner
   if (black > .25 && (phase === "show" || phase === "evac")) {
