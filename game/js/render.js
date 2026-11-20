@@ -175,6 +175,7 @@ function init3D() {
   const sc = G3.scene = new THREE.Scene(); sc.background = new THREE.Color(0x141516);
   G3.camera = new THREE.PerspectiveCamera(30, WW / WH, 1, 500); G3.camera.up.set(0, 0, -1);
   G3.hemi = new THREE.HemisphereLight(0xffffff, 0x8a8478, .9); sc.add(G3.hemi);
+  G3.washL = [0, 1, 2, 3].map(() => { const l = new THREE.SpotLight(0xffffff, 0, 48, .16, .65, 1); l.castShadow = false; sc.add(l, l.target); return l; });   // colored pools of light from the stage beams (night venues)
   const sun = G3.sun = new THREE.DirectionalLight(0xfff1dc, 1.5);
   sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -.0006; sun.shadow.normalBias = .02;
   sun.shadow.camera.near = 1; sun.shadow.camera.far = 220; sc.add(sun); sc.add(sun.target);
@@ -2048,7 +2049,11 @@ function render3D(now, dtR) {
     mesh.visible = inten > 0; mesh.material.opacity = Math.min(.3, .085 * inten);
     if (bm.white) mesh.material.color.setRGB(1, .97, .9); else mesh.material.color.setHSL(((now / 22 + i * 60) % 360) / 360, 1, .6);
     mesh.lookAt(bm.x + Math.cos(ang) * 20, 0, bm.y + Math.sin(ang) * 20);
+    const wl = G3.washL[i];
+    if (wl) { wl.position.copy(mesh.position); wl.target.position.set(bm.x + Math.cos(ang) * 20, 0, bm.y + Math.sin(ang) * 20); wl.color.copy(mesh.material.color); wl.intensity = scene.night && inten > 0 ? Math.min(3.2, 1.3 * inten) * (1 - .7 * black) : 0; }
   });
+  for (let i = scene.beams.length; i < G3.washL.length; i++) G3.washL[i].intensity = 0;
+  for (const wl of G3.washL) wl.visible = gfx().sky;   // Low preset: no extra lights
   // stage smoke machines puff during the drop at night venues
   if (scene.night && live && surgeT > 0 && scene.beams.length && Math.random() < .5) {
     const bm = scene.beams[(Math.random() * scene.beams.length) | 0];
