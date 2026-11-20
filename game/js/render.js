@@ -2099,6 +2099,10 @@ function render3D(now, dtR) {
     puff(bm.x + (Math.random() - .5) * 3, bm.y + 1 + Math.random() * 2, .4, "#b9c2d6", .5 + Math.random() * .4, 3.2, .25);
   }
   stagePyro(live, dtR);
+  if (live && ag.length && gfx().sky && !(MOD && MOD.rain)) {   // body heat: steam rising off the most squeezed parts of the crowd
+    for (let k = 0; k < 10; k++) { const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.ps < PCRIT * .7 || a.air > 0) continue;
+      puff(a.x + (Math.random() - .5) * .4, a.y + (Math.random() - .5) * .4, 1.9 * (a.sc || 1), scene.night ? "#c9d4ea" : "#ffffff", .16 + Math.random() * .14, 1.3, .9); }
+  }
   for (const lm of G3.lasers || []) {   // lasers sweep with the music, wild during the drop
     const on = live && fullAt ? (surgeT > 0 ? 1 : .35) : 0, ph = lm.userData.ph, sp = surgeT > 0 ? 1.6 : .5;
     lm.visible = on > 0; lm.material.opacity = on * (.55 + .45 * Math.sin(tt * 9 + ph * 3));
