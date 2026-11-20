@@ -214,7 +214,7 @@ function init3D() {
     }
   }
   const ct = new THREE.CanvasTexture(cc); ct.wrapS = ct.wrapT = THREE.RepeatWrapping; ct.repeat.set(.55, .55 * SH / WW);
-  G3.clouds = new THREE.Mesh(new THREE.PlaneGeometry(WW + 40, SH + 40), new THREE.MeshBasicMaterial({ color: 0x000000, alphaMap: ct, transparent: true, opacity: .16, depthWrite: false }));
+  G3.clouds = new THREE.Mesh(new THREE.PlaneGeometry(WW + 40, SH + 40), new THREE.MeshBasicMaterial({ color: 0x000000, alphaMap: ct, transparent: true, opacity: .22, depthWrite: false }));
   G3.clouds.rotation.x = -Math.PI / 2; G3.clouds.position.set(WW / 2, .02, SH / 2); G3.clouds.renderOrder = 0; sc.add(G3.clouds);
   G3.motes = inst0(new THREE.SphereGeometry(.05, 6, 4), new THREE.MeshBasicMaterial({ toneMapped: false }), 160, sc);
   G3.motes.count = 160;
@@ -293,6 +293,7 @@ function buildStatic3D() {
   G3.ground.geometry = pv ? G3.polyGeos[gk][0] : G3.flatGeo; G3.skirt.geometry = pv ? G3.polyGeos[gk][1] : G3.flatSkirt;
   G3.ground.material.flatShading = pv; G3.skirt.material.flatShading = pv; G3.skirt.material.needsUpdate = true;
   G3.fxPlane.position.y = pv ? .085 : .03;   // the floor markings sit just above the tallest facet
+  G3.clouds.position.y = pv ? .075 : .02;    // and so must the drifting cloud shadows
   const m = new THREE.MeshStandardMaterial({ map: tex, roughness: .85 });
   G3.scene.background.set(scene.night ? 0x070a12 : 0x141516);
   G3.skirt.material.color.set(scene.outside).multiplyScalar(.8);
