@@ -1560,9 +1560,15 @@ function cineCamera(dt) {
   G3.horizon.visible = true;
   const sky = skyDome(), su = sky.material.uniforms; sky.visible = true; sky.position.copy(c.position);
   su.hor.value.copy(SKY_TMP).multiplyScalar(1 / Math.max(.15, 1 - .85 * black)); su.top.value.copy(night ? SKY_TOP_N : SKY_TOP_D).lerp(GOLD_TOP, night ? 0 : (G3.golden || 0) * .6).lerp(SKY_RAIN_TOP, night ? 0 : (G3.wet || 0) * .85); su.night.value = night ? 1 : 0; su.dim.value = 1 - .85 * black; su.time.value = performance.now() / 1000;
-  const sun = G3.sun; sun.target.position.set(cx, 0, cy); sun.position.set(cx - 22, 60, cy - 28);
+  const sun = G3.sun; sun.target.position.set(cx, 0, cy); sunAt(cx, cy);
   const sc = sun.shadow.camera, ext = 34; sc.left = -ext; sc.right = ext; sc.top = ext * 1.4; sc.bottom = -ext * 1.4; sc.updateProjectionMatrix();
   return [-1e9, 1e9, -1e9, 1e9];
+}
+// the sun moves across the sky during the show and sinks when the golden hour comes: shadows turn and grow longer
+function sunAt(x, z) {
+  const live = phase === "show" || phase === "evac", arc = scene.night || !live ? 0 : clamp(t / 140, 0, 1) * .75, a = Math.atan2(-28, -22) + arc;
+  const low = scene.night ? 0 : (G3.golden || 0), d = 35.6 * (1 + low * .9), h = 60 - low * 32;
+  G3.sun.position.set(x + Math.cos(a) * d, h, z + Math.sin(a) * d);
 }
 function updateCamera(dt) {
   if (camMode === 4 && !demo) { cine = 1; return cineCamera(dt || 0); }
@@ -1581,7 +1587,7 @@ function updateCamera(dt) {
   G3.camera.position.set(tx + dx * h * Math.sin(tilt), h * Math.cos(tilt), tz + dz * h * Math.sin(tilt));
   G3.camera.lookAt(tx, 0, tz);
   const sun = G3.sun, ext = WW / z * .9 + 8;
-  sun.target.position.set(tx, 0, tz); sun.position.set(tx - 22, 60, tz - 28);
+  sun.target.position.set(tx, 0, tz); sunAt(tx, tz);
   const c = sun.shadow.camera; c.left = -ext; c.right = ext; c.top = ext * 1.4; c.bottom = -ext * 1.4; c.updateProjectionMatrix();
   return [tx - WW / (2 * z) - 4, tx + WW / (2 * z) + 4, tz - WH / (2 * z) - 6, tz + WH / (2 * z) + 8];
 }
