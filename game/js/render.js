@@ -905,6 +905,7 @@ function renderPeople(tt, dtR, vb) {
       if (hs === 2) { emit(P.head, C.head, LOCAL.bun); colW(P.head, C.head++, hc[0] * k, hc[1] * k, hc[2] * k); }
       else if (hs === 3) { emit(P.head, C.head, LOCAL.tail); colW(P.head, C.head++, hc[0] * k, hc[1] * k, hc[2] * k); }
     }
+    if ((a.acc === 1 || a.acc === 2 || a.acc === 5) && (phase === "show" || phase === "evac") && (down || a.air > 0 || (a.acc === 1 && a.ps > PCRIT * .8 && ((a.ph * 131) | 0) % 3 === 0))) loseAcc(a);
     if (a.acc && !down && hh < .4) {   // accessories hide during the pressure view
       const ac = SHIRT_L[a.ac];
       if (a.acc === 1) {        // balloon on a string, swaying
@@ -1851,6 +1852,47 @@ function renderRain(tt) {
   });
   G3.rain.instanceMatrix.needsUpdate = true;
 }
+// lost stuff: balloons let go and float off into the sky, hats fly off the fallen and stay on the floor
+function loseAcc(a) {
+  const L = G3.loose || (G3.loose = []), c = SHIRT_L[a.ac], an = Math.random() * 6.283;
+  if (L.length < 260) L.push({ k: a.acc, x: a.x, y: a.y, h: a.acc === 1 ? 2.6 : 1.9, vx: Math.cos(an) * (a.acc === 1 ? .3 : 1.6), vy: Math.sin(an) * (a.acc === 1 ? .3 : 1.6),
+    vh: a.acc === 1 ? 1.4 + Math.random() * .6 : 2.5 + Math.random() * 2.5, rx: 0, rz: 0, sx: (Math.random() - .5) * 14, sz: (Math.random() - .5) * 14, ph: Math.random() * 6, col: c, rest: 0 });
+  a.acc = 0;
+}
+function renderLoose(dt) {
+  if (!G3.lB) {
+    const sm = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: .5 }, o)), mk = (g, m, n) => { const im = new THREE.InstancedMesh(g, m, n); im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); im.frustumCulled = false; im.castShadow = true; im.count = 0; G3.scene.add(im); return im; };
+    G3.lB = mk(new THREE.SphereGeometry(.2, 10, 8), sm({ roughness: .25, metalness: .1 }), 120);
+    const sg = new THREE.BoxGeometry(.012, .9, .012); sg.translate(0, -.62, 0); G3.lS = mk(sg, sm(), 120); G3.lS.castShadow = false;
+    G3.lP = mk(new THREE.ConeGeometry(.1, .3, 10), sm(), 200);
+    const wg = new THREE.CylinderGeometry(.34, .34, .03, 14), tg = new THREE.CylinderGeometry(.13, .15, .14, 10); tg.translate(0, .08, 0);
+    G3.lW = mk(wg, sm({ color: 0xc79e52, roughness: .8 }), 200); G3.lWT = mk(tg, sm({ color: 0xbd9449, roughness: .8 }), 200);
+    G3.lM = new THREE.Matrix4(); G3.lQ = new THREE.Quaternion(); G3.lE = new THREE.Euler(); G3.lV = new THREE.Vector3(); G3.lO = new THREE.Vector3(1, 1, 1); G3.lC = new THREE.Color();
+  }
+  const L = G3.loose || (G3.loose = []);
+  if (phase === "plan" && L.length) L.length = 0;
+  const M = G3.lM, Q = G3.lQ, E = G3.lE, V = G3.lV, O = G3.lO, C = G3.lC, wx = windF.t > 0 ? windF.x * 3 : .6, tt = performance.now() / 1000;
+  let nb = 0, np = 0, nw = 0;
+  for (let i = L.length - 1; i >= 0; i--) {
+    const o = L[i];
+    if (o.k === 1) {   // a balloon drifts up and away on the breeze, bobbing a little
+      o.vh = Math.min(2.4, o.vh + dt * .4); o.h += o.vh * dt; o.x += (wx * .5 + o.vx + Math.sin(tt * 1.3 + o.ph) * .3) * dt; o.y += (o.vy + Math.cos(tt * 1.1 + o.ph) * .2) * dt;
+      if (o.h > 60) { L.splice(i, 1); continue; }
+      E.set(Math.sin(tt * 1.7 + o.ph) * .25, 0, Math.cos(tt * 1.4 + o.ph) * .25); Q.setFromEuler(E);
+      M.compose(V.set(o.x, o.h, o.y), Q, O); G3.lB.setMatrixAt(nb, M); G3.lS.setMatrixAt(nb, M);
+      G3.lB.setColorAt(nb, C.setRGB(o.col[0] * 1.15, o.col[1] * 1.15, o.col[2] * 1.15)); G3.lS.setColorAt(nb, C.setRGB(.8, .8, .8)); nb++;
+      continue;
+    }
+    if (!o.rest) {   // a hat tumbles through the air and lands flat (party hats roll onto their side)
+      o.vh -= 9.8 * dt; o.h += o.vh * dt; o.x += o.vx * dt; o.y += o.vy * dt; o.rx += o.sx * dt; o.rz += o.sz * dt;
+      if (o.h <= .03 && o.vh < 0) { if (o.vh < -3) { o.vh *= -.3; o.vx *= .5; o.vy *= .5; o.h = .03; } else { o.rest = 1; o.h = o.k === 2 ? .1 : .02; o.rx = o.k === 2 ? Math.PI / 2 : 0; o.rz = 0; o.sx = Math.random() * 6.28; } }
+    }
+    E.set(o.rx, o.rest ? o.sx : 0, o.rz); Q.setFromEuler(E); M.compose(V.set(o.x, o.h, o.y), Q, O);
+    if (o.k === 2 && np < 200) { G3.lP.setMatrixAt(np, M); G3.lP.setColorAt(np++, C.setRGB(o.col[0], o.col[1], o.col[2])); }
+    else if (o.k === 5 && nw < 200) { G3.lW.setMatrixAt(nw, M); G3.lWT.setMatrixAt(nw++, M); }
+  }
+  for (const [m, n] of [[G3.lB, nb], [G3.lS, nb], [G3.lP, np], [G3.lW, nw], [G3.lWT, nw]]) { m.count = n; if (n) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; } }
+}
 function renderParticles() {
   const sm = G3.spark; let n = 0;
   for (const p of sparks) {
@@ -1976,7 +2018,7 @@ function render3D(now, dtR) {
   if (scene.frame3D) scene.frame3D(tt, dtR);   // per-venue animation hook
   renderPeople(tt, dtR, vb);
   renderChunks(); renderConfetti();
-  renderParticles();
+  renderParticles(); renderLoose(Math.min(.05, dtR || 0));
   renderGhosts(tt);
   updateFxLayer(live);
   renderRain(tt);
