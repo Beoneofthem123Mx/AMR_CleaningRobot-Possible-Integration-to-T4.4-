@@ -1635,6 +1635,7 @@ function sunAt(x, z) {
   const live = phase === "show" || phase === "evac", arc = scene.night || !live ? 0 : clamp(t / 140, 0, 1) * .75, a = Math.atan2(-28, -22) + arc;
   const low = scene.night ? 0 : (G3.golden || 0), d = 35.6 * (1 + low * .9), h = 60 - low * 32;
   G3.sun.position.set(x + Math.cos(a) * d, h, z + Math.sin(a) * d);
+  if (G3.sky) G3.sky.material.uniforms.sunD.value.set(Math.cos(a) * .72, .38 - low * .22, Math.sin(a) * .72).normalize();   // the painted sun follows the light
 }
 function updateCamera(dt) {
   if (camMode === 4 && !demo) { cine = 1; return cineCamera(dt || 0); }
@@ -1804,8 +1805,37 @@ function updateFxLayer(live) {
   G3.fxTex.needsUpdate = true;
 }
 const Vproj = new THREE.Vector3();
+// street camera looking toward the sun: a soft glow and a chain of lens ghosts through the middle of the frame
+const FLARE = [[.32, .028, "255,214,150", .26], [.55, .055, "140,190,255", .13], [.78, .018, "255,170,110", .3], [1.18, .085, "170,255,200", .1], [1.45, .035, "255,236,190", .2], [1.75, .12, "150,170,255", .075]];
+function drawFlare(g) {
+  if (!(cine > .01) || scene.night || !G3.sky || !G3.sky.visible || !gfx().post || black > .2) return;
+  const sd = G3.sky.material.uniforms.sunD.value, cp = G3.camera.position;
+  Vproj.set(cp.x + sd.x * 400, cp.y + sd.y * 400, cp.z + sd.z * 400).project(G3.camera);
+  if (Vproj.z > 1 || Math.abs(Vproj.x) > 1.4 || Vproj.y > 1.9 || Vproj.y < -1.2) return;   // the sun may sit a little above the frame: the ghosts still cross it
+  let k = clamp((1.4 - Math.abs(Vproj.x)) / .55, 0, 1) * clamp((1.9 - Vproj.y) / .7, 0, 1) * Math.min(1, cine * 2) * (1 - (G3.wet || 0)) * (MOD && MOD.rain ? .3 : 1) * (.55 + .45 * (G3.golden || 0));
+  if (k > .01 && (G3.flareF = (G3.flareF || 0) + 1) % 8 === 1) {   // is something standing in front of the sun? (checked a few times a second)
+    const rc = G3.flareRC || (G3.flareRC = new THREE.Raycaster()); rc.set(cp, sd); rc.far = 160;
+    const objs = [G3.static, G3.horizon, G3.dyn].filter(o => o && o.visible);
+    let hit = false; try { hit = rc.intersectObjects(objs, true).some(h => h.object.visible && !(h.object.material && h.object.material.transparent)); } catch (e) { /* ignore */ }
+    G3.flareOcc = hit ? 0 : 1;
+  }
+  G3.flareV = (G3.flareV ?? 1) + ((G3.flareOcc ?? 1) - (G3.flareV ?? 1)) * .2; k *= G3.flareV;
+  G3.flareK = k; if (k <= .01) return;
+  const W = ov.width, H = ov.height, sx = (Vproj.x + 1) / 2 * W, sy = (1 - Vproj.y) / 2 * H, cx = W / 2, cy = H / 2, gold = G3.golden || 0;
+  g.save(); g.globalCompositeOperation = "lighter";
+  const R = H * .22, gr = g.createRadialGradient(sx, sy, 0, sx, sy, R);
+  gr.addColorStop(0, `rgba(255,${(244 - gold * 40) | 0},${(214 - gold * 90) | 0},${(.42 * k).toFixed(3)})`); gr.addColorStop(.25, `rgba(255,200,140,${(.12 * k).toFixed(3)})`); gr.addColorStop(1, "rgba(255,190,120,0)");
+  g.fillStyle = gr; g.fillRect(sx - R, sy - R, R * 2, R * 2);
+  for (const [f, r, col, a] of FLARE) {
+    const px = sx + (cx - sx) * f, py = sy + (cy - sy) * f, rr = r * H, gg = g.createRadialGradient(px, py, rr * .55, px, py, rr);
+    gg.addColorStop(0, `rgba(${col},${(a * k).toFixed(3)})`); gg.addColorStop(.85, `rgba(${col},${(a * k * .6).toFixed(3)})`); gg.addColorStop(1, `rgba(${col},0)`);
+    g.fillStyle = gg; g.beginPath(); g.arc(px, py, rr, 0, 7); g.fill();
+  }
+  g.restore();
+}
 function drawOverlay() {
   const g = octx; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, ov.width, ov.height);
+  drawFlare(g);
   const ppm = ov.height / ((LAND ? WW : WH) / cam.z);
   g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
   const placed = [[ov.width / 2, ov.height * .1, ov.width * .38, ov.height * .2]], fsz = Math.round(Math.max(12, .95 * ppm));   // the counter at the top stays clear
