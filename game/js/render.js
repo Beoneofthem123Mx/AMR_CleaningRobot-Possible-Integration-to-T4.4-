@@ -237,6 +237,7 @@ function init3D() {
   { const wg = new THREE.SphereGeometry(.16, 8, 5); wg.scale(.35, 1, 1.6); wg.translate(0, .02, .2); G3.ghostWing = inst(wg, new THREE.MeshBasicMaterial({ transparent: true, opacity: .7, depthWrite: false }), 520); }   // little angel wings
   G3.ghostHalo = inst(new THREE.TorusGeometry(.17, .03, 6, 16), new THREE.MeshBasicMaterial({ toneMapped: false }), 260);
   G3.puff = inst(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ transparent: true, opacity: .5, depthWrite: false, flatShading: true, emissive: 0x404040 }), 800);   // low-poly dust: faceted, lit by the sun
+  G3.fireM = inst(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ transparent: true, opacity: .85, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }), 200);   // stage flame jets
   SHOE_L = toLin(["#1c1c20", "#f2f2f2", "#d8322b", "#2f6fc4", "#6b4a2b", "#1c1c20", "#e8b631"]);
   COS_L = [null].concat(toLin(["#8a5a34", "#4caf50", "#f4f4f0"])); COS_X = [null].concat(toLin(["#5e3a20", "#ffd23a", "#f2a52b", "#e53935"]));
   SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); if (typeof applyCB === "function") applyCB(); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
@@ -1559,6 +1560,35 @@ function swayTrees(grp) {
   });
   return cache.size;
 }
+// stage pyrotechnics during the drop: flame jets at night, CO2 cannons by day, from the front corners of the stage
+function stagePyro(live, dt) {
+  if (G3.pyroKey !== sceneKey + WW + SH) {   // find the stage's front edge (the side the crowd stands on) once per venue
+    G3.pyroKey = sceneKey + WW + SH; G3.pyro = [];
+    const cand = obs.filter(o => o.kind === "stage" && o.t === "r");
+    const st = cand.sort((a, b) => (b.x1 - b.x0) * (b.y1 - b.y0) - (a.x1 - a.x0) * (a.y1 - a.y0))[0];
+    if (st) {
+      const cx = WW / 2, cy = SH / 2, ed = [[st.x0, st.y0, st.x1, st.y0, 0, -1], [st.x0, st.y1, st.x1, st.y1, 0, 1], [st.x0, st.y0, st.x0, st.y1, -1, 0], [st.x1, st.y0, st.x1, st.y1, 1, 0]];
+      let best = null, bd = 1e9;
+      for (const e of ed) { const mx = (e[0] + e[2]) / 2 + e[4] * 1.5, my = (e[1] + e[3]) / 2 + e[5] * 1.5; if (mx < 0 || my < 0 || mx > WW || my > SH || (blockedC && blockedC[cellOf(mx, my)])) continue; const d = Math.hypot(mx - cx, my - cy); if (d < bd) { bd = d; best = e; } }
+      if (best) { const ix = (best[2] - best[0]) * .08, iy = (best[3] - best[1]) * .08; G3.pyro = [[best[0] + ix - best[4] * .5, best[1] + iy - best[5] * .5], [best[2] - ix - best[4] * .5, best[3] - iy - best[5] * .5]]; G3.pyroH = (typeof HEIGHTS !== "undefined" && HEIGHTS.stage) || 1.8; }
+    }
+    if (!G3.pyro.length && scene.beams.length >= 2 && typeof scene.goal === "function") {   // no usable stage block: the crash barrier in front of the show, jets at both ends
+      const b = obs.filter(o => o.t === "s" && o.kind === "barrier" && scene.goal(o)).sort((a, c) => Math.hypot(c.bx - c.ax, c.by - c.ay) - Math.hypot(a.bx - a.ax, a.by - a.ay))[0];
+      if (b) { const L = Math.hypot(b.bx - b.ax, b.by - b.ay) || 1, ux = (b.bx - b.ax) / L, uy = (b.by - b.ay) / L; G3.pyro = [[b.ax + ux * .6, b.ay + uy * .6], [b.bx - ux * .6, b.by - uy * .6]]; G3.pyroH = 1.2; }
+    }
+  }
+  if (!G3.pyro.length || !live || !(surgeT > 0) || !gfx().sky) { G3.pyroT = 0; return; }
+  const was = G3.pyroT || 0; G3.pyroT = was + (dt || 0); const cyc = G3.pyroT % 1.7;
+  if (cyc < was % 1.7 && typeof sfx === "function") sfx("fiu");
+  if (cyc > .55) return;
+  const night = !!scene.night, h = G3.pyroH;
+  for (const [x, y] of G3.pyro) for (let k = 0; k < 2; k++) {
+    const life = night ? .45 + Math.random() * .2 : .8 + Math.random() * .3;   // pushed straight in: the jets get room even when the smoke pool is full
+    if (puffs.length > 780) puffs.splice(0, 4);
+    puffs.push({ x: x + (Math.random() - .5) * .3, y: y + (Math.random() - .5) * .3, h: h + .2, col: night ? ["#ffd23a", "#ff9a2a", "#ff5a1f"][(Math.random() * 3) | 0] : "#f4f8ff", r: night ? .3 + Math.random() * .25 : .45 + Math.random() * .3, life, max: life, vh: (night ? 9 : 10) + Math.random() * 3, vx: (Math.random() - .5) * .6, vy: (Math.random() - .5) * .6, grow: .7, fire: night });
+  }
+  if (night && Math.random() < .5) { const [x, y] = G3.pyro[(Math.random() * 2) | 0]; sparks.push({ x, y, h: h + 2 + Math.random() * 3, vx: (Math.random() - .5) * 3, vy: (Math.random() - .5) * 3, vh: 2 + Math.random() * 3, col: "#ffcf6a", life: .6 }); }
+}
 // a triangular prism (gable roof): 1 long on x, 1 wide on z, 1 high, sitting on y = 0
 function gableGeo() {
   const sh = new THREE.Shape([new THREE.Vector2(-.5, 0), new THREE.Vector2(.5, 0), new THREE.Vector2(0, 1)]), g = new THREE.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false });
@@ -1966,14 +1996,22 @@ function renderParticles() {
     const c = linArr(p.col); sm.instanceColor.array.set([c[0] * 3, c[1] * 3, c[2] * 3], n * 3); n++;
   }
   sm.count = n; sm.instanceMatrix.needsUpdate = true; sm.instanceColor.needsUpdate = true;
+  const fm = G3.fireM; let nf = 0;   // stage flame jets: bright, additive, they glow through the bloom
   const pm = G3.puff; n = 0;
   for (const p of puffs) {
+    if (p.fire) {
+      if (nf >= 200) continue;
+      const a = fm.instanceMatrix.array, o = nf * 16, q = p.life / p.max, s = p.r * (.6 + .6 * q);
+      a.fill(0, o, o + 16); a[o] = a[o + 5] = a[o + 10] = s; a[o + 12] = p.x; a[o + 13] = p.h; a[o + 14] = p.y; a[o + 15] = 1;
+      const c = linArr(p.col), k = 2.2 * q; fm.instanceColor.array.set([c[0] * k, c[1] * k, c[2] * k], nf * 3); nf++; continue;
+    }
     if (n >= 800) break;
     const a = pm.instanceMatrix.array, o = n * 16, s = p.r * Math.min(1, p.life / (p.max * .4));
     a.fill(0, o, o + 16); a[o] = a[o + 5] = a[o + 10] = s; a[o + 12] = p.x; a[o + 13] = p.h; a[o + 14] = p.y; a[o + 15] = 1;
     pm.instanceColor.array.set(linArr(p.col), n * 3); n++;
   }
   pm.count = n; pm.instanceMatrix.needsUpdate = true; pm.instanceColor.needsUpdate = true;
+  fm.count = nf; fm.instanceMatrix.needsUpdate = true; fm.instanceColor.needsUpdate = true;
 }
 function renderGhosts(tt) {
   const b = G3.ghostBody, e = G3.ghostEye, h = G3.ghostHalo, wgm = G3.ghostWing; let n = 0;
@@ -2059,6 +2097,7 @@ function render3D(now, dtR) {
     const bm = scene.beams[(Math.random() * scene.beams.length) | 0];
     puff(bm.x + (Math.random() - .5) * 3, bm.y + 1 + Math.random() * 2, .4, "#b9c2d6", .5 + Math.random() * .4, 3.2, .25);
   }
+  stagePyro(live, dtR);
   for (const lm of G3.lasers || []) {   // lasers sweep with the music, wild during the drop
     const on = live && fullAt ? (surgeT > 0 ? 1 : .35) : 0, ph = lm.userData.ph, sp = surgeT > 0 ? 1.6 : .5;
     lm.visible = on > 0; lm.material.opacity = on * (.55 + .45 * Math.sin(tt * 9 + ph * 3));
