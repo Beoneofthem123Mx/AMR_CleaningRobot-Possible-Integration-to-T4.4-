@@ -235,7 +235,7 @@ function init3D() {
   G3.ghostEye = inst(new THREE.SphereGeometry(.045, 6, 4), new THREE.MeshBasicMaterial({ color: 0x15171c }), 520);
   { const wg = new THREE.SphereGeometry(.16, 8, 5); wg.scale(.35, 1, 1.6); wg.translate(0, .02, .2); G3.ghostWing = inst(wg, new THREE.MeshBasicMaterial({ transparent: true, opacity: .7, depthWrite: false }), 520); }   // little angel wings
   G3.ghostHalo = inst(new THREE.TorusGeometry(.17, .03, 6, 16), new THREE.MeshBasicMaterial({ toneMapped: false }), 260);
-  G3.puff = inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: .3, depthWrite: false }), 800);
+  G3.puff = inst(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ transparent: true, opacity: .5, depthWrite: false, flatShading: true, emissive: 0x404040 }), 800);   // low-poly dust: faceted, lit by the sun
   SHOE_L = toLin(["#1c1c20", "#f2f2f2", "#d8322b", "#2f6fc4", "#6b4a2b", "#1c1c20", "#e8b631"]);
   COS_L = [null].concat(toLin(["#8a5a34", "#4caf50", "#f4f4f0"])); COS_X = [null].concat(toLin(["#5e3a20", "#ffd23a", "#f2a52b", "#e53935"]));
   SHIRT_L = toLin(SHIRTS); HEAT_L = toLin(HEAT); if (typeof applyCB === "function") applyCB(); SKIN_L = toLin(SKIN); PANTS_L = toLin(PANTS); HAIR_L = toLin(HAIR); GLOW_L = toLin(GLOW);
