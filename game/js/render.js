@@ -1633,6 +1633,21 @@ function stagePyro(live, dt) {
   }
   if (night && Math.random() < .5) { const [x, y] = G3.pyro[(Math.random() * 2) | 0]; sparks.push({ x, y, h: h + 2 + Math.random() * 3, vx: (Math.random() - .5) * 3, vy: (Math.random() - .5) * 3, vh: 2 + Math.random() * 3, col: "#ffcf6a", life: .6 }); }
 }
+// rain: puddles fill up in the dips of the floor (dark, with a sky-blue sheen) and dry out after the show
+function drawPuddles(g) {
+  const w = G3.wet || 0; if (w < .03) return;
+  if (G3.pudKey !== sceneKey + WW + SH) {
+    G3.pudKey = sceneKey + WW + SH; const r = rng(sceneKey.length * 31 + 5); G3.puds = [];
+    for (let k = 0; k < 400 && G3.puds.length < 16; k++) { const x = 2 + r() * (WW - 4), y = 2 + r() * (SH - 4); if (blockedC && blockedC[cellOf(x, y)]) continue; G3.puds.push([x, y, .8 + r() * 1.6, .5 + r() * .4, r() * 3.14]); }
+  }
+  g.save();
+  for (const [x, y, rx, ry, a] of G3.puds) {
+    const s = Math.min(1, w * 1.2);
+    g.fillStyle = `rgba(36,54,82,${(.4 * s).toFixed(3)})`; g.beginPath(); g.ellipse(x, y, rx * s, rx * ry * s, a, 0, 7); g.fill();
+    g.fillStyle = `rgba(170,210,255,${(.22 * s).toFixed(3)})`; g.beginPath(); g.ellipse(x - rx * .25 * s, y - rx * ry * .2 * s, rx * .45 * s, rx * ry * .25 * s, a, 0, 7); g.fill();
+  }
+  g.restore();
+}
 // a triangular prism (gable roof): 1 long on x, 1 wide on z, 1 high, sitting on y = 0
 function gableGeo() {
   const sh = new THREE.Shape([new THREE.Vector2(-.5, 0), new THREE.Vector2(.5, 0), new THREE.Vector2(0, 1)]), g = new THREE.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false });
@@ -1751,6 +1766,7 @@ function updateFxLayer(live) {
   } else if (phase === "plan") G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height);
   g.scale(k, k);
   drawWear(g, live); drawSnow(g, live);
+  drawPuddles(g);
   // red shadow under those who fell
   // blackout: every phone flashlight throws a small pool of light ahead of its owner
   if (black > .25 && (phase === "show" || phase === "evac")) {
