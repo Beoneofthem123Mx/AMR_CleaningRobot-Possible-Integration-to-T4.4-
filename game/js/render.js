@@ -166,6 +166,11 @@ function updateAmbient(tt, dtR) {
   if (G3.cloud3d && G3.cloud3d.parent === G3.horizon) G3.cloud3d.rotation.y = tt * .004;   // the 3D clouds drift around the venue
   if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
   G3.motes.visible = night;
+  if (night && G3.winTex && tt - (G3.winT || 0) > .9) {   // the city at night: a window goes dark, another lights up
+    G3.winT = tt; const g = G3.winTex.image.getContext("2d");
+    for (let k = 0; k < 2; k++) { const x = 4 + ((Math.random() * 4) | 0) * 16, y = 4 + ((Math.random() * 4) | 0) * 16; g.fillStyle = Math.random() < .55 ? ["#ffd98a", "#ffe9b8", "#9fd0ff"][(Math.random() * 3) | 0] : "#1a1d26"; g.fillRect(x, y, 9, 10); }
+    G3.winTex.needsUpdate = true;
+  }
   if (night) {
     const cols = [[1, .85, .4], [.5, 1, .6], [.6, .8, 1], [1, .5, .9]];
     G3.moteData.forEach((d, i) => {
