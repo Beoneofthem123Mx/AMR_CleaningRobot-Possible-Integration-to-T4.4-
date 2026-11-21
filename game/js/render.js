@@ -1408,6 +1408,11 @@ function buildHorizon() {
       const lamp = new THREE.InstancedMesh(new THREE.BoxGeometry(1.6, .22, .12), new THREE.MeshBasicMaterial({ toneMapped: false }), nCar * 2);
       const CC = ["#d8322b", "#2f6fc4", "#f4f4f0", "#e8b631", "#3fa34d", "#1c1c20", "#ff7a2a", "#8a5bd6"];
       for (let i = 0; i < nCar; i++) { car.setColorAt(i, C.set(CC[(r() * CC.length) | 0])); lamp.setColorAt(i * 2, C.setRGB(3, 2.8, 2.2)); lamp.setColorAt(i * 2 + 1, C.setRGB(2.6, .2, .15)); }
+      { const nl = 36, post = new THREE.InstancedMesh(new THREE.CylinderGeometry(.09, .12, 4.2, 6), mat("#3a3d44"), nl), bulb = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.32, 0), new THREE.MeshBasicMaterial({ toneMapped: false }), nl);
+        for (let i = 0; i < nl; i++) { const a = i / nl * 6.283, R = RR + 3.3, x = cx + Math.cos(a) * R, z = cz + Math.sin(a) * R;   // street lamps on the outer kerb
+          M.compose(V.set(x, 2.1, z), Q.identity(), S3.set(1, 1, 1)); post.setMatrixAt(i, M); M.compose(V.set(x, 4.3, z), Q.identity(), S3.set(1, 1, 1)); bulb.setMatrixAt(i, M);
+          if (scene.night) bulb.setColorAt(i, C.setRGB(3.2, 2.5, 1.4)); else bulb.setColorAt(i, C.setRGB(.85, .85, .8)); }
+        grp.add(post, bulb); }
       lamp.visible = !!scene.night; for (const m of [car, cab, lamp]) { m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); grp.add(m); }
       G3.traffic = { car, cab, lamp, cx, cz, RR, d: Array.from({ length: nCar }, (_, i) => ({ a: r() * 6.283, dir: i % 2 ? 1 : -1, v: 7 + r() * 6 })) };
     }
