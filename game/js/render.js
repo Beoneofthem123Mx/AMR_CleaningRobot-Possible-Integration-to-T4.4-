@@ -2181,6 +2181,10 @@ function render3D(now, dtR) {
     puff(bm.x + (Math.random() - .5) * 3, bm.y + 1 + Math.random() * 2, .4, "#b9c2d6", .5 + Math.random() * .4, 3.2, .25);
   }
   stagePyro(live, dtR);
+  if (live && scene.night && ag.length && black < .3 && sparks.length < 1400) for (let k = 0; k < 3; k++) {   // phone camera flashes popping all over the crowd
+    if (Math.random() > (surgeT > 0 ? .9 : .35)) continue; const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.air > 0) continue;
+    sparks.push({ x: a.x + Math.cos(a.h) * .2, y: a.y + Math.sin(a.h) * .2, h: 2.1 * (a.sc || 1), vx: 0, vy: 0, vh: 0, col: "#ffffff", life: .07 });
+  }
   if (live && ag.length && gfx().sky && !(MOD && MOD.rain)) {   // body heat: steam rising off the most squeezed parts of the crowd
     for (let k = 0; k < 10; k++) { const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.ps < PCRIT * .7 || a.air > 0) continue;
       puff(a.x + (Math.random() - .5) * .4, a.y + (Math.random() - .5) * .4, 1.9 * (a.sc || 1), scene.night ? "#c9d4ea" : "#ffffff", .16 + Math.random() * .14, 1.3, .9); }
