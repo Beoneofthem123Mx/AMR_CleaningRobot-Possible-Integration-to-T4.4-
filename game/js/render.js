@@ -2197,6 +2197,10 @@ function render3D(now, dtR) {
     puff(bm.x + (Math.random() - .5) * 3, bm.y + 1 + Math.random() * 2, .4, "#b9c2d6", .5 + Math.random() * .4, 3.2, .25);
   }
   stagePyro(live, dtR);
+  if (live && (G3.wet || 0) > .3 && G3.puds && ag.length) for (let k = 0; k < 8; k++) {   // feet splashing through the puddles
+    const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.vx * a.vx + a.vy * a.vy < .4) continue;
+    for (const p of G3.puds) if ((a.x - p[0]) ** 2 + (a.y - p[1]) ** 2 < p[2] * p[2] * .5) { puff(a.x, a.y, .08, "#d6e8ff", .1 + Math.random() * .08, .35, 2.2); break; }
+  }
   if (live && scene.night && ag.length && black < .3 && sparks.length < 1400) for (let k = 0; k < 3; k++) {   // phone camera flashes popping all over the crowd
     if (Math.random() > (surgeT > 0 ? .9 : .35)) continue; const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.air > 0) continue;
     sparks.push({ x: a.x + Math.cos(a.h) * .2, y: a.y + Math.sin(a.h) * .2, h: 2.1 * (a.sc || 1), vx: 0, vy: 0, vh: 0, col: "#ffffff", life: .07 });
