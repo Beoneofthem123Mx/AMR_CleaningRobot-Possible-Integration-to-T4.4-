@@ -152,6 +152,16 @@ function updateAmbient(tt, dtR) {
   const night = !!scene.night;
   birds(tt, !night && !(MOD && (MOD.rain || MOD.snow)));
   if (typeof faunaTick === "function" && gfx().sky) { faunaTick(tt); cameoTick(tt, dtR || 0); } else if (G3.fauna) G3.fauna.visible = false;   // more birds, and random things crossing the sky
+  if (G3.traffic && G3.horizon && G3.horizon.visible && G3.traffic.car.parent === G3.horizon) {   // toy traffic on the ring road
+    const T = G3.traffic, M = M4, Q = T.q || (T.q = new THREE.Quaternion()), V = T.v || (T.v = new THREE.Vector3()), S = T.s || (T.s = new THREE.Vector3(1, 1, 1)), F = T.f || (T.f = new THREE.Vector3()), UP = T.up || (T.up = new THREE.Vector3(0, 1, 0)), dt = Math.min(.05, dtR || 0);
+    T.d.forEach((c, i) => {
+      c.a += c.dir * c.v * dt / T.RR; const R = T.RR + c.dir * 1.25, x = T.cx + Math.cos(c.a) * R, z = T.cz + Math.sin(c.a) * R;
+      Q.setFromAxisAngle(UP, -c.a + (c.dir > 0 ? Math.PI : 0)); M.compose(V.set(x, .45, z), Q, S); T.car.setMatrixAt(i, M);
+      M.compose(V.set(x, 1.05, z), Q, S); M.multiply(new THREE.Matrix4().makeTranslation(0, 0, -.3)); T.cab.setMatrixAt(i, M);
+      if (T.lamp.visible) { F.set(0, 0, 2.02).applyQuaternion(Q); M.compose(V.set(x + F.x, .55, z + F.z), Q, S); T.lamp.setMatrixAt(i * 2, M); M.compose(V.set(x - F.x, .55, z - F.z), Q, S); T.lamp.setMatrixAt(i * 2 + 1, M); }
+    });
+    T.car.instanceMatrix.needsUpdate = true; T.cab.instanceMatrix.needsUpdate = true; if (T.lamp.visible) T.lamp.instanceMatrix.needsUpdate = true;
+  }
   G3.clouds.visible = !night;
   if (G3.cloud3d && G3.cloud3d.parent === G3.horizon) G3.cloud3d.rotation.y = tt * .004;   // the 3D clouds drift around the venue
   if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
@@ -1359,7 +1369,7 @@ function waterify(m, scale) {
 // far-away scenery for the street camera: rolling hills and toy trees by day, a city skyline at night
 function buildHorizon() {
   if (G3.horizon) { G3.scene.remove(G3.horizon); G3.horizon.traverse(o => { if (o.geometry && !o.userData.shared) o.geometry.dispose(); }); }
-  const grp = G3.horizon = new THREE.Group(), r = rng(sceneKey.length * 97 + 13), cx = WW / 2, cz = SH / 2, night = !!scene.night && sceneKey !== "ovni";   // the UFO lands in the countryside
+  G3.traffic = null; const grp = G3.horizon = new THREE.Group(), r = rng(sceneKey.length * 97 + 13), cx = WW / 2, cz = SH / 2, night = !!scene.night && sceneKey !== "ovni";   // the UFO lands in the countryside
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), C = new THREE.Color();
   const wet = sceneKey === "crucero" ? () => true : sceneKey === "beach" ? x => x < 2 : () => false;   // no trees or towers standing in the sea
   if (sceneKey === "crucero") { grp.visible = false; G3.scene.add(grp); return; }
@@ -1390,6 +1400,16 @@ function buildHorizon() {
         if (isPoly()) { const dk = house.__d; M.compose(V.set(x, h, z), Q2, S3.set(w * 1.12, w * .5, dk * 1.12)); } else M.compose(V.set(x, h + w * .3, z), Q2.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4)), S3.set(w * 1.05, w * .6, w * 1.05)); roof.setMatrixAt(i, M); roof.setColorAt(i, C.set(["#c0583b", "#8a2f3b", "#4f5a6a"][i % 3]));
       }
       grp.add(house, roof);
+      // a ring road between the venue and the town, with toy cars going round in both directions (headlights at night)
+      const RR = 54, road = new THREE.Mesh(new THREE.RingGeometry(RR - 2.6, RR + 2.6, 96, 1), new THREE.MeshStandardMaterial({ color: lin(scene.night ? "#2a2c33" : "#5b5e66"), roughness: .9 }));
+      road.rotation.x = -Math.PI / 2; road.position.set(cx, .05, cz); grp.add(road);
+      const nCar = 30, car = new THREE.InstancedMesh(new THREE.BoxGeometry(1.8, .7, 4), new THREE.MeshStandardMaterial({ roughness: .4, metalness: .2, flatShading: true }), nCar);
+      const cab = new THREE.InstancedMesh(new THREE.BoxGeometry(1.5, .55, 2), new THREE.MeshStandardMaterial({ color: lin("#bcd6e6"), roughness: .15, metalness: .4 }), nCar);
+      const lamp = new THREE.InstancedMesh(new THREE.BoxGeometry(1.6, .22, .12), new THREE.MeshBasicMaterial({ toneMapped: false }), nCar * 2);
+      const CC = ["#d8322b", "#2f6fc4", "#f4f4f0", "#e8b631", "#3fa34d", "#1c1c20", "#ff7a2a", "#8a5bd6"];
+      for (let i = 0; i < nCar; i++) { car.setColorAt(i, C.set(CC[(r() * CC.length) | 0])); lamp.setColorAt(i * 2, C.setRGB(3, 2.8, 2.2)); lamp.setColorAt(i * 2 + 1, C.setRGB(2.6, .2, .15)); }
+      lamp.visible = !!scene.night; for (const m of [car, cab, lamp]) { m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); grp.add(m); }
+      G3.traffic = { car, cab, lamp, cx, cz, RR, d: Array.from({ length: nCar }, (_, i) => ({ a: r() * 6.283, dir: i % 2 ? 1 : -1, v: 7 + r() * 6 })) };
     }
     themedHorizon(grp, HORIZON_THEME[sceneKey], r, cx, cz, wet);
     // puffy low-poly clouds around the venue (only seen from the street camera, like the rest of the horizon)
