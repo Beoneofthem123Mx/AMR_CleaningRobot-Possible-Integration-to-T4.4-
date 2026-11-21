@@ -150,7 +150,7 @@ function applyGfx() {   // called at start-up and whenever the preset changes
 }
 function updateAmbient(tt, dtR) {
   const night = !!scene.night;
-  birds(tt, !night && !(MOD && MOD.rain));
+  birds(tt, !night && !(MOD && (MOD.rain || MOD.snow)));
   if (typeof faunaTick === "function" && gfx().sky) { faunaTick(tt); cameoTick(tt, dtR || 0); } else if (G3.fauna) G3.fauna.visible = false;   // more birds, and random things crossing the sky
   G3.clouds.visible = !night;
   if (G3.cloud3d && G3.cloud3d.parent === G3.horizon) G3.cloud3d.rotation.y = tt * .004;   // the 3D clouds drift around the venue
@@ -1706,7 +1706,7 @@ function updateFxLayer(live) {
     g.globalAlpha = .9; g.drawImage(G3.trail, 0, 0); g.globalAlpha = 1;
   } else if (phase === "plan") G3.tctx.clearRect(0, 0, G3.trail.width, G3.trail.height);
   g.scale(k, k);
-  drawWear(g, live);
+  drawWear(g, live); drawSnow(g, live);
   // red shadow under those who fell
   // blackout: every phone flashlight throws a small pool of light ahead of its owner
   if (black > .25 && (phase === "show" || phase === "evac")) {
@@ -1931,6 +1931,42 @@ function renderConfetti() {
 const LINC = {};
 const linArr = hex => LINC[hex] || (LINC[hex] = (c => [c.r, c.g, c.b])(lin(hex)));
 // rain: drops falling around the camera
+// snow: big soft flakes drifting down over the whole venue, swaying as they fall
+function renderSnow(tt) {
+  const on = MOD && MOD.snow && (phase === "show" || phase === "evac");
+  if (!G3.snowM) {
+    if (!on) return;
+    G3.snowM = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.06, 0), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9, depthWrite: false }), 1400);
+    G3.snowM.frustumCulled = false; G3.snowM.instanceMatrix.setUsage(THREE.DynamicDrawUsage); G3.scene.add(G3.snowM);
+    G3.flakes = Array.from({ length: 1400 }, () => [Math.random(), Math.random(), Math.random() * 26, Math.random() * 6.28, .6 + Math.random() * .8]);
+  }
+  G3.snowM.visible = !!on; if (!on) return;
+  const a = G3.snowM.instanceMatrix.array, n = gfx().sky ? 1400 : 600, wx = windF.t > 0 ? windF.x * .12 : .015;
+  for (let i = 0; i < n; i++) { const d = G3.flakes[i];
+    d[2] -= .045 * d[4]; d[0] += wx / WW; if (d[2] < 0) { d[2] = 26; d[0] = Math.random(); d[1] = Math.random(); }
+    const x = ((d[0] % 1) + 1) % 1 * (WW + 16) - 8 + Math.sin(tt * 1.3 + d[3]) * .6, z = d[1] * (SH + 10) - 5 + Math.cos(tt * 1.1 + d[3]) * .4, s = d[4];
+    const o = i * 16; a.fill(0, o, o + 16); a[o] = a[o + 5] = a[o + 10] = s; a[o + 12] = x; a[o + 13] = d[2]; a[o + 14] = z; a[o + 15] = 1; }
+  G3.snowM.count = n; G3.snowM.instanceMatrix.needsUpdate = true;
+}
+// snow cover: the floor slowly turns white during the show and every footstep scrapes it away again
+function drawSnow(g, live) {
+  if (!G3.wear) return;
+  const w = G3.wear.width, h = G3.wear.height;
+  if (!G3.snowCv || G3.snowCv.width !== w || G3.snowCv.height !== h) { G3.snowCv = document.createElement("canvas"); G3.snowCv.width = w; G3.snowCv.height = h; G3.snowA = 0; }
+  const c = G3.snowCv.getContext("2d");
+  if (phase === "plan" || !(MOD && MOD.snow)) { if (G3.snowA) { c.clearRect(0, 0, w, h); G3.snowA = 0; } return; }
+  if (live) {
+    G3.snowF = (G3.snowF || 0) + 1;
+    if (G3.snowF % 3 === 0 && G3.snowA < 1) {   // a fresh dusting all over, with soft drifts
+      G3.snowA = Math.min(1, G3.snowA + .006); c.globalCompositeOperation = "source-over"; c.fillStyle = "rgba(246,250,255,.03)"; c.fillRect(0, 0, w, h);
+      c.fillStyle = "rgba(255,255,255,.05)"; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(Math.random() * w, Math.random() * h, 3 + Math.random() * 6, 0, 7); c.fill(); }
+    }
+    c.globalCompositeOperation = "destination-out"; c.fillStyle = "rgba(0,0,0,.22)"; let n = 0;   // feet scrape it off: dark paths where the crowd walks
+    for (const a of ag) { if (a.vx * a.vx + a.vy * a.vy < .15) continue; if (++n > 3000) break; c.fillRect(a.x * WEAR - 1, a.y * WEAR - 1, 2, 2); }
+    c.globalCompositeOperation = "source-over";
+  }
+  g.globalAlpha = .92; g.drawImage(G3.snowCv, 0, 0, WW, SH); g.globalAlpha = 1;
+}
 function renderRain(tt) {
   if (!G3.rain) {
     G3.rain = new THREE.InstancedMesh(new THREE.BoxGeometry(.03, .9, .03), new THREE.MeshBasicMaterial({ color: 0xbcd4ff, transparent: true, opacity: .45, depthWrite: false }), 900);
@@ -2067,6 +2103,8 @@ function render3D(now, dtR) {
   G3.golden = (G3.golden || 0) + (gTarget - (G3.golden || 0)) * Math.min(1, dtR * (live ? .8 : 3)); const gold = G3.golden * .95;
   G3.sun.color.set(scene.light.sun).lerp(GOLD_SUN, gold); G3.hemi.color.set(scene.light.sky).lerp(GOLD_SKY, gold * .8);
   G3.hemi.intensity = scene.light.hemi * (1 - .8 * black) * (1 - .12 * gold); G3.sun.intensity = scene.light.sunI * (1 - .9 * black) * (1 + .08 * gold) * (1 - .4 * (G3.wet || 0));   // rain: overcast
+  G3.snowK = (G3.snowK || 0) + ((live && MOD && MOD.snow ? 1 : 0) - (G3.snowK || 0)) * Math.min(1, dtR * .5);
+  if (G3.snowK > .01) { const k = G3.snowK; G3.sun.intensity *= 1 - .35 * k; G3.sun.color.lerp(TD_COL.set(0xdfe9ff), .6 * k); G3.hemi.color.lerp(TD_COL.set(0xe8f0ff), .5 * k); G3.hemi.intensity *= 1 + .15 * k; }   // snow: soft, cold, overcast light
   if (td) { G3.sun.intensity *= td.sun; G3.hemi.intensity *= td.hemi; if (td.tint) { G3.sun.color.lerp(TD_COL.set(td.tint), td.k); G3.hemi.color.lerp(TD_COL.set(td.sky), td.k * .7); } }
   const vb = updateCamera(dtR);
   {   // the venue moves under your feet: the ship rolls, machines rumble, stadiums bounce (scene.rock), plus every big shake
@@ -2133,7 +2171,7 @@ function render3D(now, dtR) {
   renderParticles(); renderLoose(Math.min(.05, dtR || 0));
   renderGhosts(tt);
   updateFxLayer(live);
-  renderRain(tt);
+  renderRain(tt); renderSnow(tt);
   renderFrame();
   // photo for the newspaper: halfway through the show or at the first trampling
   if (live && (G3.wantPhoto || (fullAt && !G3.photo && t > fullAt + 12))) { try { G3.photo = cv.toDataURL("image/jpeg", .62); } catch (e) { /* no photo */ } G3.wantPhoto = false; }

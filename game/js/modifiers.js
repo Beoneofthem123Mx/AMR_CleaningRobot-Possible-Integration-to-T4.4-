@@ -77,6 +77,7 @@ MODS.push(
   { id: "pirates", icon: "🏴‍☠️", name: "Pirate invasion", desc: "Pirates heard there was a party. They brought cannons. Arrr.", w: 1, events: ["crucero:piratas", "crucero:piratas"] },
   { id: "clones", icon: "👯", name: "Clone day", desc: "The cloning machine was left on overnight. More of everyone, everywhere.", w: 1, crowdMul: 1.1, events: ["laboratorio:clones", "laboratorio:clones"] },
   { id: "heat", icon: "🥵", name: "Heatwave", desc: "41 °C in the shade. Everyone is slow, sweaty and fainting at the slightest squeeze.", w: 1, speed: .85, pcritMul: .85 },
+  { id: "snow", icon: "❄️", name: "Freak snowstorm", desc: "It's snowing. Here. Today. The floor turns white, the crowd carves paths through it and everybody walks like a penguin.", w: 1, speed: .88, pcritMul: .95, snow: true },
   { id: "disco", icon: "🪩", name: "Disco inferno", desc: "The DJ refuses to stop dropping the beat. Every drop, everybody jumps.", w: 1, dropMul: .35, bounce: 2.2 },
 );
 const MODS_BY_ID = Object.fromEntries(MODS.map(m => [m.id, m]));
@@ -93,7 +94,7 @@ function comboMod(a, b) {
   if (a.id === "normal") return b; if (b.id === "normal" || a.id === b.id) return a;
   const prod = k => (a[k] || 1) * (b[k] || 1);
   return { id: a.id + "+" + b.id, name: `${a.name} + ${b.name}`, desc: `${a.desc} Also: ${b.desc.charAt(0).toLowerCase() + b.desc.slice(1)}`,
-    speed: prod("speed"), pcritMul: prod("pcritMul"), crowdMul: prod("crowdMul"), dropMul: prod("dropMul"), sizeMul: prod("sizeMul"), bounce: a.bounce || b.bounce, rain: a.rain || b.rain, uniform: a.uniform || b.uniform,
+    speed: prod("speed"), pcritMul: prod("pcritMul"), crowdMul: prod("crowdMul"), dropMul: prod("dropMul"), sizeMul: prod("sizeMul"), bounce: a.bounce || b.bounce, rain: a.rain || b.rain, snow: (a.snow || b.snow) && !(a.rain || b.rain), uniform: a.uniform || b.uniform,
     altShare: Math.max(a.altShare || 0, b.altShare || 0) || undefined, events: (a.events || []).concat(b.events || []), ev: { ...(a.ev || {}), ...(b.ev || {}) },
     look: a.look || b.look ? L => { if (a.look) a.look(L); if (b.look) b.look(L); } : undefined,
     step: a.step || b.step ? () => { if (a.step) a.step(); if (b.step) b.step(); } : undefined,
