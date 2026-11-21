@@ -166,6 +166,18 @@ function updateAmbient(tt, dtR) {
   if (G3.cloud3d && G3.cloud3d.parent === G3.horizon) G3.cloud3d.rotation.y = tt * .004;   // the 3D clouds drift around the venue
   if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
   G3.motes.visible = night;
+  {   // butterflies: two flapping wings each, wandering over the grass by day (not in rain or snow, not on Low)
+    const on = !night && gfx().sky && G3.flyHome && G3.flyHome.length && !(MOD && (MOD.rain || MOD.snow));
+    if (on && !G3.fly) { const wg = new THREE.PlaneGeometry(.16, .12); wg.translate(.08, 0, 0); wg.rotateX(-Math.PI / 2);
+      G3.fly = new THREE.InstancedMesh(wg, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), 48); G3.fly.frustumCulled = false; G3.fly.instanceMatrix.setUsage(THREE.DynamicDrawUsage); G3.scene.add(G3.fly);
+      const FC = ["#ffd23a", "#ff8ac2", "#ffffff", "#9fd8ff", "#ff9a2a", "#c7a6ff"]; for (let i = 0; i < 48; i++) G3.fly.setColorAt(i, new THREE.Color(FC[(i >> 1) % FC.length])); }
+    if (G3.fly) { G3.fly.visible = !!on; if (on) {
+      const n = Math.min(24, G3.flyHome.length), Mx = M4, Qf = G3.flyQ || (G3.flyQ = new THREE.Quaternion()), Ef = G3.flyE || (G3.flyE = new THREE.Euler()), Vf = G3.flyV || (G3.flyV = new THREE.Vector3()), Sf = G3.flyS || (G3.flyS = new THREE.Vector3(1.8, 1.8, 1.8));
+      for (let i = 0; i < n; i++) { const [hx, hy, a, b] = G3.flyHome[i], ph = a * 50, x = hx + Math.sin(tt * .7 + ph) * 1.6 + Math.sin(tt * 1.9 + ph * 2) * .4, z = hy + Math.cos(tt * .6 + ph) * 1.4, y = .7 + b * .5 + Math.abs(Math.sin(tt * 3 + ph)) * .35;
+        const yaw = Math.atan2(Math.cos(tt * .7 + ph) * 1.1, -Math.sin(tt * .6 + ph) * .85), flap = Math.sin(tt * 22 + ph) * 1.1;
+        for (let w = 0; w < 2; w++) { Ef.set(0, yaw + (w ? Math.PI : 0), w ? -flap : flap, "YXZ"); Qf.setFromEuler(Ef); Mx.compose(Vf.set(x, y, z), Qf, Sf); G3.fly.setMatrixAt(i * 2 + w, Mx); } }
+      G3.fly.count = n * 2; G3.fly.instanceMatrix.needsUpdate = true; } }
+  }
   if (night && G3.winTex && tt - (G3.winT || 0) > .9) {   // the city at night: a window goes dark, another lights up
     G3.winT = tt; const g = G3.winTex.image.getContext("2d");
     for (let k = 0; k < 2; k++) { const x = 4 + ((Math.random() * 4) | 0) * 16, y = 4 + ((Math.random() * 4) | 0) * 16; g.fillStyle = Math.random() < .55 ? ["#ffd98a", "#ffe9b8", "#9fd0ff"][(Math.random() * 3) | 0] : "#1a1d26"; g.fillRect(x, y, 9, 10); }
@@ -1500,6 +1512,7 @@ function facetPlane(w, h, cell, amp, outside) {
 // low-poly grass tufts and little flowers wherever the painted floor is green (read from the floor texture
 // itself, so every venue gets them where its lawns are); one instanced draw each, fewer on lower presets
 function grassTufts(grp) {
+  G3.flyHome = [];
   const N = gfx().plod >= 1100 ? 650 : gfx().plod >= 700 ? 350 : 0; if (!N || !staticLayer || !blockedC) return;
   let img; try { img = staticLayer.getContext("2d").getImageData(0, 0, staticLayer.width, staticLayer.height).data; } catch (e) { return; }
   const W = staticLayer.width, H = staticLayer.height, r = rng(sceneKey.length * 53 + 7), spots = [];
@@ -1509,6 +1522,7 @@ function grassTufts(grp) {
     if (blockedC[cellOf(x, y)]) continue; spots.push([x, y, r(), r(), r()]);
   }
   if (!spots.length) return;
+  G3.flyHome = spots.filter((_, i) => i % 23 === 0).slice(0, 24);   // butterflies live over the lawns
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), C = new THREE.Color(), E = new THREE.Euler();
   const bm = new THREE.MeshLambertMaterial({ flatShading: true });
   bm.onBeforeCompile = sh => {   // the tips sway in the wind, each tuft a little out of step with its neighbours
