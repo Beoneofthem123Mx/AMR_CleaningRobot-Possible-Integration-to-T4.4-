@@ -2165,6 +2165,8 @@ function render3D(now, dtR) {
   G3.sun.color.set(scene.light.sun).lerp(GOLD_SUN, gold); G3.hemi.color.set(scene.light.sky).lerp(GOLD_SKY, gold * .8);
   G3.hemi.intensity = scene.light.hemi * (1 - .8 * black) * (1 - .12 * gold); G3.sun.intensity = scene.light.sunI * (1 - .9 * black) * (1 + .08 * gold) * (1 - .4 * (G3.wet || 0));   // rain: overcast
   G3.snowK = (G3.snowK || 0) + ((live && MOD && MOD.snow ? 1 : 0) - (G3.snowK || 0)) * Math.min(1, dtR * .5);
+  G3.heatK = (G3.heatK || 0) + ((live && MOD && MOD.id === "heat" && !scene.night ? 1 : 0) - (G3.heatK || 0)) * Math.min(1, dtR * .5);
+  if (G3.heatK > .01) { const k = G3.heatK; G3.sun.intensity *= 1 + .22 * k; G3.sun.color.lerp(TD_COL.set(0xffd9a0), .45 * k); G3.hemi.color.lerp(TD_COL.set(0xfff0d0), .3 * k); }   // heatwave: harsh, bleached, orange light
   if (G3.grassMat) G3.grassMat.emissive.setScalar(.5 * (G3.snowK || 0) * Math.min(1, (G3.snowA || 0) * 2));   // lawns frost over in the snow
   if (G3.snowK > .01) { const k = G3.snowK; G3.sun.intensity *= 1 - .35 * k; G3.sun.color.lerp(TD_COL.set(0xdfe9ff), .6 * k); G3.hemi.color.lerp(TD_COL.set(0xe8f0ff), .5 * k); G3.hemi.intensity *= 1 + .15 * k; }   // snow: soft, cold, overcast light
   if (td) { G3.sun.intensity *= td.sun; G3.hemi.intensity *= td.hemi; if (td.tint) { G3.sun.color.lerp(TD_COL.set(td.tint), td.k); G3.hemi.color.lerp(TD_COL.set(td.sky), td.k * .7); } }
@@ -2213,7 +2215,7 @@ function render3D(now, dtR) {
     sparks.push({ x: a.x + Math.cos(a.h) * .2, y: a.y + Math.sin(a.h) * .2, h: 2.1 * (a.sc || 1), vx: 0, vy: 0, vh: 0, col: "#ffffff", life: .07 });
   }
   if (live && ag.length && fxOK() && !(MOD && MOD.rain)) {   // body heat: steam rising off the most squeezed parts of the crowd
-    for (let k = 0; k < 10; k++) { const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.ps < PCRIT * .7 || a.air > 0) continue;
+    for (let k = 0; k < 10; k++) { const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.ps < PCRIT * (MOD && MOD.id === "heat" ? .35 : .7) || a.air > 0) continue;
       puff(a.x + (Math.random() - .5) * .4, a.y + (Math.random() - .5) * .4, 1.9 * (a.sc || 1), scene.night ? "#c9d4ea" : "#ffffff", .16 + Math.random() * .14, 1.3, .9); }
   }
   for (const lm of G3.lasers || []) {   // lasers sweep with the music, wild during the drop
