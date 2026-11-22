@@ -10,6 +10,7 @@ const GFX_LEVELS = {
   high:   { name: "High",   dpr: 1.75, plod: 1100, shadow: 2048, post: true,  people: true,  sky: true,  desc: "The intended look." },
   ultra:  { name: "Ultra",  dpr: 2,    plod: 1800, shadow: 4096, post: true,  people: true,  sky: true,  desc: "Sharper image, sharper shadows, more people in full detail." },
 };
+const fxOK = () => gfx().sky && !(typeof perf !== "undefined" && perf.level >= 1);   // extras the auto-quality drops first when the frame rate sinks
 let GFX = "high"; try { GFX = localStorage.getItem("mh.gfx") || "high"; } catch (e) { /* no storage */ } if (!GFX_LEVELS[GFX]) GFX = "high";
 const gfx = () => GFX_LEVELS[GFX];
 let S = 10, dpr = 1, staticLayer = null, staticDirty = true, camMode = 0, LAND = false;  // LAND: landscape monitor
@@ -167,7 +168,7 @@ function updateAmbient(tt, dtR) {
   if (!night) { const map = G3.clouds.material.alphaMap; map.offset.x = tt * .004; map.offset.y = tt * .0025; }
   G3.motes.visible = night;
   {   // butterflies: two flapping wings each, wandering over the grass by day (not in rain or snow, not on Low)
-    const on = !night && gfx().sky && G3.flyHome && G3.flyHome.length && !(MOD && (MOD.rain || MOD.snow));
+    const on = !night && fxOK() && G3.flyHome && G3.flyHome.length && !(MOD && (MOD.rain || MOD.snow));
     if (on && !G3.fly) { const wg = new THREE.PlaneGeometry(.16, .12); wg.translate(.08, 0, 0); wg.rotateX(-Math.PI / 2);
       G3.fly = new THREE.InstancedMesh(wg, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), 48); G3.fly.frustumCulled = false; G3.fly.instanceMatrix.setUsage(THREE.DynamicDrawUsage); G3.scene.add(G3.fly);
       const FC = ["#ffd23a", "#ff8ac2", "#ffffff", "#9fd8ff", "#ff9a2a", "#c7a6ff"]; for (let i = 0; i < 48; i++) G3.fly.setColorAt(i, new THREE.Color(FC[(i >> 1) % FC.length])); }
@@ -2191,7 +2192,7 @@ function render3D(now, dtR) {
     if (wl) { wl.position.copy(mesh.position); wl.target.position.set(bm.x + Math.cos(ang) * 20, 0, bm.y + Math.sin(ang) * 20); wl.color.copy(mesh.material.color); wl.intensity = scene.night && inten > 0 ? Math.min(3.2, 1.3 * inten) * (1 - .7 * black) : 0; }
   });
   for (let i = scene.beams.length; i < G3.washL.length; i++) G3.washL[i].intensity = 0;
-  for (const wl of G3.washL) wl.visible = gfx().sky && !!scene.night && scene.beams.length > 0;   // only night venues with beams pay for them (never on Low)
+  for (const wl of G3.washL) wl.visible = fxOK() && !!scene.night && scene.beams.length > 0;   // only night venues with beams pay for them (never on Low)
   // stage smoke machines puff during the drop at night venues
   if (scene.night && live && surgeT > 0 && scene.beams.length && Math.random() < .5) {
     const bm = scene.beams[(Math.random() * scene.beams.length) | 0];
@@ -2203,15 +2204,15 @@ function render3D(now, dtR) {
     if (a && !(a.air > 0)) { sparks.push({ x: a.x, y: a.y, h: 1.9 * (a.sc || 1), vx: Math.cos(an) * d / .9, vy: Math.sin(an) * d / .9, vh: 3.2, col: "#ffffff", life: 1.1 });
       if (Math.random() < .03) pop(a.x, a.y - .5, ["SNOWBALL!", "INCOMING!", "IN THE NECK!", "TRUCE!"][(Math.random() * 4) | 0]); }
   }
-  if (live && (G3.wet || 0) > .3 && G3.puds && ag.length) for (let k = 0; k < 8; k++) {   // feet splashing through the puddles
+  if (live && (G3.wet || 0) > .3 && G3.puds && ag.length && fxOK()) for (let k = 0; k < 8; k++) {   // feet splashing through the puddles
     const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.vx * a.vx + a.vy * a.vy < .4) continue;
     for (const p of G3.puds) if ((a.x - p[0]) ** 2 + (a.y - p[1]) ** 2 < p[2] * p[2] * .5) { puff(a.x, a.y, .08, "#d6e8ff", .1 + Math.random() * .08, .35, 2.2); break; }
   }
-  if (live && scene.night && ag.length && black < .3 && sparks.length < 1400) for (let k = 0; k < 3; k++) {   // phone camera flashes popping all over the crowd
+  if (live && scene.night && ag.length && black < .3 && sparks.length < 1400 && fxOK()) for (let k = 0; k < 3; k++) {   // phone camera flashes popping all over the crowd
     if (Math.random() > (surgeT > 0 ? .9 : .35)) continue; const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.air > 0) continue;
     sparks.push({ x: a.x + Math.cos(a.h) * .2, y: a.y + Math.sin(a.h) * .2, h: 2.1 * (a.sc || 1), vx: 0, vy: 0, vh: 0, col: "#ffffff", life: .07 });
   }
-  if (live && ag.length && gfx().sky && !(MOD && MOD.rain)) {   // body heat: steam rising off the most squeezed parts of the crowd
+  if (live && ag.length && fxOK() && !(MOD && MOD.rain)) {   // body heat: steam rising off the most squeezed parts of the crowd
     for (let k = 0; k < 10; k++) { const a = ag[(Math.random() * ag.length) | 0]; if (!a || a.ps < PCRIT * .7 || a.air > 0) continue;
       puff(a.x + (Math.random() - .5) * .4, a.y + (Math.random() - .5) * .4, 1.9 * (a.sc || 1), scene.night ? "#c9d4ea" : "#ffffff", .16 + Math.random() * .14, 1.3, .9); }
   }
