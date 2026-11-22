@@ -1768,6 +1768,12 @@ function updateFxLayer(live) {
   g.scale(k, k);
   drawWear(g, live); drawSnow(g, live);
   drawPuddles(g);
+  if ((phase === "show" || phase === "evac") && MOD && MOD.id === "disco") {   // mirror-ball specks sweeping over the floor
+    const tt = performance.now() / 1000, cx = WW / 2, cy = SH * .4; g.save(); g.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 90; i++) { const a = i * 2.39996 + tt * (.35 + (i % 3) * .05), d = 3 + (i * 7.3 % 1) * Math.max(WW, SH) * .45, x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d * 1.3;
+      g.fillStyle = `hsla(${(i * 47 + tt * 40) % 360},100%,85%,.55)`; g.beginPath(); g.arc(x, y, .22, 0, 7); g.fill(); }
+    g.restore();
+  }
   // red shadow under those who fell
   // blackout: every phone flashlight throws a small pool of light ahead of its owner
   if (black > .25 && (phase === "show" || phase === "evac")) {
@@ -2201,6 +2207,11 @@ function render3D(now, dtR) {
     puff(bm.x + (Math.random() - .5) * 3, bm.y + 1 + Math.random() * 2, .4, "#b9c2d6", .5 + Math.random() * .4, 3.2, .25);
   }
   stagePyro(live, dtR);
+  {   // Disco inferno: a giant mirror ball spins over the crowd
+    const on = live && MOD && MOD.id === "disco";
+    if (on && !G3.disco) { G3.disco = new THREE.Mesh(new THREE.IcosahedronGeometry(1.4, 1), new THREE.MeshStandardMaterial({ color: 0xdfe6ef, metalness: .95, roughness: .12, flatShading: true, emissive: 0x303844 })); G3.scene.add(G3.disco); }
+    if (G3.disco) { G3.disco.visible = !!on; if (on) { G3.disco.position.set(WW / 2, 10 + Math.sin(tt * 1.2) * .2, SH * .4); G3.disco.rotation.y = tt * .9; } }
+  }
   if (live && MOD && MOD.snow && ag.length && Math.random() < .35 && sparks.length < 1400) {   // snowball fight: lobbed across the crowd
     const a = ag[(Math.random() * ag.length) | 0], an = Math.random() * 6.283, d = 3 + Math.random() * 4;
     if (a && !(a.air > 0)) { sparks.push({ x: a.x, y: a.y, h: 1.9 * (a.sc || 1), vx: Math.cos(an) * d / .9, vy: Math.sin(an) * d / .9, vh: 3.2, col: "#ffffff", life: 1.1 });
