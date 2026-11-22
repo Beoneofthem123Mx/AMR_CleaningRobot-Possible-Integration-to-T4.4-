@@ -1512,7 +1512,7 @@ function facetPlane(w, h, cell, amp, outside) {
 // low-poly grass tufts and little flowers wherever the painted floor is green (read from the floor texture
 // itself, so every venue gets them where its lawns are); one instanced draw each, fewer on lower presets
 function grassTufts(grp) {
-  G3.flyHome = [];
+  G3.flyHome = []; G3.grassMat = null;
   const N = gfx().plod >= 1100 ? 650 : gfx().plod >= 700 ? 350 : 0; if (!N || !staticLayer || !blockedC) return;
   let img; try { img = staticLayer.getContext("2d").getImageData(0, 0, staticLayer.width, staticLayer.height).data; } catch (e) { return; }
   const W = staticLayer.width, H = staticLayer.height, r = rng(sceneKey.length * 53 + 7), spots = [];
@@ -1531,7 +1531,7 @@ function grassTufts(grp) {
       { float tip = clamp((transformed.y + .21) / .42, 0.0, 1.0); vec3 ip = vec3(instanceMatrix[3]); float w = sin(uTime * 2.1 + ip.x * .7 + ip.z * .45) + .4 * sin(uTime * 4.3 + ip.z * 1.3);
         transformed.x += w * .09 * tip * tip; transformed.z += w * .04 * tip * tip; }`);
   };
-  bm.customProgramCacheKey = () => "grasssway";
+  bm.customProgramCacheKey = () => "grasssway"; G3.grassMat = bm;
   const blades = new THREE.InstancedMesh(new THREE.ConeGeometry(.13, .42, 4), bm, spots.length * 3);
   const flowers = spots.filter(s => s[4] < .18), fl = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.07, 0), new THREE.MeshLambertMaterial({ flatShading: true, emissive: 0x222222 }), Math.max(1, flowers.length));
   const GR = ["#3f7a2a", "#4f8f34", "#5fa23c", "#2f6a24"], FL = ["#ffd23a", "#ff6fb1", "#f4f4f0", "#a98bff", "#d8322b"];
@@ -2164,6 +2164,7 @@ function render3D(now, dtR) {
   G3.sun.color.set(scene.light.sun).lerp(GOLD_SUN, gold); G3.hemi.color.set(scene.light.sky).lerp(GOLD_SKY, gold * .8);
   G3.hemi.intensity = scene.light.hemi * (1 - .8 * black) * (1 - .12 * gold); G3.sun.intensity = scene.light.sunI * (1 - .9 * black) * (1 + .08 * gold) * (1 - .4 * (G3.wet || 0));   // rain: overcast
   G3.snowK = (G3.snowK || 0) + ((live && MOD && MOD.snow ? 1 : 0) - (G3.snowK || 0)) * Math.min(1, dtR * .5);
+  if (G3.grassMat) G3.grassMat.emissive.setScalar(.5 * (G3.snowK || 0) * Math.min(1, (G3.snowA || 0) * 2));   // lawns frost over in the snow
   if (G3.snowK > .01) { const k = G3.snowK; G3.sun.intensity *= 1 - .35 * k; G3.sun.color.lerp(TD_COL.set(0xdfe9ff), .6 * k); G3.hemi.color.lerp(TD_COL.set(0xe8f0ff), .5 * k); G3.hemi.intensity *= 1 + .15 * k; }   // snow: soft, cold, overcast light
   if (td) { G3.sun.intensity *= td.sun; G3.hemi.intensity *= td.hemi; if (td.tint) { G3.sun.color.lerp(TD_COL.set(td.tint), td.k); G3.hemi.color.lerp(TD_COL.set(td.sky), td.k * .7); } }
   const vb = updateCamera(dtR);
