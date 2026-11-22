@@ -295,7 +295,7 @@ the free camera and the whole-venue view alone.
 Auto quality lowers the number of people drawn in full detail before it turns off shadows and effects.
 
 **Graphics presets** (Options → Graphics: Low, Medium, High, Ultra) set resolution, crowd detail,
-shadow quality, glow/blur and the ambient extras; Options → **Show FPS** puts a frame counter in the
+shadow quality, glow/blur and the ambient extras; Options → **FPS counter** puts a frame counter in the
 corner. Auto quality drops the newest extras first (stage light pools, butterflies, steam, phone
 flashes, puddle splashes), then crowd detail, then shadows and effects.
 
