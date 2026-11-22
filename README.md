@@ -166,7 +166,7 @@ around.
 - **Today's twist**: when the gates open, a roulette picks a surprise: free wifi in one corner, an
   influencer going live, a downpour, reggaeton night, moon gravity, rush hour, a slow-motion
   audience, a rain of flip-flops, hungry pigeons, blackouts, Children's Day, mandatory uniform
-  (everyone in the same T-shirt) or that one uncle at the party.
+  (everyone in the same T-shirt) or that one uncle at the party (plus many more, from a heatwave to a freak snowstorm).
 - **Megaphone**: during the show, each click calms the people in that area (three uses per show).
 - **Total Chaos mode** (in the menu): any event from any venue can happen anywhere, and two of
   today's twists are combined.
@@ -293,6 +293,28 @@ then; double-click it for a joke and a secret achievement. They are listed in th
 and every 20 pancaked it cuts to another spot where people are falling ("MEANWHILE..."). It leaves
 the free camera and the whole-venue view alone.
 Auto quality lowers the number of people drawn in full detail before it turns off shadows and effects.
+
+**Graphics presets** (Options → Graphics: Low, Medium, High, Ultra) set resolution, crowd detail,
+shadow quality, glow/blur and the ambient extras; Options → **Show FPS** puts a frame counter in the
+corner. Auto quality drops the newest extras first (stage light pools, butterflies, steam, phone
+flashes, puddle splashes), then crowd detail, then shadows and effects.
+
+Living world:
+- The **sun moves** during the show: shadows turn and stretch toward the golden hour. The street
+  camera gets a soft **lens flare** when it looks toward the sun (hidden if something blocks it).
+- **Low-poly water** (pools, fountains, the sea) with faceted waves; **3D clouds** around the venue
+  and drifting cloud shadows on the floor.
+- **Lawns**: grass tufts and little flowers sway in the wind, trees rock, butterflies flutter by
+  day, and the crowd **wears muddy paths** into the grass where it keeps walking.
+- **Town venues** sit next to a ring road with toy traffic and street lamps; at night the city's
+  windows switch on and off.
+- **Night shows**: the stage beams throw real coloured pools of light over the crowd, phones flash,
+  and during the drop the stage fires **flame jets** (CO2 cannons by day).
+- **Lost stuff**: balloons slip away into the sky, hats fly off the fallen and stay on the floor
+  until a gust tumbles them again. Steam rises off the most squeezed parts of the crowd.
+- **Weather**: a downpour leaves puddles people splash through; the new **Freak snowstorm** twist
+  covers the floor in snow (the crowd scrapes paths through it), frosts the grass, chills the light
+  and starts snowball fights.
 
 ## Keyboard shortcuts
 
