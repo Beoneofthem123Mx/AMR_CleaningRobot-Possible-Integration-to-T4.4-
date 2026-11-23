@@ -30,6 +30,7 @@ const EGGS = {
   mercado:     ["box", "#2f7fd6", "Totally Original", "A stall selling Adibas, Nikey and Gucchi. All 100% authentic, says the vendor, winking."],
   laboratorio: ["bin", "#7dff6a", "Do Not Drink", "A coffee mug labelled NOT A SAMPLE. It is bubbling. Someone drank half."],
   terminal:    ["sign", "#ffd23a", "Schedule Valid Since 1987", "A bus timetable printed in 1987. It is still the most accurate thing in the terminal."],
+  cocina:      ["box", "#ff6fb1", "Kevin's Diet Plan", "A sticky note on the floor: 'NO MORE CAKE AFTER MIDNIGHT. — Kevin'. The cake is on the floor. It is past midnight."],
 };
 for (const [k, e] of Object.entries(EGGS)) SECRETS["EGG_" + k.toUpperCase()] = { icon: "🥚", name: e[2], desc: e[3], hint: `Something odd is hiding in ${SCENES[k] ? SCENES[k].name : k}. Double-click it.`, egg: true };
 const EGG_POS = {};

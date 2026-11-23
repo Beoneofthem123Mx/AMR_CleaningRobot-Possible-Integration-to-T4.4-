@@ -123,7 +123,7 @@ const TRACKS = {
   taco: ["desert_1", "funk_3"], ovni: ["space_1", "mystery_1"], aeropuerto: ["party_4", "dance_3"], arena: ["action_1", "dnb_2"], rocket: ["chip_2", "chip_4"],
   zoo: ["silly_4", "silly_1"], cheese: ["chip_1", "chip_3"], zombie: ["spooky_1", "spooky_2"], beach: ["party_6", "party_3"], park: ["chip_3", "silly_5"],
   nuclear: ["action_1", "spooky_3"], guerra: ["dnb_3", "action_1"], fabrica: ["funk_3", "chip_4"], procesion: ["jazz_3", "jazz_1"], marcha: ["party_7", "party_2"],
-  metro: ["dnb_2", "dnb_1"], mercado: ["funk_4", "desert_1"], laboratorio: ["mystery_1", "spooky_3"], terminal: ["jazz_4", "funk_1"],
+  metro: ["dnb_2", "dnb_1"], mercado: ["funk_4", "desert_1"], laboratorio: ["mystery_1", "spooky_3"], terminal: ["jazz_4", "funk_1"], cocina: ["spooky_3", "funk_4"],
 };
 let TRACK_PICK = { key: "", name: "" };
 function venueTrack() {   // the song for this visit (picked once per visit to a venue)

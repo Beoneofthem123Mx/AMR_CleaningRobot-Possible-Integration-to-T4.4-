@@ -221,6 +221,7 @@ function spawnJetpack() {
     } });
 }
 function spawnAmbient() {
+  if (scene.ambient) { scene.ambient(); return; }   // venues with their own street life (the kitchen has flies, not hot-dog vendors)
   if (Math.random() < .3) { spawnJetpack(); return; }
   const a = AMBIENT[(Math.random() * AMBIENT.length) | 0], gx = openGateX();
   const pts = [crowdPoint(), crowdPoint(), crowdPoint(), [openGateX(), SH + 3]];

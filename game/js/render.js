@@ -91,7 +91,7 @@ function mat(hex, o) { const key = hex + JSON.stringify(o || {}); return MATS[ke
 function basic(hex, o) { const key = "b" + hex + JSON.stringify(o || {}); return MATS[key] || (MATS[key] = new THREE.MeshBasicMaterial(Object.assign({ color: lin(hex), toneMapped: false }, o || {}))); }
 let GEO;
 // low-poly look (first venues): chamfered, rounded boxes and faceted columns instead of plain boxes and smooth cylinders
-const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono", "ciudad", "mitin", "taco", "ovni", "aeropuerto", "arena", "rocket", "zoo", "cheese", "zombie", "beach", "park", "nuclear", "guerra", "fabrica", "procesion", "marcha", "metro", "mercado", "laboratorio", "terminal"]);
+const POLY_VENUES = new Set(["plaza", "circo", "estadio", "viernes", "crucero", "boda", "hipodromo", "trono", "ciudad", "mitin", "taco", "ovni", "aeropuerto", "arena", "rocket", "zoo", "cheese", "zombie", "beach", "park", "nuclear", "guerra", "fabrica", "procesion", "marcha", "metro", "mercado", "laboratorio", "terminal", "cocina"]);
 const isPoly = () => POLY_VENUES.has(sceneKey);
 function polyBox(w, h, d, r) {   // a box with rounded corners (few segments, so it stays faceted) and a chamfered top edge
   r = Math.max(.02, Math.min(r, w / 2 - .01, d / 2 - .01)); const b = Math.min(.12, h * .25, r * .8), x0 = -w / 2 + r, x1 = w / 2 - r, z0 = -d / 2 + r, z1 = d / 2 - r, sh = new THREE.Shape();
@@ -1354,6 +1354,9 @@ const OUTFITS = [null, null, null, null,
   { n: "fan", b: "#d8322b", l: "#f4f4f0", p(pt, a) { const c = a.ph < 3.14 ? "#d8322b" : "#1f4fa8"; pt("b", .12, 2.1, .3, .07, .4, .14, c); pt("b", .12, 2.33, .3, .07, .12, .05, c); pt("b", .21, 1.66, 0, .02, .08, .2, a.ph < 3.14 ? "#ffffff" : "#ffd23a"); pt("b", 0, 1.43, 0, .32, .1, .5, a.ph < 3.14 ? "#ffffff" : "#ffd23a"); } },
   { n: "viking", b: "#7a4a2a", l: "#5a3b22", p(pt) { pt("s", -.02, 1.8, 0, 2.6, 1.4, 2.6, "#9aa0a8"); for (const z of [-1, 1]) pt("c", -.02, 1.96, z * .26, 1, 1.7, 1, "#f4ecd8", -z * .9); pt("s", .2, 1.48, 0, 1.4, 1.5, 1.6, "#e3a040"); } },
   { n: "superhero", b: "#2f6fc4", l: "#d8322b", p(pt) { pt("b", -.24, 1.0, 0, .05, 1.0, .6, "#d8322b"); pt("b", .2, 1.68, 0, .03, .08, .3, "#111214"); pt("s", .25, 1.12, 0, .8, .9, .3, "#ffd23a"); } },
+  { n: "roach", b: "#5a2e14", l: "#3a1e0c", s: "#6b3a1c", p(pt, a) {   // a cartoon cockroach on two legs: big shell, antennae, two extra arms
+      pt("s", -.11, 1.16, 0, 3.3, 4.9, 3.1, ["#4a2410", "#3e1e0c", "#5a2c12"][(a.ph * 3) % 3 | 0]); pt("b", -.4, 1.2, 0, .02, .78, .02, "#1e0c04");
+      for (const z of [-1, 1]) { pt("b", .13, 2.02, z * .09, .025, .55, .025, "#2a1206", -.55); pt("s", .32, 2.22, z * .09, .3, .3, .3, "#2a1206"); pt("b", .03, 1.02, z * .25, .05, .05, .28, "#3a1e0c"); } } },
   { n: "wizard", b: "#5f3d8a", l: "#3a2a5a", p(pt) { pt("c", -.02, 2.08, 0, 2.2, 3.4, 2.2, "#5f3d8a"); pt("b", -.02, 1.84, 0, .5, .03, .5, "#5f3d8a"); pt("s", .2, 1.42, 0, 1.3, 2.4, 1.6, "#e8e8e8"); for (let i = 0; i < 3; i++) pt("s", .05, 2.0 + i * .14, .13 - i * .04, .35, .35, .35, "#ffd23a"); } },
 ];
 const OUTFIT_ID = Object.fromEntries(OUTFITS.map((o, i) => o && [o.n, i]).filter(Boolean));
